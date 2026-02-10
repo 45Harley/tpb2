@@ -29,23 +29,40 @@ It is role-aware (`roles` column) and tagged for search. Detailed docs live in `
 - Query: `SELECT doc_key, doc_title, roles, tags FROM system_documentation` for full index
 
 ## Deployment
-Git-based deployment to `tpb2.sandgems.net` on InMotion hosting.
+Both environments are on the same InMotion hosting server.
 
-### Push changes to production
+### Environments
+| | Staging | Production |
+|---|---------|-----------|
+| **URL** | `https://tpb2.sandgems.net` | `https://4tpb.org` |
+| **Doc root** | `/home/sandge5/tpb2.sandgems.net` | `/home/sandge5/4tpb.org` |
+| **Deploy method** | git pull | zip extract (no .git/) |
+
+### Server details (shared)
+- **Host**: `ecngx308.inmotionhosting.com` (SSH port 2222)
+- **User**: `sandge5`
+- **Branch**: `master`
+- **Database**: Both environments share the same databases
+
+### Deploy to production (4tpb.org)
+Create a zip of the project excluding `.git/`, upload and extract into the production doc root:
+```bash
+# From project root — create zip without .git/
+zip -r tpb2-deploy.zip . -x ".git/*"
+
+# Upload and extract on server
+scp -P 2222 tpb2-deploy.zip sandge5@ecngx308.inmotionhosting.com:/home/sandge5/4tpb.org/
+ssh sandge5@ecngx308.inmotionhosting.com -p 2222 "cd /home/sandge5/4tpb.org && unzip -o tpb2-deploy.zip && rm tpb2-deploy.zip"
+```
+
+### Push changes to staging
 ```bash
 # 1. Commit and push locally
 git add <files> && git commit -m "description" && git push origin master
 
-# 2. Pull on server
+# 2. Pull on staging server
 ssh sandge5@ecngx308.inmotionhosting.com -p 2222 "cd /home/sandge5/tpb2.sandgems.net && git pull"
 ```
-
-### Server details
-- **Host**: `ecngx308.inmotionhosting.com` (SSH port 2222)
-- **User**: `sandge5`
-- **Doc root**: `/home/sandge5/tpb2.sandgems.net`
-- **Branch**: `master`
-- **URL**: `https://tpb2.sandgems.net`
 
 ### Config files
 `config.php` and `config-claude.php` are gitignored. They exist on the server but are NOT managed by git. If you need to update them on the server, use scp:
@@ -64,7 +81,7 @@ git add <files> && git commit -m "description" && git push origin fix-logout
 
 # 3. Open a PR on GitHub, review the diff, merge to master
 
-# 4. Pull the merged result on the server
+# 4. Pull the merged result on staging
 ssh sandge5@ecngx308.inmotionhosting.com -p 2222 "cd /home/sandge5/tpb2.sandgems.net && git pull"
 ```
 
