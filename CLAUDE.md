@@ -16,8 +16,17 @@ PHP web application ("TPB Putnam") running on XAMPP locally, deployed to InMotio
 - `poll/` — poll system
 - `volunteer/` — volunteer system
 - `constitution/` — constitution section
+- `0media/` — media assets (images git-tracked; mp3/mp4 gitignored, deployed via scp)
+- `docs/` — project documentation (detailed docs referenced by system_documentation table)
+- `scripts/` — reusable scripts grouped by purpose (deploy/, db/, setup/, maintenance/)
 - `config.php` — DB credentials, SMTP, site settings (gitignored)
 - `config-claude.php` — Anthropic API key, clerk system (gitignored)
+
+## Documentation
+The `system_documentation` table in sandge5_tpb2 is the master documentation registry.
+It is role-aware (`roles` column) and tagged for search. Detailed docs live in `docs/`.
+- [Media files](docs/media-management.md) — 0media/ workflow, large file deployment
+- Query: `SELECT doc_key, doc_title, roles, tags FROM system_documentation` for full index
 
 ## Deployment
 Git-based deployment to `tpb2.sandgems.net` on InMotion hosting.
