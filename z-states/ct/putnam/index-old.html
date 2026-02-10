@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Putnam CT - A More Perfect Town. Join your neighbors in protecting what makes Putnam special and building what's next. Your voice shapes our future.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://4tpb.org/ct/putnam/">
+    <meta property="og:title" content="Putnam CT - A More Perfect Town">
+    <meta property="og:description" content="The Quiet Corner's gem. Antiques Capital of the Northeast. River Trail. First Fridays. Help us protect what's special and build what's next.">
+    
+    <title>Putnam CT - A More Perfect Town | The People's Branch</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: #0a0a0a;
+        }
+        
+        /* HERO */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)),
+                        linear-gradient(135deg, #1a2a1a 0%, #0a1a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+        }
+        
+        .hero-content {
+            max-width: 900px;
+            animation: fadeIn 1s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .town-badge {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.15);
+            border: 2px solid #d4af37;
+            padding: 8px 25px;
+            border-radius: 30px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            color: #d4af37;
+        }
+        
+        .hero h1 {
+            font-size: 3.2em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+            font-weight: normal;
+            line-height: 1.2;
+        }
+        
+        .hero h1 span {
+            color: #d4af37;
+        }
+        
+        .hero .tagline {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            color: #ccc;
+            font-style: italic;
+        }
+        
+        .hero-description {
+            font-size: 1.15em;
+            color: #aaa;
+            max-width: 700px;
+            margin: 0 auto 35px;
+            line-height: 1.7;
+        }
+        
+        .hero-cta {
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 16px 35px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 8px;
+        }
+        
+        .btn-primary {
+            background: #d4af37;
+            color: #1a1a1a;
+        }
+        
+        .btn-primary:hover {
+            background: #f4cf57;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #d4af37;
+            border: 2px solid #d4af37;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            color: white;
+            animation: bounce 2s infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+        
+        /* SECTIONS */
+        section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 80px 20px;
+        }
+        
+        section h2 {
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            color: #d4af37;
+            text-align: center;
+        }
+        
+        .section-intro {
+            text-align: center;
+            font-size: 1.2em;
+            max-width: 700px;
+            margin: 0 auto 50px;
+            color: #aaa;
+            line-height: 1.7;
+        }
+        
+        /* WHAT MAKES PUTNAM SPECIAL */
+        .special {
+            background: #0f1a0f;
+            color: #e0e0e0;
+        }
+        
+        .special-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .special-card {
+            background: #1a2a1a;
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 4px solid #4a7c4a;
+        }
+        
+        .special-card h3 {
+            color: #7cb77c;
+            margin-bottom: 12px;
+            font-size: 1.25em;
+        }
+        
+        .special-card p {
+            color: #aaa;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        /* WHAT WE'RE BUILDING */
+        .building {
+            background: #1a1a2a;
+            color: #e0e0e0;
+        }
+        
+        .building-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        
+        .building-card {
+            background: #252535;
+            padding: 28px;
+            border-radius: 10px;
+            border-left: 4px solid #d4af37;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            display: block;
+        }
+        
+        .building-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            border-left-color: #fff;
+        }
+        
+        .building-card .card-type {
+            font-size: 0.8em;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .building-card h3 {
+            color: #d4af37;
+            margin-bottom: 10px;
+            font-size: 1.15em;
+        }
+        
+        .building-card p {
+            color: #999;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        
+        /* PUTNAM THOUGHTS */
+        .thoughts-section {
+            background: #0d1117;
+            padding: 60px 20px;
+        }
+        
+        .thoughts-section h2 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .thoughts-section .section-intro {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        
+        .thoughts-list {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .thought-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .thought-card:hover {
+            border-color: #d4af37;
+        }
+        
+        .thought-content {
+            color: #e6e6e6;
+            font-size: 1.05em;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        
+        .thought-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        .thought-votes {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .vote-btn {
+            background: #252535;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            color: #888;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+        }
+        
+        .vote-btn:hover {
+            background: #303045;
+            border-color: #666;
+        }
+        
+        .vote-btn.agree:hover {
+            border-color: #4a9;
+            color: #4a9;
+        }
+        
+        .vote-btn.disagree:hover {
+            border-color: #a54;
+            color: #a54;
+        }
+        
+        .vote-btn.voted {
+            font-weight: 600;
+        }
+        
+        .vote-btn.agree.voted {
+            background: #1a3a2a;
+            border-color: #4a9;
+            color: #4a9;
+        }
+        
+        .vote-btn.disagree.voted {
+            background: #3a1a1a;
+            border-color: #a54;
+            color: #a54;
+        }
+        
+        .vote-btn .count {
+            margin-left: 4px;
+        }
+        
+        .thoughts-loading {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+        
+        .thoughts-empty {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+        
+        /* WHO WE NEED */
+        .who {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        .who-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .who-card {
+            background: #252525;
+            padding: 25px 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .who-card:hover {
+            border-color: #d4af37;
+            transform: translateY(-2px);
+        }
+        
+        .who-card .who-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .who-card h3 {
+            color: #d4af37;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        
+        .who-card p {
+            color: #888;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+        
+        /* YOUR REPS */
+        .reps {
+            background: #0f1f1f;
+            color: #e0e0e0;
+        }
+        
+        .reps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        
+        .rep-card {
+            background: #1a2a2a;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #2a3a3a;
+            transition: all 0.2s ease;
+        }
+        
+        .rep-card .rep-level {
+            font-size: 0.8em;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .rep-card h3 {
+            color: #d4af37;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        
+        .rep-card .rep-title {
+            color: #999;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+        
+        .rep-card .rep-link {
+            color: #d4af37;
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+        
+        a.rep-card:hover {
+            background: #252535;
+            border-color: #d4af37;
+            transform: translateY(-2px);
+        }
+        
+        /* CTA SECTION */
+        .cta {
+            background: linear-gradient(135deg, #1a2a1a 0%, #1a1a2a 100%);
+            color: #e0e0e0;
+            text-align: center;
+            padding: 100px 20px;
+        }
+        
+        .cta h2 {
+            font-size: 2.3em;
+            margin-bottom: 20px;
+        }
+        
+        .cta-subtitle {
+            font-size: 1.25em;
+            color: #aaa;
+            max-width: 650px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+        
+        .thought-input-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .thought-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.1em;
+            border: 2px solid #444;
+            border-radius: 10px;
+            background: #252525;
+            color: #e0e0e0;
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        .thought-input:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+        
+        .thought-input::placeholder {
+            color: #666;
+        }
+        
+        .thought-examples {
+            text-align: left;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid #d4af37;
+        }
+        
+        .thought-examples p {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
+        .thought-examples ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .thought-examples li {
+            color: #999;
+            font-size: 0.9em;
+            padding: 5px 0;
+            font-style: italic;
+        }
+        
+        .thought-examples li:before {
+            content: "→ ";
+            color: #d4af37;
+        }
+        
+        .thought-submit {
+            margin-top: 25px;
+        }
+        
+        /* FOOTER */
+        footer {
+            background: #0a0a0a;
+            color: #666;
+            padding: 50px 20px;
+            text-align: center;
+        }
+        
+        footer a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer-putnam {
+            margin-bottom: 25px;
+            color: #888;
+            line-height: 1.8;
+        }
+        
+        .footer-putnam strong {
+            color: #aaa;
+        }
+        
+        .footer-links {
+            margin-bottom: 25px;
+        }
+        
+        .footer-links a {
+            margin: 0 15px;
+        }
+        
+        .footer-tpb {
+            padding-top: 25px;
+            border-top: 1px solid #222;
+        }
+        
+        .footer-tpb .tagline {
+            color: #d4af37;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2em;
+            }
+            
+            .hero .tagline {
+                font-size: 1.2em;
+            }
+            
+            section {
+                padding: 60px 20px;
+            }
+            
+            section h2 {
+                font-size: 1.8em;
+            }
+            
+            .btn {
+                display: block;
+                width: 100%;
+                max-width: 300px;
+                margin: 10px auto;
+            }
+            
+            .who-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="town-badge">THE QUIET CORNER • CONNECTICUT</div>
+            <h1>Putnam: <span>A More Perfect Town</span></h1>
+            <p class="tagline">Protect what's special. Build what's next.</p>
+            
+            <p class="hero-description">
+                The Antiques Capital of the Northeast. The River Trail along the Quinebaug. 
+                First Fridays, the Bradley Playhouse, Main Street's revival. 
+                Putnam is already something special — and with your voice, it can be even better.
+            </p>
+            
+            <div class="hero-cta">
+                <a href="#share" class="btn btn-primary">Add Your Voice</a>
+                <a href="#building" class="btn btn-secondary">See What We're Building</a>
+            </div>
+        </div>
+        <div class="scroll-indicator">↓</div>
+    </section>
+
+    <!-- WHAT MAKES PUTNAM SPECIAL -->
+    <section class="special" id="special">
+        <h2>What Makes Putnam Special</h2>
+        <p class="section-intro">
+            This is worth protecting. This is worth building on.
+        </p>
+        
+        <div class="special-grid">
+            <div class="special-card">
+                <h3>🏛️ Antiques Capital of the Northeast</h3>
+                <p>Four floors at the Antiques Marketplace. Jeremiah's next door. 300+ dealers. Treasure hunters come from Boston to New York. This is our identity.</p>
+            </div>
+            
+            <div class="special-card">
+                <h3>🚶 The Putnam River Trail</h3>
+                <p>Two miles along the Quinebaug — through woodlands, parks, past the mills, into downtown. Walking, biking, running, skating. Pet-friendly. Ours.</p>
+            </div>
+            
+            <div class="special-card">
+                <h3>🎭 Arts & Al Fresco</h3>
+                <p>The Bradley Playhouse. First Fridays with music and art. Fire & Ice Festival. Great Pumpkin Festival. Galleries and boutiques. Small-town creative energy.</p>
+            </div>
+            
+            <div class="special-card">
+                <h3>🍽️ Main Street Revival</h3>
+                <p>85 Main. Black Dog. The Stomping Ground. Bear Hands Brewing. From hard times to thriving — the comeback is real, and it's delicious.</p>
+            </div>
+            
+            <div class="special-card">
+                <h3>📚 Quiet Corner Character</h3>
+                <p>The 1906 train station. Head-on parking. Locals who say hello. The Boxcar Children Museum. A pace of life that lets you breathe.</p>
+            </div>
+            
+            <div class="special-card">
+                <h3>🏠 9,347 Neighbors</h3>
+                <p>Small enough to know people. Big enough to matter. Teachers, artists, business owners, families, retirees — all with a stake in what Putnam becomes.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- WHAT WE'RE BUILDING TOGETHER -->
+    <section class="building" id="building">
+        <h2>What We're Building Together</h2>
+        <p class="section-intro">
+            Protect what works. Fix what's broken. Dream what's next.<br>
+            These are the conversations Putnam residents are starting.
+        </p>
+        
+        <div class="building-grid">
+            <a href="#share" class="building-card" data-question="What would help Main Street thrive?">
+                <div class="card-type">Protect</div>
+                <h3>Keep Main Street Thriving</h3>
+                <p>Support local businesses. Fill empty storefronts. Make downtown a destination every day, not just First Fridays.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="How should we grow the River Trail?">
+                <div class="card-type">Expand</div>
+                <h3>Grow the River Trail</h3>
+                <p>Connect more neighborhoods. Add amenities. Make the Quinebaug corridor Putnam's crown jewel.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What property needs attention?">
+                <div class="card-type">Fix</div>
+                <h3>Address Blight</h3>
+                <p>Unmaintained properties hurt everyone. Identify them. Track them. Push for action.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What do our schools need most?">
+                <div class="card-type">Invest</div>
+                <h3>Strengthen Our Schools</h3>
+                <p>Our kids deserve the best. Budget priorities, teacher support, facility needs — make education a community conversation.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What road or sidewalk needs fixing?">
+                <div class="card-type">Fix</div>
+                <h3>Roads & Infrastructure</h3>
+                <p>Potholes. Sidewalks. Route 21 traffic. The basics matter. Report issues, track progress, demand accountability.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What's your vision for Putnam?">
+                <div class="card-type">Dream</div>
+                <h3>What's YOUR Vision?</h3>
+                <p>A dog park expansion? More youth programs? Better transit connections? Your idea could be the next thing we build.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- PUTNAM THOUGHTS -->
+    <section class="thoughts-section" id="thoughts">
+        <h2>What Putnam Is Saying</h2>
+        <p class="section-intro">
+            Real thoughts from your neighbors. Join the conversation.
+        </p>
+        
+        <div class="thoughts-list" id="thoughtsList">
+            <div class="thoughts-loading">Loading thoughts...</div>
+        </div>
+    </section>
+
+    <!-- WHO WE NEED -->
+    <section class="who" id="who">
+        <h2>Putnam Needs Your Voice</h2>
+        <p class="section-intro">
+            Whatever your background, you have something to contribute.<br>
+            A more perfect Putnam takes all of us.
+        </p>
+        
+        <div class="who-grid">
+            <div class="who-card">
+                <div class="who-icon">🏪</div>
+                <h3>Business Owners</h3>
+                <p>You built Main Street. Help shape its future.</p>
+            </div>
+            
+            <div class="who-card">
+                <div class="who-icon">🎨</div>
+                <h3>Artists & Creatives</h3>
+                <p>Arts & Al Fresco needs your voice and vision.</p>
+            </div>
+            
+            <div class="who-card">
+                <div class="who-icon">👨‍🏫</div>
+                <h3>Teachers & Educators</h3>
+                <p>Our schools shape our future. Speak up.</p>
+            </div>
+            
+            <div class="who-card">
+                <div class="who-icon">💻</div>
+                <h3>Tech & Retirees</h3>
+                <p>Skills + time = civic infrastructure.</p>
+            </div>
+            
+            <div class="who-card">
+                <div class="who-icon">👨‍👩‍👧</div>
+                <h3>Young Families</h3>
+                <p>You're raising the next generation here.</p>
+            </div>
+            
+            <div class="who-card">
+                <div class="who-icon">🚶</div>
+                <h3>Trail Advocates</h3>
+                <p>The River Trail is just the beginning.</p>
+            </div>
+            
+            <div class="who-card">
+                <div class="who-icon">🏠</div>
+                <h3>Longtime Residents</h3>
+                <p>You know what Putnam was. Help shape what it becomes.</p>
+            </div>
+            
+            <div class="who-card">
+                <div class="who-icon">🆕</div>
+                <h3>Newcomers</h3>
+                <p>Fresh eyes see possibilities we've missed.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- YOUR REPRESENTATIVES -->
+    <section class="reps" id="reps">
+        <h2>Your Representatives</h2>
+        <p class="section-intro">
+            These are the people who represent Putnam. They should hear from you.
+        </p>
+        
+        <div class="reps-grid">
+            <a href="https://putnamct.us/government/mayors-office" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Mayor Barney Seney</h3>
+                <div class="rep-title">Mayor since 2017 (R)</div>
+                <div class="rep-link">→ Mayor's Office</div>
+            </a>
+            
+            <a href="https://putnamct.us/government/boards/board-of-selectmen" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Board of Selectmen</h3>
+                <div class="rep-title">6 members + Mayor</div>
+                <div class="rep-link">→ Meeting Agendas & Minutes</div>
+            </a>
+            
+            <a href="https://putnamct.us/government/town-administrator" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Elaine Sistare</h3>
+                <div class="rep-title">Town Administrator</div>
+                <div class="rep-link">→ Town Admin Office</div>
+            </a>
+            
+            <a href="https://www.housedems.ct.gov/Boyd" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">State House</div>
+                <h3>Pat Boyd</h3>
+                <div class="rep-title">District 50 (D)</div>
+                <div class="rep-link">→ State Legislature</div>
+            </a>
+            
+            <a href="https://www.senatedems.ct.gov/Flexer" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">State Senate</div>
+                <h3>Mae Flexer</h3>
+                <div class="rep-title">District 29 (D)</div>
+                <div class="rep-link">→ State Legislature</div>
+            </a>
+        </div>
+    </section>
+
+    <!-- SHARE YOUR VOICE CTA -->
+    <section class="cta" id="share">
+        <h2>What's Your Vision for Putnam?</h2>
+        <p class="cta-subtitle">
+            Something to protect? Something to fix? Something to build?<br>
+            Your neighbors are listening. Your representatives should be too.
+        </p>
+        
+        <div class="thought-input-container">
+            <textarea class="thought-input" id="thoughtInput" placeholder="Share your thought about Putnam..."></textarea>
+            
+            <div class="thought-submit">
+                <button type="button" class="btn btn-primary" id="submitThought">Share Your Thought</button>
+            </div>
+            
+            <!-- Email verification (hidden by default) -->
+            <div id="emailSection" style="display: none; margin-top: 20px;">
+                <p style="color: #d4af37; margin-bottom: 10px;">Enter your email to verify and submit:</p>
+                <div style="display: flex; gap: 10px; max-width: 400px; margin: 0 auto;">
+                    <input type="email" id="emailInput" placeholder="your@email.com" 
+                           style="flex: 1; padding: 12px; border-radius: 6px; border: 1px solid #444; background: #1a1a2e; color: #fff;">
+                    <button type="button" id="sendVerification" class="btn btn-primary">Verify</button>
+                </div>
+            </div>
+            
+            <!-- Status messages -->
+            <div id="submitStatus" style="margin-top: 20px; display: none;"></div>
+            
+            <p style="margin-top: 25px; color: #666; font-size: 0.95em;">
+                Just your email + Putnam = your voice counts.<br>
+                No long forms. No social media games. Just civic participation.
+            </p>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-putnam">
+            <strong>Putnam, Connecticut</strong><br>
+            Population 9,347 • Incorporated 1855 • The Quiet Corner<br>
+            Town Hall: 200 School Street • (860) 963-6800 • <a href="https://putnamct.us" target="_blank">putnamct.us</a>
+        </div>
+        
+        <div class="footer-links">
+            <a href="/index.php">Full Platform</a>
+            <a href="/reps.php">All Your Reps</a>
+            <a href="/volunteer/apply.php">Volunteer</a>
+        </div>
+        
+        <div class="footer-tpb">
+            <p>Powered by <a href="/"><strong>The People's Branch</strong></a></p>
+            <p class="tagline">No Kings. Only Citizens.</p>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script>
+    (function() {
+        'use strict';
+        
+        // Session management
+        let sessionId = localStorage.getItem('tpb_civic_session');
+        if (!sessionId) {
+            sessionId = 'civic_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+            localStorage.setItem('tpb_civic_session', sessionId);
+        }
+        
+        // Store town preference
+        localStorage.setItem('tpb_town', 'Putnam');
+        localStorage.setItem('tpb_state', 'CT');
+        
+        // Building card click → set placeholder with trigger question
+        document.querySelectorAll('.building-card[data-question]').forEach(card => {
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                const question = this.dataset.question;
+                const textarea = document.getElementById('thoughtInput');
+                textarea.placeholder = question;
+                textarea.value = '';
+                textarea.focus();
+                // Scroll to share section
+                document.getElementById('share').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+        
+        // Fetch and display Putnam thoughts
+        fetch('/api/get-thoughts.php?town_id=119&sort=votes&limit=10')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('thoughtsList');
+                if (data.status === 'success' && data.thoughts.length > 0) {
+                    container.innerHTML = data.thoughts.map(t => `
+                        <div class="thought-card" data-id="${t.thought_id}">
+                            <div class="thought-content">"${t.content}"</div>
+                            <div class="thought-meta">
+                                <span>${t.time_ago}</span>
+                                <span class="thought-votes">
+                                    <button class="vote-btn agree" data-thought="${t.thought_id}" data-vote="up">
+                                        👍 <span class="count">${t.upvotes}</span>
+                                    </button>
+                                    <button class="vote-btn disagree" data-thought="${t.thought_id}" data-vote="down">
+                                        👎 <span class="count">${t.downvotes}</span>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    // Attach vote handlers
+                    attachVoteHandlers();
+                } else {
+                    container.innerHTML = '<div class="thoughts-empty">No thoughts yet. Be the first!</div>';
+                }
+            })
+            .catch(() => {
+                document.getElementById('thoughtsList').innerHTML = 
+                    '<div class="thoughts-empty">Could not load thoughts.</div>';
+            });
+        
+        // Log page visit
+        fetch('/api/log-civic-click.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action_type: 'page_visit',
+                page_name: 'putnam_landing_v2',
+                session_id: sessionId,
+                town: 'Putnam',
+                state: 'CT',
+                referrer: document.referrer || 'direct'
+            })
+        }).catch(function() {});
+        
+        // Status message helper
+        function showStatus(message, isError) {
+            const status = document.getElementById('submitStatus');
+            status.style.display = 'block';
+            status.style.padding = '15px';
+            status.style.borderRadius = '8px';
+            status.style.textAlign = 'center';
+            status.style.background = isError ? '#3d1f1f' : '#1f3d1f';
+            status.style.color = isError ? '#ff6b6b' : '#6bff6b';
+            status.innerHTML = message;
+        }
+        
+        // Attach vote handlers to all vote buttons
+        function attachVoteHandlers() {
+            document.querySelectorAll('.vote-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const isVerified = await checkVerified();
+                    if (!isVerified) {
+                        showStatus('Please verify your email to vote.', true);
+                        document.getElementById('emailSection').style.display = 'block';
+                        document.getElementById('share').scrollIntoView({ behavior: 'smooth' });
+                        return;
+                    }
+                    
+                    const thoughtId = this.dataset.thought;
+                    const voteType = this.dataset.vote;
+                    const isActive = this.classList.contains('voted');
+                    
+                    const upBtn = document.querySelector(`.vote-btn[data-thought="${thoughtId}"][data-vote="up"]`);
+                    const downBtn = document.querySelector(`.vote-btn[data-thought="${thoughtId}"][data-vote="down"]`);
+                    
+                    try {
+                        const response = await fetch('/api/vote-thought.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                session_id: sessionId,
+                                thought_id: thoughtId,
+                                vote_type: voteType,
+                                toggle: isActive
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.status === 'success') {
+                            upBtn.querySelector('.count').textContent = data.upvotes;
+                            downBtn.querySelector('.count').textContent = data.downvotes;
+                            
+                            upBtn.classList.remove('voted');
+                            downBtn.classList.remove('voted');
+                            if (data.user_vote === 'up') {
+                                upBtn.classList.add('voted');
+                            } else if (data.user_vote === 'down') {
+                                downBtn.classList.add('voted');
+                            }
+                        } else {
+                            showStatus(data.message || 'Could not vote', true);
+                        }
+                    } catch (err) {
+                        showStatus('Could not vote. Please try again.', true);
+                    }
+                });
+            });
+        }
+        
+        // Check if user is verified
+        async function checkVerified() {
+            try {
+                const response = await fetch('/api/check-session.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                const data = await response.json();
+                return data.email_verified === true;
+            } catch (err) {
+                return false;
+            }
+        }
+        
+        // Submit thought via API
+        async function submitThought(content) {
+            const response = await fetch('/api/submit-thought.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    content: content,
+                    is_local: true,
+                    is_state: false,
+                    is_federal: false
+                })
+            });
+            return response.json();
+        }
+        
+        // Handle thought submission button
+        document.getElementById('submitThought').addEventListener('click', async function(e) {
+            e.preventDefault();
+            const thought = document.getElementById('thoughtInput').value.trim();
+            
+            if (!thought || thought.length < 10) {
+                showStatus('Please enter at least 10 characters.', true);
+                return;
+            }
+            
+            // Store thought in case we need to verify first
+            localStorage.setItem('tpb_pending_thought', thought);
+            
+            // Check if verified
+            const isVerified = await checkVerified();
+            
+            if (isVerified) {
+                // Submit directly
+                const result = await submitThought(thought);
+                if (result.status === 'success') {
+                    showStatus('✓ Your thought has been shared! Thank you for your voice.', false);
+                    document.getElementById('thoughtInput').value = '';
+                    localStorage.removeItem('tpb_pending_thought');
+                    // Refresh thoughts list
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showStatus('Error: ' + (result.message || 'Could not submit'), true);
+                }
+            } else {
+                // Show email input
+                document.getElementById('emailSection').style.display = 'block';
+                showStatus('Verify your email to submit your thought.', false);
+            }
+        });
+        
+        // Handle email verification
+        document.getElementById('sendVerification').addEventListener('click', async function() {
+            const email = document.getElementById('emailInput').value.trim();
+            
+            if (!email || !email.includes('@')) {
+                showStatus('Please enter a valid email.', true);
+                return;
+            }
+            
+            this.disabled = true;
+            this.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch('/api/send-magic-link.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        session_id: sessionId,
+                        return_url: '/ct/putnam/?verified=1'
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showStatus('✓ Check your email! Click the link to verify and submit your thought.', false);
+                    document.getElementById('emailSection').style.display = 'none';
+                } else {
+                    showStatus('Error: ' + (result.message || 'Could not send'), true);
+                }
+            } catch (err) {
+                showStatus('Could not send verification email.', true);
+            }
+            
+            this.disabled = false;
+            this.textContent = 'Verify';
+        });
+        
+        // On page load: check for verified return and pending thought
+        (async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pendingThought = localStorage.getItem('tpb_pending_thought');
+            
+            if (urlParams.get('verified') === '1' && pendingThought) {
+                // Clear URL param
+                history.replaceState({}, '', '/ct/putnam/');
+                
+                // Submit the pending thought
+                showStatus('Submitting your thought...', false);
+                const result = await submitThought(pendingThought);
+                
+                if (result.status === 'success') {
+                    showStatus('✓ Your thought has been shared! Thank you for your voice.', false);
+                    document.getElementById('thoughtInput').value = '';
+                    localStorage.removeItem('tpb_pending_thought');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showStatus('Error: ' + (result.message || 'Could not submit'), true);
+                }
+            }
+        })();
+        
+        // Track who-card clicks
+        document.querySelectorAll('.who-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var role = this.querySelector('h3').textContent;
+                fetch('/api/log-civic-click.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action_type: 'role_interest',
+                        page_name: 'putnam_landing_v2',
+                        session_id: sessionId,
+                        extra_data: { role: role }
+                    })
+                }).catch(function() {});
+            });
+        });
+        
+    })();
+    </script>
+
+</body>
+</html>

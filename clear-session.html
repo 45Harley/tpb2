@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TPB Session Reset</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .container {
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid #2a2a4a;
+        }
+        h1 {
+            color: #d4af37;
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .cookie-list {
+            background: #12121f;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .cookie-item {
+            padding: 0.4rem 0;
+            border-bottom: 1px solid #222;
+            word-break: break-all;
+        }
+        .cookie-item:last-child { border-bottom: none; }
+        .cookie-name { color: #d4af37; }
+        .cookie-value { color: #7a9ec2; }
+        .tpb-cookie { background: #2a1a1a; margin: 0.2rem -0.5rem; padding: 0.4rem 0.5rem; border-radius: 4px; }
+        .no-cookies { color: #4a4; font-style: italic; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 0.75rem;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-danger {
+            background: #c0392b;
+            color: white;
+        }
+        .btn-secondary {
+            background: #2a2a4a;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+        .btn-login {
+            background: #2a6a3a;
+            color: white;
+        }
+        .status {
+            text-align: center;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .status.success {
+            display: block;
+            background: #1a3a1a;
+            border: 1px solid #2a5a2a;
+            color: #6c6;
+        }
+        .status.info {
+            display: block;
+            background: #1a2a3a;
+            border: 1px solid #2a4a5a;
+            color: #6ac;
+        }
+        .count { 
+            text-align: center; 
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .count strong { color: #d4af37; }
+        .tpb-count { color: #c0392b; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 TPB Session Reset</h1>
+        <p class="subtitle">View and clear cookies for this domain</p>
+
+        <div id="status" class="status"></div>
+
+        <div class="count" id="cookieCount"></div>
+
+        <div class="cookie-list" id="cookieList"></div>
+
+        <button class="btn btn-danger" id="clearTpbBtn" onclick="clearTpbCookies()">
+            🗑️ Clear TPB Cookies Only
+        </button>
+
+        <button class="btn btn-secondary" onclick="clearAllCookies()">
+            💣 Clear ALL Cookies (this domain)
+        </button>
+
+        <button class="btn btn-secondary" onclick="refreshView()">
+            🔄 Refresh View
+        </button>
+
+        <div id="loginSection" style="display:none; margin-top: 1rem; border-top: 1px solid #333; padding-top: 1rem;">
+            <button class="btn btn-login" onclick="window.location.href='/login.php'">
+                → Log In Fresh
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // TPB-specific cookie name patterns
+        const TPB_PATTERNS = [
+            'tpb_civic_session',
+            'tpb_pending_zip',
+            'tpb_pending_town',
+            'tpb_pending_state',
+            'tpb_'  // catch any others
+        ];
+
+        function getAllCookies() {
+            if (!document.cookie) return [];
+            return document.cookie.split(';').map(c => {
+                const [name, ...rest] = c.trim().split('=');
+                return { name: name.trim(), value: rest.join('=') };
+            }).filter(c => c.name);
+        }
+
+        function isTPBCookie(name) {
+            return TPB_PATTERNS.some(pattern => name.startsWith(pattern));
+        }
+
+        function deleteCookie(name) {
+            // Try multiple path variants to ensure deletion
+            const paths = ['/', '', '/api', '/api/'];
+            paths.forEach(path => {
+                document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=' + path;
+                document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=' + path + '; secure';
+                document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=' + path + '; samesite=lax';
+            });
+            // Also try without path
+            document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        }
+
+        function displayCookies() {
+            const cookies = getAllCookies();
+            const list = document.getElementById('cookieList');
+            const count = document.getElementById('cookieCount');
+
+            const tpbCount = cookies.filter(c => isTPBCookie(c.name)).length;
+
+            if (cookies.length === 0) {
+                list.innerHTML = '<div class="no-cookies">✅ No cookies found — clean slate</div>';
+                count.innerHTML = 'No cookies on this domain';
+                document.getElementById('clearTpbBtn').style.display = 'none';
+                document.getElementById('loginSection').style.display = 'block';
+                return;
+            }
+
+            count.innerHTML = '<strong>' + cookies.length + '</strong> cookie' + 
+                (cookies.length !== 1 ? 's' : '') + ' found' +
+                (tpbCount > 0 ? ' — <span class="tpb-count">' + tpbCount + ' TPB</span>' : '');
+
+            list.innerHTML = cookies.map(c => {
+                const isTpb = isTPBCookie(c.name);
+                const shortVal = c.value.length > 50 ? c.value.substring(0, 50) + '...' : c.value;
+                return '<div class="cookie-item' + (isTpb ? ' tpb-cookie' : '') + '">' +
+                    '<span class="cookie-name">' + c.name + '</span>' +
+                    (isTpb ? ' 🎯' : '') +
+                    '<br><span class="cookie-value">' + shortVal + '</span>' +
+                    '</div>';
+            }).join('');
+
+            document.getElementById('clearTpbBtn').style.display = tpbCount > 0 ? 'block' : 'none';
+        }
+
+        function clearTpbCookies() {
+            const cookies = getAllCookies();
+            let cleared = 0;
+
+            cookies.forEach(c => {
+                if (isTPBCookie(c.name)) {
+                    deleteCookie(c.name);
+                    cleared++;
+                }
+            });
+
+            const status = document.getElementById('status');
+            status.className = 'status success';
+            status.textContent = '✅ Cleared ' + cleared + ' TPB cookie' + (cleared !== 1 ? 's' : '') + 
+                '. You can now log in fresh.';
+
+            displayCookies();
+        }
+
+        function clearAllCookies() {
+            const cookies = getAllCookies();
+            let cleared = 0;
+
+            cookies.forEach(c => {
+                deleteCookie(c.name);
+                cleared++;
+            });
+
+            const status = document.getElementById('status');
+            status.className = 'status success';
+            status.textContent = '✅ Cleared ' + cleared + ' cookie' + (cleared !== 1 ? 's' : '') + 
+                '. Clean slate.';
+
+            displayCookies();
+        }
+
+        function refreshView() {
+            document.getElementById('status').className = 'status';
+            document.getElementById('status').textContent = '';
+            displayCookies();
+        }
+
+        // Show cookies on load
+        displayCookies();
+    </script>
+</body>
+</html>

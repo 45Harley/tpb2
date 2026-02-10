@@ -1,0 +1,520 @@
+/**
+ * TPB2 Modal Help System - CSS Styles
+ * ====================================
+ * Styling for modal help icons, tooltips, and modal popups
+ * 
+ * Version: 1.0
+ * Date: November 25, 2025
+ */
+
+/* ============================================================================
+   HELP TAGS (Icons placed next to elements)
+   ============================================================================ */
+
+.tpb-help {
+    display: none;
+    cursor: pointer;
+    margin-left: 6px;
+    font-size: 0.75em;
+    opacity: 1;
+    transition: all 0.2s ease;
+    vertical-align: middle;
+    user-select: none;
+    position: relative;
+    /* Circle badge */
+    width: 1.4em;
+    height: 1.4em;
+    line-height: 1.4em;
+    text-align: center;
+    border-radius: 50%;
+    background: rgba(212, 175, 55, 0.15);
+    border: 1.5px solid #d4af37;
+    /* Pulse glow */
+    animation: tpb-help-pulse 2.5s ease-in-out 3;
+}
+
+@keyframes tpb-help-pulse {
+    0%, 100% {
+        box-shadow: 0 0 4px rgba(212, 175, 55, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.6), 0 0 24px rgba(212, 175, 55, 0.3);
+    }
+}
+
+.tpb-help-active {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tpb-help:hover {
+    opacity: 1;
+    transform: scale(1.2);
+    background: rgba(212, 175, 55, 0.3);
+    box-shadow: 0 0 14px rgba(212, 175, 55, 0.5);
+    animation: none;
+}
+
+.tpb-help:focus {
+    outline: 2px solid #d4af37;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Icon type colors */
+.tpb-help-info       { color: #4a90e2; }
+.tpb-help-help       { color: #5dade2; }
+.tpb-help-docs       { color: #3498db; }
+.tpb-help-success    { color: #2ecc71; }
+.tpb-help-tip        { color: #27ae60; }
+.tpb-help-tutorial   { color: #1abc9c; }
+.tpb-help-warning    { color: #f39c12; }
+.tpb-help-important  { color: #e67e22; }
+.tpb-help-new        { color: #f1c40f; }
+.tpb-help-preview    { color: #9b59b6; }
+.tpb-help-feature    { color: #8e44ad; }
+.tpb-help-philosophy { color: #c0392b; }
+.tpb-help-security   { color: #7f8c8d; }
+.tpb-help-location   { color: #95a5a6; }
+.tpb-help-external   { color: #34495e; }
+.tpb-help-social     { color: #16a085; }
+
+
+/* ============================================================================
+   TOOLTIPS (On hover before click)
+   ============================================================================ */
+
+.tpb-help.tpb-has-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    color: #d4af37;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    white-space: nowrap;
+    max-width: 250px;
+    white-space: normal;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    border: 1px solid #d4af37;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    margin-bottom: 8px;
+}
+
+.tpb-help.tpb-has-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #d4af37;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1001;
+    margin-bottom: -4px;
+}
+
+.tpb-help.tpb-has-tooltip:hover::after,
+.tpb-help.tpb-has-tooltip:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* ============================================================================
+   MODAL OVERLAY
+   ============================================================================ */
+
+.tpb-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.tpb-modal-overlay.tpb-modal-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* ============================================================================
+   MODAL CONTAINER
+   ============================================================================ */
+
+.tpb-modal-container {
+    background: #1a1a1a;
+    border: 2px solid #d4af37;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.tpb-modal-visible .tpb-modal-container {
+    transform: scale(1);
+}
+
+
+/* ============================================================================
+   MODAL HEADER
+   ============================================================================ */
+
+.tpb-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px;
+    background: #252525;
+    border-bottom: 2px solid #d4af37;
+    border-radius: 10px 10px 0 0;
+}
+
+.tpb-modal-icon {
+    font-size: 1.8em;
+    line-height: 1;
+}
+
+.tpb-modal-title {
+    flex: 1;
+    margin: 0;
+    font-size: 1.3em;
+    color: #ffdb58;
+    font-weight: 600;
+}
+
+.tpb-modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 2em;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border-radius: 50%;
+}
+
+.tpb-modal-close:hover {
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+    transform: rotate(90deg);
+}
+
+
+/* ============================================================================
+   MODAL CONTENT
+   ============================================================================ */
+
+.tpb-modal-content {
+    padding: 25px;
+    overflow-y: auto;
+    color: #d4af37;
+    line-height: 1.7;
+    flex: 1;
+}
+
+/* Typography inside modal */
+.tpb-modal-content h1 {
+    color: #ffdb58;
+    font-size: 1.6em;
+    margin: 25px 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.tpb-modal-content h2 {
+    color: #ffdb58;
+    font-size: 1.3em;
+    margin: 20px 0 12px 0;
+}
+
+.tpb-modal-content h3 {
+    color: #ffdb58;
+    font-size: 1.1em;
+    margin: 15px 0 10px 0;
+}
+
+.tpb-modal-content p {
+    margin: 0 0 15px 0;
+}
+
+.tpb-modal-content strong {
+    color: #ffdb58;
+}
+
+.tpb-modal-content em {
+    font-style: italic;
+    color: #e8c547;
+}
+
+.tpb-modal-content a {
+    color: #5dade2;
+    text-decoration: none;
+    border-bottom: 1px dotted #5dade2;
+    transition: all 0.2s ease;
+}
+
+.tpb-modal-content a:hover {
+    color: #85c1e9;
+    border-bottom-style: solid;
+}
+
+.tpb-modal-content a::after {
+    content: ' ↗';
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+/* Lists */
+.tpb-modal-content ul,
+.tpb-modal-content ol {
+    margin: 15px 0;
+    padding-left: 25px;
+}
+
+.tpb-modal-content li {
+    margin: 8px 0;
+}
+
+.tpb-modal-content ul li::marker {
+    color: #d4af37;
+}
+
+/* Code */
+.tpb-modal-content code {
+    background: #0d0d0d;
+    color: #66bb6a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.tpb-modal-content pre {
+    background: #0d0d0d;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 15px 0;
+    border: 1px solid #2a2a2a;
+}
+
+.tpb-modal-content pre code {
+    background: none;
+    padding: 0;
+}
+
+
+/* ============================================================================
+   MODAL FOOTER
+   ============================================================================ */
+
+.tpb-modal-footer {
+    padding: 12px 20px;
+    background: #252525;
+    border-top: 1px solid #3a3a3a;
+    border-radius: 0 0 10px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tpb-modal-category {
+    font-size: 0.85em;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+
+/* ============================================================================
+   MODAL TYPE VARIATIONS (Border colors by icon type)
+   ============================================================================ */
+
+.tpb-modal-info       { border-color: #4a90e2; }
+.tpb-modal-info .tpb-modal-header { border-bottom-color: #4a90e2; }
+
+.tpb-modal-help       { border-color: #5dade2; }
+.tpb-modal-help .tpb-modal-header { border-bottom-color: #5dade2; }
+
+.tpb-modal-success    { border-color: #2ecc71; }
+.tpb-modal-success .tpb-modal-header { border-bottom-color: #2ecc71; }
+
+.tpb-modal-tip        { border-color: #27ae60; }
+.tpb-modal-tip .tpb-modal-header { border-bottom-color: #27ae60; }
+
+.tpb-modal-warning    { border-color: #f39c12; }
+.tpb-modal-warning .tpb-modal-header { border-bottom-color: #f39c12; }
+
+.tpb-modal-important  { border-color: #e67e22; }
+.tpb-modal-important .tpb-modal-header { border-bottom-color: #e67e22; }
+
+.tpb-modal-new        { border-color: #f1c40f; }
+.tpb-modal-new .tpb-modal-header { border-bottom-color: #f1c40f; }
+
+.tpb-modal-preview    { border-color: #9b59b6; }
+.tpb-modal-preview .tpb-modal-header { border-bottom-color: #9b59b6; }
+
+.tpb-modal-feature    { border-color: #8e44ad; }
+.tpb-modal-feature .tpb-modal-header { border-bottom-color: #8e44ad; }
+
+.tpb-modal-philosophy { border-color: #c0392b; }
+.tpb-modal-philosophy .tpb-modal-header { border-bottom-color: #c0392b; }
+
+.tpb-modal-security   { border-color: #7f8c8d; }
+.tpb-modal-security .tpb-modal-header { border-bottom-color: #7f8c8d; }
+
+.tpb-modal-docs       { border-color: #3498db; }
+.tpb-modal-docs .tpb-modal-header { border-bottom-color: #3498db; }
+
+.tpb-modal-tutorial   { border-color: #1abc9c; }
+.tpb-modal-tutorial .tpb-modal-header { border-bottom-color: #1abc9c; }
+
+.tpb-modal-location   { border-color: #95a5a6; }
+.tpb-modal-location .tpb-modal-header { border-bottom-color: #95a5a6; }
+
+.tpb-modal-external   { border-color: #34495e; }
+.tpb-modal-external .tpb-modal-header { border-bottom-color: #34495e; }
+
+.tpb-modal-social     { border-color: #16a085; }
+.tpb-modal-social .tpb-modal-header { border-bottom-color: #16a085; }
+
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .tpb-modal-overlay {
+        padding: 10px;
+    }
+    
+    .tpb-modal-container {
+        max-height: 90vh;
+        border-radius: 10px;
+    }
+    
+    .tpb-modal-header {
+        padding: 15px;
+    }
+    
+    .tpb-modal-title {
+        font-size: 1.1em;
+    }
+    
+    .tpb-modal-content {
+        padding: 20px;
+    }
+    
+    .tpb-help {
+        font-size: 1em;
+        margin-left: 8px;
+    }
+    
+    /* Better touch targets on mobile */
+    .tpb-help-active {
+        padding: 5px;
+        margin: -5px;
+        margin-left: 3px;
+    }
+    
+    /* Hide tooltips on mobile (use tap instead) */
+    .tpb-help.tpb-has-tooltip::after,
+    .tpb-help.tpb-has-tooltip::before {
+        display: none;
+    }
+}
+
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes tpb-modal-fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.tpb-modal-visible .tpb-modal-container {
+    animation: tpb-modal-fade-in 0.3s ease forwards;
+}
+
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .tpb-modal-overlay,
+    .tpb-modal-container,
+    .tpb-help,
+    .tpb-modal-close {
+        transition: none;
+        animation: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .tpb-modal-container {
+        border-width: 3px;
+    }
+    
+    .tpb-help {
+        opacity: 1;
+    }
+    
+    .tpb-modal-content a {
+        text-decoration: underline;
+    }
+}
+
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+
+@media print {
+    .tpb-help,
+    .tpb-modal-overlay {
+        display: none !important;
+    }
+}

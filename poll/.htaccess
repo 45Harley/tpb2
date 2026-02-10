@@ -1,0 +1,7 @@
+# TPB Poll System
+RewriteEngine On
+RewriteBase /poll/
+
+# Clean URLs
+RewriteRule ^closed/?$ closed.php [L]
+RewriteRule ^admin/?$ admin.php [L]

@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Woodstock CT - A More Perfect Town. Join your neighbors in protecting what makes Woodstock special and building what's next. Your voice shapes our future.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://4tpb.org/ct/woodstock/">
+    <meta property="og:title" content="Woodstock CT - A More Perfect Town">
+    <meta property="og:description" content="The Quiet Corner's gem. Roseland Cottage. The Woodstock Fair. Historic farms and dark skies. Help us protect what's special and build what's next.">
+    
+    <title>Woodstock CT - A More Perfect Town | The People's Branch</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: #0a0a0a;
+        }
+        
+        /* HERO */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)),
+                        linear-gradient(135deg, #1a2a1a 0%, #0a1a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+        }
+        
+        .hero-content {
+            max-width: 900px;
+            animation: fadeIn 1s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .town-badge {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.15);
+            border: 2px solid #d4af37;
+            padding: 8px 25px;
+            border-radius: 30px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            color: #d4af37;
+        }
+        
+        .hero h1 {
+            font-size: 3.2em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+            font-weight: normal;
+            line-height: 1.2;
+        }
+        
+        .hero h1 span {
+            color: #d4af37;
+        }
+        
+        .hero .tagline {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            color: #ccc;
+            font-style: italic;
+        }
+        
+        .hero-description {
+            font-size: 1.15em;
+            color: #aaa;
+            max-width: 700px;
+            margin: 0 auto 35px;
+            line-height: 1.7;
+        }
+        
+        .hero-cta {
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 16px 35px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 8px;
+        }
+        
+        .btn-primary {
+            background: #d4af37;
+            color: #1a1a1a;
+        }
+        
+        .btn-primary:hover {
+            background: #f4cf57;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #d4af37;
+            border: 2px solid #d4af37;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            color: white;
+            animation: bounce 2s infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+        
+        /* SECTIONS */
+        section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 80px 20px;
+        }
+        
+        section h2 {
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            color: #d4af37;
+            text-align: center;
+        }
+        
+        .section-intro {
+            text-align: center;
+            font-size: 1.2em;
+            max-width: 700px;
+            margin: 0 auto 50px;
+            color: #aaa;
+            line-height: 1.7;
+        }
+        
+        /* WHAT MAKES WOODSTOCK SPECIAL */
+        .special {
+            background: #0f1a0f;
+            color: #e0e0e0;
+        }
+        
+        .special-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .special-card {
+            background: #1a2a1a;
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 4px solid #4a7c4a;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .special-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            border-left-color: #7cb77c;
+        }
+        
+        .special-card h3 {
+            color: #7cb77c;
+            margin-bottom: 12px;
+            font-size: 1.25em;
+        }
+        
+        .special-card p {
+            color: #aaa;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        /* WHAT WE'RE BUILDING */
+        .building {
+            background: #0a1a2a;
+            color: #e0e0e0;
+        }
+        
+        .building-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .building-card {
+            background: #1a2a3a;
+            padding: 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #2a3a4a;
+        }
+        
+        .building-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            border-color: #4a6a8a;
+        }
+        
+        .building-card .card-type {
+            display: inline-block;
+            background: #2a4a6a;
+            color: #7ab8e0;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .building-card h3 {
+            color: #7ab8e0;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .building-card p {
+            color: #999;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        /* THOUGHTS */
+        .thoughts-section {
+            background: #1a1a2a;
+            color: #e0e0e0;
+        }
+        
+        .thoughts-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .thought-item {
+            background: #252535;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 3px solid #d4af37;
+        }
+        
+        .thought-content {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        
+        .thought-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            color: #888;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .thought-votes {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .vote-btn {
+            background: #1a1a2a;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 5px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+        }
+        
+        .vote-btn:hover {
+            background: #2a2a3a;
+            border-color: #666;
+        }
+        
+        .vote-btn.agree.voted {
+            background: #1a3a1a;
+            border-color: #4a9;
+            color: #4a9;
+        }
+        
+        .vote-btn.disagree.voted {
+            background: #3a1a1a;
+            border-color: #a54;
+            color: #a54;
+        }
+        
+        .vote-btn .count {
+            margin-left: 4px;
+        }
+        
+        .thoughts-loading {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+        
+        .thoughts-empty {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+        
+        /* WHO WE NEED */
+        .who {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        .who-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .who-card {
+            background: #252525;
+            padding: 25px 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .who-card:hover {
+            border-color: #d4af37;
+            transform: translateY(-2px);
+        }
+        
+        .who-card .who-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .who-card h3 {
+            color: #d4af37;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        
+        .who-card p {
+            color: #888;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+        
+        /* YOUR REPS */
+        .reps {
+            background: #0f1f1f;
+            color: #e0e0e0;
+        }
+        
+        .reps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        
+        .rep-card {
+            background: #1a2a2a;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #2a3a3a;
+            transition: all 0.2s ease;
+        }
+        
+        .rep-card .rep-level {
+            font-size: 0.8em;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .rep-card h3 {
+            color: #d4af37;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        
+        .rep-card .rep-title {
+            color: #999;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+        
+        .rep-card .rep-link {
+            color: #d4af37;
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+        
+        a.rep-card:hover {
+            background: #252535;
+            border-color: #d4af37;
+            transform: translateY(-2px);
+        }
+        
+        /* CTA SECTION */
+        .cta {
+            background: linear-gradient(135deg, #1a2a1a 0%, #1a1a2a 100%);
+            color: #e0e0e0;
+            text-align: center;
+            padding: 100px 20px;
+        }
+        
+        .cta h2 {
+            font-size: 2.3em;
+            margin-bottom: 20px;
+        }
+        
+        .cta-subtitle {
+            font-size: 1.25em;
+            color: #aaa;
+            max-width: 650px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+        
+        .thought-input-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .thought-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.1em;
+            border: 2px solid #444;
+            border-radius: 10px;
+            background: #252525;
+            color: #e0e0e0;
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        .thought-input:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+        
+        .thought-input::placeholder {
+            color: #666;
+        }
+        
+        .dictate-btn {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            background: #2a2a3a;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        
+        .dictate-btn:hover {
+            background: #d4af37;
+            color: #0a0a0a;
+        }
+        
+        .dictate-btn.recording {
+            background: #e74c3c;
+            border-color: #e74c3c;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .dictate-btn.unsupported {
+            display: none;
+        }
+        
+        .thought-submit {
+            margin-top: 20px;
+        }
+        
+        /* FOOTER */
+        footer {
+            background: #0a0a0a;
+            color: #888;
+            padding: 60px 20px 40px;
+            text-align: center;
+            border-top: 1px solid #222;
+        }
+        
+        .footer-woodstock {
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        
+        .footer-woodstock a {
+            color: #d4af37;
+        }
+        
+        .footer-links {
+            margin-bottom: 30px;
+        }
+        
+        .footer-links a {
+            color: #d4af37;
+            text-decoration: none;
+            margin: 0 15px;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer-tpb {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .footer-tpb a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        .footer-tpb .tagline {
+            margin-top: 8px;
+            font-style: italic;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2em;
+            }
+            
+            .hero .tagline {
+                font-size: 1.2em;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                margin: 10px auto;
+            }
+            
+            .who-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="town-badge">THE QUIET CORNER • CONNECTICUT</div>
+            <h1>Woodstock: <span>A More Perfect Town</span></h1>
+            <p class="tagline">Protect what's special. Build what's next.</p>
+            
+            <p class="hero-description">
+                The Pink House where presidents bowled. The Woodstock Fair since 1860.
+                Roseland Park, dark skies, and 62 square miles of rolling New England countryside.
+                Woodstock is already something special — and with your voice, it can be even better.
+            </p>
+            
+            <div class="hero-cta">
+                <a href="#share" class="btn btn-primary">Add Your Voice</a>
+                <a href="#building" class="btn btn-secondary">See What We're Building</a>
+            </div>
+        </div>
+        <div class="scroll-indicator">↓</div>
+    </section>
+
+    <!-- WHAT MAKES WOODSTOCK SPECIAL -->
+    <section class="special" id="special">
+        <h2>What Makes Woodstock Special</h2>
+        <p class="section-intro">
+            This is worth protecting. This is worth building on.
+        </p>
+        
+        <div class="special-grid">
+            <a href="#share" class="special-card" data-question="What would help preserve Roseland Cottage's legacy?">
+                <h3>🏛️ Roseland Cottage</h3>
+                <p>The Pink House. Gothic Revival gem since 1846. Four U.S. presidents visited. America's oldest indoor bowling alley. Our crown jewel — worth protecting.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="How should we improve the Woodstock Fair?">
+                <h3>🎪 The Woodstock Fair</h3>
+                <p>Labor Day weekend since 1860. 150,000+ visitors. Agriculture, animals, rides, and community. New England tradition — ours to carry forward.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="How can we better use Roseland Park?">
+                <h3>🌲 Roseland Park</h3>
+                <p>60 acres donated by the Bowen family. Trails, lake, golf course, playgrounds. Open to all — a gift from the past for our future.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="What wines or farm products should we highlight?">
+                <h3>🍷 Taylor Brooke Winery</h3>
+                <p>Part of the CT Wine Trail. Award-winning wines from local grapes. Farms, orchting, and vineyards — rural economy we can taste.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="How do we protect our rural character?">
+                <h3>🌌 Last Green Valley</h3>
+                <p>One of the darkest areas between Boston and D.C. Stars you can actually see. Part of a National Heritage Corridor — worth fighting for.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="What brings our community together?">
+                <h3>🏠 8,000 Neighbors</h3>
+                <p>Second-largest town in Connecticut by land. Farms, forests, and families who chose quiet over chaos. All with a stake in what Woodstock becomes.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- WHAT WE'RE BUILDING TOGETHER -->
+    <section class="building" id="building">
+        <h2>What We're Building Together</h2>
+        <p class="section-intro">
+            Protect what works. Fix what's broken. Dream what's next.<br>
+            These are the conversations Woodstock residents are starting.
+        </p>
+        
+        <div class="building-grid">
+            <a href="#share" class="building-card" data-question="What would help preserve our rural character?">
+                <div class="card-type">Protect</div>
+                <h3>Keep Woodstock Rural</h3>
+                <p>Dark skies. Open fields. Working farms. Protect what makes Woodstock different from everywhere else.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="How should we expand recreation options?">
+                <div class="card-type">Expand</div>
+                <h3>Grow Our Trails & Parks</h3>
+                <p>Roseland Park. Town Beach. Crystal Pond. Connect them, improve them, make them shine.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What road or bridge needs attention?">
+                <div class="card-type">Fix</div>
+                <h3>Roads & Bridges</h3>
+                <p>62 square miles of roads. Aging bridges. The basics matter. Report issues, track progress, demand accountability.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What do our schools need most?">
+                <div class="card-type">Invest</div>
+                <h3>Strengthen Our Schools</h3>
+                <p>Woodstock Academy. Elementary and Middle Schools. Our kids deserve the best — make education a community conversation.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="How can we support local farms and businesses?">
+                <div class="card-type">Build</div>
+                <h3>Support Local Economy</h3>
+                <p>Farms, wineries, small businesses. Keep dollars local. Build what sustains us.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What's your vision for Woodstock?">
+                <div class="card-type">Dream</div>
+                <h3>What's YOUR Vision?</h3>
+                <p>More trails? Better broadband? Youth programs? Your idea could be the next thing we build.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- WOODSTOCK THOUGHTS -->
+    <section class="thoughts-section" id="thoughts">
+        <h2>What Woodstock Is Saying</h2>
+        <p class="section-intro">
+            Real thoughts from your neighbors. Join the conversation.
+        </p>
+        
+        <div class="thoughts-list" id="thoughtsList">
+            <div class="thoughts-loading">Loading thoughts...</div>
+        </div>
+    </section>
+
+    <!-- WHO WE NEED -->
+    <section class="who" id="who">
+        <h2>Woodstock Needs Your Voice</h2>
+        <p class="section-intro">
+            Whatever your background, you have something to contribute.<br>
+            A more perfect Woodstock takes all of us.
+        </p>
+        
+        <div class="who-grid">
+            <a href="/volunteer/apply.php?role=farming" class="who-card">
+                <div class="who-icon">🌾</div>
+                <h3>Farmers & Landowners</h3>
+                <p>You steward the land. Help shape its future.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=history" class="who-card">
+                <div class="who-icon">🏛️</div>
+                <h3>History Buffs</h3>
+                <p>Roseland, Quasset, the Fair — preserve the story.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=education" class="who-card">
+                <div class="who-icon">👨‍🏫</div>
+                <h3>Teachers & Educators</h3>
+                <p>Our schools shape our future. Speak up.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=outdoors" class="who-card">
+                <div class="who-icon">🥾</div>
+                <h3>Outdoor Enthusiasts</h3>
+                <p>Trails, parks, conservation — lead the way.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=families" class="who-card">
+                <div class="who-icon">👨‍👩‍👧</div>
+                <h3>Young Families</h3>
+                <p>You're raising the next generation here.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=business" class="who-card">
+                <div class="who-icon">🏪</div>
+                <h3>Business Owners</h3>
+                <p>Local economy starts with you.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=longtime" class="who-card">
+                <div class="who-icon">🏠</div>
+                <h3>Longtime Residents</h3>
+                <p>You know what Woodstock was. Help shape what it becomes.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=newcomer" class="who-card">
+                <div class="who-icon">🆕</div>
+                <h3>Newcomers</h3>
+                <p>Fresh eyes see possibilities we've missed.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- YOUR REPRESENTATIVES -->
+    <section class="reps" id="reps">
+        <h2>Your Representatives</h2>
+        <p class="section-intro">
+            These are the people who represent Woodstock. They should hear from you.
+        </p>
+        
+        <div class="reps-grid">
+            <a href="https://www.woodstockct.gov/office-first-selectman" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Chandler Paquette</h3>
+                <div class="rep-title">First Selectman (R)</div>
+                <div class="rep-link">→ First Selectman's Office</div>
+            </a>
+            
+            <a href="https://www.woodstockct.gov/board-selectmen" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Board of Selectmen</h3>
+                <div class="rep-title">Kate McDonald, Chris Mayhew</div>
+                <div class="rep-link">→ Meeting Agendas & Minutes</div>
+            </a>
+            
+            <a href="https://www.woodstockct.gov/town-clerk" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Judy Walberg</h3>
+                <div class="rep-title">Town Clerk (R)</div>
+                <div class="rep-link">→ Town Clerk's Office</div>
+            </a>
+            
+            <a href="https://www.housedems.ct.gov/Boyd" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">State House</div>
+                <h3>Pat Boyd</h3>
+                <div class="rep-title">District 50 (D)</div>
+                <div class="rep-link">→ State Legislature</div>
+            </a>
+            
+            <a href="https://ctsenaterepublicans.com/home-gordon/" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">State Senate</div>
+                <h3>Jeff Gordon</h3>
+                <div class="rep-title">District 35 (R)</div>
+                <div class="rep-link">→ State Legislature</div>
+            </a>
+            
+            <a href="https://courtney.house.gov" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">U.S. House</div>
+                <h3>Joe Courtney</h3>
+                <div class="rep-title">CT District 2 (D)</div>
+                <div class="rep-link">→ Congress</div>
+            </a>
+        </div>
+    </section>
+
+    <!-- SHARE YOUR VOICE CTA -->
+    <section class="cta" id="share">
+        <h2>What's Your Vision for Woodstock?</h2>
+        <p class="cta-subtitle">
+            Something to protect? Something to fix? Something to build?<br>
+            Your neighbors are listening. Your representatives should be too.
+        </p>
+        
+        <div class="thought-input-container">
+            <div style="position: relative;">
+                <textarea class="thought-input" id="thoughtInput" placeholder="Share your thought about Woodstock..." maxlength="1000"></textarea>
+                <button type="button" id="dictateBtn" class="dictate-btn">🎤 Dictate</button>
+            </div>
+            <div style="text-align: right; margin: 5px 0 10px;">
+                <span id="thoughtCounter" style="color: #888; font-size: 0.85em;">0 / 1000</span>
+            </div>
+            
+            <!-- Category Dropdown -->
+            <select id="thoughtCategory" style="width: 100%; padding: 12px; margin: 15px 0; background: #1a1a2e; border: 1px solid #444; border-radius: 8px; color: #e0e0e0; font-size: 1em;">
+                <option value="">Select category (optional)</option>
+                <optgroup label="── About Woodstock ──">
+                    <option value="1">🏗️ Infrastructure</option>
+                    <option value="2">📚 Education</option>
+                    <option value="3">🚔 Public Safety</option>
+                    <option value="4">🌳 Environment</option>
+                    <option value="5">💼 Economy</option>
+                    <option value="6">🏥 Healthcare</option>
+                    <option value="7">🏠 Housing</option>
+                    <option value="8">🚌 Transportation</option>
+                    <option value="9">🏛️ Government</option>
+                    <option value="10">👥 Community</option>
+                    <option value="11">❓ Other</option>
+                </optgroup>
+                <optgroup label="── About TPB Platform ──">
+                    <option value="16">💡 Idea</option>
+                    <option value="17">🐛 Bug Report</option>
+                    <option value="18">❓ Question</option>
+                    <option value="19">💬 Discussion</option>
+                </optgroup>
+            </select>
+            
+            <!-- TPB Profile Notice (shows when TPB category selected) -->
+            <div id="tpbProfileNotice" style="display: none; background: #2a2a4a; border: 1px solid #d4af37; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                <p style="color: #d4af37; margin: 0 0 8px; font-size: 0.95em;">⚠️ TPB feedback requires a complete profile</p>
+                <p style="color: #aaa; margin: 0; font-size: 0.85em;">We need your name and phone to follow up on your <span id="tpbCategoryName">idea</span>.</p>
+                <div id="tpbMissingFields" style="color: #ff6b6b; margin-top: 8px; font-size: 0.85em;"></div>
+            </div>
+            
+            <!-- Other Topic Field (shows when Other selected) -->
+            <div id="otherTopicField" style="display: none; margin-bottom: 15px;">
+                <input type="text" id="otherTopic" placeholder="What topic is this?" maxlength="100"
+                       style="width: 100%; padding: 12px; background: #1a1a2e; border: 1px solid #444; border-radius: 8px; color: #e0e0e0; font-size: 1em;">
+                <div style="text-align: right; margin-top: 5px;">
+                    <span id="otherTopicCounter" style="color: #888; font-size: 0.85em;">0 / 100</span>
+                </div>
+            </div>
+            
+            <div class="thought-submit">
+                <button type="button" class="btn btn-primary" id="submitThought">Share Your Thought</button>
+            </div>
+            
+            <!-- Email verification (hidden by default) -->
+            <div id="emailSection" style="display: none; margin-top: 20px;">
+                <p style="color: #d4af37; margin-bottom: 10px;">Enter your email to verify and submit:</p>
+                <div style="display: flex; gap: 10px; max-width: 400px; margin: 0 auto;">
+                    <input type="email" id="emailInput" placeholder="your@email.com" 
+                           style="flex: 1; padding: 12px; border-radius: 6px; border: 1px solid #444; background: #1a1a2e; color: #fff;">
+                    <button type="button" id="sendVerification" class="btn btn-primary">Verify</button>
+                </div>
+            </div>
+            
+            <!-- Status messages -->
+            <div id="submitStatus" style="margin-top: 20px; display: none;"></div>
+            
+            <p style="margin-top: 25px; color: #666; font-size: 0.95em;">
+                Just your email + Woodstock = your voice counts.<br>
+                No long forms. No social media games. Just civic participation.
+            </p>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-woodstock">
+            <strong>Woodstock, Connecticut</strong><br>
+            Population ~8,000 • Incorporated 1749 • The Quiet Corner<br>
+            Town Hall: 415 Route 169 • (860) 928-0208 • <a href="https://woodstockct.gov" target="_blank">woodstockct.gov</a>
+        </div>
+        
+        <div class="footer-links">
+            <a href="/index.php">Full Platform</a>
+            <a href="/reps.php">All Your Reps</a>
+            <a href="/volunteer/apply.php">Volunteer</a>
+        </div>
+        
+        <div class="footer-tpb">
+            <p>Powered by <a href="/"><strong>The People's Branch</strong></a></p>
+            <p class="tagline">No Kings. Only Citizens.</p>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script>
+    (function() {
+        'use strict';
+        
+        // Session management
+        let sessionId = localStorage.getItem('tpb_civic_session');
+        if (!sessionId) {
+            sessionId = 'civic_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+            localStorage.setItem('tpb_civic_session', sessionId);
+        }
+        
+        // Store town/state for API
+        localStorage.setItem('tpb_town', 'Woodstock');
+        localStorage.setItem('tpb_state', 'CT');
+        
+        // TPB feedback categories
+        const tpbCategories = [16, 17, 18, 19];
+        const tpbCategoryNames = {16: 'idea', 17: 'bug report', 18: 'question', 19: 'discussion'};
+        
+        // User profile (loaded async)
+        let userProfile = null;
+        
+        // Check if user is verified
+        async function checkVerified() {
+            try {
+                const response = await fetch('/api/check-session.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                const data = await response.json();
+                return data.status === 'success' && data.email_verified;
+            } catch (err) {
+                return false;
+            }
+        }
+        
+        // Submit thought to API
+        async function submitThought(content, categoryId, otherTopic) {
+            try {
+                const payload = {
+                    content: content,
+                    town_id: 172,
+                    session_id: sessionId
+                };
+                if (categoryId) payload.category_id = categoryId;
+                if (otherTopic) payload.other_topic = otherTopic;
+                
+                const response = await fetch('/api/submit-thought.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                return await response.json();
+            } catch (err) {
+                return { status: 'error', message: 'Network error' };
+            }
+        }
+        
+        // Submit button handler
+        document.getElementById('submitThought').addEventListener('click', async function() {
+            const content = document.getElementById('thoughtInput').value.trim();
+            const categoryId = document.getElementById('thoughtCategory').value || null;
+            const otherTopic = document.getElementById('otherTopic').value.trim() || null;
+            
+            if (!content) {
+                showStatus('Please share your thought first.', true);
+                return;
+            }
+            
+            if (content.length < 10) {
+                showStatus('Please write at least 10 characters.', true);
+                return;
+            }
+            
+            // Check TPB profile requirements
+            if (tpbCategories.includes(parseInt(categoryId))) {
+                const profile = checkTpbProfile();
+                if (!profile.complete) {
+                    showStatus('TPB feedback requires a complete profile. Missing: ' + profile.missing.join(', '), true);
+                    return;
+                }
+            }
+            
+            const isVerified = await checkVerified();
+            
+            if (isVerified) {
+                showStatus('Submitting your thought...', false);
+                const result = await submitThought(content, categoryId, otherTopic);
+                
+                if (result.status === 'success') {
+                    showStatus('✓ Your thought has been shared! Thank you for your voice.', false);
+                    document.getElementById('thoughtInput').value = '';
+                    document.getElementById('thoughtCategory').value = '';
+                    document.getElementById('otherTopic').value = '';
+                    document.getElementById('otherTopicField').style.display = 'none';
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showStatus('Error: ' + (result.message || 'Could not submit'), true);
+                }
+            } else {
+                // Store pending thought and show email input
+                localStorage.setItem('tpb_pending_thought', content);
+                localStorage.setItem('tpb_pending_category', categoryId || '');
+                localStorage.setItem('tpb_pending_other', otherTopic || '');
+                document.getElementById('emailSection').style.display = 'block';
+                showStatus('Please verify your email to submit your thought.', false);
+            }
+        });
+        
+        // Email verification
+        document.getElementById('sendVerification').addEventListener('click', async function() {
+            const email = document.getElementById('emailInput').value.trim();
+            
+            if (!email || !email.includes('@')) {
+                showStatus('Please enter a valid email address.', true);
+                return;
+            }
+            
+            showStatus('Sending verification email...', false);
+            
+            try {
+                const response = await fetch('/api/send-verification.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        session_id: sessionId,
+                        return_url: '/ct/woodstock/?verified=1'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showStatus('✓ Check your email! Click the verification link, then your thought will be submitted.', false);
+                } else {
+                    showStatus('Error: ' + (data.message || 'Could not send verification'), true);
+                }
+            } catch (err) {
+                showStatus('Could not send verification. Please try again.', true);
+            }
+        });
+        
+        // Load thoughts for Woodstock
+        fetch('/api/get-thoughts.php?town_id=172&limit=10')
+            .then(r => r.json())
+            .then(data => {
+                const container = document.getElementById('thoughtsList');
+                if (data.status === 'success' && data.thoughts && data.thoughts.length > 0) {
+                    container.innerHTML = data.thoughts.map(t => {
+                        return `
+                        <div class="thought-item">
+                            <div class="thought-content">${escapeHtml(t.content)}</div>
+                            <div class="thought-meta">
+                                <span>${t.time_ago}</span>
+                                ${t.category ? `<span style="background: #2a2a4a; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; margin-left: 8px;">${t.icon || ''} ${t.category}</span>` : ''}
+                                <span class="thought-votes">
+                                    <button class="vote-btn agree" data-thought="${t.thought_id}" data-vote="up">
+                                        👍 <span class="count">${t.upvotes}</span>
+                                    </button>
+                                    <button class="vote-btn disagree" data-thought="${t.thought_id}" data-vote="down">
+                                        👎 <span class="count">${t.downvotes}</span>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    `}).join('');
+                    
+                    // Attach vote handlers
+                    attachVoteHandlers();
+                } else {
+                    container.innerHTML = '<div class="thoughts-empty">No thoughts yet. Be the first!</div>';
+                }
+            })
+            .catch(() => {
+                document.getElementById('thoughtsList').innerHTML = 
+                    '<div class="thoughts-empty">Could not load thoughts.</div>';
+            });
+        
+        // Log page visit
+        fetch('/api/log-civic-click.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action_type: 'page_visit',
+                page_name: 'woodstock_landing',
+                session_id: sessionId,
+                town: 'Woodstock',
+                state: 'CT',
+                referrer: document.referrer || 'direct'
+            })
+        }).catch(function() {});
+        
+        // Status message helper
+        function showStatus(message, isError) {
+            const status = document.getElementById('submitStatus');
+            status.style.display = 'block';
+            status.style.padding = '15px';
+            status.style.borderRadius = '8px';
+            status.style.textAlign = 'center';
+            status.style.background = isError ? '#3d1f1f' : '#1f3d1f';
+            status.style.color = isError ? '#ff6b6b' : '#6bff6b';
+            status.innerHTML = message;
+        }
+        
+        // Attach vote handlers to all vote buttons
+        function attachVoteHandlers() {
+            document.querySelectorAll('.vote-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const isVerified = await checkVerified();
+                    if (!isVerified) {
+                        showStatus('Please verify your email to vote.', true);
+                        document.getElementById('emailSection').style.display = 'block';
+                        document.getElementById('share').scrollIntoView({ behavior: 'smooth' });
+                        return;
+                    }
+                    
+                    const thoughtId = this.dataset.thought;
+                    const voteType = this.dataset.vote;
+                    const isActive = this.classList.contains('voted');
+                    
+                    const upBtn = document.querySelector(`.vote-btn[data-thought="${thoughtId}"][data-vote="up"]`);
+                    const downBtn = document.querySelector(`.vote-btn[data-thought="${thoughtId}"][data-vote="down"]`);
+                    
+                    try {
+                        const response = await fetch('/api/vote-thought.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                session_id: sessionId,
+                                thought_id: thoughtId,
+                                vote_type: voteType,
+                                toggle: isActive
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.status === 'success') {
+                            upBtn.querySelector('.count').textContent = data.upvotes;
+                            downBtn.querySelector('.count').textContent = data.downvotes;
+                            
+                            upBtn.classList.remove('voted');
+                            downBtn.classList.remove('voted');
+                            if (data.user_vote === 'up') {
+                                upBtn.classList.add('voted');
+                            } else if (data.user_vote === 'down') {
+                                downBtn.classList.add('voted');
+                            }
+                        } else {
+                            showStatus(data.message || 'Could not vote', true);
+                        }
+                    } catch (err) {
+                        showStatus('Could not vote. Please try again.', true);
+                    }
+                });
+            });
+        }
+        
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Fetch user profile
+        async function fetchUserProfile() {
+            try {
+                const response = await fetch('/api/check-session.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    userProfile = data;
+                    checkParentConsent();
+                }
+            } catch (err) {
+                console.error('Could not fetch profile');
+            }
+        }
+        fetchUserProfile();
+        
+        // Check if minor needs parent consent and disable form if so
+        function checkParentConsent() {
+            if (!userProfile) return;
+            if (userProfile.needs_parent_consent) {
+                // Show notice and disable form
+                const submitBtn = document.getElementById('submitThoughtBtn');
+                const textarea = document.getElementById('thoughtInput');
+                const thoughtContainer = document.querySelector('.thought-input-container');
+                
+                if (thoughtContainer) {
+                    const notice = document.createElement('div');
+                    notice.id = 'parentConsentNotice';
+                    notice.style.cssText = 'background: #2a2a4a; border: 1px solid #7ab8e0; border-radius: 8px; padding: 15px; margin-bottom: 15px; text-align: center;';
+                    notice.innerHTML = '<p style="color: #7ab8e0; margin: 0 0 8px; font-size: 1.1em;">⏳ Waiting for Parent/Guardian Approval</p><p style="color: #aaa; margin: 0; font-size: 0.9em;">We sent an email to your parent/guardian. Ask them to check and approve!</p>';
+                    thoughtContainer.insertBefore(notice, thoughtContainer.firstChild);
+                }
+                if (submitBtn) submitBtn.disabled = true;
+                if (textarea) textarea.disabled = true;
+            }
+        }
+        
+        // Check if TPB profile is complete
+        function checkTpbProfile() {
+            if (!userProfile) return { complete: false, missing: ['profile not loaded'] };
+            const missing = [];
+            if (!userProfile.first_name) missing.push('first name');
+            if (!userProfile.last_name) missing.push('last name');
+            if (!userProfile.phone) missing.push('phone');
+            return { complete: missing.length === 0, missing: missing };
+        }
+        
+        // Thought textarea character counter
+        document.getElementById('thoughtInput').addEventListener('input', function() {
+            document.getElementById('thoughtCounter').textContent = this.value.length + ' / 1000';
+        });
+        
+        // Speech Recognition (Dictate)
+        (function initDictate() {
+            const dictateBtn = document.getElementById('dictateBtn');
+            const contentTextarea = document.getElementById('thoughtInput');
+            
+            if (dictateBtn && contentTextarea) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                
+                if (!SpeechRecognition) {
+                    dictateBtn.classList.add('unsupported');
+                } else {
+                    const recognition = new SpeechRecognition();
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.lang = 'en-US';
+                    
+                    let isRecording = false;
+                    let finalTranscript = '';
+                    
+                    dictateBtn.addEventListener('click', function() {
+                        if (isRecording) {
+                            recognition.stop();
+                        } else {
+                            finalTranscript = contentTextarea.value;
+                            if (finalTranscript && !finalTranscript.endsWith(' ')) {
+                                finalTranscript += ' ';
+                            }
+                            recognition.start();
+                        }
+                    });
+                    
+                    recognition.onstart = function() {
+                        isRecording = true;
+                        dictateBtn.classList.add('recording');
+                        dictateBtn.textContent = '🎤 Stop';
+                    };
+                    
+                    recognition.onend = function() {
+                        isRecording = false;
+                        dictateBtn.classList.remove('recording');
+                        dictateBtn.textContent = '🎤 Dictate';
+                        document.getElementById('thoughtCounter').textContent = contentTextarea.value.length + ' / 1000';
+                    };
+                    
+                    recognition.onresult = function(event) {
+                        let interimTranscript = '';
+                        
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += transcript;
+                            } else {
+                                interimTranscript += transcript;
+                            }
+                        }
+                        
+                        contentTextarea.value = finalTranscript + interimTranscript;
+                        document.getElementById('thoughtCounter').textContent = contentTextarea.value.length + ' / 1000';
+                    };
+                    
+                    recognition.onerror = function(event) {
+                        isRecording = false;
+                        dictateBtn.classList.remove('recording');
+                        dictateBtn.textContent = '🎤 Dictate';
+                        
+                        if (event.error === 'not-allowed') {
+                            alert('Microphone access denied. Please allow microphone access to use dictation.');
+                        }
+                    };
+                }
+            }
+        })();
+        
+        // Category change - show/hide Other topic field and TPB notice
+        document.getElementById('thoughtCategory').addEventListener('change', function() {
+            const otherField = document.getElementById('otherTopicField');
+            const tpbNotice = document.getElementById('tpbProfileNotice');
+            const categoryId = parseInt(this.value);
+            
+            // Other field
+            if (this.value == 11) {
+                otherField.style.display = 'block';
+            } else {
+                otherField.style.display = 'none';
+                document.getElementById('otherTopic').value = '';
+            }
+            
+            // TPB profile notice
+            if (tpbCategories.includes(categoryId)) {
+                const profile = checkTpbProfile();
+                document.getElementById('tpbCategoryName').textContent = tpbCategoryNames[categoryId] || 'feedback';
+                if (!profile.complete) {
+                    document.getElementById('tpbMissingFields').textContent = 'Missing: ' + profile.missing.join(', ');
+                    tpbNotice.style.display = 'block';
+                } else {
+                    tpbNotice.style.display = 'none';
+                }
+            } else {
+                tpbNotice.style.display = 'none';
+            }
+        });
+        
+        // Other topic character counter
+        document.getElementById('otherTopic').addEventListener('input', function() {
+            document.getElementById('otherTopicCounter').textContent = this.value.length + ' / 100';
+        });
+        
+        // On page load: check for verified return and pending thought
+        (async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pendingThought = localStorage.getItem('tpb_pending_thought');
+            const pendingCategory = localStorage.getItem('tpb_pending_category');
+            const pendingOther = localStorage.getItem('tpb_pending_other');
+            
+            if (urlParams.get('verified') === '1' && pendingThought) {
+                // Clear URL param
+                history.replaceState({}, '', '/ct/woodstock/');
+                
+                // Submit the pending thought
+                showStatus('Submitting your thought...', false);
+                const result = await submitThought(pendingThought, pendingCategory || null, pendingOther || null);
+                
+                if (result.status === 'success') {
+                    showStatus('✓ Your thought has been shared! Thank you for your voice.', false);
+                    document.getElementById('thoughtInput').value = '';
+                    localStorage.removeItem('tpb_pending_thought');
+                    localStorage.removeItem('tpb_pending_category');
+                    localStorage.removeItem('tpb_pending_other');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showStatus('Error: ' + (result.message || 'Could not submit'), true);
+                }
+            }
+        })();
+        
+        // Track who-card clicks
+        document.querySelectorAll('.who-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var role = this.querySelector('h3').textContent;
+                fetch('/api/log-civic-click.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action_type: 'role_interest',
+                        page_name: 'woodstock_landing',
+                        session_id: sessionId,
+                        extra_data: { role: role }
+                    })
+                }).catch(function() {});
+            });
+        });
+        
+    })();
+    </script>
+
+</body>
+</html>

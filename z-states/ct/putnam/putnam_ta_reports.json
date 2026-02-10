@@ -1,0 +1,912 @@
+{
+  "meta": {
+    "town": "Putnam",
+    "town_id": 119,
+    "state": "CT",
+    "source": "Town Administrator Monthly Reports",
+    "author": "Elaine Sistare, PE, BCEE",
+    "title": "Town Administrator",
+    "contact": {
+      "phone": "860-963-6800 ext. 113",
+      "assistant": "Denise Geeza",
+      "assistant_phone": "860-963-6800 ext. 100"
+    },
+    "url": "https://www.putnamct.us/government/town-administrator",
+    "generated": "2026-01-28",
+    "report_count": 11,
+    "date_range": {
+      "start": "2025-02-13",
+      "end": "2026-01-14"
+    }
+  },
+
+  "reports": [
+    {
+      "id": 1,
+      "month": "February 2025",
+      "date": "2025-02-13",
+      "pages": 4,
+      "sections": {
+        "administration": {
+          "contract_updates": [
+            "70 May Street P&S Agreement being drafted, Town Counsel review upcoming",
+            "Town Services Agreements to East Putnam, West Putnam and SSD prepared for FY26-FY28"
+          ],
+          "recent": [
+            "FY26 budget work including Mayor's budget, drafting CIP",
+            "Health insurance significant budget driver - 12 months over trends",
+            "Requested Putnam EMS response times from East Putnam Fire location",
+            "Drafting Fire Lane and Open Burning ordinances",
+            "Held third WPCA Union negotiation meeting",
+            "DOT Route 44 retaining wall - coordinated with DOT on emergency temp wall support",
+            "Track Improvements: received conceptual design from CHA, preparing STEAP grant app for $1M",
+            "WPCA lead service line inventory - finalizing, loan closing prep",
+            "MSW/Recycling Casella - January payments trickling in",
+            "BOE: HVAC ongoing, Roof out for bid (summer 2025 construction)"
+          ],
+          "upcoming": [
+            "FY26 Budget presentation to BOS",
+            "EMS Facilities: expect update on leasing from East Putnam Fire District",
+            "WPCA Meeting 4 negotiations",
+            "Tech Park closings and excavation expected",
+            "Transfer Station: Pomfret drafting agreement, bulky waste March 1",
+            "Church St Tennis Courts improvements - expect 2025"
+          ]
+        },
+        "roads": {
+          "status": [
+            "School Street Sidewalks: pre-construction meeting held, Spring start expected",
+            "Kennedy Drive Parking: B&W to continue as weather allows, Spring completion"
+          ],
+          "upcoming": [
+            "Planning future improvements - survey Grove St area, north end for LOTCIP grants"
+          ]
+        },
+        "bridges": {
+          "status": [
+            "Danco Drive: Contract awarded to NJR, CDM Smith engineering, Spring 2025 start",
+            "Wicker Street culvert: researching in-situ lining options",
+            "State DOT 100% funded: E Putnam/Cady Brook, Chase Rd/Cady Brook committed",
+            "E Putnam/Mary Brown Brook: poor condition, met with WMC engineers, considering 50/50 DOT or Town funded"
+          ]
+        },
+        "recreation": {
+          "status": [
+            "Tennis Courts: reviewing options for paving, painting, fence by Killingly Fence",
+            "Track: drafted STEAP app, considering scope reductions based on CHA estimates",
+            "Sabin Street Field: gravel excavation ongoing, 1-2 years remaining",
+            "Airline Trail from Pomfret: 60% design received Oct 2024, ACOE permitting delay",
+            "Air Line to Thompson: road-adjacent trail only viable option"
+          ]
+        },
+        "other": [
+          "Route 44 Retaining Wall: design for water/sewer utilities",
+          "WPCA loan closing for lead service line inventory",
+          "Belding Grant: Town-direct approach, prevailing wages apply to remediation"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "month": "March 2025",
+      "date": "2025-03-13",
+      "pages": 4,
+      "sections": {
+        "administration": {
+          "contract_updates": [
+            "70 May Street P&S will NOT be moved forward - not signed by Mayor",
+            "Town Services Agreements: East Putnam and West Putnam executed, SSD soon",
+            "Reviewing WMC proposal for E Putnam/Mary Brown Brook bridge design"
+          ],
+          "recent": [
+            "FY26 Budget: Mayor's budget and CIP prepared, workshop held, presented to BOF",
+            "Putnam EMS: no action on East Putnam location, Ad-Hoc rebanded for mobile home at 191 Church St",
+            "General Government approved Fire Lane and Open Burning ordinances",
+            "WPCA Union: 4th meeting complete, contract executed July 2024-June 2027",
+            "Track: STEAP application submitted",
+            "WPCA lead inventory: project work complete, mid-April loan closing",
+            "BOE: HVAC ongoing, Roof out for bid"
+          ],
+          "upcoming": [
+            "FY26 Budget through May Town Meeting",
+            "EMS: bi-weekly Ad-Hoc meetings for mobile home bid docs",
+            "Tech Park closings expected",
+            "Transfer Station: bulky waste March 1"
+          ]
+        },
+        "roads": {
+          "status": [
+            "School Street: construction late March, Bolles St lot for laydown",
+            "Kennedy Drive: B&W to restart, Spring completion"
+          ]
+        },
+        "bridges": {
+          "status": [
+            "Danco Drive: utility coordination with Eversource, pre-construction planning",
+            "E Putnam/Mary Brown: WMC contract proposal for 50/50 or Town funded"
+          ]
+        },
+        "recreation": {
+          "status": [
+            "Track: STEAP submitted, expect results April 2025",
+            "RecDesk: new online signup program launched, staff pleased"
+          ]
+        },
+        "other": [
+          "Belding: coordination continuing, Town-direct with prevailing wages"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "month": "April-May-June 2025",
+      "date": "2025-05-29",
+      "pages": 4,
+      "sections": {
+        "administration": {
+          "contract_updates": [
+            "Finalized Town Services Agreements to East Putnam, West Putnam, SSD for FY26-FY28",
+            "Executed WMC Agreement for E Putnam/Mary Brown Brook bridge design",
+            "Executed CHA Agreement for 55 Front Street design (Sawdust donation)"
+          ],
+          "recent": [
+            "FY26 Budget: BOF coordination, Public Hearing, Town Meeting - ALL PASSED",
+            "FY25 Year End: revenue above budget, expenditure on target",
+            "Putnam EMS: Bid Package prepared for 191 Church St, LOCIP pending, bid opening June 19",
+            "ARPA annual report submitted",
+            "Highway Maintainer position advertised",
+            "Fire Lane and Open Burning ordinances APPROVED at April Town Meeting",
+            "Track: STEAP $1M AWARDED - Governor announcement May 28",
+            "WPCA lead service line: DPH loan closed mid-April",
+            "BOE: HVAC ongoing, Roof contractor selected, summer 2025 work"
+          ],
+          "upcoming": [
+            "FY26 operations begin July 1",
+            "EMS: review bids, recommend award",
+            "Highway Maintainer interviews",
+            "Tech Park closings and excavation expected",
+            "Tennis Courts: bid docs late June/early July, possible Fall 2025 or Spring 2026",
+            "Air Line Trail: coordinate with DEEP on forest property"
+          ]
+        },
+        "roads": {
+          "status": [
+            "School Street: construction ongoing, July substantial completion expected",
+            "Kennedy Drive: near substantial completion, open to public early June",
+            "Industrial Park Drive and Ridge Road significant paving"
+          ]
+        },
+        "bridges": {
+          "status": [
+            "Danco Drive: utility meeting with Eversource, waiting for utility move in June",
+            "E Putnam/Mary Brown: design contract executed with WMC",
+            "State confirmed E Putnam/Mary Brown NOT eligible for 100% program"
+          ]
+        },
+        "recreation": {
+          "status": [
+            "Track: $1M STEAP awarded, requesting CHA scope",
+            "Sabin Field: gravel excavation 1-2 years",
+            "Airline from Pomfret: ACOE permitting, 2026 or later construction",
+            "Air Line to Thompson: Barton & LoGiudice layout design"
+          ]
+        },
+        "other": [
+          "Route 44: design for water/sewer utilities",
+          "WPCA: loan closed",
+          "Belding: waiting legislative session on prevailing wage"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "month": "July 2025",
+      "date": "2025-07-16",
+      "pages": 4,
+      "sections": {
+        "administration": {
+          "contract_updates": [
+            "Preparing EMS Contract with Nutts Construction, execute week of July 21",
+            "Pomfret Transfer Station agreement under review",
+            "Energy Supplier 4-year term for January 2025 start"
+          ],
+          "recent": [
+            "FY26 Budget: year opening, blanket POs, salary notifications complete",
+            "FY25 Year End: final processing, revenue above, expenditure under",
+            "HR/Payroll coverage for medical/maternity leave",
+            "Putnam EMS: Nutts Construction contract, LOCIP and CHRO approved",
+            "Belding: DECD extension, prevailing wage clarified, tax abatement draft",
+            "Assessor coordinating veteran and elderly local options",
+            "Highway Maintainer Andrew Senegal started early July",
+            "Tech Park: new info on gravel quantity, financials, timeline",
+            "Track: pending State contract, CHA scope being finalized",
+            "Transfer Station: draft from Pomfret under review, bulky waste Aug 30",
+            "BOE: HVAC near complete, Roof contract executed, late start",
+            "Air Line Trail RFQ advertised, August qualifications due"
+          ],
+          "upcoming": [
+            "EMS: execute contract, start construction",
+            "Tech Park: conditions changed, need Special Town Meeting",
+            "Transfer Station: finalize terms",
+            "Tennis Courts: postponed to upcoming month",
+            "Air Line Trail: review qualifications with DOT"
+          ]
+        },
+        "roads": {
+          "status": [
+            "School Street: July substantial completion expected",
+            "Kennedy Drive: near substantial, punch list and change order",
+            "Canal Street, Five Mile River Road paving"
+          ]
+        },
+        "bridges": {
+          "status": [
+            "Danco Drive: construction started June, excavation and removal ongoing",
+            "E Putnam/Mary Brown: WMC design for lining or replacement"
+          ]
+        },
+        "recreation": {
+          "status": [
+            "Track: CHA design agreement executing, full depth reclamation needed",
+            "CT Greenway to Killingly: DOT TAP funds, RFQ advertised, DEEP site walk held"
+          ]
+        },
+        "other": [
+          "Route 44: ongoing coordination",
+          "WPCA: planning additional state funding for filter rehab and lead/copper",
+          "Belding: prevailing wage resolved, pass-through approach restored"
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "month": "September 2025",
+      "date": "2025-09-10",
+      "pages": 3,
+      "sections": {
+        "administration": {
+          "contract_updates": [
+            "Pomfret Transfer Station: expect BOS and Town Meeting approval"
+          ],
+          "recent": [
+            "POCD: Land Use leading, draft review, BOS input upcoming, complete by June 2026",
+            "HR/Payroll coverage continuing for medical/maternity leave",
+            "Putnam EMS: permitting phase, concrete and trailer in 1-3 months",
+            "Belding: tax abatement agreement under review",
+            "Tech Park: BOS reviewing options on gravel, financials, timeline",
+            "Track: pending State contract, Town engineering design underway",
+            "Transfer Station: final capital costs coming",
+            "BOE: HVAC substantially complete, Roof approaching completion",
+            "Air Line Trail: qualifications received, late September interviews"
+          ],
+          "upcoming": [
+            "EMS: start construction and sitework",
+            "Tech Park: possible Special Town Meeting",
+            "Transfer Station: finalize, then regular 3rd Saturday opening",
+            "Tennis Courts: possible Spring 2026",
+            "Air Line Trail: select consultant"
+          ]
+        },
+        "roads": {
+          "status": [
+            "School Street: substantially complete, line striping and signage this month",
+            "Kennedy Drive: near substantial, final change order late Summer/Fall"
+          ]
+        },
+        "bridges": {
+          "status": [
+            "Danco Drive: construction ongoing since June",
+            "E Putnam/Mary Brown: WMC design for lining or replacement"
+          ]
+        },
+        "recreation": {
+          "status": [
+            "Track: CHA design deliverables upcoming",
+            "Sabin Field: 1-2 years gravel remaining",
+            "Air Line from Pomfret: ACOE permitting, 2026 or later",
+            "Air Line to Thompson: Barton & LoGiudice layout",
+            "CT Greenway: DOT TAP, interviews and selection with DOT"
+          ]
+        },
+        "other": [
+          "Route 44: 6-month detour possibly Spring 2026",
+          "WPCA: planning state funding for filter rehab",
+          "Belding: FAP with DECD, tax abatement expected",
+          "Senior transportation: identifying personnel, ECD and Veterans leading"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "month": "October 2025",
+      "date": "2025-10-15",
+      "pages": 2,
+      "sections": {
+        "administration": {
+          "contract_updates": [
+            "Following Oct 20 Special Town Meeting, sign Transfer Station agreement"
+          ],
+          "recent": [
+            "POCD: BOS view in December 2025",
+            "HR Director returned from FMLA",
+            "Putnam EMS: mods to existing, sitework planning, unit in 6-8 weeks",
+            "Belding: expect tax abatement to BOS in upcoming month",
+            "Veterans exemption: drafting ordinance for 100% disabled limit to median value",
+            "Tech Park: BOS reviewing, possible Special Town Meeting",
+            "Track: STEAP state contract received, design underway",
+            "Transfer Station: pending STM vote",
+            "BOE: HVAC substantially complete, Roof near complete",
+            "Air Line Trail: interviews held, awaiting state approval"
+          ]
+        },
+        "roads": {
+          "status": [
+            "School Street: ALL CONSTRUCTION COMPLETE, closeout activities",
+            "Kennedy Drive: final change order expected"
+          ]
+        },
+        "bridges": {
+          "status": [
+            "Danco Drive: expect complete before winter, Spring 2026 paving",
+            "E Putnam/Mary Brown: WMC recommends lining, applying for 50/50 DOT"
+          ]
+        },
+        "recreation": {
+          "status": [
+            "Tennis Courts: possible Spring 2026",
+            "Track: CHA design deliverables upcoming",
+            "Sabin Field: 1 year gravel remaining",
+            "Air Line to Thompson: layout ongoing",
+            "CT Greenway: interviews and selection with DOT"
+          ]
+        },
+        "other": [
+          "Route 44: 6-month detour possibly Spring 2026",
+          "WPCA: planning state funding",
+          "Belding: FAP and tax abatement expected",
+          "Senior transportation: identifying and training personnel"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "month": "November 2025",
+      "date": "2025-11-13",
+      "pages": 2,
+      "sections": {
+        "administration": {
+          "contract_updates": [
+            "Pomfret Transfer Station: APPROVED/FINALIZED"
+          ],
+          "recent": [
+            "POCD: BOS view December 2025",
+            "Putnam EMS: concrete poured mid-November, unit in 4-6 weeks",
+            "Belding: expect tax abatement to BOS upcoming month",
+            "Registrar/Voting: worked with HR on election worker documentation",
+            "Veterans exemption: drafting ordinance, coordinating with VAC",
+            "Tech Park: updated draft reviewed by Town Counsel, BOS in December",
+            "Track: design underway",
+            "Transfer Station: internal planning for days, residency, fees",
+            "BOE: HVAC and Roof substantially complete, Roof warranties outstanding",
+            "Air Line Trail: waiting state approval to notify consultants"
+          ]
+        },
+        "roads": {
+          "status": [
+            "School Street: complete, closeout activities",
+            "Kennedy Drive: expect final change order"
+          ]
+        },
+        "bridges": {
+          "status": [
+            "Danco Drive: Lane 1 complete, waiting Eversource gas reconnect for Lane 2",
+            "E Putnam/Mary Brown: applying for 50/50 DOT funding, ACOE/DEEP permitting"
+          ]
+        },
+        "recreation": {
+          "status": [
+            "Tennis Courts: possible Spring 2026",
+            "Track: CHA design deliverables upcoming",
+            "Sabin Field: 1 year gravel remaining",
+            "Air Line from Pomfret: Wetlands Commission review December",
+            "Air Line to Thompson: Barton & LoGiudice layout",
+            "CT Greenway: waiting DOT approval to award consultant"
+          ]
+        },
+        "other": [
+          "Route 44: 6-month detour possibly Spring 2026, Cargill Falls temp wall",
+          "WPCA: referendum likely Q1 2026",
+          "Belding: FAP expected, tax abatement expected",
+          "Senior transportation: identifying and training, January 2026 launch"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "month": "December 2025",
+      "date": "2025-12-11",
+      "pages": 3,
+      "sections": {
+        "administration": {
+          "contract_updates": [
+            "Selected SLR for Trail Design Putnam-Killingly, scoping upcoming"
+          ],
+          "recent": [
+            "FY27 Budget prep started, Dept Head requests due December",
+            "Completing Department Head evaluations",
+            "POCD: BOS view January or February 2026",
+            "Putnam EMS: unit expected this month, furniture ordered from WB Mason, generator ordered",
+            "Belding: State SIGNED Financial Assistance Plan, coordinating tax abatement for BOS and BOF",
+            "Registrar: 2026 FICA management TBD",
+            "Pension Board: discussing allowing pension recipients to work limited days",
+            "Health Insurance: considering options, ECHIP meeting January, may consider alternatives",
+            "Recreation Clerk retired, posting soon",
+            "Veterans exemption: proposed ordinances for BOS",
+            "Zoning fines: proposed similar to blight",
+            "Tech Park: BOS consideration December, possible STM January 2026",
+            "Track: design underway",
+            "Transfer Station: internal planning",
+            "Trash program: considering cost adjustment, BOS early 2026",
+            "BOE Roof: difficult, near-completion, warranties outstanding",
+            "Air Line Trail: State approved SLR selection"
+          ]
+        },
+        "roads": {
+          "status": [
+            "School Street: complete, closeout",
+            "Kennedy Drive: pushed to Spring 2026"
+          ]
+        },
+        "bridges": {
+          "status": [
+            "Danco Drive: Lane 1 complete, Eversource reconnected, Lane 2 started, winter shutdown likely",
+            "E Putnam/Mary Brown: applying for 50/50, ACOE/DEEP permitting"
+          ]
+        },
+        "recreation": {
+          "status": [
+            "Tennis Courts: possible Spring 2026",
+            "Track: CHA design deliverables upcoming",
+            "Sabin Field: 1 year gravel remaining",
+            "Air Line from Pomfret: Wetlands Commission APPROVED December 10",
+            "Air Line to Thompson: design through Fall 2026",
+            "CT Greenway: DOT approved SLR"
+          ]
+        },
+        "other": [
+          "Route 44: 6-month detour possibly Spring 2026",
+          "WPCA: referendum likely Q1 2026",
+          "Belding: remediation start 2026",
+          "Senior transportation: personnel hired, training, January 2026 launch"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "month": "January 2026",
+      "date": "2026-01-14",
+      "pages": 3,
+      "sections": {
+        "administration": {
+          "contract_updates": [
+            "Expect Annual Fuel Contract with Dime for FY27, prices competitive"
+          ],
+          "recent": [
+            "FY27 Budget: all Dept Head requests received, Mayor's budget February",
+            "POCD: BOS view January 2026",
+            "Putnam EMS: UNIT ONSITE early January, utility hookup in progress",
+            "Belding: Tax Abatement APPROVED by BOS and BOF December 2025",
+            "Registrar: two election workers exceeded FICA, coordinating 2026 list",
+            "Pension Board: December meeting approved drafting text for limited work",
+            "Health Insurance: ECHIP meeting January 20, possible dissolution",
+            "Recreation Coordinator: updated job description, interviews January, February fill",
+            "Veterans exemption: APPROVED at Town Meeting",
+            "Zoning fines: voted down, will re-introduce with P&Z input",
+            "Tech Park: Special Town Meeting January 29",
+            "Track: design reviewed with staff and athletic director",
+            "Transfer Station: flyer in Town Crier upcoming",
+            "Trash program: review and propose early 2026",
+            "BOE Roof: difficult, warranties and negotiations ongoing",
+            "Air Line Trail: SLR scoping meeting mid-January"
+          ]
+        },
+        "roads": {
+          "status": [
+            "School Street: complete, LOTCIP closeout",
+            "Kennedy Drive: paving Spring 2026",
+            "Grove/South Main: applying for Community Connectivity Grant",
+            "Walmart sidewalk: possible LOTCIP application"
+          ]
+        },
+        "bridges": {
+          "status": [
+            "Danco Drive: Lane 2 construction continues, paving Spring 2026",
+            "E Putnam/Cady Brook: Public Information Meeting February 10",
+            "Chase/Cady Brook: Public meeting held December",
+            "E Putnam/Mary Brown: applying for 50/50 DOT",
+            "Wicker Street: possible Spring 2026"
+          ]
+        },
+        "recreation": {
+          "status": [
+            "Tennis Courts: possible Spring 2026",
+            "Track: design reviewed, considering options",
+            "Sabin Field: 1 year gravel remaining",
+            "Air Line from Pomfret: construction late 2026 or 2027",
+            "Air Line to Thompson: design through Fall 2026",
+            "CT Greenway: scope development next several months"
+          ]
+        },
+        "other": [
+          "SSD: coordinating pension, insurance, safety reviews, FY27 budget",
+          "Union Square Courtyard: waiting DEEP Community Garden Grant response",
+          "Route 44: 6-month detour possibly Spring 2026",
+          "WPCA: referendum likely March or April 2026",
+          "Belding: remediation start 2026",
+          "Senior transportation: LAUNCHING January 2026"
+        ]
+      }
+    }
+  ],
+
+  "projects": {
+    "belding": {
+      "name": "Belding Redevelopment",
+      "category": "development",
+      "status": "approved",
+      "lead": "ECD Office",
+      "funding": "State DECD Grant",
+      "timeline": [
+        {"month": "Feb 2025", "status": "Town-direct approach, prevailing wages apply"},
+        {"month": "Mar 2025", "status": "Coordination continuing"},
+        {"month": "Apr-Jun 2025", "status": "Waiting legislative session on prevailing wage"},
+        {"month": "Jul 2025", "status": "Prevailing wage resolved, FAP extension, tax abatement draft"},
+        {"month": "Sept 2025", "status": "Tax abatement agreement under review"},
+        {"month": "Oct 2025", "status": "Expect BOS consideration upcoming month"},
+        {"month": "Nov 2025", "status": "Expect BOS consideration upcoming month"},
+        {"month": "Dec 2025", "status": "State SIGNED Financial Assistance Plan"},
+        {"month": "Jan 2026", "status": "Tax Abatement APPROVED by BOS and BOF"}
+      ],
+      "completed": "2025-12"
+    },
+    "tech_park": {
+      "name": "Tech Park Four-Party Agreement",
+      "category": "development",
+      "status": "pending_vote",
+      "lead": "Town Administrator",
+      "timeline": [
+        {"month": "Feb 2025", "status": "Closings and excavation expected"},
+        {"month": "Mar 2025", "status": "Same"},
+        {"month": "Apr-Jun 2025", "status": "Same"},
+        {"month": "Jul 2025", "status": "Conditions changed, need Special Town Meeting"},
+        {"month": "Sept 2025", "status": "BOS reviewing options"},
+        {"month": "Oct 2025", "status": "Possible Special Town Meeting"},
+        {"month": "Nov 2025", "status": "Updated draft to Town Counsel, BOS December"},
+        {"month": "Dec 2025", "status": "BOS consideration, possible STM January"},
+        {"month": "Jan 2026", "status": "Special Town Meeting JANUARY 29"}
+      ],
+      "next_action": "Special Town Meeting January 29, 2026"
+    },
+    "ems_facility": {
+      "name": "Putnam EMS Facility",
+      "category": "facilities",
+      "status": "in_progress",
+      "location": "191 Church Street",
+      "lead": "Town Administrator / Ad-Hoc Committee",
+      "contractor": "Nutts Construction of Ashford, CT",
+      "funding": "LOCIP, ARPA",
+      "timeline": [
+        {"month": "Feb 2025", "status": "Considering leasing from East Putnam Fire District"},
+        {"month": "Mar 2025", "status": "No action on East Putnam, Ad-Hoc rebanded for mobile home"},
+        {"month": "Apr-Jun 2025", "status": "Bid package prepared, LOCIP pending, June 19 bid opening"},
+        {"month": "Jul 2025", "status": "Contract with Nutts, LOCIP and CHRO approved"},
+        {"month": "Sept 2025", "status": "Permitting phase, concrete and trailer 1-3 months"},
+        {"month": "Oct 2025", "status": "Modifications, sitework planning, unit 6-8 weeks"},
+        {"month": "Nov 2025", "status": "Concrete poured mid-November, unit 4-6 weeks"},
+        {"month": "Dec 2025", "status": "Unit expected this month, furniture and generator ordered"},
+        {"month": "Jan 2026", "status": "UNIT ONSITE, utility hookup in progress"}
+      ]
+    },
+    "transfer_station": {
+      "name": "Pomfret Transfer Station Agreement",
+      "category": "services",
+      "status": "completed",
+      "partner": "Town of Pomfret",
+      "lead": "Highway Department",
+      "timeline": [
+        {"month": "Feb 2025", "status": "Pomfret drafting agreement, bulky waste March 1"},
+        {"month": "Mar 2025", "status": "Same"},
+        {"month": "Apr-Jun 2025", "status": "Same"},
+        {"month": "Jul 2025", "status": "Draft under review, bulky waste August 30"},
+        {"month": "Sept 2025", "status": "Final costs coming, BOS and Town Meeting approval expected"},
+        {"month": "Oct 2025", "status": "Special Town Meeting vote pending"},
+        {"month": "Nov 2025", "status": "APPROVED/FINALIZED"}
+      ],
+      "completed": "2025-11"
+    },
+    "track_improvements": {
+      "name": "St Marie Greenhalgh Track Improvements",
+      "category": "recreation",
+      "status": "design",
+      "location": "St Marie Greenhalgh",
+      "lead": "ECD Director Chinatti",
+      "engineer": "CHA Engineers",
+      "funding": "$1M STEAP Grant",
+      "timeline": [
+        {"month": "Feb 2025", "status": "Conceptual design from CHA, STEAP app drafted"},
+        {"month": "Mar 2025", "status": "STEAP application submitted, results expected April"},
+        {"month": "Apr-Jun 2025", "status": "$1M STEAP AWARDED - Governor announcement May 28"},
+        {"month": "Jul 2025", "status": "CHA design agreement executing, full depth reclamation needed"},
+        {"month": "Sept 2025", "status": "State contract pending, design underway"},
+        {"month": "Oct 2025", "status": "STEAP contract received, design underway"},
+        {"month": "Nov 2025", "status": "CHA design deliverables upcoming"},
+        {"month": "Dec 2025", "status": "CHA design deliverables upcoming"},
+        {"month": "Jan 2026", "status": "Draft design reviewed with staff and athletic director"}
+      ]
+    },
+    "danco_bridge": {
+      "name": "Danco Drive Bridge Replacement",
+      "category": "bridges",
+      "status": "construction",
+      "location": "Danco Drive",
+      "lead": "Highway Department",
+      "contractor": "NJR",
+      "engineer": "CDM Smith",
+      "timeline": [
+        {"month": "Feb 2025", "status": "Contract awarded to NJR, Spring 2025 start expected"},
+        {"month": "Mar 2025", "status": "Utility coordination with Eversource, pre-construction planning"},
+        {"month": "Apr-Jun 2025", "status": "Waiting Eversource utility move in June"},
+        {"month": "Jul 2025", "status": "Construction started June, excavation and removal ongoing"},
+        {"month": "Sept 2025", "status": "Construction ongoing since June"},
+        {"month": "Oct 2025", "status": "Expect complete before winter, Spring 2026 paving"},
+        {"month": "Nov 2025", "status": "Lane 1 complete, waiting Eversource gas reconnect"},
+        {"month": "Dec 2025", "status": "Eversource reconnected, Lane 2 started, winter shutdown likely"},
+        {"month": "Jan 2026", "status": "Lane 2 continues, paving Spring 2026"}
+      ]
+    },
+    "school_street_sidewalks": {
+      "name": "School Street Sidewalks",
+      "category": "roads",
+      "status": "completed",
+      "lead": "Town Administrator",
+      "contractor": "Mather",
+      "engineer": "J&D",
+      "inspector": "Turner Consulting",
+      "funding": "LOTCIP",
+      "timeline": [
+        {"month": "Feb 2025", "status": "Pre-construction meeting, Spring start expected"},
+        {"month": "Mar 2025", "status": "Construction late March, Bolles St laydown"},
+        {"month": "Apr-Jun 2025", "status": "Construction ongoing, July completion expected"},
+        {"month": "Jul 2025", "status": "July substantial completion expected"},
+        {"month": "Sept 2025", "status": "Substantially complete, line striping this month"},
+        {"month": "Oct 2025", "status": "ALL CONSTRUCTION COMPLETE"},
+        {"month": "Nov 2025", "status": "Closeout activities"},
+        {"month": "Dec 2025", "status": "Closeout activities"},
+        {"month": "Jan 2026", "status": "LOTCIP closeout"}
+      ],
+      "completed": "2025-10"
+    },
+    "kennedy_drive": {
+      "name": "Kennedy Drive Parking Improvements",
+      "category": "roads",
+      "status": "in_progress",
+      "lead": "Town Administrator",
+      "contractor": "B&W Paving",
+      "engineer": "J&D",
+      "inspector": "Turner Consulting",
+      "timeline": [
+        {"month": "Feb 2025", "status": "B&W to continue as weather allows, Spring completion"},
+        {"month": "Mar 2025", "status": "B&W to restart, Spring completion"},
+        {"month": "Apr-Jun 2025", "status": "Near substantial completion, open to public early June"},
+        {"month": "Jul 2025", "status": "Near substantial, punch list and change order"},
+        {"month": "Sept 2025", "status": "Final change order late Summer/Fall"},
+        {"month": "Oct 2025", "status": "Final change order expected"},
+        {"month": "Nov 2025", "status": "Expect final change order"},
+        {"month": "Dec 2025", "status": "Pushed to Spring 2026"},
+        {"month": "Jan 2026", "status": "Paving Spring 2026"}
+      ]
+    },
+    "airline_trail_killingly": {
+      "name": "Air Line Trail to Killingly",
+      "category": "trails",
+      "status": "design",
+      "lead": "Town Administrator / DOT",
+      "engineer": "SLR of Cheshire, CT",
+      "funding": "DOT TAP",
+      "timeline": [
+        {"month": "Feb 2025", "status": "On hold - DEEP hunting property issue"},
+        {"month": "Mar 2025", "status": "Requesting DEEP input"},
+        {"month": "Apr-Jun 2025", "status": "Coordinating with DEEP on forest property"},
+        {"month": "Jul 2025", "status": "RFQ advertised, August qualifications due"},
+        {"month": "Sept 2025", "status": "Qualifications received, late September interviews"},
+        {"month": "Oct 2025", "status": "Interviews held, awaiting state approval"},
+        {"month": "Nov 2025", "status": "Waiting state approval to notify consultants"},
+        {"month": "Dec 2025", "status": "State APPROVED SLR selection"},
+        {"month": "Jan 2026", "status": "SLR scoping meeting mid-January"}
+      ]
+    },
+    "river_trail_connection": {
+      "name": "Airline Trail Connection to Putnam River Trail",
+      "category": "trails",
+      "status": "permitting",
+      "lead": "Town of Pomfret (leading)",
+      "engineer": "Weston & Sampson",
+      "timeline": [
+        {"month": "Feb 2025", "status": "60% design received Oct 2024, ACOE permitting delay"},
+        {"month": "Mar 2025", "status": "ACOE permitting may extend significantly, April field walk"},
+        {"month": "Apr-Jun 2025", "status": "ACOE permitting, 2026 or later construction"},
+        {"month": "Jul 2025", "status": "ACOE permitting, 2026 or later"},
+        {"month": "Sept 2025", "status": "ACOE permitting, 2026 or later"},
+        {"month": "Oct 2025", "status": "ACOE permitting, 2026 or later"},
+        {"month": "Nov 2025", "status": "Wetlands Commission review December"},
+        {"month": "Dec 2025", "status": "Wetlands Commission APPROVED December 10"},
+        {"month": "Jan 2026", "status": "Construction late 2026 or 2027"}
+      ]
+    },
+    "airline_intervale": {
+      "name": "Air Line Connection Putnam to Intervale",
+      "category": "trails",
+      "status": "design",
+      "lead": "Land Use and ECD",
+      "engineer": "Barton & LoGiudice",
+      "timeline": [
+        {"month": "Feb 2025", "status": "Survey and ped bridge concepts, road-adjacent only option"},
+        {"month": "Mar 2025", "status": "Same"},
+        {"month": "Apr-Jun 2025", "status": "Layout of road-adjacent trail"},
+        {"month": "Jul 2025", "status": "Layout design ongoing"},
+        {"month": "Sept 2025", "status": "Layout ongoing"},
+        {"month": "Oct 2025", "status": "Layout ongoing"},
+        {"month": "Nov 2025", "status": "Layout ongoing"},
+        {"month": "Dec 2025", "status": "Design through Fall 2026"},
+        {"month": "Jan 2026", "status": "Design through Fall 2026"}
+      ]
+    },
+    "ct_greenway": {
+      "name": "CT Greenway Connection to Killingly",
+      "category": "trails",
+      "status": "scoping",
+      "lead": "Town Administrator / DOT",
+      "engineer": "SLR",
+      "funding": "DOT TAP",
+      "timeline": [
+        {"month": "Jul 2025", "status": "DOT TAP funds designated, RFQ advertised, DEEP site walk"},
+        {"month": "Sept 2025", "status": "Interviews and selection with DOT"},
+        {"month": "Oct 2025", "status": "Interviews and selection with DOT"},
+        {"month": "Nov 2025", "status": "Waiting DOT approval to award consultant"},
+        {"month": "Dec 2025", "status": "DOT approved SLR"},
+        {"month": "Jan 2026", "status": "Scope development next several months"}
+      ]
+    },
+    "tennis_courts": {
+      "name": "Church Street Tennis Courts",
+      "category": "recreation",
+      "status": "planned",
+      "location": "Church Street",
+      "lead": "Highway Department",
+      "timeline": [
+        {"month": "Feb 2025", "status": "Reviewing options, fence by Killingly Fence, expect 2025"},
+        {"month": "Mar 2025", "status": "Pricing and contract prep for Spring 2025"},
+        {"month": "Apr-Jun 2025", "status": "Data gathering, bid docs late June, possible Fall 2025"},
+        {"month": "Jul 2025", "status": "Postponed"},
+        {"month": "Sept 2025", "status": "Possible Spring 2026"},
+        {"month": "Oct 2025", "status": "Possible Spring 2026"},
+        {"month": "Nov 2025", "status": "Possible Spring 2026"},
+        {"month": "Dec 2025", "status": "Possible Spring 2026"},
+        {"month": "Jan 2026", "status": "Possible Spring 2026"}
+      ]
+    },
+    "senior_transport": {
+      "name": "Senior Transportation Program",
+      "category": "services",
+      "status": "completed",
+      "lead": "ECD and Veterans Offices",
+      "timeline": [
+        {"month": "Sept 2025", "status": "Identifying personnel, training coordination"},
+        {"month": "Oct 2025", "status": "Identifying and training personnel"},
+        {"month": "Nov 2025", "status": "Identifying and training, January 2026 launch"},
+        {"month": "Dec 2025", "status": "Personnel hired, training, January 2026 launch"},
+        {"month": "Jan 2026", "status": "LAUNCHING January 2026"}
+      ],
+      "completed": "2026-01"
+    },
+    "e_putnam_mary_brown": {
+      "name": "East Putnam Road Bridge over Mary Brown Brook",
+      "category": "bridges",
+      "status": "design",
+      "lead": "Highway Superintendent Sirrine",
+      "engineer": "WMC",
+      "funding": "Seeking DOT 50/50",
+      "timeline": [
+        {"month": "Feb 2025", "status": "Poor condition, met with WMC, considering 50/50 or Town funded"},
+        {"month": "Mar 2025", "status": "WMC contract proposal"},
+        {"month": "Apr-Jun 2025", "status": "WMC contract executed, NOT eligible for 100% DOT"},
+        {"month": "Jul 2025", "status": "WMC design for lining or replacement"},
+        {"month": "Sept 2025", "status": "WMC recommends lining"},
+        {"month": "Oct 2025", "status": "WMC recommends lining, applying for 50/50 DOT"},
+        {"month": "Nov 2025", "status": "Applying for 50/50 DOT, ACOE/DEEP permitting"},
+        {"month": "Dec 2025", "status": "Applying for 50/50 DOT, ACOE/DEEP permitting"},
+        {"month": "Jan 2026", "status": "Applying for 50/50 DOT"}
+      ]
+    },
+    "wpca_referendum": {
+      "name": "WPCA Water Treatment Referendum",
+      "category": "utilities",
+      "status": "planned",
+      "lead": "WPCA",
+      "purpose": "Filter rehabilitation and lead/copper service connection",
+      "timeline": [
+        {"month": "Sept 2025", "status": "Planning additional state funding"},
+        {"month": "Oct 2025", "status": "Planning state funding"},
+        {"month": "Nov 2025", "status": "Referendum likely Q1 2026"},
+        {"month": "Dec 2025", "status": "Referendum likely Q1 2026"},
+        {"month": "Jan 2026", "status": "Referendum likely March or April 2026"}
+      ],
+      "next_action": "Town Referendum March/April 2026"
+    },
+    "route_44_detour": {
+      "name": "Route 44 Retaining Wall DOT Project",
+      "category": "roads",
+      "status": "planned",
+      "lead": "State DOT",
+      "coordination": "WPCA, Town Engineer",
+      "timeline": [
+        {"month": "Feb 2025", "status": "DOT emergency designation for temp wall support"},
+        {"month": "Mar 2025", "status": "Design for water/sewer utilities"},
+        {"month": "Apr-Jun 2025", "status": "Ongoing coordination"},
+        {"month": "Jul 2025", "status": "Ongoing coordination"},
+        {"month": "Sept 2025", "status": "6-month detour possibly Spring 2026"},
+        {"month": "Oct 2025", "status": "6-month detour possibly Spring 2026"},
+        {"month": "Nov 2025", "status": "6-month detour possibly Spring 2026, Cargill Falls temp wall"},
+        {"month": "Dec 2025", "status": "6-month detour possibly Spring 2026"},
+        {"month": "Jan 2026", "status": "6-month detour possibly Spring 2026"}
+      ],
+      "impact": "6-month detour expected"
+    }
+  },
+
+  "annual_summary": {
+    "year": "2025",
+    "completed": [
+      {"project": "FY26 Budget", "date": "May 2025", "notes": "All budgets passed at Town Meeting"},
+      {"project": "WPCA Union Contract", "date": "Mar 2025", "notes": "July 2024-June 2027"},
+      {"project": "Fire Lane/Open Burning Ordinances", "date": "Apr 2025", "notes": "Town Meeting approved"},
+      {"project": "WPCA Lead Service Line Loan", "date": "Apr 2025", "notes": "DPH loan closed"},
+      {"project": "Highway Maintainer Hire", "date": "Jul 2025", "notes": "Andrew Senegal started"},
+      {"project": "Track STEAP Award", "date": "May 2025", "notes": "$1M awarded"},
+      {"project": "School Street Sidewalks", "date": "Oct 2025", "notes": "All construction complete"},
+      {"project": "Transfer Station Agreement", "date": "Nov 2025", "notes": "Approved with Pomfret"},
+      {"project": "Belding FAP Signed", "date": "Dec 2025", "notes": "State signed Financial Assistance Plan"},
+      {"project": "Trail Wetlands Permit", "date": "Dec 2025", "notes": "Approved December 10"},
+      {"project": "SLR Consultant Approved", "date": "Dec 2025", "notes": "For two trail projects"},
+      {"project": "RecDesk Launch", "date": "Mar 2025", "notes": "Online recreation signup"}
+    ],
+    "started": [
+      {"project": "Danco Bridge Construction", "date": "Jun 2025"},
+      {"project": "EMS Facility Construction", "date": "Jul 2025"},
+      {"project": "Air Line Trail Design", "date": "Sept 2025"},
+      {"project": "Track Design", "date": "Jul 2025"},
+      {"project": "Senior Transport Program", "date": "Sept 2025"}
+    ],
+    "cancelled": [
+      {"project": "70 May Street Purchase", "date": "Mar 2025", "notes": "Not signed by Mayor"}
+    ],
+    "key_dates": [
+      {"date": "2026-01-20", "event": "ECHIP Insurance Meeting"},
+      {"date": "2026-01-29", "event": "Tech Park Special Town Meeting"},
+      {"date": "2026-02-10", "event": "E Putnam Bridge Public Meeting"},
+      {"date": "2026-03-01", "event": "WPCA Referendum (approximate)"},
+      {"date": "2026-04-01", "event": "Route 44 Detour Begins (approximate)"}
+    ]
+  },
+
+  "categories": {
+    "development": ["belding", "tech_park"],
+    "facilities": ["ems_facility"],
+    "services": ["transfer_station", "senior_transport"],
+    "recreation": ["track_improvements", "tennis_courts"],
+    "bridges": ["danco_bridge", "e_putnam_mary_brown"],
+    "roads": ["school_street_sidewalks", "kennedy_drive", "route_44_detour"],
+    "trails": ["airline_trail_killingly", "river_trail_connection", "airline_intervale", "ct_greenway"],
+    "utilities": ["wpca_referendum"]
+  }
+}

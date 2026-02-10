@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pomfret CT - A More Perfect Town. The Last Green Valley's hidden treasure. Wolf Den. Pomfret School. Dark skies and open spaces. Help us protect what's special.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://4tpb.org/ct/pomfret/">
+    <meta property="og:title" content="Pomfret CT - A More Perfect Town">
+    <meta property="og:description" content="The Last Green Valley's hidden treasure. Wolf Den State Park. Dark skies and open spaces. Since 1713.">
+    
+    <title>Pomfret CT - A More Perfect Town | The People's Branch</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: #0a0a0a;
+        }
+        
+        /* BREADCRUMB */
+        .breadcrumb {
+            background: #111;
+            padding: 12px 20px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .breadcrumb-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            font-size: 0.9em;
+        }
+        
+        .breadcrumb a {
+            color: #888;
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            color: #d4af37;
+        }
+        
+        .breadcrumb .current {
+            color: #d4af37;
+        }
+        
+        .breadcrumb .separator {
+            color: #555;
+            margin: 0 8px;
+        }
+        
+        /* HERO */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)),
+                        linear-gradient(135deg, #1a2a1a 0%, #0a1a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+        }
+        
+        .hero-content {
+            max-width: 900px;
+            animation: fadeIn 1s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .town-badge {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.15);
+            border: 2px solid #d4af37;
+            padding: 8px 25px;
+            border-radius: 30px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            color: #d4af37;
+        }
+        
+        .hero h1 {
+            font-size: 3.2em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+            font-weight: normal;
+            line-height: 1.2;
+        }
+        
+        .hero h1 span {
+            color: #d4af37;
+        }
+        
+        .hero .tagline {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            color: #ccc;
+            font-style: italic;
+        }
+        
+        .hero-description {
+            font-size: 1.15em;
+            color: #aaa;
+            max-width: 700px;
+            margin: 0 auto 35px;
+            line-height: 1.7;
+        }
+        
+        .hero-cta {
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 16px 35px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #d4af37;
+            color: #0a0a0a;
+        }
+        
+        .btn-primary:hover {
+            background: #f4cf57;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #d4af37;
+            border: 2px solid #d4af37;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            color: white;
+            animation: bounce 2s infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+        
+        /* SECTIONS */
+        section {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 70px 20px;
+        }
+        
+        section h2 {
+            font-size: 2.2em;
+            margin-bottom: 15px;
+            color: #d4af37;
+            text-align: center;
+        }
+        
+        .section-intro {
+            text-align: center;
+            color: #aaa;
+            font-size: 1.1em;
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* SPECIAL SECTION */
+        .special {
+            background: #0f0f0f;
+        }
+        
+        .special-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .special-card {
+            background: #1a1a2a;
+            padding: 30px;
+            border-radius: 12px;
+            border-left: 4px solid #d4af37;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: block;
+        }
+        
+        .special-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.15);
+        }
+        
+        .special-card h3 {
+            color: #e0e0e0;
+            margin-bottom: 12px;
+            font-size: 1.2em;
+        }
+        
+        .special-card p {
+            color: #888;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        /* BUILDING SECTION */
+        .building {
+            background: #0a0a0a;
+        }
+        
+        .building-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .building-card {
+            background: #1a1a1a;
+            padding: 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s ease;
+            display: block;
+            border-top: 3px solid #4a7c4e;
+        }
+        
+        .building-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .building-card .card-type {
+            font-size: 0.8em;
+            color: #4a7c4e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .building-card h3 {
+            color: #e0e0e0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .building-card p {
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        /* THOUGHTS SECTION */
+        .thoughts-section {
+            background: #0f0f0f;
+        }
+        
+        .thoughts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .thought-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 3px solid #d4af37;
+        }
+        
+        .thought-content {
+            color: #e0e0e0;
+            font-size: 1em;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        
+        .thought-meta {
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        .thought-votes {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .vote-btn {
+            background: #2a2a2a;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            color: #888;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+        }
+        
+        .vote-btn:hover {
+            background: #3a3a3a;
+            color: #d4af37;
+        }
+        
+        .vote-btn.voted {
+            background: #d4af37;
+            color: #0a0a0a;
+        }
+        
+        .thoughts-loading, .thoughts-empty {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+        
+        /* REPS SECTION */
+        .reps {
+            background: #0a0a0a;
+        }
+        
+        .reps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .rep-card {
+            background: #1a1a1a;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+        
+        .rep-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .rep-card .rep-level {
+            font-size: 0.75em;
+            color: #d4af37;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .rep-card h3 {
+            color: #e0e0e0;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        .rep-card .rep-title {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
+        .rep-card .rep-link {
+            color: #d4af37;
+            font-size: 0.85em;
+        }
+        
+        a.rep-card:hover {
+            text-decoration: none;
+        }
+        
+        /* CTA SECTION */
+        .cta {
+            background: #0f0f0f;
+            text-align: center;
+        }
+        
+        .cta h2 {
+            color: #d4af37;
+        }
+        
+        .cta-subtitle {
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+        
+        .thought-input-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        #thoughtInput {
+            width: 100%;
+            min-height: 120px;
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+        
+        #thoughtInput:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+        
+        #thoughtInput::placeholder {
+            color: #666;
+        }
+        
+        .char-count {
+            text-align: right;
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 15px;
+        }
+        
+        #submitThought {
+            width: 100%;
+            padding: 16px;
+            background: #d4af37;
+            color: #0a0a0a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s ease;
+        }
+        
+        #submitThought:hover {
+            background: #f4cf57;
+        }
+        
+        #submitThought:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        
+        .submit-feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .submit-feedback.success {
+            background: rgba(74, 124, 78, 0.2);
+            color: #4a7c4e;
+            display: block;
+        }
+        
+        .submit-feedback.error {
+            background: rgba(200, 80, 80, 0.2);
+            color: #c85050;
+            display: block;
+        }
+        
+        /* FOOTER */
+        footer {
+            background: #0a0a0a;
+            border-top: 1px solid #222;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .footer-pomfret {
+            color: #888;
+            margin-bottom: 25px;
+            font-size: 0.95em;
+        }
+        
+        .footer-pomfret a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        .footer-links {
+            margin-bottom: 20px;
+        }
+        
+        .footer-links a {
+            color: #aaa;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 0.95em;
+        }
+        
+        .footer-links a:hover {
+            color: #d4af37;
+        }
+        
+        .footer-tpb {
+            color: #666;
+        }
+        
+        .footer-tpb a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        .footer-tpb .tagline {
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2em;
+            }
+            
+            .hero .tagline {
+                font-size: 1.2em;
+            }
+            
+            section h2 {
+                font-size: 1.8em;
+            }
+            
+            .special-grid, .building-grid, .reps-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- BREADCRUMB -->
+    <nav class="breadcrumb">
+        <div class="breadcrumb-inner">
+            <a href="/index.html">USA</a>
+            <span class="separator">→</span>
+            <a href="/ct/">CT</a>
+            <span class="separator">→</span>
+            <span class="current">Pomfret</span>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="town-badge">THE QUIET CORNER • CONNECTICUT</div>
+            <h1>Pomfret: <span>A More Perfect Town</span></h1>
+            <p class="tagline">Protect what's special. Build what's next.</p>
+            <p class="hero-description">
+                In The Last Green Valley, where the stars still shine and the wolves once roamed. 
+                Rolling hills, stone walls, and 4,266 neighbors who chose quiet over chaos. 
+                This is Pomfret — worth protecting, worth building on, worth speaking up for.
+            </p>
+            <div class="hero-cta">
+                <a href="#share" class="btn btn-primary">Add Your Voice</a>
+                <a href="#building" class="btn btn-secondary">See What We're Building</a>
+            </div>
+        </div>
+        <div class="scroll-indicator">↓</div>
+    </section>
+
+    <!-- WHAT MAKES POMFRET SPECIAL -->
+    <section class="special" id="special">
+        <h2>What Makes Pomfret Special</h2>
+        <p class="section-intro">
+            This is worth protecting. This is worth building on.
+        </p>
+        
+        <div class="special-grid">
+            <a href="#share" class="special-card" data-question="How should we preserve our dark skies and open spaces?">
+                <h3>🌌 The Last Green Valley</h3>
+                <p>One of the last dark-sky areas between Boston and Washington. Stars you can actually see. Open spaces worth protecting. Part of a 35-town National Heritage Corridor.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="What would you like to see at Mashamoquet Brook State Park?">
+                <h3>🐺 Wolf Den & State Parks</h3>
+                <p>Where Israel Putnam shot Connecticut's last wolf in 1742. Over 1,000 acres of trails, camping, swimming. Table Rock and Indian Chair. Living history in our backyard.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="How can we support our schools?">
+                <h3>🎓 Education Heritage</h3>
+                <p>Pomfret School (1894). Rectory School (1920). Pomfret Community School for our kids. A town that takes learning seriously — always has, since 1713.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="What local businesses should we support?">
+                <h3>🍷 Wineries & Local Flavor</h3>
+                <p>Taylor Brooke Winery. Sharpe Hill Vineyard. Vanilla Bean Café. Grill 37. Local gems that make the drive worthwhile.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="What trails or outdoor spaces need attention?">
+                <h3>🥾 Trails Everywhere</h3>
+                <p>Air Line Trail for walking and biking. Pomfret Forest for mountain biking. CT Audubon Center. Stone walls and country roads. A hiker's paradise.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="What brings our community together?">
+                <h3>🏠 4,266 Neighbors</h3>
+                <p>Small enough to know people. Quiet enough to think. Memorial Day parades and holiday tree lightings. A volunteer fire department that shows up. This is home.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- WHAT WE'RE BUILDING TOGETHER -->
+    <section class="building" id="building">
+        <h2>What We're Building Together</h2>
+        <p class="section-intro">
+            Protect what works. Fix what's broken. Dream what's next.<br>
+            These are the conversations Pomfret residents are starting.
+        </p>
+        
+        <div class="building-grid">
+            <a href="#share" class="building-card" data-question="How should we protect our rural character?">
+                <div class="card-type">Protect</div>
+                <h3>Preserve Rural Character</h3>
+                <p>Open space. Dark skies. Stone walls. What makes Pomfret special is easy to lose and hard to get back.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What do our parks and trails need?">
+                <div class="card-type">Expand</div>
+                <h3>Strengthen Our Parks</h3>
+                <p>Mashamoquet Brook. Wolf Den. Pomfret Forest. World-class outdoor resources that need maintenance and investment.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What road or infrastructure needs fixing?">
+                <div class="card-type">Fix</div>
+                <h3>Roads & Infrastructure</h3>
+                <p>Route 44. Route 169. Country roads. The basics matter — safe roads, clear signage, maintained bridges.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What do our schools need most?">
+                <div class="card-type">Invest</div>
+                <h3>Support Our Schools</h3>
+                <p>Pomfret Community School serves our kids K-8. What resources, programs, or facilities would help them thrive?</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What local businesses or services do we need?">
+                <div class="card-type">Build</div>
+                <h3>Economic Development</h3>
+                <p>Supporting local businesses. Attracting visitors. Balancing growth with rural character.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What's your vision for Pomfret?">
+                <div class="card-type">Dream</div>
+                <h3>What's YOUR Vision?</h3>
+                <p>More community events? Better broadband? Historic preservation? Your idea could be the next conversation.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- POMFRET THOUGHTS -->
+    <section class="thoughts-section" id="thoughts">
+        <h2>What Pomfret Is Saying</h2>
+        <p class="section-intro">
+            Real thoughts from your neighbors. Join the conversation.
+        </p>
+        
+        <div class="thoughts-list" id="thoughtsList">
+            <div class="thoughts-loading">Loading thoughts...</div>
+        </div>
+    </section>
+
+    <!-- YOUR REPRESENTATIVES -->
+    <section class="reps" id="reps">
+        <h2>Your Representatives</h2>
+        <p class="section-intro">
+            These are the people who represent Pomfret. They should hear from you.
+        </p>
+        
+        <div class="reps-grid">
+            <a href="https://www.pomfretct.gov/first-selectmans-office" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Maureen Nicholson</h3>
+                <div class="rep-title">First Selectman (D)</div>
+                <div class="rep-link">→ First Selectman's Office</div>
+            </a>
+            
+            <a href="https://www.pomfretct.gov/board-of-selectmen" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Board of Selectmen</h3>
+                <div class="rep-title">3 members</div>
+                <div class="rep-link">→ Meeting Schedule</div>
+            </a>
+            
+            <a href="https://www.pomfretct.gov/town-clerk" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Sandy Arcayan</h3>
+                <div class="rep-title">Town Clerk</div>
+                <div class="rep-link">→ Town Clerk's Office</div>
+            </a>
+            
+            <a href="https://www.housedems.ct.gov/Boyd" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">State House</div>
+                <h3>Pat Boyd</h3>
+                <div class="rep-title">District 50 (D)</div>
+                <div class="rep-link">→ State Legislature</div>
+            </a>
+            
+            <a href="https://www.senatedems.ct.gov/Flexer" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">State Senate</div>
+                <h3>Mae Flexer</h3>
+                <div class="rep-title">District 29 (D)</div>
+                <div class="rep-link">→ State Legislature</div>
+            </a>
+            
+            <a href="https://courtney.house.gov" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">US Congress</div>
+                <h3>Joe Courtney</h3>
+                <div class="rep-title">District 2 (D)</div>
+                <div class="rep-link">→ Congressional Office</div>
+            </a>
+        </div>
+    </section>
+
+    <!-- SHARE YOUR VOICE CTA -->
+    <section class="cta" id="share">
+        <h2>What's Your Vision for Pomfret?</h2>
+        <p class="cta-subtitle">
+            Something to protect? Something to fix? Something to build?<br>
+            Your neighbors are listening. Your representatives should be too.
+        </p>
+        
+        <div class="thought-input-container">
+            <div style="position: relative;">
+                <textarea 
+                    id="thoughtInput" 
+                    placeholder="What's on your mind about Pomfret? What needs protecting? What needs fixing? What's your vision?"
+                    maxlength="1000"
+                ></textarea>
+                <div class="char-count"><span id="charCount">0</span>/1000</div>
+            </div>
+            
+            <button id="submitThought">Share Your Thought</button>
+            <div id="submitFeedback" class="submit-feedback"></div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-pomfret">
+            <strong>Pomfret, Connecticut</strong><br>
+            Population 4,266 • Incorporated 1713 • The Last Green Valley<br>
+            Town Hall: 5 Haven Road, Pomfret Center • (860) 315-5730 • <a href="https://pomfretct.gov" target="_blank">pomfretct.gov</a>
+        </div>
+        
+        <div class="footer-links">
+            <a href="/index.php">Full Platform</a>
+            <a href="/reps.php">All Your Reps</a>
+            <a href="/volunteer/apply.php">Volunteer</a>
+        </div>
+        
+        <div class="footer-tpb">
+            <p>Powered by <a href="/"><strong>The People's Branch</strong></a></p>
+            <p class="tagline">No Kings. Only Citizens.</p>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script>
+    (function() {
+        'use strict';
+        
+        // Session management
+        let sessionId = localStorage.getItem('tpb_civic_session');
+        if (!sessionId) {
+            sessionId = 'civic_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+            localStorage.setItem('tpb_civic_session', sessionId);
+        }
+        
+        // Store town preference
+        localStorage.setItem('tpb_town', 'Pomfret');
+        localStorage.setItem('tpb_state', 'CT');
+        
+        // Card click → set placeholder with trigger question
+        document.querySelectorAll('.building-card[data-question], .special-card[data-question]').forEach(card => {
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                const question = this.dataset.question;
+                const textarea = document.getElementById('thoughtInput');
+                textarea.placeholder = question;
+                textarea.value = '';
+                textarea.focus();
+                document.getElementById('share').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+        
+        // Fetch and display Pomfret thoughts
+        // town_id=115 for Pomfret
+        fetch('/api/get-thoughts.php?town_id=115&limit=10')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('thoughtsList');
+                if (data.status === 'success' && data.thoughts && data.thoughts.length > 0) {
+                    container.innerHTML = data.thoughts.map(t => {
+                        let authorDisplay = t.display_name || 'Anonymous';
+                        if (t.age_bracket) {
+                            authorDisplay += ` (${t.age_bracket})`;
+                        }
+                        return `
+                        <div class="thought-card" data-id="${t.thought_id}">
+                            <div class="thought-content">"${t.content}"</div>
+                            <div class="thought-meta">
+                                <span>${t.time_ago}</span>
+                                <span style="color: #888; margin-left: 8px;">— ${authorDisplay}</span>
+                            </div>
+                            <div class="thought-votes">
+                                <button class="vote-btn" onclick="voteThought(${t.thought_id}, 'up')">👍 ${t.votes_up || 0}</button>
+                                <button class="vote-btn" onclick="voteThought(${t.thought_id}, 'down')">👎 ${t.votes_down || 0}</button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<div class="thoughts-empty">No thoughts yet. Be the first to share what\'s on your mind about Pomfret!</div>';
+                }
+            })
+            .catch(err => {
+                document.getElementById('thoughtsList').innerHTML = 
+                    '<div class="thoughts-empty">Could not load thoughts. Try refreshing.</div>';
+            });
+        
+        // Character count
+        const textarea = document.getElementById('thoughtInput');
+        const charCount = document.getElementById('charCount');
+        textarea.addEventListener('input', () => {
+            charCount.textContent = textarea.value.length;
+        });
+        
+        // Submit thought
+        document.getElementById('submitThought').addEventListener('click', async function() {
+            const content = textarea.value.trim();
+            const feedback = document.getElementById('submitFeedback');
+            
+            if (content.length < 10) {
+                feedback.className = 'submit-feedback error';
+                feedback.textContent = 'Please write at least 10 characters.';
+                return;
+            }
+            
+            this.disabled = true;
+            this.textContent = 'Submitting...';
+            
+            try {
+                const response = await fetch('/api/submit-thought.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: content,
+                        town_id: 115,
+                        session_id: sessionId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    feedback.className = 'submit-feedback success';
+                    feedback.textContent = 'Thank you! Your thought has been shared.';
+                    textarea.value = '';
+                    charCount.textContent = '0';
+                    // Reload thoughts after short delay
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    throw new Error(data.message || 'Could not submit');
+                }
+            } catch (err) {
+                feedback.className = 'submit-feedback error';
+                feedback.textContent = 'Could not submit. Please try again.';
+            }
+            
+            this.disabled = false;
+            this.textContent = 'Share Your Thought';
+        });
+    })();
+    
+    // Vote function (global scope for onclick)
+    async function voteThought(thoughtId, direction) {
+        try {
+            const response = await fetch('/api/vote-thought.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    thought_id: thoughtId,
+                    direction: direction,
+                    session_id: localStorage.getItem('tpb_civic_session')
+                })
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                location.reload();
+            }
+        } catch (err) {
+            console.error('Vote failed:', err);
+        }
+    }
+    </script>
+</body>
+</html>

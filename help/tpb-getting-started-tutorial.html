@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The People's Branch — Getting Started!</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #1a1a2e;
+    --bg-card: #16213e;
+    --bg-card-hover: #1a2745;
+    --accent-gold: #f0c929;
+    --accent-blue: #4fc3f7;
+    --accent-green: #66bb6a;
+    --accent-coral: #ff7979;
+    --accent-purple: #b388ff;
+    --text-main: #e8e8f0;
+    --text-dim: #9a9ab8;
+    --text-bright: #ffffff;
+    --border: #2a2a4a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Nunito', sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .hero {
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    padding: 3rem 1.5rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 3px solid var(--accent-gold);
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 40%, rgba(240,201,41,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(79,195,247,0.06) 0%, transparent 50%);
+    animation: drift 15s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(-3%, 2%); }
+  }
+  .hero h1 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--accent-gold);
+    position: relative;
+    margin-bottom: 0.3rem;
+  }
+  .hero .subtitle {
+    font-size: 1.15rem;
+    color: var(--accent-blue);
+    position: relative;
+    font-weight: 600;
+  }
+  .hero .tagline {
+    font-size: 0.95rem;
+    color: var(--text-dim);
+    margin-top: 0.5rem;
+    position: relative;
+  }
+
+  /* ── NAVIGATION DOTS ── */
+  .step-nav {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.2rem;
+    background: rgba(22, 33, 62, 0.9);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .step-dot {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg-dark);
+    color: var(--text-dim);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .step-dot.active {
+    border-color: var(--accent-gold);
+    background: var(--accent-gold);
+    color: #1a1a2e;
+    transform: scale(1.15);
+    box-shadow: 0 0 12px rgba(240,201,41,0.4);
+  }
+  .step-dot.completed {
+    border-color: var(--accent-green);
+    background: var(--accent-green);
+    color: #1a1a2e;
+  }
+  .step-dot:hover:not(.active) {
+    border-color: var(--accent-blue);
+    transform: scale(1.1);
+  }
+
+  /* ── CONTENT AREA ── */
+  .content-area {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  .step-section {
+    display: none;
+    animation: fadeSlide 0.4s ease;
+  }
+  .step-section.visible { display: block; }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.8rem;
+    margin-bottom: 1.2rem;
+    transition: border-color 0.3s;
+  }
+  .card:hover { border-color: rgba(240,201,41,0.3); }
+
+  .card h2 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.6rem;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .card h3 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.15rem;
+    color: var(--accent-blue);
+    margin: 1.2rem 0 0.5rem;
+  }
+
+  .emoji-icon { font-size: 1.5rem; }
+
+  p + p { margin-top: 0.8rem; }
+
+  /* ── HIGHLIGHT BOXES ── */
+  .highlight-box {
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+    border-left: 4px solid;
+  }
+  .highlight-box.gold {
+    background: rgba(240,201,41,0.08);
+    border-color: var(--accent-gold);
+  }
+  .highlight-box.blue {
+    background: rgba(79,195,247,0.08);
+    border-color: var(--accent-blue);
+  }
+  .highlight-box.green {
+    background: rgba(102,187,106,0.08);
+    border-color: var(--accent-green);
+  }
+  .highlight-box.coral {
+    background: rgba(255,121,121,0.08);
+    border-color: var(--accent-coral);
+  }
+  .highlight-box.purple {
+    background: rgba(179,136,255,0.08);
+    border-color: var(--accent-purple);
+  }
+  .highlight-box strong {
+    color: var(--text-bright);
+  }
+
+  /* ── ANALOGY SECTION ── */
+  .analogy {
+    background: linear-gradient(135deg, rgba(79,195,247,0.06), rgba(179,136,255,0.06));
+    border: 1px dashed var(--accent-purple);
+    border-radius: 14px;
+    padding: 1.3rem 1.5rem;
+    margin: 1rem 0;
+  }
+  .analogy .label {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-purple);
+    margin-bottom: 0.4rem;
+  }
+
+  /* ── QUIZ ── */
+  .quiz-container {
+    margin: 1.2rem 0;
+  }
+  .quiz-question {
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 0.8rem;
+    font-size: 1.05rem;
+  }
+  .quiz-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.8rem 1.2rem;
+    margin-bottom: 0.5rem;
+    background: rgba(42, 42, 74, 0.5);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-main);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .quiz-option:hover:not(.selected) {
+    border-color: var(--accent-blue);
+    background: rgba(79,195,247,0.08);
+  }
+  .quiz-option.correct {
+    border-color: var(--accent-green);
+    background: rgba(102,187,106,0.15);
+    color: var(--accent-green);
+    font-weight: 700;
+  }
+  .quiz-option.wrong {
+    border-color: var(--accent-coral);
+    background: rgba(255,121,121,0.1);
+    color: var(--accent-coral);
+    opacity: 0.7;
+  }
+  .quiz-option.selected { pointer-events: none; }
+  .quiz-feedback {
+    margin-top: 0.5rem;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    display: none;
+  }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb {
+    background: rgba(102,187,106,0.12);
+    color: var(--accent-green);
+  }
+  .quiz-feedback.wrong-fb {
+    background: rgba(255,121,121,0.12);
+    color: var(--accent-coral);
+  }
+
+  /* ── LEVEL VISUALIZATION ── */
+  .level-track {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .level-badge {
+    padding: 0.5rem 0.9rem;
+    border-radius: 20px;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    position: relative;
+  }
+  .level-arrow {
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    padding: 0 0.2rem;
+  }
+  .level-badge.l1 { background: rgba(158,158,158,0.2); color: #bbb; border: 1px solid #555; }
+  .level-badge.l2 { background: rgba(79,195,247,0.15); color: var(--accent-blue); border: 1px solid rgba(79,195,247,0.4); }
+  .level-badge.l3 { background: rgba(102,187,106,0.15); color: var(--accent-green); border: 1px solid rgba(102,187,106,0.4); }
+  .level-badge.l4 { background: rgba(240,201,41,0.15); color: var(--accent-gold); border: 1px solid rgba(240,201,41,0.4); }
+
+  /* ── NAV BUTTONS ── */
+  .nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .nav-btn {
+    padding: 0.7rem 1.6rem;
+    border-radius: 25px;
+    border: 2px solid var(--accent-gold);
+    background: transparent;
+    color: var(--accent-gold);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .nav-btn:hover {
+    background: var(--accent-gold);
+    color: var(--bg-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(240,201,41,0.3);
+  }
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .nav-btn.primary {
+    background: var(--accent-gold);
+    color: var(--bg-dark);
+  }
+  .nav-btn.primary:hover {
+    background: #ffe066;
+    box-shadow: 0 4px 20px rgba(240,201,41,0.4);
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap {
+    background: var(--border);
+    height: 6px;
+    border-radius: 3px;
+    margin: 1rem 0 0;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-gold), var(--accent-green));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* ── THOUGHT EXAMPLE ── */
+  .thought-example {
+    background: rgba(240,201,41,0.06);
+    border: 1px solid rgba(240,201,41,0.2);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin: 0.8rem 0;
+    font-style: italic;
+    position: relative;
+  }
+  .thought-example::before {
+    content: '💭';
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    font-size: 1.3rem;
+    font-style: normal;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 500px) {
+    .card { padding: 1.2rem; }
+    .hero { padding: 2rem 1rem 1.5rem; }
+    .step-dot { width: 32px; height: 32px; font-size: 0.75rem; }
+    .level-badge { font-size: 0.7rem; padding: 0.4rem 0.6rem; }
+  }
+
+  /* ── FUN DETAILS ── */
+  .fun-fact {
+    display: inline-block;
+    background: rgba(179,136,255,0.1);
+    border: 1px solid rgba(179,136,255,0.3);
+    border-radius: 8px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.82rem;
+    color: var(--accent-purple);
+    font-weight: 600;
+    margin: 0.3rem 0;
+  }
+
+  /* ── POINTS EXPLAINER ── */
+  .points-scenario {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem 1.4rem;
+    margin: 0.8rem 0;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .points-scenario:hover { border-color: rgba(240,201,41,0.4); }
+  .points-scenario.expanded .scenario-details { display: block; }
+  .points-scenario .scenario-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+  }
+  .points-scenario .scenario-header .left {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .scenario-emoji { font-size: 1.6rem; }
+  .scenario-name { font-family: 'Fredoka', sans-serif; font-weight: 600; color: var(--text-bright); font-size: 1rem; }
+  .scenario-pts {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    color: var(--accent-gold);
+    font-size: 1.05rem;
+    white-space: nowrap;
+    background: rgba(240,201,41,0.1);
+    padding: 0.2rem 0.7rem;
+    border-radius: 20px;
+    border: 1px solid rgba(240,201,41,0.25);
+  }
+  .scenario-details {
+    display: none;
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+  .scenario-toggle {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    transition: transform 0.3s;
+  }
+  .points-scenario.expanded .scenario-toggle { transform: rotate(180deg); }
+
+  .story-box {
+    background: linear-gradient(135deg, rgba(240,201,41,0.04), rgba(102,187,106,0.04));
+    border: 1px solid rgba(102,187,106,0.2);
+    border-radius: 14px;
+    padding: 1.3rem 1.5rem;
+    margin: 1rem 0;
+    position: relative;
+  }
+  .story-box .story-label {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-green);
+    margin-bottom: 0.5rem;
+  }
+  .story-character {
+    font-weight: 700;
+    color: var(--accent-blue);
+  }
+  .story-points-badge {
+    display: inline-block;
+    background: rgba(240,201,41,0.12);
+    border: 1px solid rgba(240,201,41,0.3);
+    color: var(--accent-gold);
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 10px;
+    margin: 0 0.1rem;
+  }
+
+  .not-list {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+  }
+  .not-card {
+    flex: 1;
+    min-width: 200px;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    text-align: center;
+  }
+  .not-card.is-not {
+    background: rgba(255,121,121,0.06);
+    border: 1px solid rgba(255,121,121,0.25);
+  }
+  .not-card.is-yes {
+    background: rgba(102,187,106,0.06);
+    border: 1px solid rgba(102,187,106,0.25);
+  }
+  .not-card .label {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+  }
+  .not-card.is-not .label { color: var(--accent-coral); }
+  .not-card.is-yes .label { color: var(--accent-green); }
+  .not-card p { font-size: 0.9rem; color: var(--text-dim); }
+
+  /* Points calculator mini-game */
+  .calc-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4rem;
+    margin: 1rem 0;
+  }
+  .calc-title {
+    font-family: 'Fredoka', sans-serif;
+    color: var(--accent-gold);
+    font-size: 1.1rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
+  }
+  .calc-checkboxes { display: flex; flex-direction: column; gap: 0.5rem; }
+  .calc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+    background: rgba(42,42,74,0.4);
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+  }
+  .calc-row:hover { background: rgba(42,42,74,0.7); }
+  .calc-row.checked { background: rgba(240,201,41,0.08); }
+  .calc-row input[type="checkbox"] { display: none; }
+  .calc-row .check-icon {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .calc-row.checked .check-icon {
+    background: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--bg-dark);
+  }
+  .calc-row .row-left { display: flex; align-items: center; gap: 0.6rem; }
+  .calc-row .row-label { font-size: 0.9rem; }
+  .calc-row .row-pts { font-family: 'Fredoka', sans-serif; color: var(--accent-gold); font-weight: 700; font-size: 0.85rem; white-space: nowrap; }
+  .calc-total {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background: rgba(240,201,41,0.08);
+    border: 1px solid rgba(240,201,41,0.2);
+    border-radius: 10px;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.3rem;
+    color: var(--accent-gold);
+    font-weight: 700;
+    transition: transform 0.2s;
+  }
+  .calc-total.bump { transform: scale(1.05); }
+
+  a { color: var(--accent-blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .text-gold { color: var(--accent-gold); }
+  .text-blue { color: var(--accent-blue); }
+  .text-green { color: var(--accent-green); }
+  .text-coral { color: var(--accent-coral); }
+  .text-purple { color: var(--accent-purple); }
+  .text-bright { color: var(--text-bright); }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>🏛️ The People's Branch</h1>
+  <div class="subtitle">Your Voice. Your Government. For Real.</div>
+  <div class="tagline">A Getting Started Tutorial — no boring stuff, we promise.</div>
+  <div class="progress-bar-wrap" style="max-width:400px;margin:1rem auto 0">
+    <div class="progress-bar-fill" id="progressBar"></div>
+  </div>
+</div>
+
+<!-- STEP NAV -->
+<div class="step-nav" id="stepNav">
+  <div class="step-dot active" data-step="0">1</div>
+  <div class="step-dot" data-step="1">2</div>
+  <div class="step-dot" data-step="2">3</div>
+  <div class="step-dot" data-step="3">4</div>
+  <div class="step-dot" data-step="4">5</div>
+  <div class="step-dot" data-step="5">6</div>
+  <div class="step-dot" data-step="6">7</div>
+  <div class="step-dot" data-step="7">8</div>
+</div>
+
+<div class="content-area">
+
+  <!-- ═══ STEP 1: WHAT IS TPB? ═══ -->
+  <div class="step-section visible" data-step="0">
+    <div class="card">
+      <h2><span class="emoji-icon">🤔</span> What Even IS "The People's Branch"?</h2>
+
+      <p>You know how the U.S. government has <strong class="text-blue">three branches</strong> — the President (Executive), Congress (Legislative), and the Courts (Judicial)?</p>
+
+      <p>Well, <strong class="text-gold">The People's Branch</strong> is like an unofficial <strong>fourth branch</strong> — built by everyday people like you — so citizens can have a voice in government <em>all the time</em>, not just on Election Day.</p>
+
+      <div class="analogy">
+        <div class="label">🎮 Think of it like this</div>
+        <p>Imagine your school has a Student Council, but you only get to vote for reps once a year. The rest of the year? You have no way to say "Hey, the lunch menu is terrible" or "We need more time between classes." <strong class="text-bright">TPB is like having a suggestion box that actually works</strong> — your ideas get organized, sent to the right people, and tracked so you can see what happened.</p>
+      </div>
+
+      <div class="highlight-box gold">
+        <strong>⚡ The Big Idea:</strong> Instead of "vote and vanish" (vote once, then forget about government for years), TPB helps you stay involved and make your voice count every single day.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="emoji-icon">🌟</span> Why Should YOU Care?</h2>
+
+      <p>Ever been frustrated about something in your town? Maybe a broken sidewalk, a park that needs fixing, or a rule that doesn't make sense?</p>
+
+      <p>Most people just complain to their friends. But on TPB, your complaint goes somewhere real. It gets matched to the <strong class="text-green">actual government official</strong> who can do something about it.</p>
+
+      <div class="highlight-box blue">
+        <strong>📣 Your voice + the right person = actual change.</strong> That's the formula.
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" disabled>← Back</button>
+      <button class="nav-btn primary" onclick="goToStep(1)">Let's Go! →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 2: HOW IT WORKS ═══ -->
+  <div class="step-section" data-step="1">
+    <div class="card">
+      <h2><span class="emoji-icon">⚙️</span> How Does It Work?</h2>
+
+      <p>TPB works on a simple idea: <strong class="text-gold">trust is earned, not demanded</strong>. When you first show up, you're anonymous — nobody knows who you are, and that's fine! As you share a little more about yourself (like your email, your town, your name), you unlock more abilities.</p>
+
+      <h3>🪪 Identity Levels — Who You Are</h3>
+      <p>Think of these like trust badges. The more you verify, the more the platform trusts you.</p>
+
+      <div class="level-track">
+        <div class="level-badge l1">👤 Anonymous</div>
+        <span class="level-arrow">→</span>
+        <div class="level-badge l2">🔵 Remembered</div>
+        <span class="level-arrow">→</span>
+        <div class="level-badge l3">✅ Verified</div>
+        <span class="level-arrow">→</span>
+        <div class="level-badge l4">⭐ Vetted</div>
+      </div>
+
+      <div class="highlight-box green">
+        <strong>🔒 Your privacy matters.</strong> You're never <em>forced</em> to share anything. You choose what to share, and each step unlocks new things you can do. It's like leveling up in a game — but for real life.
+      </div>
+
+      <h3>🚀 Engagement Levels — What You Do</h3>
+      <p>Separately from who you are, there's also what you <em>do</em>. The more you participate, the more you can do on the platform.</p>
+
+      <div class="level-track">
+        <div class="level-badge l1">👀 Viewer</div>
+        <span class="level-arrow">→</span>
+        <div class="level-badge l1">🗳️ Voter</div>
+        <span class="level-arrow">→</span>
+        <div class="level-badge l2">🤝 Volunteer</div>
+        <span class="level-arrow">→</span>
+        <div class="level-badge l2">📚 Trainee</div>
+        <span class="level-arrow">→</span>
+        <div class="level-badge l3">🏃 Active</div>
+        <span class="level-arrow">→</span>
+        <div class="level-badge l4">👑 Lead</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="analogy">
+        <div class="label">🎮 RPG Analogy</div>
+        <p>Identity Levels = your <strong>character class</strong> (who you are). Engagement Levels = your <strong>experience points</strong> (what you've done). You level up both tracks independently!</p>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goToStep(0)">← Back</button>
+      <button class="nav-btn primary" onclick="goToStep(2)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 3: THOUGHTS ═══ -->
+  <div class="step-section" data-step="2">
+    <div class="card">
+      <h2><span class="emoji-icon">💭</span> "Thoughts" — Your Civic Voice</h2>
+
+      <p>On TPB, when you have an idea, a complaint, or a concern about your community, you post a <strong class="text-gold">"Thought."</strong> It's not a tweet. It's not a rant. It's your civic voice — and it goes somewhere.</p>
+
+      <h3>Here's what makes Thoughts special:</h3>
+
+      <div class="highlight-box blue">
+        <strong>🎯 Smart Routing:</strong> Your Thought gets automatically matched to the government official who can actually do something about it — whether that's your town selectman, your state rep, or someone in Congress.
+      </div>
+
+      <div class="highlight-box green">
+        <strong>📊 Aggregation:</strong> When lots of people in your town post Thoughts about the same issue (like "Fix Main Street!"), those get grouped together. Officials can see that 200 people care about this — not just one.
+      </div>
+
+      <div class="highlight-box purple">
+        <strong>📈 Tracking:</strong> You can follow what happens with your Thought. Did it get seen? Did anyone respond? This is accountability.
+      </div>
+
+      <h3>Example Thoughts:</h3>
+
+      <div class="thought-example">
+        "The crosswalk on Elm Street doesn't have a signal. Kids walk to school there every day and it feels dangerous."
+      </div>
+
+      <div class="thought-example">
+        "Our town library closes at 5pm but most parents don't get off work until 6. Can we extend hours?"
+      </div>
+
+      <div class="thought-example">
+        "The recycling bins at the park are always overflowing on weekends. Can we get more frequent pickup?"
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goToStep(1)">← Back</button>
+      <button class="nav-btn primary" onclick="goToStep(3)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 4: CIVIC POINTS ═══ -->
+  <div class="step-section" data-step="3">
+    <div class="card">
+      <h2><span class="emoji-icon">✨</span> Civic Points — Gratitude, Not Money</h2>
+
+      <p>When you do stuff on TPB — post Thoughts, vote on issues, volunteer — you earn <strong class="text-gold">Civic Points</strong>.</p>
+
+      <p>But here's the important part: <strong class="text-bright">points are NOT money.</strong> You can't buy pizza with them. So what ARE they?</p>
+
+      <div class="not-list">
+        <div class="not-card is-not">
+          <div class="label">❌ NOT This</div>
+          <p>Money, crypto, gift cards, or anything you can spend</p>
+        </div>
+        <div class="not-card is-yes">
+          <div class="label">✅ THIS</div>
+          <p>Gratitude — the community's way of saying <em>"thanks for caring"</em></p>
+        </div>
+      </div>
+
+      <div class="analogy">
+        <div class="label">🏆 Think of it like</div>
+        <p>Community service hours, but digital. When you apply to college or a job and say "I have 200 service hours," that doesn't mean you got paid — it means you <strong>showed up and made a difference.</strong> Civic Points work the same way. They're your <strong>reputation</strong>, not a currency.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="emoji-icon">📊</span> How Points Actually Work</h2>
+      <p>Here are real examples of actions and the points they earn. <strong class="text-blue">Tap any row to learn more!</strong></p>
+
+      <h3>🚪 Getting Started (Onboarding)</h3>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">👋</span><span class="scenario-name">Accept the Community Guidelines</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+5 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">Just agree to be respectful and participate in good faith. That's it — easiest 5 points ever! Everyone starts here.</div>
+      </div>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">📍</span><span class="scenario-name">Set Your Location (Town &amp; State)</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+10 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">Tell TPB where you live so it can connect you with YOUR town's issues, YOUR representatives, and YOUR neighbors. This is how your Thoughts get routed to the right people!</div>
+      </div>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">✅</span><span class="scenario-name">Complete Your Profile</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+10 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">Set your preferences and get your auto-generated username. Unlike social media, you don't pick a clever handle — TPB gives you one automatically. This keeps things civic, not personal. It's about your ideas, not your brand.</div>
+      </div>
+
+      <h3>🪪 Building Trust (Identity)</h3>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">📧</span><span class="scenario-name">Provide Your Email</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+20 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">Sharing your email moves you from "Anonymous" to "Remembered." TPB can now recognize you when you come back. Nobody else sees your email — it's just between you and the platform.</div>
+      </div>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">🔓</span><span class="scenario-name">Verify Your Email</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+50 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">Click the link in the verification email to prove it's really yours. <strong>Big unlock:</strong> you can now <strong>VOTE</strong> on community issues! This is worth a lot of points because it's a big trust step.</div>
+      </div>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">📱</span><span class="scenario-name">Verify Your Phone</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+100 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">TPB sends a magic link to your phone — just tap it and you're verified. No codes to type, no SMS hassles. This is a big trust step because it proves you're a real person with a real phone number. 100 points because that level of trust matters.</div>
+      </div>
+
+      <h3>🗳️ Participating (Engagement)</h3>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">🗳️</span><span class="scenario-name">Cast Your First Vote</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+15 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">See an issue you care about? Vote on it! Your first vote is special — it means you've gone from watching to <em>doing</em>. Every vote after this one counts too.</div>
+      </div>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">💭</span><span class="scenario-name">Post Your First Thought</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+25 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">This is a big moment! You're not just voting on what others said — you're putting YOUR idea out there. Your Thought gets routed to the right official and becomes part of your town's civic record.</div>
+      </div>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">🔥</span><span class="scenario-name">Cast 10 Votes</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+50 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">You're not just a casual visitor anymore — you're an <strong>active citizen</strong>. TPB recognizes consistent participation because that's what makes democracy work.</div>
+      </div>
+
+      <h3>🤝 Going Further (Volunteering & Leading)</h3>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">🎉</span><span class="scenario-name">Get Accepted as a Volunteer</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+75 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">Apply to volunteer, get accepted, and join the team building TPB! You'll be placed in one of the 12 skill areas based on what you're good at and what you want to learn.</div>
+      </div>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">🎓</span><span class="scenario-name">Complete Training</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+100 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">Finish all the training modules for your skill area. Now you're not just helping — you <em>know what you're doing</em>. This unlocks your "Active" engagement status.</div>
+      </div>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">🌟</span><span class="scenario-name">Get Certified in Your Role</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+150 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">A Lead reviews your work and says "You've got it!" Now you can <strong>mentor others</strong>. This is where you start giving back to the next generation of volunteers.</div>
+      </div>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">🏅</span><span class="scenario-name">Complete Your First Mentorship</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+200 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">You taught someone, they learned, and you both rated each other. <strong>This is TPB's biggest reward for a reason</strong> — teaching others multiplies the impact. The person you taught can now teach someone else!</div>
+      </div>
+
+      <div class="points-scenario" onclick="toggleScenario(this)">
+        <div class="scenario-header">
+          <div class="left"><span class="scenario-emoji">👑</span><span class="scenario-name">Become a Lead</span></div>
+          <div style="display:flex;align-items:center;gap:0.5rem"><span class="scenario-pts">+300 pts</span><span class="scenario-toggle">▼</span></div>
+        </div>
+        <div class="scenario-details">The highest level! You're promoted to lead a skill area. You can now route Thoughts to officials, certify other volunteers, and help shape how TPB grows. This is real civic leadership.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="emoji-icon">🎮</span> Points Calculator — Try It!</h2>
+      <p>Check off the things below to see how many points you'd earn. It adds up fast!</p>
+
+      <div class="calc-wrap">
+        <div class="calc-title">✨ What Would YOU Do?</div>
+        <div class="calc-checkboxes" id="calcChecks">
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="5">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">👋 Accept community guidelines</span></div>
+            <span class="row-pts">+5</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="10">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">📍 Set my town</span></div>
+            <span class="row-pts">+10</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="10">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">✅ Complete my profile</span></div>
+            <span class="row-pts">+10</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="20">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">📧 Share my email</span></div>
+            <span class="row-pts">+20</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="50">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">🔓 Verify my email</span></div>
+            <span class="row-pts">+50</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="15">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">🗳️ Cast my first vote</span></div>
+            <span class="row-pts">+15</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="100">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">📱 Verify my phone</span></div>
+            <span class="row-pts">+100</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="25">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">💭 Post my first Thought</span></div>
+            <span class="row-pts">+25</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="50">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">🔥 Vote 10 times total</span></div>
+            <span class="row-pts">+50</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="75">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">🤝 Become a volunteer</span></div>
+            <span class="row-pts">+75</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="100">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">🎓 Complete training</span></div>
+            <span class="row-pts">+100</span>
+          </div>
+          <div class="calc-row" onclick="toggleCalc(this)" data-pts="200">
+            <div class="row-left"><div class="check-icon"></div><span class="row-label">🏅 Mentor someone</span></div>
+            <span class="row-pts">+200</span>
+          </div>
+        </div>
+        <div class="calc-total" id="calcTotal">✨ Your Points: <span id="calcScore">0</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="emoji-icon">📖</span> Points in Action — Meet Maya & Jordan</h2>
+      <p>Here's what earning points looks like for two different people:</p>
+
+      <div class="story-box">
+        <div class="story-label">📱 Maya's Story — The Concerned Citizen</div>
+        <p><span class="story-character">Maya</span> is 14 and frustrated that there's no bike lane on the road to her school. She signs up for TPB, accepts the guidelines <span class="story-points-badge">+5</span>, sets her town <span class="story-points-badge">+10</span>, and completes her profile <span class="story-points-badge">+10</span>.</p>
+        <p>She adds her email <span class="story-points-badge">+20</span> and verifies it <span class="story-points-badge">+50</span>. Now she can vote! She starts voting on other people's Thoughts <span class="story-points-badge">+15</span> and realizes she's not the only one who wants bike lanes.</p>
+        <p>She verifies her phone with a magic link <span class="story-points-badge">+100</span> — now she's a trusted, verified citizen. She posts her first Thought: <em>"We need a protected bike lane on Oak Street — 200+ students bike to school and it's dangerous."</em> <span class="story-points-badge">+25</span></p>
+        <p style="margin-top:0.7rem;"><strong class="text-gold">Maya's total: 235 points</strong> — and her Thought gets routed to the town transportation committee. Three weeks later, 47 other citizens have voted on her Thought. The committee adds it to their next meeting agenda. 🎉</p>
+      </div>
+
+      <div class="story-box">
+        <div class="story-label">🛠️ Jordan's Story — The Builder</div>
+        <p><span class="story-character">Jordan</span> is 13 and loves web design. After getting the same 235 points as Maya through onboarding and first participation, Jordan applies to volunteer as a designer <span class="story-points-badge">+20</span> and gets accepted <span class="story-points-badge">+75</span>.</p>
+        <p>Jordan gets assigned to the Design skill set <span class="story-points-badge">+25</span>, starts training <span class="story-points-badge">+25</span>, and completes it <span class="story-points-badge">+100</span>. Now Jordan is helping build town pages — real pages that real citizens use!</p>
+        <p>After getting certified <span class="story-points-badge">+150</span>, Jordan mentors a new volunteer named Alex, teaching them how to create town pages <span class="story-points-badge">+200</span>. Alex rates Jordan 5 stars <span class="story-points-badge">+100</span>!</p>
+        <p style="margin-top:0.7rem;"><strong class="text-gold">Jordan's total: 930 points</strong> — and Alex (the mentee) earned points too! Now Alex can go mentor someone else. The ripple effect is real. 🌊</p>
+      </div>
+
+      <div class="highlight-box coral">
+        <strong>🔑 Notice something?</strong> The highest point rewards go to actions that help OTHER people — mentoring (+200), getting certified so you CAN mentor (+150), and becoming a lead (+300). TPB rewards giving back more than anything else.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="emoji-icon">❓</span> Points FAQ</h2>
+
+      <div class="highlight-box blue">
+        <strong>"Can I lose points?"</strong><br>
+        Points represent what you've already done — they're a record of your contributions. Think of them like a high score: they go up, not down.
+      </div>
+
+      <div class="highlight-box green">
+        <strong>"Are points the same as XP in a game?"</strong><br>
+        Kind of! But the difference is these represent <em>real</em> civic contributions. You're not grinding — you're actually helping your community.
+      </div>
+
+      <div class="highlight-box purple">
+        <strong>"Why do teachers AND students get points?"</strong><br>
+        Because TPB believes learning is a two-way street. Teaching takes effort. Learning takes effort. Both deserve recognition. Plus, it encourages experienced people to share their knowledge.
+      </div>
+
+      <div class="highlight-box gold">
+        <strong>"What's the most points you can earn?"</strong><br>
+        There's no cap! The more you participate, teach, and lead, the more points you accumulate. Some day your total might show you've spent <em>years</em> making your community better. That's a legacy. 🌟
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goToStep(2)">← Back</button>
+      <button class="nav-btn primary" onclick="goToStep(4)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 5: VOLUNTEERING ═══ -->
+  <div class="step-section" data-step="4">
+    <div class="card">
+      <h2><span class="emoji-icon">🤝</span> Volunteering — Be Part of the Build</h2>
+
+      <p>TPB isn't built by a big corporation. It's built by <strong class="text-gold">volunteers</strong> — regular people who want to make democracy work better. And there are <strong>12 different skill areas</strong> you can contribute to!</p>
+
+      <p>You don't need to be a coder. Here are just some of the ways you can help:</p>
+
+      <div class="highlight-box blue">
+        <strong>🖊️ Writing</strong> — Help write content for town pages<br>
+        <strong>🔍 Research</strong> — Look up info about local officials<br>
+        <strong>🧪 Testing</strong> — Try out new features and report bugs<br>
+        <strong>📢 Outreach</strong> — Tell people about TPB<br>
+        <strong>🎨 Design</strong> — Make things look good<br>
+        <strong>💻 Code</strong> — Build features (if you know how!)
+      </div>
+
+      <div class="analogy">
+        <div class="label">🧩 It's like a group project, but actually good</div>
+        <p>Instead of one person doing all the work (we've all been there 😅), TPB splits tasks into a chain: one person <strong class="text-blue">Builds</strong>, another person <strong class="text-green">Tests</strong>, another person <strong class="text-gold">Deploys</strong>. No single person does everything. Everyone contributes their strength.</p>
+      </div>
+
+      <div class="highlight-box green">
+        <strong>🌱 Why this matters:</strong> By separating duties, everyone learns how real organizations work. It's like a mini civics lesson just by participating!
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goToStep(3)">← Back</button>
+      <button class="nav-btn primary" onclick="goToStep(5)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 6: YOUR TOWN ═══ -->
+  <div class="step-section" data-step="5">
+    <div class="card">
+      <h2><span class="emoji-icon">🏘️</span> Your Town Page — Where It Gets Real</h2>
+
+      <p>Every town on TPB gets its own page — a hub for everything civic in your community. Think of it as a <strong class="text-gold">home base for your town's democracy</strong>.</p>
+
+      <h3>What's on a Town Page?</h3>
+
+      <div class="highlight-box gold">
+        <strong>🏛️ Your Representatives</strong> — Who represents you at the town, state, and federal level, with contact info
+      </div>
+      <div class="highlight-box blue">
+        <strong>💭 Community Thoughts</strong> — What people in your town are talking about
+      </div>
+      <div class="highlight-box green">
+        <strong>📊 Civic Scorecards</strong> — How responsive are your officials? Are they listening?
+      </div>
+      <div class="highlight-box purple">
+        <strong>🤝 Volunteer Opportunities</strong> — Ways to help build your town's TPB presence
+      </div>
+
+      <div class="analogy">
+        <div class="label">🗺️ Think of it like</div>
+        <p>Google Maps, but instead of restaurants and gas stations, it shows you <strong>who runs your town</strong> and <strong>how to talk to them</strong>. Plus a way for your neighbors to team up on issues you all care about.</p>
+      </div>
+
+      <p><span class="fun-fact">📍 Fun fact:</span> Putnam, Connecticut is TPB's first complete model town — the proof of concept before expanding everywhere. But here's the real vision: when citizens build their town pages together, <strong class="text-gold">every town gets better and keeps evolving forever</strong> — always working toward <em>a more perfect town</em>. Your town. Built by you and your neighbors.</p>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goToStep(4)">← Back</button>
+      <button class="nav-btn primary" onclick="goToStep(6)">Quiz Time! →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 7: QUIZ ═══ -->
+  <div class="step-section" data-step="6">
+    <div class="card">
+      <h2><span class="emoji-icon">🧠</span> Quick Quiz — Did You Get It?</h2>
+      <p>Let's see if you were paying attention! No pressure — this is just for fun.</p>
+
+      <!-- Q1 -->
+      <div class="quiz-container" id="q1">
+        <div class="quiz-question">1. What are Civic Points?</div>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q1', false)">💰 Digital money you can spend at stores</button>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q1', true)">🙏 Gratitude — a way of saying "thanks for participating"</button>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q1', false)">🎮 Points to unlock video games</button>
+        <div class="quiz-feedback" id="q1-feedback"></div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="quiz-container" id="q2">
+        <div class="quiz-question">2. What is a "Thought" on TPB?</div>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q2', false)">📱 A post on social media</button>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q2', false)">🧘 A meditation exercise</button>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q2', true)">💭 A citizen's idea or concern that gets routed to the right official</button>
+        <div class="quiz-feedback" id="q2-feedback"></div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="quiz-container" id="q3">
+        <div class="quiz-question">3. What's the first Identity Level on TPB?</div>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q3', true)">👤 Anonymous — nobody knows who you are yet</button>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q3', false)">⭐ Vetted — fully trusted member</button>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q3', false)">👑 Lead — you're in charge</button>
+        <div class="quiz-feedback" id="q3-feedback"></div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="quiz-container" id="q4">
+        <div class="quiz-question">4. In TPB's mentorship system, who earns points?</div>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q4', false)">📚 Only the teacher</button>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q4', false)">🎓 Only the student</button>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q4', true)">🤝 Both the teacher AND the student</button>
+        <div class="quiz-feedback" id="q4-feedback"></div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="quiz-container" id="q5">
+        <div class="quiz-question">5. TPB is often called the "fourth branch" because it's...</div>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q5', false)">🏦 A new government department</button>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q5', true)">🗣️ A way for citizens to have a continuous voice in government</button>
+        <button class="quiz-option" onclick="checkAnswer(this, 'q5', false)">🌳 A tree-planting initiative</button>
+        <div class="quiz-feedback" id="q5-feedback"></div>
+      </div>
+
+      <div id="quizScore" style="display:none; text-align:center; margin-top:1.5rem;">
+        <div style="font-family:'Fredoka',sans-serif; font-size:1.8rem; color:var(--accent-gold);" id="scoreText"></div>
+        <p id="scoreMessage" style="margin-top:0.5rem;"></p>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goToStep(5)">← Back</button>
+      <button class="nav-btn primary" onclick="goToStep(7)">Wrap Up →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 8: WRAP UP ═══ -->
+  <div class="step-section" data-step="7">
+    <div class="card">
+      <h2><span class="emoji-icon">🎉</span> You Made It!</h2>
+
+      <p>You now know more about how democracy can work in the 21st century than most adults! Seriously.</p>
+
+      <h3>Let's Recap the Big Ideas:</h3>
+
+      <div class="highlight-box gold">
+        <strong>🏛️ TPB = The People's Branch</strong> — A citizen-powered "fourth branch" of government where your voice actually goes somewhere.
+      </div>
+
+      <div class="highlight-box blue">
+        <strong>💭 Thoughts</strong> get routed to the right officials, not lost in the void.
+      </div>
+
+      <div class="highlight-box green">
+        <strong>📈 You level up</strong> by sharing more about yourself (Identity) and by participating (Engagement). It's all voluntary.
+      </div>
+
+      <div class="highlight-box purple">
+        <strong>✨ Civic Points = gratitude</strong>, not money. They show you care.
+      </div>
+
+      <div class="highlight-box coral">
+        <strong>🤝 Volunteers build TPB together</strong>, teaching and learning from each other. Everyone contributes their strengths.
+      </div>
+
+      <div class="card" style="background: linear-gradient(135deg, rgba(240,201,41,0.08), rgba(79,195,247,0.08)); border-color: var(--accent-gold); text-align:center; margin-top:1.5rem;">
+        <p style="font-family:'Fredoka',sans-serif; font-size:1.3rem; color:var(--accent-gold); margin-bottom:0.5rem;">🌟 The Bottom Line 🌟</p>
+        <p style="font-size:1.1rem;">Democracy isn't a spectator sport. <strong class="text-bright">TPB gives you a seat at the table</strong> — no matter how old you are, where you live, or how much money you have.</p>
+        <p style="margin-top:0.8rem; color:var(--text-dim); font-size:0.9rem;">Ready to make your voice heard? Visit <strong class="text-blue">4tpb.org</strong> to get started.</p>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goToStep(6)">← Back</button>
+      <button class="nav-btn primary" onclick="goToStep(0)">🔄 Start Over</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let currentStep = 0;
+  const totalSteps = 8;
+  let quizAnswered = 0;
+  let quizCorrect = 0;
+
+  function goToStep(n) {
+    // Hide current
+    document.querySelector(`.step-section.visible`).classList.remove('visible');
+    // Show new
+    document.querySelector(`.step-section[data-step="${n}"]`).classList.add('visible');
+
+    // Update dots
+    document.querySelectorAll('.step-dot').forEach((dot, i) => {
+      dot.classList.remove('active');
+      if (i < n) dot.classList.add('completed');
+      if (i === n) dot.classList.add('active');
+      // Don't remove completed from future steps going back
+    });
+
+    currentStep = n;
+
+    // Update progress bar
+    const pct = ((n) / (totalSteps - 1)) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Click nav dots
+  document.querySelectorAll('.step-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      goToStep(parseInt(dot.dataset.step));
+    });
+  });
+
+  function toggleScenario(el) {
+    el.classList.toggle('expanded');
+  }
+
+  function toggleCalc(row) {
+    row.classList.toggle('checked');
+    const icon = row.querySelector('.check-icon');
+    icon.textContent = row.classList.contains('checked') ? '✓' : '';
+    updateCalcTotal();
+  }
+
+  function updateCalcTotal() {
+    let total = 0;
+    document.querySelectorAll('.calc-row.checked').forEach(r => {
+      total += parseInt(r.dataset.pts);
+    });
+    const scoreEl = document.getElementById('calcScore');
+    scoreEl.textContent = total;
+    const totalEl = document.getElementById('calcTotal');
+    totalEl.classList.add('bump');
+    setTimeout(() => totalEl.classList.remove('bump'), 200);
+  }
+
+  function checkAnswer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const feedback = document.getElementById(qId + '-feedback');
+    const options = container.querySelectorAll('.quiz-option');
+
+    options.forEach(opt => {
+      opt.classList.add('selected');
+      // Mark all as wrong first
+      opt.classList.add('wrong');
+    });
+
+    // Find and mark the correct one
+    options.forEach(opt => {
+      // The correct answer button will have isCorrect=true in its onclick
+      // We need a different approach - mark the clicked one
+    });
+
+    if (isCorrect) {
+      btn.classList.remove('wrong');
+      btn.classList.add('correct');
+      feedback.textContent = '🎉 Nailed it!';
+      feedback.className = 'quiz-feedback show correct-fb';
+      quizCorrect++;
+    } else {
+      btn.classList.add('wrong');
+      // Find correct answer and highlight it
+      options.forEach(opt => {
+        const onclickStr = opt.getAttribute('onclick');
+        if (onclickStr && onclickStr.includes('true')) {
+          opt.classList.remove('wrong');
+          opt.classList.add('correct');
+        }
+      });
+      feedback.textContent = '😅 Not quite — check the highlighted answer!';
+      feedback.className = 'quiz-feedback show wrong-fb';
+    }
+
+    quizAnswered++;
+    if (quizAnswered === 5) {
+      const scoreDiv = document.getElementById('quizScore');
+      scoreDiv.style.display = 'block';
+      document.getElementById('scoreText').textContent = quizCorrect + ' / 5';
+      const msgs = {
+        5: "🏆 Perfect score! You're ready to lead a TPB chapter!",
+        4: "🌟 Awesome job! You've got this!",
+        3: "👍 Solid! You understand the basics!",
+        2: "📖 Not bad! Maybe skim through again?",
+        1: "🤔 Give it another read — you'll get it!",
+        0: "😄 Hey, at least you tried! Scroll back and try again!"
+      };
+      document.getElementById('scoreMessage').textContent = msgs[quizCorrect];
+    }
+  }
+</script>
+
+</body>
+</html>

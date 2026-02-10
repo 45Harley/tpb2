@@ -1,0 +1,18 @@
+
+DirectoryIndex index.php index.html
+
+# Clean state/town URLs (case-insensitive)
+RewriteEngine On
+
+# Exclude qt from state rewrite
+RewriteRule ^qt/ - [L]
+
+RewriteCond %{REQUEST_URI} ^/([a-zA-Z]{2})/(.*)$
+RewriteRule ^([a-zA-Z]{2})/(.*)$ z-states/$1/$2 [L,NC]
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the "ea-php84" package as the default "PHP" programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php84 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit

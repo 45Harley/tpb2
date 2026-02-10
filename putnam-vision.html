@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Just Imagine — The People's Branch, Putnam CT</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0e13;
+    --bg-elevated: #141820;
+    --bg-card: #1a1f2b;
+    --bg-glow: rgba(212,168,67,0.04);
+    --border: #252b38;
+    --border-accent: #3a3520;
+    --gold: #d4a843;
+    --gold-soft: #b8943d;
+    --gold-glow: rgba(212,168,67,0.12);
+    --white: #f0ede6;
+    --text: #c8c4bb;
+    --muted: #7a7670;
+    --blue: #5b9bd5;
+    --green: #6abf7b;
+    --red-soft: #d4756a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── UTILITY ── */
+  .serif { font-family: 'Cormorant Garamond', serif; }
+  .gold { color: var(--gold); }
+  .white { color: var(--white); }
+  .muted { color: var(--muted); }
+
+  /* ── OPENING ── */
+  .opening {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .opening::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 60%, rgba(212,168,67,0.05) 0%, transparent 55%),
+      radial-gradient(ellipse at 70% 30%, rgba(91,155,213,0.03) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .opening .over-title {
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    position: relative;
+    animation: fadeUp 1s ease both;
+  }
+  .opening h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+    position: relative;
+    animation: fadeUp 1s 0.15s ease both;
+  }
+  .opening h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--gold);
+  }
+  .opening .sub {
+    font-size: 1.15rem;
+    color: var(--muted);
+    max-width: 480px;
+    position: relative;
+    animation: fadeUp 1s 0.3s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCROLL CONTAINER ── */
+  .scroll-body {
+    max-width: 740px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ── SECTION MARKERS ── */
+  .marker {
+    text-align: center;
+    padding: 5rem 0 2rem;
+  }
+  .marker .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--border);
+    line-height: 1;
+  }
+  .marker h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 700;
+    color: var(--white);
+    margin-top: 0.3rem;
+  }
+
+  /* ── PROSE ── */
+  .prose {
+    margin-bottom: 2.5rem;
+  }
+  .prose p {
+    margin-bottom: 1.2rem;
+    font-size: 1.05rem;
+    line-height: 1.85;
+  }
+
+  /* ── BLOCKQUOTE ── */
+  .voice {
+    border-left: 3px solid var(--gold-soft);
+    padding: 1.5rem 0 1.5rem 1.8rem;
+    margin: 2.5rem 0;
+  }
+  .voice p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    line-height: 1.7;
+    color: var(--white);
+    font-style: italic;
+    margin-bottom: 0.8rem;
+  }
+  .voice p:last-of-type { margin-bottom: 0; }
+  .voice .attr {
+    font-family: 'Manrope', sans-serif;
+    font-style: normal;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 0.8rem;
+  }
+
+  /* ── PROGRESSION (civil → civics → civilization) ── */
+  .progression-block {
+    margin: 3rem 0;
+    padding: 2rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .prog-step {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.8rem;
+    align-items: baseline;
+  }
+  .prog-step:last-child { margin-bottom: 0; }
+  .prog-word {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--gold);
+    min-width: 180px;
+    text-align: right;
+  }
+  .prog-def {
+    font-size: 1rem;
+    color: var(--text);
+    padding-top: 0.35rem;
+  }
+  .prog-def .latin {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 0.15rem;
+  }
+  @media (max-width: 550px) {
+    .prog-step { flex-direction: column; gap: 0.2rem; }
+    .prog-word { text-align: left; min-width: auto; }
+  }
+
+  /* ── SHIFT PAIRS ── */
+  .shifts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 2.5rem 0;
+  }
+  @media (max-width: 550px) { .shifts { grid-template-columns: 1fr; } }
+  .shift {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem;
+  }
+  .shift .from {
+    font-size: 0.9rem;
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--border);
+  }
+  .shift .arrow { color: var(--gold-soft); margin: 0.3rem 0; font-size: 0.85rem; }
+  .shift .to {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .shift .why {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 0.25rem;
+    font-style: italic;
+  }
+
+  /* ── ALREADY BUILT ── */
+  .built-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+  @media (max-width: 550px) { .built-grid { grid-template-columns: 1fr; } }
+  .built-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .built-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold-soft), transparent);
+  }
+  .built-card .status {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    margin-bottom: 0.5rem;
+  }
+  .status-live { background: rgba(106,191,123,0.15); color: var(--green); }
+  .status-built { background: rgba(91,155,213,0.15); color: var(--blue); }
+  .status-designed { background: rgba(212,168,67,0.15); color: var(--gold); }
+  .built-card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0.3rem;
+  }
+  .built-card p {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── IMAGINE SECTION ── */
+  .imagine-list {
+    margin: 2rem 0;
+  }
+  .imagine-item {
+    padding: 1.2rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .imagine-item:first-child { border-top: 1px solid var(--border); }
+  .imagine-item .word {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--gold-soft);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  .imagine-item p {
+    font-size: 1.05rem;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  /* ── CENTERPIECE QUOTE ── */
+  .centerpiece {
+    text-align: center;
+    padding: 4rem 1rem;
+    margin: 3rem 0;
+    position: relative;
+  }
+  .centerpiece::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, var(--gold-glow) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .centerpiece p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.6;
+    position: relative;
+  }
+  .centerpiece .kicker {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: 1rem;
+    font-style: italic;
+    position: relative;
+  }
+
+  /* ── NUMBERS ROW ── */
+  .numbers {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 2rem 0;
+    margin: 2rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .num-block { text-align: center; }
+  .num-block .n {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .num-block .nl {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 0.3rem;
+  }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    text-align: center;
+    padding: 4rem 2rem;
+    border-top: 1px solid var(--border);
+    margin-top: 4rem;
+  }
+  .doc-footer .mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--gold-soft);
+    margin-bottom: 0.5rem;
+  }
+  .doc-footer .details {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .doc-footer a { color: var(--blue); text-decoration: none; }
+  .doc-footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════ -->
+<!-- OPENING                              -->
+<!-- ════════════════════════════════════ -->
+<section class="opening">
+  <div class="over-title">A Vision Document</div>
+  <h1>Just <em>Imagine</em></h1>
+  <div class="sub">The People's Branch — Putnam, Connecticut<br>"All Politics Is Local"</div>
+</section>
+
+<div class="scroll-body">
+
+<!-- ════════════════════════════════════ -->
+<!-- 1. THE VOICE                         -->
+<!-- ════════════════════════════════════ -->
+<div class="marker">
+  <div class="num">I</div>
+  <h2>The Voice</h2>
+</div>
+
+<div class="voice">
+  <p>I have this idea — Putnam, The People's Branch. It's about getting more people in Putnam engaged.</p>
+  <p>I've been the worst offender. But Washington politics kicked me awake. And all I can do about that is vote every two years or freeze my fanny protesting. Neither sounds too appealing.</p>
+  <p>Civic engagement is the longer-term, more organized, more productive approach. Engage in what you're good at. Engage in what you find interesting. Help Putnam.</p>
+  <div class="attr">— Harley, Putnam resident &amp; TPB founder</div>
+</div>
+
+<div class="prose">
+  <p>This isn't a tech startup. It's not a social media platform. It's not partisan. It's one retired guy in a small Connecticut town who decided that complaining about government isn't enough — and that the real work of democracy happens locally, continuously, and together.</p>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!-- 2. THE PHILOSOPHY                    -->
+<!-- ════════════════════════════════════ -->
+<div class="marker">
+  <div class="num">II</div>
+  <h2>The Philosophy</h2>
+</div>
+
+<div class="prose">
+  <p>Politics has become tribal warfare. My team vs. your team. Winning, not solving. TPB isn't about that. It starts with three words — and each one builds on the last.</p>
+</div>
+
+<div class="progression-block">
+  <div class="prog-step">
+    <div class="prog-word">Civil</div>
+    <div class="prog-def">
+      Treating each other with respect, even in disagreement.
+      <span class="latin">From the Latin civis — citizen.</span>
+    </div>
+  </div>
+  <div class="prog-step">
+    <div class="prog-word">Civics</div>
+    <div class="prog-def">
+      Understanding how we govern ourselves together.
+      <span class="latin">Citizens learning to participate.</span>
+    </div>
+  </div>
+  <div class="prog-step">
+    <div class="prog-word">Civilization</div>
+    <div class="prog-def">
+      What we build when we cooperate across generations.
+      <span class="latin">Citizens building together over time.</span>
+    </div>
+  </div>
+</div>
+
+<div class="prose">
+  <p>TPB reframes the language of civic life — small shifts that change how people see their own role.</p>
+</div>
+
+<div class="shifts">
+  <div class="shift">
+    <div class="from">Resident</div>
+    <div class="arrow">→</div>
+    <div class="to">Citizen</div>
+    <div class="why">Living here vs. participating here</div>
+  </div>
+  <div class="shift">
+    <div class="from">Voting</div>
+    <div class="arrow">→</div>
+    <div class="to">Voice</div>
+    <div class="why">Once every few years vs. ongoing</div>
+  </div>
+  <div class="shift">
+    <div class="from">Complaint</div>
+    <div class="arrow">→</div>
+    <div class="to">Thought</div>
+    <div class="why">Negative energy vs. full expression</div>
+  </div>
+  <div class="shift">
+    <div class="from">Government</div>
+    <div class="arrow">→</div>
+    <div class="to">Governance</div>
+    <div class="why">Them vs. us doing it together</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!-- 3. WHAT'S ALREADY BUILT              -->
+<!-- ════════════════════════════════════ -->
+<div class="marker">
+  <div class="num">III</div>
+  <h2>What's Already Built</h2>
+</div>
+
+<div class="prose">
+  <p>This isn't a pitch for something that might exist someday. The infrastructure is live. The pages are on a server. The database has 45+ tables. Here's what Putnam residents can already see and use:</p>
+</div>
+
+<div class="numbers">
+  <div class="num-block">
+    <div class="n">45+</div>
+    <div class="nl">Database Tables</div>
+  </div>
+  <div class="num-block">
+    <div class="n">8,600+</div>
+    <div class="nl">Elected Officials</div>
+  </div>
+  <div class="num-block">
+    <div class="n">11</div>
+    <div class="nl">TA Reports Indexed</div>
+  </div>
+  <div class="num-block">
+    <div class="n">$100</div>
+    <div class="nl">Monthly Budget</div>
+  </div>
+</div>
+
+<div class="built-grid">
+  <div class="built-card">
+    <div class="status status-live">Live</div>
+    <h4>School Budget Dashboard</h4>
+    <p>The full $21.9M Putnam Board of Education budget — charts, tables, key takeaways — in plain English any resident can read.</p>
+  </div>
+  <div class="built-card">
+    <div class="status status-live">Live</div>
+    <h4>Town Administrator Reports</h4>
+    <p>11 months of TA monthly reports turned into an interactive tracker — monthly view, annual summary, project timelines, upcoming actions.</p>
+  </div>
+  <div class="built-card">
+    <div class="status status-live">Live</div>
+    <h4>Interactive State Map</h4>
+    <p>Click any state to find elected officials. Connecticut's Quiet Corner towns — Putnam, Brooklyn, Pomfret, Woodstock — have dedicated pages.</p>
+  </div>
+  <div class="built-card">
+    <div class="status status-built">Built</div>
+    <h4>Trust Progression System</h4>
+    <p>Identity levels from Anonymous to Vetted. Engagement levels from Viewer to Lead. Civic points as gratitude, not currency.</p>
+  </div>
+  <div class="built-card">
+    <div class="status status-built">Built</div>
+    <h4>Citizen Thoughts System</h4>
+    <p>Submit concerns, ideas, questions. Routed to the right officials. Aggregated for accountability. Civic voice with purpose.</p>
+  </div>
+  <div class="built-card">
+    <div class="status status-built">Built</div>
+    <h4>12 Volunteer Skill Paths</h4>
+    <p>Writing, tech, research, outreach, data, design — every skill has a place. Mutual mentorship where teachers and trainees both earn points.</p>
+  </div>
+  <div class="built-card">
+    <div class="status status-designed">Designed</div>
+    <h4>PHS Partnership</h4>
+    <p>A proposal for Putnam High School to integrate TPB into civics and social studies — students doing real civic engagement, not textbook exercises.</p>
+  </div>
+  <div class="built-card">
+    <div class="status status-designed">Designed</div>
+    <h4>Putnam Town Code</h4>
+    <p>Local ordinances and regulations made searchable and browsable — because citizens can't follow rules they can't find.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!-- 4. JUST IMAGINE                      -->
+<!-- ════════════════════════════════════ -->
+<div class="marker">
+  <div class="num">IV</div>
+  <h2>Just Imagine</h2>
+</div>
+
+<div class="imagine-list">
+  <div class="imagine-item">
+    <div class="word">Imagine</div>
+    <p>An 81-year-old retired IT professional building the future of civic engagement from his home in Putnam, Connecticut — on a hundred dollars a month — using AI as his co-builder.</p>
+  </div>
+  <div class="imagine-item">
+    <div class="word">Imagine</div>
+    <p>High school students at Putnam High sitting next to retirees in a lab — the kids teaching the elders how to prompt AI, the elders teaching the kids how government actually works.</p>
+  </div>
+  <div class="imagine-item">
+    <div class="word">Imagine</div>
+    <p>A civics class where the homework isn't a worksheet — it's building a real tool that real neighbors will use tomorrow.</p>
+  </div>
+  <div class="imagine-item">
+    <div class="word">Imagine</div>
+    <p>A teenager who's never voted building an AI agent that helps her grandmother find out who represents her on the town council.</p>
+  </div>
+  <div class="imagine-item">
+    <div class="word">Imagine</div>
+    <p>A retired electrician volunteering his skills and earning civic points — not money, but gratitude — because Putnam noticed he showed up.</p>
+  </div>
+  <div class="imagine-item">
+    <div class="word">Imagine</div>
+    <p>Town Administrator monthly reports that nobody reads — turned into an annual summary illustrating real Putnam town progress on a dozen projects. Already done.</p>
+  </div>
+  <div class="imagine-item">
+    <div class="word">Imagine</div>
+    <p>A school budget turned into an online dashboard any parent can understand in two minutes. Already live.</p>
+  </div>
+  <div class="imagine-item">
+    <div class="word">Imagine</div>
+    <p>The mayor checking TPB every morning the way she checks email — because that's where the town talks to her now.</p>
+  </div>
+  <div class="imagine-item">
+    <div class="word">Imagine</div>
+    <p>Another small town in Connecticut seeing what Putnam did and saying "we want that." And then another. And another.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!-- CENTERPIECE                          -->
+<!-- ════════════════════════════════════ -->
+<div class="centerpiece">
+  <p>Real people. Real places. Real issues.<br>Not red vs. blue.<br>Just… us. Figuring it out together.</p>
+  <div class="kicker">That's the heartbeat of The People's Branch.</div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!-- 5. HOW IT GROWS                      -->
+<!-- ════════════════════════════════════ -->
+<div class="marker">
+  <div class="num">V</div>
+  <h2>How It Grows</h2>
+</div>
+
+<div class="prose">
+  <p>TPB doesn't need to start big. It starts with one town that proves the model works. That town is Putnam.</p>
+  <p>One school principal says yes — and students start building real civic tools in class. One town official starts checking TPB — and residents realize their voice actually lands somewhere. One neighbor tells another — and engagement spreads the way it always has: person to person, street to street.</p>
+  <p>Putnam becomes the proof. Then Brooklyn, Pomfret, Woodstock — the Quiet Corner towns already on the platform. Then the rest of Connecticut. Then anywhere a community decides that democracy is a daily practice, not a biennial errand.</p>
+  <p>All politics is local. And all civic engagement starts with one person deciding to show up.</p>
+</div>
+
+</div><!-- end scroll-body -->
+
+<!-- ════════════════════════════════════ -->
+<!-- FOOTER                               -->
+<!-- ════════════════════════════════════ -->
+<div class="doc-footer">
+  <div class="mark">The People's Branch</div>
+  <div class="details">
+    Putnam, Connecticut &middot; <a href="https://4tpb.org" target="_blank">4tpb.org</a><br>
+    Vision document &middot; February 2026<br><br>
+    <em>Engage in what you're good at.<br>
+    Engage in what you find interesting.<br>
+    Help Putnam.</em>
+  </div>
+</div>
+
+</body>
+</html>

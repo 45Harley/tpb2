@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The People's Branch - A More Perfect Union. You are the Fourth Branch. Nine branches of government serve you. Find your state and make your voice heard.">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://4tpb.org/">
+    <meta property="og:title" content="USA | The People's Branch">
+    <meta property="og:description" content="You are the Fourth Branch. Nine branches of government serve you. Find your state.">
+    
+    <title>USA - A More Perfect Union | The People's Branch</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background: #0a0a0a;
+        }
+        
+        a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        /* HERO */
+        .hero {
+            position: relative;
+            min-height: 90vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)),
+                        linear-gradient(135deg, #1a1a2a 0%, #0a1a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            animation: fadeIn 1s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .usa-badge {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.15);
+            border: 2px solid #d4af37;
+            padding: 8px 25px;
+            border-radius: 30px;
+            font-size: 1em;
+            margin-bottom: 25px;
+            letter-spacing: 3px;
+            color: #d4af37;
+        }
+        
+        .hero h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+            font-weight: normal;
+            line-height: 1.2;
+        }
+        
+        .hero h1 span {
+            color: #d4af37;
+        }
+        
+        .foundation {
+            font-size: 1.2em;
+            color: #ccc;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.8;
+        }
+        
+        .foundation p {
+            margin-bottom: 1.2em;
+        }
+        
+        .foundation .highlight {
+            color: #d4af37;
+            font-style: italic;
+        }
+        
+        .foundation .thought-power {
+            font-size: 1.1em;
+            color: #fff;
+        }
+        
+        .scroll-hint {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #d4af37;
+            font-size: 1em;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+        }
+        
+        .scroll-hint span {
+            display: block;
+            font-size: 1.5em;
+            margin-top: 5px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        /* STRUCTURE SECTION */
+        .structure {
+            background: #0f0f0f;
+            padding: 60px 20px;
+            border-top: 1px solid #222;
+        }
+        
+        .structure-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .structure h2 {
+            font-size: 1.8em;
+            color: #d4af37;
+            margin-bottom: 30px;
+        }
+        
+        .pyramid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .pyramid-level {
+            background: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px 30px;
+            text-align: center;
+        }
+        
+        .pyramid-level.you {
+            background: linear-gradient(135deg, #2a2a1a 0%, #1a1a0a 100%);
+            border-color: #d4af37;
+            font-size: 1.3em;
+        }
+        
+        .pyramid-level.you .label {
+            color: #d4af37;
+            font-weight: bold;
+        }
+        
+        .pyramid-level .label {
+            color: #888;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .pyramid-level .branches {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+        
+        .pyramid-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .structure-note {
+            color: #888;
+            font-size: 1em;
+            font-style: italic;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        /* MAP SECTION */
+        .map-section {
+            background: #0a0a0a;
+            padding: 60px 20px;
+        }
+        
+        .map-section h2 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #d4af37;
+        }
+        
+        .map-section .section-intro {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            color: #aaa;
+        }
+        
+        .map-container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .map-container svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        /* SVG State Styling */
+        .map-container .state path,
+        .map-container .state circle {
+            fill: #2a2a2a;
+            stroke: #444;
+            stroke-width: 1;
+            transition: fill 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .map-container .state path:hover,
+        .map-container .state circle:hover {
+            fill: #3a3a3a;
+        }
+        
+        /* Active states - gold */
+        .map-container .state .ct {
+            fill: #d4af37;
+        }
+        
+        .map-container .state .ct:hover {
+            fill: #f4cf57;
+        }
+        
+        /* Tooltip */
+        .map-tooltip {
+            position: absolute;
+            background: #1a1a1a;
+            border: 1px solid #d4af37;
+            color: #e0e0e0;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 100;
+            white-space: nowrap;
+        }
+        
+        .map-tooltip.visible {
+            opacity: 1;
+        }
+        
+        .map-tooltip .state-name {
+            font-weight: bold;
+            color: #d4af37;
+        }
+        
+        .map-tooltip .state-stats {
+            color: #888;
+            font-size: 0.85em;
+            margin-top: 3px;
+        }
+        
+        .map-tooltip .state-stats.coming-soon {
+            color: #666;
+            font-style: italic;
+        }
+        
+        /* Map Legend */
+        .map-legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            color: #888;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .legend-color.active {
+            background: #d4af37;
+        }
+        
+        .legend-color.coming {
+            background: #2a2a2a;
+            border: 1px solid #444;
+        }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            background: #111;
+            padding: 12px 20px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .breadcrumb-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            font-size: 0.9em;
+        }
+        
+        .breadcrumb a {
+            color: #888;
+        }
+        
+        .breadcrumb a:hover {
+            color: #d4af37;
+        }
+        
+        .breadcrumb .current {
+            color: #d4af37;
+        }
+        
+        /* STATE MODAL */
+        .state-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .state-modal-overlay.visible {
+            display: flex;
+        }
+        
+        .state-modal {
+            background: #1a1a2e;
+            border: 1px solid #d4af37;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .state-modal h2 {
+            color: #d4af37;
+            font-size: 1.5em;
+            margin-bottom: 12px;
+        }
+        
+        .state-modal .pitch {
+            color: #aaa;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+        
+        .state-modal .pitch strong {
+            color: #e0e0e0;
+        }
+        
+        .state-modal .active-pitch {
+            color: #ccc;
+        }
+        
+        .state-modal .build-pitch {
+            color: #aaa;
+            font-style: italic;
+        }
+        
+        .state-modal .zip-form {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .state-modal .zip-input {
+            padding: 12px 16px;
+            font-size: 1.1em;
+            background: #0a0a0f;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #e0e0e0;
+            width: 140px;
+            text-align: center;
+        }
+        
+        .state-modal .zip-input:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+        
+        .state-modal .zip-btn {
+            padding: 12px 24px;
+            font-size: 1em;
+            background: #d4af37;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .state-modal .zip-btn:hover {
+            background: #e4bf47;
+        }
+        
+        .state-modal .result {
+            margin: 15px 0;
+            padding: 15px;
+            background: #0a0a0f;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .state-modal .result.visible {
+            display: block;
+        }
+        
+        .state-modal .result .town-name {
+            color: #d4af37;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .state-modal .result .districts {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .state-modal .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .state-modal .cta-btn {
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .state-modal .cta-btn.primary {
+            background: #d4af37;
+            color: #000;
+            border: none;
+            font-weight: bold;
+        }
+        
+        .state-modal .cta-btn.primary:hover {
+            background: #e4bf47;
+            text-decoration: none;
+        }
+        
+        .state-modal .cta-btn.secondary {
+            background: transparent;
+            color: #d4af37;
+            border: 1px solid #d4af37;
+        }
+        
+        .state-modal .cta-btn.secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+            text-decoration: none;
+        }
+        
+        .state-modal .skip-link {
+            display: block;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        
+        .state-modal .skip-link:hover {
+            color: #888;
+        }
+        
+        .state-modal .see-ct {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+        
+        .state-modal .see-ct p {
+            color: #888;
+            margin-bottom: 10px;
+        }
+        
+        /* FOOTER */
+        footer {
+            background: #0a0a0a;
+            border-top: 1px solid #222;
+            padding: 40px 20px;
+            text-align: center;
+            color: #888;
+        }
+        
+        .footer-links {
+            margin-bottom: 20px;
+        }
+        
+        .footer-links a {
+            color: #aaa;
+            margin: 0 15px;
+            font-size: 0.95em;
+        }
+        
+        .footer-links a:hover {
+            color: #d4af37;
+        }
+        
+        .footer-tpb .tagline {
+            color: #d4af37;
+            font-size: 1em;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.4em;
+            }
+            
+            .foundation {
+                font-size: 1.05em;
+            }
+            
+            .pyramid-row {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .pyramid-level {
+                width: 100%;
+                max-width: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- BREADCRUMB -->
+    <nav class="breadcrumb">
+        <div class="breadcrumb-inner">
+            <span class="current">USA</span>
+        </div>
+    </nav>
+    
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="usa-badge">THE PEOPLE'S BRANCH</div>
+            <h1>A More <span>Perfect</span> Union</h1>
+            
+            <div class="foundation">
+                <p>You are the Fourth Branch.</p>
+                
+                <p>Beneath you stand three levels of government — town, state, and nation. Each with its three branches: legislative, executive, judicial. Nine branches in all. Every one of them exists to serve you.</p>
+                
+                <p>This was always the design. We just forgot.</p>
+                
+                <p>You are not at the bottom of a hierarchy, waiting for power to trickle down. You are at the top. <span class="highlight">The sovereign. The source. The Thought-Power.</span></p>
+                
+                <p class="thought-power">Every law, every policy, every action of government — it begins as a thought. Someone's thought. Why not yours?</p>
+                
+                <p>A More Perfect You isn't a destination — it's a practice. Each thought you share, each vote you cast, each neighbor you engage, each official you hold accountable: you unfold. You become more informed. More connected. More powerful.</p>
+                
+                <p>And as you become more perfect, so does everything beneath you. Your town. Your state. Your nation.</p>
+            </div>
+        </div>
+        
+        <div class="scroll-hint" onclick="document.getElementById('structure').scrollIntoView({behavior: 'smooth'})">
+            Find Your State
+            <span>↓</span>
+        </div>
+    </section>
+    
+    <!-- STRUCTURE -->
+    <section class="structure" id="structure">
+        <div class="structure-inner">
+            <h2>Nine Branches. One Sovereign.</h2>
+            
+            <div class="pyramid">
+                <div class="pyramid-level you">
+                    <div class="label">You — The Fourth Branch</div>
+                </div>
+                
+                <div class="pyramid-row">
+                    <div class="pyramid-level">
+                        <div class="label">Town</div>
+                        <div class="branches">Legislative · Executive · Judicial</div>
+                    </div>
+                    <div class="pyramid-level">
+                        <div class="label">State</div>
+                        <div class="branches">Legislative · Executive · Judicial</div>
+                    </div>
+                    <div class="pyramid-level">
+                        <div class="label">Nation</div>
+                        <div class="branches">Legislative · Executive · Judicial</div>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="structure-note">No kings. Only citizens.<br>The Fourth Branch is not yet built. You are building it.</p>
+        </div>
+    </section>
+    
+    <!-- MAP SECTION -->
+    <section class="map-section">
+        <h2>Find Your State</h2>
+        <p class="section-intro">One thought at a time.</p>
+        
+        <div class="map-container">
+            <div class="map-tooltip" id="mapTooltip">
+                <div class="state-name"></div>
+                <div class="state-stats"></div>
+            </div>
+            
+            <!-- SVG Map will be inserted here -->
+            <div id="mapHolder"></div>
+        </div>
+        
+        <div class="map-legend">
+            <div class="legend-item">
+                <div class="legend-color active"></div>
+                <span>Active</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color coming"></div>
+                <span>Click to Join</span>
+            </div>
+        </div>
+    </section>
+    
+    <!-- STATE MODAL -->
+    <div class="state-modal-overlay" id="stateModal">
+        <div class="state-modal">
+            <h2 id="modalStateName">Connecticut</h2>
+            
+            <!-- Initial: Enter zip -->
+            <div id="modalZipEntry">
+                <p class="pitch" id="modalPitch">
+                    See who represents you — from your town hall to Capitol Hill.<br>
+                    <strong>Tell them what matters.</strong>
+                </p>
+                <div class="zip-form">
+                    <input type="text" class="zip-input" id="modalZipInput" placeholder="Your zip code" maxlength="5" pattern="[0-9]*" inputmode="numeric">
+                    <button class="zip-btn" id="modalZipBtn">Go</button>
+                </div>
+            </div>
+            
+            <!-- Result: After zip lookup -->
+            <div class="result" id="modalResult">
+                <div class="town-name" id="resultTown"></div>
+                <div class="districts" id="resultDistricts"></div>
+            </div>
+            
+            <!-- CTAs for active state -->
+            <div class="cta-buttons" id="modalCTAsActive" style="display: none;">
+                <a href="reps.php?my=1" class="cta-btn primary">👥 See My Reps</a>
+                <a href="voice.php" class="cta-btn secondary">💬 Share a Thought</a>
+            </div>
+            
+            <!-- CTAs for inactive state -->
+            <div id="modalCTAsInactive" style="display: none;">
+                <p class="pitch" style="margin: 15px 0; color: #ccc; line-height: 1.6;">
+                    Connecticut is proving it works — citizens connected directly to their reps, from town hall to Capitol Hill.
+                </p>
+                <p class="pitch" style="margin: 15px 0; color: #d4af37; font-weight: bold;">
+                    Your voice. Their attention. Real progress.
+                </p>
+                <div class="cta-buttons" style="margin: 20px 0;">
+                    <a href="voice.php?browse=ct" class="cta-btn primary">👀 See CT in Action</a>
+                </div>
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #333;">
+                    <p style="color: #aaa; margin-bottom: 15px;">
+                        Want this for <strong style="color: #e0e0e0;"><span id="resultStateName">Texas</span></strong>?<br>
+                        Be a founding voice.
+                    </p>
+                    <a href="volunteer/" class="cta-btn secondary">🙋 I'm in — Help build <span id="resultStateName2">TX</span></a>
+                </div>
+            </div>
+            
+            <span class="skip-link" id="modalClose">Close</span>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-links">
+            <a href="/join.php">Join</a>
+            <a href="/reps.php">Your Representatives</a>
+            <a href="/read.php">Read Thoughts</a>
+            <a href="/volunteer/">Volunteer</a>
+        </div>
+        
+        <div class="footer-tpb">
+            <p><strong>The People's Branch</strong></p>
+            <p class="tagline">No Kings. Only Citizens.</p>
+        </div>
+    </footer>
+    
+    <script>
+    // Active states - states with linked towns in database
+    const activeStates = ['CT']; // Add more as they launch
+    
+    // State abbreviation to full name mapping
+    const stateNames = {
+        'al': 'Alabama', 'ak': 'Alaska', 'az': 'Arizona', 'ar': 'Arkansas', 'ca': 'California',
+        'co': 'Colorado', 'ct': 'Connecticut', 'de': 'Delaware', 'fl': 'Florida', 'ga': 'Georgia',
+        'hi': 'Hawaii', 'id': 'Idaho', 'il': 'Illinois', 'in': 'Indiana', 'ia': 'Iowa',
+        'ks': 'Kansas', 'ky': 'Kentucky', 'la': 'Louisiana', 'me': 'Maine', 'md': 'Maryland',
+        'ma': 'Massachusetts', 'mi': 'Michigan', 'mn': 'Minnesota', 'ms': 'Mississippi', 'mo': 'Missouri',
+        'mt': 'Montana', 'ne': 'Nebraska', 'nv': 'Nevada', 'nh': 'New Hampshire', 'nj': 'New Jersey',
+        'nm': 'New Mexico', 'ny': 'New York', 'nc': 'North Carolina', 'nd': 'North Dakota', 'oh': 'Ohio',
+        'ok': 'Oklahoma', 'or': 'Oregon', 'pa': 'Pennsylvania', 'ri': 'Rhode Island', 'sc': 'South Carolina',
+        'sd': 'South Dakota', 'tn': 'Tennessee', 'tx': 'Texas', 'ut': 'Utah', 'vt': 'Vermont',
+        'va': 'Virginia', 'wa': 'Washington', 'wv': 'West Virginia', 'wi': 'Wisconsin', 'wy': 'Wyoming',
+        'dc': 'District of Columbia'
+    };
+    
+    // Modal elements
+    const modal = document.getElementById('stateModal');
+    const modalStateName = document.getElementById('modalStateName');
+    const modalZipEntry = document.getElementById('modalZipEntry');
+    const modalResult = document.getElementById('modalResult');
+    const modalCTAsActive = document.getElementById('modalCTAsActive');
+    const modalCTAsInactive = document.getElementById('modalCTAsInactive');
+    const modalClose = document.getElementById('modalClose');
+    
+    // Show modal for a state
+    function showStateModal(stateCode) {
+        const stateName = stateNames[stateCode] || stateCode.toUpperCase();
+        
+        modalStateName.textContent = stateName;
+        
+        // Reset modal to initial state
+        modalZipEntry.style.display = 'block';
+        modalResult.classList.remove('visible');
+        modalCTAsActive.style.display = 'none';
+        modalCTAsInactive.style.display = 'none';
+        document.getElementById('modalZipInput').value = '';
+        
+        modal.classList.add('visible');
+        document.getElementById('modalZipInput').focus();
+    }
+    
+    // Close modal
+    modalClose.addEventListener('click', () => {
+        modal.classList.remove('visible');
+    });
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('visible');
+        }
+    });
+    
+    // Zip lookup - ONE function for all states
+    document.getElementById('modalZipBtn').addEventListener('click', lookupZip);
+    document.getElementById('modalZipInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') lookupZip();
+    });
+    
+    async function lookupZip() {
+        const zip = document.getElementById('modalZipInput').value.trim();
+        if (zip.length !== 5 || !/^\d+$/.test(zip)) {
+            alert('Please enter a 5-digit zip code');
+            return;
+        }
+        
+        try {
+            const response = await fetch('api/zip-lookup.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'lookup_zip', zip: zip })
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === 'success' && result.data) {
+                const data = result.data;
+                const stateAbbrev = data.state_code;  // API returns state_code
+                const stateName = data.state_name || stateAbbrev;
+                const townName = data.place;  // API returns place
+                const isActive = activeStates.includes(stateAbbrev);
+                
+                // Show result
+                document.getElementById('resultTown').textContent = townName + ', ' + stateAbbrev;
+                
+                // Districts
+                let districts = [];
+                if (data.us_congress_district) districts.push(data.us_congress_district);
+                if (data.state_senate_district) districts.push('Senate ' + data.state_senate_district);
+                if (data.state_house_district) districts.push('House ' + data.state_house_district);
+                document.getElementById('resultDistricts').textContent = districts.join(' • ') || '';
+                
+                modalZipEntry.style.display = 'none';
+                modalResult.classList.add('visible');
+                
+                if (isActive) {
+                    // Active state - show full CTAs
+                    modalCTAsActive.style.display = 'flex';
+                    modalCTAsInactive.style.display = 'none';
+                    
+                    // Save location for platform
+                    document.cookie = 'tpb_pending_zip=' + zip + '; path=/; max-age=3600';
+                    document.cookie = 'tpb_pending_town=' + encodeURIComponent(townName) + '; path=/; max-age=3600';
+                    document.cookie = 'tpb_pending_state=' + stateAbbrev + '; path=/; max-age=3600';
+                } else {
+                    // Inactive state - show "see CT" option
+                    document.getElementById('resultStateName').textContent = stateName;
+                    document.getElementById('resultStateName2').textContent = stateName;
+                    modalCTAsActive.style.display = 'none';
+                    modalCTAsInactive.style.display = 'block';
+                }
+            } else {
+                alert(result.message || 'Zip code not found. Please try again.');
+            }
+        } catch (err) {
+            console.error('Zip lookup error:', err);
+            alert('Error looking up zip code. Please try again.');
+        }
+    }
+    
+    // Load SVG map
+    fetch('usa-map.svg')
+        .then(response => response.text())
+        .then(svgContent => {
+            document.getElementById('mapHolder').innerHTML = svgContent;
+            initMap();
+        })
+        .catch(err => {
+            console.error('Failed to load map:', err);
+            document.getElementById('mapHolder').innerHTML = '<p style="text-align:center;color:#666;">Map loading...</p>';
+        });
+    
+    function initMap() {
+        const tooltip = document.getElementById('mapTooltip');
+        const statePaths = document.querySelectorAll('.state path, .state circle');
+        
+        statePaths.forEach(path => {
+            const stateClass = Array.from(path.classList).find(c => stateNames[c]);
+            if (!stateClass) return;
+            
+            const stateName = stateNames[stateClass] || stateClass.toUpperCase();
+            const isActive = activeStates.includes(stateClass.toUpperCase());
+            
+            // Mouse events for tooltip
+            path.addEventListener('mouseenter', (e) => {
+                const nameEl = tooltip.querySelector('.state-name');
+                const statsEl = tooltip.querySelector('.state-stats');
+                
+                nameEl.textContent = stateName;
+                statsEl.textContent = isActive ? 'Active — Click to join' : 'Click to join';
+                statsEl.classList.toggle('coming-soon', !isActive);
+                
+                tooltip.classList.add('visible');
+            });
+            
+            path.addEventListener('mousemove', (e) => {
+                const rect = document.querySelector('.map-container').getBoundingClientRect();
+                tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
+                tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+            });
+            
+            path.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('visible');
+            });
+            
+            // Click - opens modal for ALL states
+            path.addEventListener('click', () => {
+                showStateModal(stateClass);
+            });
+        });
+    }
+    </script>
+</body>
+</html>

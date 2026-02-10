@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brooklyn CT - A More Perfect Town. Join your neighbors in protecting what makes Brooklyn special and building what's next. Your voice shapes our future.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://4tpb.org/ct/brooklyn/">
+    <meta property="og:title" content="Brooklyn CT - A More Perfect Town">
+    <meta property="og:description" content="Home of Connecticut's oldest agricultural fair. Scenic Route 169. Historic landmarks. Help us protect what's special and build what's next.">
+    
+    <title>Brooklyn CT - A More Perfect Town | The People's Branch</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: #0a0a0a;
+        }
+        
+        /* HERO */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)),
+                        linear-gradient(135deg, #1a2a1a 0%, #0a1a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+        }
+        
+        .hero-content {
+            max-width: 900px;
+            animation: fadeIn 1s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .town-badge {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.15);
+            border: 2px solid #d4af37;
+            padding: 8px 25px;
+            border-radius: 30px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            color: #d4af37;
+        }
+        
+        .hero h1 {
+            font-size: 3.2em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+            font-weight: normal;
+            line-height: 1.2;
+        }
+        
+        .hero h1 span {
+            color: #d4af37;
+        }
+        
+        .hero .tagline {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            color: #ccc;
+            font-style: italic;
+        }
+        
+        .hero-description {
+            font-size: 1.15em;
+            color: #aaa;
+            max-width: 700px;
+            margin: 0 auto 35px;
+            line-height: 1.7;
+        }
+        
+        .hero-cta {
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 16px 35px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 8px;
+        }
+        
+        .btn-primary {
+            background: #d4af37;
+            color: #1a1a1a;
+        }
+        
+        .btn-primary:hover {
+            background: #f4cf57;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #d4af37;
+            border: 2px solid #d4af37;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            color: white;
+            animation: bounce 2s infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+        
+        /* SECTIONS */
+        section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 80px 20px;
+        }
+        
+        section h2 {
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            color: #d4af37;
+            text-align: center;
+        }
+        
+        .section-intro {
+            text-align: center;
+            font-size: 1.2em;
+            max-width: 700px;
+            margin: 0 auto 50px;
+            color: #aaa;
+            line-height: 1.7;
+        }
+        
+        /* WHAT MAKES BROOKLYN SPECIAL */
+        .special {
+            background: #0f1a0f;
+            color: #e0e0e0;
+        }
+        
+        .special-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .special-card {
+            background: #1a2a1a;
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 4px solid #4a7c4a;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .special-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            border-left-color: #7cb77c;
+        }
+        
+        .special-card h3 {
+            color: #7cb77c;
+            margin-bottom: 12px;
+            font-size: 1.25em;
+        }
+        
+        .special-card p {
+            color: #aaa;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        /* WHAT WE'RE BUILDING */
+        .building {
+            background: #1a1a2a;
+            color: #e0e0e0;
+        }
+        
+        .building-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        
+        .building-card {
+            background: #252535;
+            padding: 28px;
+            border-radius: 10px;
+            border-left: 4px solid #d4af37;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            display: block;
+        }
+        
+        .building-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            border-left-color: #fff;
+        }
+        
+        .building-card .card-type {
+            font-size: 0.8em;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .building-card h3 {
+            color: #d4af37;
+            margin-bottom: 10px;
+            font-size: 1.15em;
+        }
+        
+        .building-card p {
+            color: #999;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        
+        /* BROOKLYN THOUGHTS */
+        .thoughts-section {
+            background: #0d1117;
+            padding: 60px 20px;
+        }
+        
+        .thoughts-section h2 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .thoughts-section .section-intro {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        
+        .thoughts-list {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .thought-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .thought-card:hover {
+            border-color: #d4af37;
+        }
+        
+        .thought-content {
+            color: #e6e6e6;
+            font-size: 1.05em;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        
+        .thought-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        .thought-votes {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .vote-btn {
+            background: #252535;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            color: #888;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+        }
+        
+        .vote-btn:hover {
+            background: #303045;
+            border-color: #666;
+        }
+        
+        .vote-btn.agree:hover {
+            border-color: #4a9;
+            color: #4a9;
+        }
+        
+        .vote-btn.disagree:hover {
+            border-color: #a54;
+            color: #a54;
+        }
+        
+        .vote-btn.voted {
+            font-weight: 600;
+        }
+        
+        .vote-btn.agree.voted {
+            background: #1a3a2a;
+            border-color: #4a9;
+            color: #4a9;
+        }
+        
+        .vote-btn.disagree.voted {
+            background: #3a1a1a;
+            border-color: #a54;
+            color: #a54;
+        }
+        
+        .vote-btn .count {
+            margin-left: 4px;
+        }
+        
+        .thoughts-loading {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+        
+        .thoughts-empty {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+        
+        /* WHO WE NEED */
+        .who {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        .who-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .who-card {
+            background: #252525;
+            padding: 25px 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .who-card:hover {
+            border-color: #d4af37;
+            transform: translateY(-2px);
+        }
+        
+        .who-card .who-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .who-card h3 {
+            color: #d4af37;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        
+        .who-card p {
+            color: #888;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+        
+        /* YOUR REPS */
+        .reps {
+            background: #0f1f1f;
+            color: #e0e0e0;
+        }
+        
+        .reps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        
+        .rep-card {
+            background: #1a2a2a;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #2a3a3a;
+            transition: all 0.2s ease;
+        }
+        
+        .rep-card .rep-level {
+            font-size: 0.8em;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .rep-card h3 {
+            color: #d4af37;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        
+        .rep-card .rep-title {
+            color: #999;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+        
+        .rep-card .rep-link {
+            color: #d4af37;
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+        
+        a.rep-card:hover {
+            background: #252535;
+            border-color: #d4af37;
+            transform: translateY(-2px);
+        }
+        
+        /* CTA SECTION */
+        .cta {
+            background: linear-gradient(135deg, #1a2a1a 0%, #1a1a2a 100%);
+            color: #e0e0e0;
+            text-align: center;
+            padding: 100px 20px;
+        }
+        
+        .cta h2 {
+            font-size: 2.3em;
+            margin-bottom: 20px;
+        }
+        
+        .cta-subtitle {
+            font-size: 1.25em;
+            color: #aaa;
+            max-width: 650px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+        
+        .thought-input-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .thought-input-container textarea {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.1em;
+            border: 2px solid #444;
+            border-radius: 10px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+        
+        .thought-input-container textarea:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+        
+        .thought-input-container textarea::placeholder {
+            color: #666;
+        }
+        
+        .textarea-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding: 0 5px;
+        }
+        
+        .char-counter {
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        .dictate-btn {
+            background: #252535;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 8px 15px;
+            cursor: pointer;
+            color: #888;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+        }
+        
+        .dictate-btn:hover {
+            background: #303045;
+            border-color: #666;
+        }
+        
+        .dictate-btn.recording {
+            background: #3a1a1a;
+            border-color: #a54;
+            color: #a54;
+        }
+        
+        .dictate-btn.unsupported {
+            display: none;
+        }
+        
+        .category-select {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 1em;
+            border: 2px solid #444;
+            border-radius: 8px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            margin-top: 15px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .category-select:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+        
+        .other-topic-field {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .other-topic-field input {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 1em;
+            border: 2px solid #444;
+            border-radius: 8px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font-family: inherit;
+        }
+        
+        .other-topic-field input:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2em;
+            background: #d4af37;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn:hover {
+            background: #f4cf57;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+        }
+        
+        .submit-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status-message {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #1a3a2a;
+            border: 1px solid #4a9;
+            color: #4a9;
+        }
+        
+        .status-message.error {
+            background: #3a1a1a;
+            border: 1px solid #a54;
+            color: #a54;
+        }
+        
+        .tpb-profile-notice {
+            background: #2a2a4a;
+            border: 1px solid #7ab8e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .tpb-profile-notice p {
+            color: #7ab8e0;
+            margin: 0 0 8px;
+            font-size: 0.95em;
+        }
+        
+        .tpb-profile-notice .missing-fields {
+            color: #aaa;
+            font-size: 0.85em;
+        }
+        
+        /* FOOTER */
+        footer {
+            background: #0a0a0a;
+            color: #666;
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid #222;
+        }
+        
+        footer a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2em;
+            }
+            
+            .hero .tagline {
+                font-size: 1.2em;
+            }
+            
+            section h2 {
+                font-size: 1.8em;
+            }
+            
+            .btn {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="town-badge">WINDHAM COUNTY</div>
+            <h1>Brooklyn, <span>Connecticut</span></h1>
+            <p class="tagline">A More Perfect Town</p>
+            <p class="hero-description">
+                Home of Connecticut's oldest agricultural fair. Scenic Route 169. 
+                Historic landmarks. Four parks with trails, kayak launches, and disc golf.
+                Help us protect what's special and build what's next.
+            </p>
+            <div class="hero-cta">
+                <a href="#share" class="btn btn-primary">Share Your Thought</a>
+                <a href="#reps" class="btn btn-secondary">See Your Reps</a>
+            </div>
+        </div>
+        <div class="scroll-indicator">↓</div>
+    </section>
+
+    <!-- WHAT MAKES BROOKLYN SPECIAL -->
+    <section class="special" id="special">
+        <h2>What Makes Brooklyn Special</h2>
+        <p class="section-intro">
+            This is worth protecting. This is worth building on.
+        </p>
+        
+        <div class="special-grid">
+            <a href="#share" class="special-card" data-question="What would make the Brooklyn Fair even better?">
+                <h3>🎪 Connecticut's Oldest Fair</h3>
+                <p>The Brooklyn Fair has run since 1809 — over 200 years of agricultural tradition. Livestock shows, tractor pulls, and community pride every August.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="How should we preserve Route 169?">
+                <h3>🛤️ Scenic Route 169</h3>
+                <p>One of America's most scenic byways runs right through Brooklyn. Stone walls, farmland, historic homes — a living postcard of New England.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="What outdoor recreation does Brooklyn need?">
+                <h3>🌲 Four Town Parks</h3>
+                <p>Hiking trails, kayak launches, disc golf, and green space. Brooklyn's parks offer outdoor recreation for every season and every age.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="How can we support Brooklyn's farms?">
+                <h3>🚜 Working Farms</h3>
+                <p>Brooklyn's agricultural heritage is alive. Local farms, farm stands, and the Windham County 4-H keep our rural character thriving.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="What historic sites should we highlight?">
+                <h3>🏛️ Historic Landmarks</h3>
+                <p>The Old Brooklyn Green. The Unitarian Church. Daniel Putnam's legacy. History is written into Brooklyn's landscape.</p>
+            </a>
+            
+            <a href="#share" class="special-card" data-question="What do Brooklyn's schools need?">
+                <h3>📚 Strong Schools</h3>
+                <p>An excellent Pre-K through 8th grade system. Brooklyn kids grow up with small-town attention and solid foundations.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- WHAT WE'RE BUILDING TOGETHER -->
+    <section class="building" id="building">
+        <h2>What We're Building Together</h2>
+        <p class="section-intro">
+            Protect what works. Fix what's broken. Dream what's next.<br>
+            These are the conversations Brooklyn residents are starting.
+        </p>
+        
+        <div class="building-grid">
+            <a href="#share" class="building-card" data-question="What would help Brooklyn's town center?">
+                <div class="card-type">Protect</div>
+                <h3>Keep Brooklyn's Character</h3>
+                <p>Balance growth with preservation. Protect scenic roads. Support local businesses while maintaining our rural identity.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What trail or park improvements would you like?">
+                <div class="card-type">Expand</div>
+                <h3>Grow Our Parks & Trails</h3>
+                <p>Connect our four parks. Add amenities. Make Brooklyn's outdoor spaces even better for families and visitors.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What road or infrastructure needs fixing?">
+                <div class="card-type">Fix</div>
+                <h3>Roads & Infrastructure</h3>
+                <p>Potholes. Bridges. Rural road maintenance. The basics matter. Report issues, track progress, demand accountability.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What do our schools need most?">
+                <div class="card-type">Invest</div>
+                <h3>Strengthen Our Schools</h3>
+                <p>Pre-K through 8th grade excellence. Budget priorities, teacher support, facility needs — make education a community conversation.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="How can we support the Brooklyn Fair?">
+                <div class="card-type">Protect</div>
+                <h3>Keep the Fair Thriving</h3>
+                <p>200+ years of tradition. How do we support the Brooklyn Fair for the next generation? Your ideas matter.</p>
+            </a>
+            
+            <a href="#share" class="building-card" data-question="What's your vision for Brooklyn?">
+                <div class="card-type">Dream</div>
+                <h3>What's YOUR Vision?</h3>
+                <p>More youth programs? Better broadband? New community events? Your idea could be the next thing we build.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- BROOKLYN THOUGHTS -->
+    <section class="thoughts-section" id="thoughts">
+        <h2>What Brooklyn Is Saying</h2>
+        <p class="section-intro">
+            Real thoughts from your neighbors. Join the conversation.
+        </p>
+        
+        <div class="thoughts-list" id="thoughtsList">
+            <div class="thoughts-loading">Loading thoughts...</div>
+        </div>
+    </section>
+
+    <!-- WHO WE NEED -->
+    <section class="who" id="who">
+        <h2>Brooklyn Needs Your Voice</h2>
+        <p class="section-intro">
+            Whatever your background, you have something to contribute.<br>
+            A more perfect Brooklyn takes all of us.
+        </p>
+        
+        <div class="who-grid">
+            <a href="/volunteer/apply.php?role=farmer" class="who-card">
+                <div class="who-icon">🚜</div>
+                <h3>Farmers</h3>
+                <p>You're Brooklyn's heritage. Help shape its future.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=business" class="who-card">
+                <div class="who-icon">🏪</div>
+                <h3>Business Owners</h3>
+                <p>Local economy, local voice.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=education" class="who-card">
+                <div class="who-icon">👨‍🏫</div>
+                <h3>Teachers & Educators</h3>
+                <p>Our schools shape our future. Speak up.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=outdoors" class="who-card">
+                <div class="who-icon">🥾</div>
+                <h3>Outdoor Enthusiasts</h3>
+                <p>Parks, trails, and recreation advocates.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=families" class="who-card">
+                <div class="who-icon">👨‍👩‍👧</div>
+                <h3>Young Families</h3>
+                <p>You're raising the next generation here.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=fair" class="who-card">
+                <div class="who-icon">🎪</div>
+                <h3>Fair Volunteers</h3>
+                <p>Keep 200 years of tradition alive.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=longtime" class="who-card">
+                <div class="who-icon">🏠</div>
+                <h3>Longtime Residents</h3>
+                <p>You know what Brooklyn was. Help shape what it becomes.</p>
+            </a>
+            
+            <a href="/volunteer/apply.php?role=newcomer" class="who-card">
+                <div class="who-icon">🆕</div>
+                <h3>Newcomers</h3>
+                <p>Fresh eyes see possibilities we've missed.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- YOUR REPRESENTATIVES -->
+    <section class="reps" id="reps">
+        <h2>Your Representatives</h2>
+        <p class="section-intro">
+            These are the people who represent Brooklyn. They should hear from you.
+        </p>
+        
+        <div class="reps-grid">
+            <a href="https://www.brooklynct.org/board-of-selectmen" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Joe Bellavance</h3>
+                <div class="rep-title">First Selectman (D)</div>
+                <div class="rep-link">→ Board of Selectmen</div>
+            </a>
+            
+            <a href="https://www.brooklynct.org/board-of-selectmen" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Sherri Vogt</h3>
+                <div class="rep-title">Selectman (D)</div>
+                <div class="rep-link">→ Board of Selectmen</div>
+            </a>
+            
+            <a href="https://www.brooklynct.org/board-of-selectmen" target="_blank" class="rep-card" style="text-decoration: none; color: inherit;">
+                <div class="rep-level">Town</div>
+                <h3>Austin Tanner</h3>
+                <div class="rep-title">Selectman (R)</div>
+                <div class="rep-link">→ Board of Selectmen</div>
+            </a>
+            
+            <div class="rep-card">
+                <div class="rep-level">State House</div>
+                <h3>Coming Soon</h3>
+                <div class="rep-title">State Representative</div>
+                <div class="rep-link">District TBD</div>
+            </div>
+            
+            <div class="rep-card">
+                <div class="rep-level">State Senate</div>
+                <h3>Coming Soon</h3>
+                <div class="rep-title">State Senator</div>
+                <div class="rep-link">District TBD</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SHARE YOUR THOUGHT CTA -->
+    <section class="cta" id="share">
+        <h2>Share Your Thought</h2>
+        <p class="cta-subtitle">
+            What's on your mind about Brooklyn? Roads, schools, parks, growth, the Fair — 
+            whatever matters to you matters to us.
+        </p>
+        
+        <div class="thought-input-container">
+            <div id="parentConsentNotice"></div>
+            
+            <textarea 
+                id="thoughtInput" 
+                placeholder="What's on your mind about Brooklyn? A pothole? A park idea? Something the town should know?"
+                maxlength="1000"
+            ></textarea>
+            
+            <div class="textarea-footer">
+                <span class="char-counter" id="thoughtCounter">0 / 1000</span>
+                <button class="dictate-btn" id="dictateBtn">🎤 Dictate</button>
+            </div>
+            
+            <select class="category-select" id="thoughtCategory">
+                <option value="">Select a category (optional)</option>
+                <option value="1">Roads & Infrastructure</option>
+                <option value="2">Parks & Recreation</option>
+                <option value="3">Schools & Education</option>
+                <option value="4">Town Services</option>
+                <option value="5">Public Safety</option>
+                <option value="6">Environment</option>
+                <option value="7">Business & Economy</option>
+                <option value="8">Community Events</option>
+                <option value="9">Brooklyn Fair</option>
+                <option value="10">Historic Preservation</option>
+                <option value="11">Other</option>
+            </select>
+            
+            <div class="other-topic-field" id="otherTopicField">
+                <input type="text" id="otherTopic" placeholder="Describe your topic..." maxlength="100">
+                <span class="char-counter" id="otherTopicCounter" style="display: block; text-align: right; margin-top: 5px;">0 / 100</span>
+            </div>
+            
+            <div class="tpb-profile-notice" id="tpbProfileNotice">
+                <p>This category is for <span id="tpbCategoryName">feedback</span>. We'll need your full name to share it.</p>
+                <span class="missing-fields" id="tpbMissingFields"></span>
+            </div>
+            
+            <button class="submit-btn" id="submitThoughtBtn">Share Your Thought</button>
+            
+            <div class="status-message" id="statusMessage"></div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-links">
+            <a href="/index.php">Full Platform</a>
+            <a href="/reps.php">All Your Reps</a>
+            <a href="/volunteer/apply.php">Volunteer</a>
+        </div>
+        
+        <div class="footer-tpb">
+            <p>Powered by <a href="/"><strong>The People's Branch</strong></a></p>
+            <p class="tagline">No Kings. Only Citizens.</p>
+        </div>
+    </footer>
+
+    <script>
+    (function() {
+        // Session management
+        let sessionId = localStorage.getItem('tpb_session_id');
+        if (!sessionId) {
+            sessionId = 'anon_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('tpb_session_id', sessionId);
+        }
+        
+        // User profile
+        let userProfile = null;
+        
+        // TPB categories that need full profile
+        const tpbCategories = [12, 13, 14];
+        const tpbCategoryNames = {
+            12: 'volunteer feedback',
+            13: 'TPB suggestions',
+            14: 'platform issues'
+        };
+        
+        // Status message helper
+        function showStatus(message, isError) {
+            const status = document.getElementById('statusMessage');
+            status.textContent = message;
+            status.className = 'status-message ' + (isError ? 'error' : 'success');
+            status.style.display = 'block';
+        }
+        
+        // Submit thought
+        async function submitThought(content, categoryId, otherTopic) {
+            try {
+                const response = await fetch('/api/submit-thought.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: content,
+                        category_id: categoryId,
+                        other_topic: otherTopic,
+                        session_id: sessionId,
+                        town: 'brooklyn-ct',
+                        page: 'brooklyn_landing'
+                    })
+                });
+                return await response.json();
+            } catch (err) {
+                return { status: 'error', message: 'Network error' };
+            }
+        }
+        
+        // Load thoughts
+        async function loadThoughts() {
+            const container = document.getElementById('thoughtsList');
+            try {
+                const response = await fetch('/api/get-thoughts.php?town=brooklyn-ct&limit=5');
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.thoughts && data.thoughts.length > 0) {
+                    container.innerHTML = data.thoughts.map(function(thought) {
+                        const agreeVoted = thought.user_vote === 'agree' ? ' voted' : '';
+                        const disagreeVoted = thought.user_vote === 'disagree' ? ' voted' : '';
+                        return '<div class="thought-card">' +
+                            '<div class="thought-content">' + escapeHtml(thought.content) + '</div>' +
+                            '<div class="thought-meta">' +
+                                '<span>' + thought.display_name + ' · ' + thought.time_ago + '</span>' +
+                                '<div class="thought-votes">' +
+                                    '<button class="vote-btn agree' + agreeVoted + '" data-id="' + thought.thought_id + '" data-vote="agree">' +
+                                        '👍 <span class="count">' + thought.agree_count + '</span>' +
+                                    '</button>' +
+                                    '<button class="vote-btn disagree' + disagreeVoted + '" data-id="' + thought.thought_id + '" data-vote="disagree">' +
+                                        '👎 <span class="count">' + thought.disagree_count + '</span>' +
+                                    '</button>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
+                    }).join('');
+                    
+                    // Add vote handlers
+                    container.querySelectorAll('.vote-btn').forEach(function(btn) {
+                        btn.addEventListener('click', handleVote);
+                    });
+                } else {
+                    container.innerHTML = '<div class="thoughts-empty">No thoughts yet. Be the first to share!</div>';
+                }
+            } catch (err) {
+                container.innerHTML = '<div class="thoughts-empty">Could not load thoughts.</div>';
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        async function handleVote(e) {
+            const btn = e.currentTarget;
+            const thoughtId = btn.dataset.id;
+            const voteType = btn.dataset.vote;
+            
+            try {
+                const response = await fetch('/api/vote-thought.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        thought_id: thoughtId,
+                        vote_type: voteType,
+                        session_id: sessionId
+                    })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    loadThoughts();
+                }
+            } catch (err) {
+                console.error('Vote failed');
+            }
+        }
+        
+        // Load thoughts on page load
+        loadThoughts();
+        
+        // Special card click handlers
+        document.querySelectorAll('.special-card, .building-card').forEach(function(card) {
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                const question = this.dataset.question;
+                if (question) {
+                    document.getElementById('thoughtInput').value = question + ' ';
+                    document.getElementById('thoughtInput').focus();
+                    document.getElementById('share').scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+        
+        // Submit button handler
+        document.getElementById('submitThoughtBtn').addEventListener('click', async function() {
+            const content = document.getElementById('thoughtInput').value.trim();
+            const categoryId = document.getElementById('thoughtCategory').value;
+            const otherTopic = document.getElementById('otherTopic').value.trim();
+            
+            if (!content) {
+                showStatus('Please enter your thought.', true);
+                return;
+            }
+            
+            if (content.length < 10) {
+                showStatus('Please write a bit more (at least 10 characters).', true);
+                return;
+            }
+            
+            this.disabled = true;
+            this.textContent = 'Submitting...';
+            
+            const result = await submitThought(content, categoryId || null, otherTopic || null);
+            
+            if (result.status === 'success') {
+                showStatus('✓ Your thought has been shared! Thank you for your voice.', false);
+                document.getElementById('thoughtInput').value = '';
+                document.getElementById('thoughtCategory').value = '';
+                document.getElementById('otherTopic').value = '';
+                document.getElementById('thoughtCounter').textContent = '0 / 1000';
+                setTimeout(function() { loadThoughts(); }, 1000);
+            } else if (result.status === 'verify_required') {
+                localStorage.setItem('tpb_pending_thought', content);
+                localStorage.setItem('tpb_pending_category', categoryId);
+                localStorage.setItem('tpb_pending_other', otherTopic);
+                showStatus('Please check your email to verify and post your thought.', false);
+            } else {
+                showStatus('Error: ' + (result.message || 'Could not submit'), true);
+            }
+            
+            this.disabled = false;
+            this.textContent = 'Share Your Thought';
+        });
+        
+        // Fetch user profile
+        async function fetchUserProfile() {
+            try {
+                const response = await fetch('/api/check-session.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    userProfile = data;
+                    checkParentConsent();
+                }
+            } catch (err) {
+                console.error('Could not fetch profile');
+            }
+        }
+        fetchUserProfile();
+        
+        // Check if minor needs parent consent
+        function checkParentConsent() {
+            if (!userProfile) return;
+            if (userProfile.needs_parent_consent) {
+                const submitBtn = document.getElementById('submitThoughtBtn');
+                const textarea = document.getElementById('thoughtInput');
+                const thoughtContainer = document.querySelector('.thought-input-container');
+                
+                if (thoughtContainer) {
+                    const notice = document.createElement('div');
+                    notice.id = 'parentConsentNotice';
+                    notice.style.cssText = 'background: #2a2a4a; border: 1px solid #7ab8e0; border-radius: 8px; padding: 15px; margin-bottom: 15px; text-align: center;';
+                    notice.innerHTML = '<p style="color: #7ab8e0; margin: 0 0 8px; font-size: 1.1em;">⏳ Waiting for Parent/Guardian Approval</p><p style="color: #aaa; margin: 0; font-size: 0.9em;">We sent an email to your parent/guardian. Ask them to check and approve!</p>';
+                    thoughtContainer.insertBefore(notice, thoughtContainer.firstChild);
+                }
+                if (submitBtn) submitBtn.disabled = true;
+                if (textarea) textarea.disabled = true;
+            }
+        }
+        
+        // Check if TPB profile is complete
+        function checkTpbProfile() {
+            if (!userProfile) return { complete: false, missing: ['profile not loaded'] };
+            const missing = [];
+            if (!userProfile.first_name) missing.push('first name');
+            if (!userProfile.last_name) missing.push('last name');
+            if (!userProfile.phone) missing.push('phone');
+            return { complete: missing.length === 0, missing: missing };
+        }
+        
+        // Thought textarea character counter
+        document.getElementById('thoughtInput').addEventListener('input', function() {
+            document.getElementById('thoughtCounter').textContent = this.value.length + ' / 1000';
+        });
+        
+        // Speech Recognition (Dictate)
+        (function initDictate() {
+            const dictateBtn = document.getElementById('dictateBtn');
+            const contentTextarea = document.getElementById('thoughtInput');
+            
+            if (dictateBtn && contentTextarea) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                
+                if (!SpeechRecognition) {
+                    dictateBtn.classList.add('unsupported');
+                } else {
+                    const recognition = new SpeechRecognition();
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.lang = 'en-US';
+                    
+                    let isRecording = false;
+                    let finalTranscript = '';
+                    
+                    dictateBtn.addEventListener('click', function() {
+                        if (isRecording) {
+                            recognition.stop();
+                        } else {
+                            finalTranscript = contentTextarea.value;
+                            if (finalTranscript && !finalTranscript.endsWith(' ')) {
+                                finalTranscript += ' ';
+                            }
+                            recognition.start();
+                        }
+                    });
+                    
+                    recognition.onstart = function() {
+                        isRecording = true;
+                        dictateBtn.classList.add('recording');
+                        dictateBtn.textContent = '🎤 Stop';
+                    };
+                    
+                    recognition.onend = function() {
+                        isRecording = false;
+                        dictateBtn.classList.remove('recording');
+                        dictateBtn.textContent = '🎤 Dictate';
+                        document.getElementById('thoughtCounter').textContent = contentTextarea.value.length + ' / 1000';
+                    };
+                    
+                    recognition.onresult = function(event) {
+                        let interimTranscript = '';
+                        
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += transcript;
+                            } else {
+                                interimTranscript += transcript;
+                            }
+                        }
+                        
+                        contentTextarea.value = finalTranscript + interimTranscript;
+                        document.getElementById('thoughtCounter').textContent = contentTextarea.value.length + ' / 1000';
+                    };
+                    
+                    recognition.onerror = function(event) {
+                        isRecording = false;
+                        dictateBtn.classList.remove('recording');
+                        dictateBtn.textContent = '🎤 Dictate';
+                        
+                        if (event.error === 'not-allowed') {
+                            alert('Microphone access denied. Please allow microphone access to use dictation.');
+                        }
+                    };
+                }
+            }
+        })();
+        
+        // Category change - show/hide Other topic field
+        document.getElementById('thoughtCategory').addEventListener('change', function() {
+            const otherField = document.getElementById('otherTopicField');
+            const tpbNotice = document.getElementById('tpbProfileNotice');
+            const categoryId = parseInt(this.value);
+            
+            if (this.value == 11) {
+                otherField.style.display = 'block';
+            } else {
+                otherField.style.display = 'none';
+                document.getElementById('otherTopic').value = '';
+            }
+            
+            if (tpbCategories.includes(categoryId)) {
+                const profile = checkTpbProfile();
+                document.getElementById('tpbCategoryName').textContent = tpbCategoryNames[categoryId] || 'feedback';
+                if (!profile.complete) {
+                    document.getElementById('tpbMissingFields').textContent = 'Missing: ' + profile.missing.join(', ');
+                    tpbNotice.style.display = 'block';
+                } else {
+                    tpbNotice.style.display = 'none';
+                }
+            } else {
+                tpbNotice.style.display = 'none';
+            }
+        });
+        
+        // Other topic character counter
+        document.getElementById('otherTopic').addEventListener('input', function() {
+            document.getElementById('otherTopicCounter').textContent = this.value.length + ' / 100';
+        });
+        
+        // On page load: check for verified return and pending thought
+        (async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pendingThought = localStorage.getItem('tpb_pending_thought');
+            const pendingCategory = localStorage.getItem('tpb_pending_category');
+            const pendingOther = localStorage.getItem('tpb_pending_other');
+            
+            if (urlParams.get('verified') === '1' && pendingThought) {
+                history.replaceState({}, '', '/ct/brooklyn/');
+                
+                showStatus('Submitting your thought...', false);
+                const result = await submitThought(pendingThought, pendingCategory || null, pendingOther || null);
+                
+                if (result.status === 'success') {
+                    showStatus('✓ Your thought has been shared! Thank you for your voice.', false);
+                    document.getElementById('thoughtInput').value = '';
+                    localStorage.removeItem('tpb_pending_thought');
+                    localStorage.removeItem('tpb_pending_category');
+                    localStorage.removeItem('tpb_pending_other');
+                    setTimeout(function() { location.reload(); }, 1500);
+                } else {
+                    showStatus('Error: ' + (result.message || 'Could not submit'), true);
+                }
+            }
+        })();
+        
+        // Track who-card clicks
+        document.querySelectorAll('.who-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var role = this.querySelector('h3').textContent;
+                fetch('/api/log-civic-click.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action_type: 'role_interest',
+                        page_name: 'brooklyn_landing',
+                        session_id: sessionId,
+                        extra_data: { role: role }
+                    })
+                }).catch(function() {});
+            });
+        });
+        
+    })();
+    </script>
+
+</body>
+</html>

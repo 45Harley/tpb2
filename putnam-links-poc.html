@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Putnam, CT - Civic Links | The People's Branch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            color: #d4af37;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        header .subtitle {
+            color: #888;
+            font-size: 1.1em;
+        }
+        
+        header .town-info {
+            margin-top: 15px;
+            color: #aaa;
+            font-size: 0.95em;
+        }
+        
+        .category {
+            background: #1a1a2a;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid #2a2a3a;
+        }
+        
+        .category-header {
+            background: #2a2a3a;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .category-header:hover {
+            background: #3a3a4a;
+        }
+        
+        .category-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .category-icon {
+            font-size: 1.5em;
+        }
+        
+        .category-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #d4af37;
+        }
+        
+        .category-toggle {
+            color: #888;
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+        
+        .category.open .category-toggle {
+            transform: rotate(180deg);
+        }
+        
+        .category-links {
+            display: none;
+            padding: 0;
+        }
+        
+        .category.open .category-links {
+            display: block;
+        }
+        
+        .link-item {
+            border-top: 1px solid #2a2a3a;
+        }
+        
+        .link-main {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.2s;
+        }
+        
+        .link-main:hover {
+            background: #252535;
+        }
+        
+        .link-content {
+            flex: 1;
+        }
+        
+        .link-title {
+            color: #4a9eff;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .link-title .external-icon {
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .link-narrative {
+            color: #999;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .link-url {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 5px;
+            word-break: break-all;
+        }
+        
+        /* Sub-links (level 2) */
+        .sub-links {
+            background: #151520;
+            border-top: 1px solid #2a2a3a;
+        }
+        
+        .sub-link {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 20px 12px 45px;
+            text-decoration: none;
+            color: inherit;
+            border-top: 1px solid #1a1a2a;
+            transition: background 0.2s;
+        }
+        
+        .sub-link:first-child {
+            border-top: none;
+        }
+        
+        .sub-link:hover {
+            background: #1a1a2a;
+        }
+        
+        .sub-link .link-title {
+            color: #7ab8ff;
+            font-size: 0.95em;
+        }
+        
+        .sub-link .link-narrative {
+            font-size: 0.85em;
+        }
+        
+        .sub-link::before {
+            content: "└";
+            color: #444;
+            margin-right: 10px;
+            font-family: monospace;
+        }
+        
+        /* Level 3 sub-links */
+        .sub-sub-link {
+            padding-left: 70px;
+        }
+        
+        .sub-sub-link::before {
+            content: "└─";
+        }
+        
+        /* Quick Services section */
+        .quick-services {
+            background: linear-gradient(135deg, #1a2a1a 0%, #1a1a2a 100%);
+            border: 1px solid #2a3a2a;
+        }
+        
+        .quick-services .category-name {
+            color: #4ade80;
+        }
+        
+        .quick-services .link-title {
+            color: #4ade80;
+        }
+        
+        /* Badge for external links */
+        .badge {
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #333;
+            color: #888;
+            margin-left: 8px;
+        }
+        
+        .badge.official {
+            background: #1a3a1a;
+            color: #4ade80;
+        }
+        
+        .badge.external {
+            background: #3a2a1a;
+            color: #f0a050;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 30px;
+            border-top: 1px solid #333;
+            color: #666;
+        }
+        
+        footer a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 20px;
+            background: #151520;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #d4af37;
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏛️ Putnam, Connecticut</h1>
+            <div class="subtitle">Your Civic Source of Truth</div>
+            <div class="town-info">
+                Population: 10,214 • Town Hall: (860) 963-6800 • 200 School Street, Putnam CT 06260
+            </div>
+        </header>
+        
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-number">11</div>
+                <div class="stat-label">Categories</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">45+</div>
+                <div class="stat-label">Official Links</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">20+</div>
+                <div class="stat-label">Departments</div>
+            </div>
+        </div>
+
+        <!-- QUICK SERVICES -->
+        <div class="category quick-services open">
+            <div class="category-header">
+                <div class="category-title">
+                    <span class="category-icon">⚡</span>
+                    <span class="category-name">Quick Services</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-links">
+                <div class="link-item">
+                    <a href="https://www.mytaxbill.org/inet/bill/home.do?town=putnam" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">💳 Pay Tax Bill <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Pay your property, motor vehicle, or personal property taxes online</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://townofputnamctcitizens.munisselfservice.com" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">💧 Pay Water/Sewer Bill <span class="badge official">Official</span></div>
+                            <div class="link-narrative">View and pay your water and sewer bills online</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://permitlinkonline.com/csp/putnamct" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">🏗️ Building Permits <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Apply for building permits online</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.axisgis.com/putnamct/" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">🗺️ Property Cards / GIS Maps <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Look up property information, assessments, and view town maps</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="http://www.searchiqs.com/ctput" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">📜 Land Records <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Search town clerk land records online</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- GOVERNMENT -->
+        <div class="category open">
+            <div class="category-header">
+                <div class="category-title">
+                    <span class="category-icon">🏛️</span>
+                    <span class="category-name">Government</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-links">
+                <div class="link-item">
+                    <a href="https://www.putnamct.us" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Town Website <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Main Town of Putnam official website</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/government/mayors-office" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Mayor's Office <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Mayor Barney Seney — (860) 963-6800</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/government/mayors-office/elected-officials" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Elected Officials</div>
+                                <div class="link-narrative">Board of Selectmen members and contact info</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/government/mayors-office/temporary-pistol-permit" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Temporary Pistol Permit</div>
+                                <div class="link-narrative">Apply for temporary pistol permit</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/government/town-administrator" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Town Administrator <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Town administration office</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/government/town-administrator/bidsrfps" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Bids / RFPs</div>
+                                <div class="link-narrative">Current bid opportunities and requests for proposals</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/government/town-administrator/american-rescue-plan-act" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">American Rescue Plan Act</div>
+                                <div class="link-narrative">ARPA funding information</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/government/all-meetings" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">All Meetings <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Calendar of all board and commission meetings</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/government/boards-and-commissions" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Boards & Commissions <span class="badge official">Official</span></div>
+                            <div class="link-narrative">All town boards, commissions, and committees</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://ecode360.com/PU2092" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Town Code & Charter <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Official town charter, ordinances, and municipal code</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://onboard.putnamct.us/" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">OnBoard - Open Seats <span class="badge official">Official</span></div>
+                            <div class="link-narrative">View open seats on boards and commissions, apply to serve</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/registrar-of-voters" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Registrar of Voters <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Voter registration, election information</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/departments/registrar-of-voters/directions-to-polling-locations" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Polling Locations</div>
+                                <div class="link-narrative">Find your polling place and directions</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFRASTRUCTURE -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">
+                    <span class="category-icon">🏗️</span>
+                    <span class="category-name">Infrastructure</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-links">
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/highway" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Highway Department <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Roads, snow removal, curbside pickup services</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/water-and-sewer" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Water & Sewer <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Water and sewer services, billing, service issues</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/departments/water-and-sewer/service-line-inventory" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Service Line Inventory</div>
+                                <div class="link-narrative">Lead service line inventory information</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/municipal-solid-waste-recycling" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Solid Waste & Recycling <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Trash collection, recycling schedules, disposal info</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- EDUCATION -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">
+                    <span class="category-icon">📚</span>
+                    <span class="category-name">Education</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-links">
+                <div class="link-item">
+                    <a href="https://www.putnamschoolsct.org" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Putnam Public Schools <span class="badge official">Official</span></div>
+                            <div class="link-narrative">PK-12 school district — 3 schools, ~1,185 students</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamschoolsct.org/putnam-family-resource-center/preschool-programs" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Pre-School Programs</div>
+                                <div class="link-narrative">Early childhood education programs</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamschoolsct.org/district/schools" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Schools Directory</div>
+                                <div class="link-narrative">All schools in the district</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/visit-us/putnam-public-library" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Putnam Public Library <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Mon-Thu 10am-8pm, Fri 10am-5pm, Sat 10am-3pm — (860) 963-6826</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/visit-us/putnam-public-library/childrens-services" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Children's Services</div>
+                                <div class="link-narrative">Programs and resources for children</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/visit-us/putnam-public-library/teen-and-pre-teen-services" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Teen Services</div>
+                                <div class="link-narrative">Programs for teens and pre-teens</div>
+                            </div>
+                        </a>
+                        <a href="http://engagedpatrons.org/EventsCalendar.cfm?SiteID=5811" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Library Events Calendar</div>
+                                <div class="link-narrative">Upcoming library programs and events</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.ct.edu" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Higher Education <span class="badge external">External</span></div>
+                            <div class="link-narrative">Connecticut State Colleges and Universities</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- PUBLIC SAFETY -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">
+                    <span class="category-icon">🚔</span>
+                    <span class="category-name">Public Safety</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-links">
+                <div class="link-item">
+                    <a href="https://www.putnampolice.com" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Putnam Police Department <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Police services, pistol permits, victim services, community partnership</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/fire-marshal" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Fire Marshal <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Fire prevention, inspections, safety</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/emergency-management" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Emergency Management <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Emergency preparedness and response</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ECONOMY -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">
+                    <span class="category-icon">💼</span>
+                    <span class="category-name">Economy & Business</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-links">
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/economic-and-community-development" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Economic & Community Development <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Business support, community development, job resources</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/departments/economic-and-community-development/business-resources" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Business Resources</div>
+                                <div class="link-narrative">Resources and support for local businesses</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/departments/economic-and-community-development/tax-incentives" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Tax Incentives</div>
+                                <div class="link-narrative">Business tax incentive programs</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/departments/economic-and-community-development/job-resource-center" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Job Resource Center</div>
+                                <div class="link-narrative">Employment assistance and job listings</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/departments/economic-and-community-development/farmers-market" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Putnam Saturday Farmers Market</div>
+                                <div class="link-narrative">Local farmers market information</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnambusiness.org" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Putnam Business Association <span class="badge external">External</span></div>
+                            <div class="link-narrative">Local business association and networking</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://nectchamber.com" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">NE CT Chamber of Commerce <span class="badge external">External</span></div>
+                            <div class="link-narrative">Regional chamber of commerce</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/human-resources/job-postings" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Town Employment Opportunities <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Job openings with the Town of Putnam</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOUSING -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">
+                    <span class="category-icon">🏠</span>
+                    <span class="category-name">Housing & Development</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-links">
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/planning-and-land-use" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Planning & Land Use <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Planning, zoning applications, land use</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/departments/planning-and-land-use/town-properties-for-sale" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Town Properties for Sale</div>
+                                <div class="link-narrative">Available town-owned properties</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/zoning-department" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Zoning Department <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Zoning regulations and enforcement</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/building-official" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Building Official <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Building permits, inspections, code compliance</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/economic-and-community-development/housing" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Housing Resources <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Housing assistance and resources</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/assessor" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Assessor's Office <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Property assessments, exemptions, tax relief programs</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/departments/assessor/exemption-credit-programs" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Exemption & Credit Programs</div>
+                                <div class="link-narrative">Tax exemptions for veterans, seniors, disabled</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/departments/assessor/renters-rebate" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Renters Rebate</div>
+                                <div class="link-narrative">Rebate program for eligible renters</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/blight" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Blight <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Blight enforcement and reporting</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- HEALTH -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">
+                    <span class="category-icon">🏥</span>
+                    <span class="category-name">Health & Human Services</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-links">
+                <div class="link-item">
+                    <a href="https://www.daykimball.org" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Day Kimball Hospital <span class="badge external">External</span></div>
+                            <div class="link-narrative">Local hospital serving Putnam and surrounding area</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/economic-and-community-development/homelessness-resources" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Homelessness Resources <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Support services for those experiencing homelessness</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/resident-services/senior-services" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Support from Outside Agencies <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Social services and community support resources</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMMUNITY -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">
+                    <span class="category-icon">👥</span>
+                    <span class="category-name">Community & Recreation</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-links">
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/parks-and-recreation" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Parks & Recreation <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Recreation programs, parks, Commission on Aging</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/departments/parks-and-recreation/seniorprogramming" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Senior Programming</div>
+                                <div class="link-narrative">Activities and programs for seniors</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/veterans-services" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Veteran Services <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Support for veterans and their families</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/visit-us/concerts-and-events" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Concerts & Events <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Community events, outdoor concerts, festivals</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/visit-us/putnam-river-trail" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Putnam River Trail <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Walking and biking trail along Quinebaug River</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.discoverputnam.com" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Discover Putnam <span class="badge external">External</span></div>
+                            <div class="link-narrative">Tourism, dining, shopping, events — visitor info</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="http://www.thebradleyplayhouse.org" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">The Bradley Playhouse <span class="badge external">External</span></div>
+                            <div class="link-narrative">Historic theater — live performances since 1901</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://putnamaspinockhistsoc.com" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Aspinock Historical Society <span class="badge external">External</span></div>
+                            <div class="link-narrative">Local history museum — Tue-Thu 10am-2pm</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINANCE / TAXES -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">
+                    <span class="category-icon">💰</span>
+                    <span class="category-name">Finance & Taxes</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-links">
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/finance" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Finance Department <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Town finances, budgets, purchasing</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/revenue-collector" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Revenue Collector <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Tax collection, payments, mill rates</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/departments/revenue-collector/mill-rates" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Mill Rates</div>
+                                <div class="link-narrative">Current and historical mill rates</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/departments/revenue-collector/real-estate-taxes" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Real Estate Taxes</div>
+                                <div class="link-narrative">Property tax information</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/departments/revenue-collector/motor-vehicle-taxes" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Motor Vehicle Taxes</div>
+                                <div class="link-narrative">Vehicle tax information</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="link-item">
+                    <a href="https://www.putnamct.us/departments/town-clerk" target="_blank" class="link-main">
+                        <div class="link-content">
+                            <div class="link-title">Town Clerk <span class="badge official">Official</span></div>
+                            <div class="link-narrative">Records, licenses, vital statistics — ext. 180</div>
+                        </div>
+                    </a>
+                    <div class="sub-links">
+                        <a href="https://www.putnamct.us/departments/town-clerk/dog-licensing" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Dog Licensing</div>
+                                <div class="link-narrative">Register your dog</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/departments/town-clerk/marriage-licenses" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Marriage Licenses</div>
+                                <div class="link-narrative">Apply for marriage license</div>
+                            </div>
+                        </a>
+                        <a href="https://www.putnamct.us/departments/town-clerk/vital-records" target="_blank" class="sub-link">
+                            <div class="link-content">
+                                <div class="link-title">Vital Records</div>
+                                <div class="link-narrative">Birth, death, marriage certificates</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Powered by <a href="https://tpb2.sandgems.net">The People's Branch</a></p>
+            <p style="margin-top: 10px; font-size: 0.85em;">All links point to official government sources. TPB does not store or duplicate official content.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Toggle categories open/closed
+        document.querySelectorAll('.category-header').forEach(header => {
+            header.addEventListener('click', () => {
+                header.parentElement.classList.toggle('open');
+            });
+        });
+    </script>
+</body>
+</html>

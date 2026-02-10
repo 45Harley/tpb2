@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Connecticut - Your Civic Home. Find benefits, services, representatives, and connect with your town. The People's Branch.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://4tpb.org/ct/">
+    <meta property="og:title" content="Connecticut | The People's Branch">
+    <meta property="og:description" content="Find CT benefits you're owed, connect with your representatives, and join your town's civic voice.">
+    
+    <title>Connecticut | The People's Branch</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background: #0a0a0a;
+        }
+        
+        a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        /* HERO */
+        .hero {
+            position: relative;
+            min-height: 60vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)),
+                        linear-gradient(135deg, #1a2a3a 0%, #0a1a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+        }
+        
+        .hero-content {
+            max-width: 900px;
+            animation: fadeIn 1s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .state-badge {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.15);
+            border: 2px solid #d4af37;
+            padding: 8px 25px;
+            border-radius: 30px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            color: #d4af37;
+        }
+        
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+            font-weight: normal;
+        }
+        
+        .hero h1 span {
+            color: #d4af37;
+        }
+        
+        .hero .tagline {
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            color: #ccc;
+            font-style: italic;
+        }
+        
+        .hero-description {
+            font-size: 1.1em;
+            color: #aaa;
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+        
+        .btn {
+            padding: 14px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 8px;
+        }
+        
+        .btn-primary {
+            background: #d4af37;
+            color: #1a1a1a;
+        }
+        
+        .btn-primary:hover {
+            background: #f4cf57;
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #d4af37;
+            border: 2px solid #d4af37;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+            text-decoration: none;
+        }
+        
+        /* SECTIONS */
+        section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+        
+        section h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #d4af37;
+        }
+        
+        section .section-subtitle {
+            color: #888;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        
+        /* QUICK LINKS NAV */
+        .quick-nav {
+            background: #1a1a1a;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #333;
+        }
+        
+        .quick-nav-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .quick-nav a {
+            color: #aaa;
+            font-size: 0.9em;
+            padding: 5px 12px;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+        
+        .quick-nav a:hover {
+            background: #252525;
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        /* BENEFITS GRID */
+        .benefits {
+            background: #0f0f0f;
+        }
+        
+        .benefits-category {
+            margin-bottom: 40px;
+        }
+        
+        .benefits-category h3 {
+            font-size: 1.4em;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .benefits-category h3 .icon {
+            margin-right: 10px;
+        }
+        
+        .benefit-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .benefit-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+        
+        .benefit-card:hover {
+            border-color: #d4af37;
+            transform: translateY(-2px);
+        }
+        
+        .benefit-card h4 {
+            color: #d4af37;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        
+        .benefit-card .benefit-amount {
+            color: #4a9;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .benefit-card p {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 12px;
+        }
+        
+        .benefit-card .benefit-link {
+            font-size: 0.85em;
+        }
+        
+        .benefit-card .benefit-deadline {
+            color: #c94;
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+        
+        /* TOWNS SECTION */
+        .towns {
+            background: #1a1a1a;
+        }
+        
+        .town-search {
+            max-width: 500px;
+            margin: 0 auto 30px;
+        }
+        
+        .town-search input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #252525;
+            color: #e0e0e0;
+        }
+        
+        .town-search input:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+        
+        .towns-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .town-link {
+            background: #252525;
+            padding: 12px 15px;
+            border-radius: 6px;
+            text-align: center;
+            transition: all 0.2s;
+            color: #aaa;
+            font-size: 0.95em;
+        }
+        
+        .town-link:hover {
+            background: #2a2a2a;
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        .town-link.active {
+            background: #2a3a2a;
+            color: #d4af37;
+            border: 1px solid #d4af37;
+        }
+        
+        .town-link.coming-soon {
+            opacity: 0.5;
+            cursor: default;
+        }
+        
+        /* STATE OFFICIALS */
+        .officials {
+            background: #0f1a1f;
+        }
+        
+        .officials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .official-card {
+            background: #1a2a2a;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #2a3a3a;
+            transition: all 0.2s;
+        }
+        
+        .official-card:hover {
+            border-color: #d4af37;
+        }
+        
+        .official-card .level {
+            font-size: 0.8em;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .official-card h3 {
+            color: #d4af37;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        
+        .official-card .title {
+            color: #999;
+            font-size: 0.9em;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        
+        .official-card .party {
+            font-size: 0.85em;
+            color: #888;
+        }
+        
+        .official-card .party.democrat { color: #6af; }
+        .official-card .party.republican { color: #f66; }
+        
+        /* KEY CONTACTS */
+        .contacts {
+            background: #1a1a2a;
+        }
+        
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .contact-card {
+            background: #252535;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid #d4af37;
+        }
+        
+        .contact-card h4 {
+            color: #d4af37;
+            margin-bottom: 10px;
+        }
+        
+        .contact-card .phone {
+            font-size: 1.3em;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+        }
+        
+        .contact-card .website {
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        
+        .contact-card .description {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        /* FOOTER */
+        footer {
+            background: #0a0a0a;
+            border-top: 1px solid #222;
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+        }
+        
+        footer a {
+            color: #888;
+        }
+        
+        /* MOBILE */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2em;
+            }
+            
+            section h2 {
+                font-size: 1.6em;
+            }
+            
+            .quick-nav-inner {
+                gap: 10px;
+            }
+            
+            .quick-nav a {
+                font-size: 0.8em;
+                padding: 4px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-content">
+            <div class="state-badge">THE CONSTITUTION STATE</div>
+            <h1><span>Connecticut</span></h1>
+            <p class="tagline">Your Voice. Your Representatives. Your Benefits.</p>
+            <p class="hero-description">
+                Frustrated with Washington? Tired of Hartford? Your voice matters — but only if it's counted. 
+                Share what Connecticut's leaders need to hear.
+            </p>
+            <div class="hero-cta">
+                <a href="#towns" class="btn btn-primary">🏘️ Find Your Town</a>
+                <a href="/thought.php" target="_blank" class="btn btn-secondary">📢 Share Your Thought</a>
+                <a href="/read.php" target="_blank" class="btn btn-secondary">📖 Read CT Thoughts</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- FEDERAL REPS -->
+    <section class="officials" id="federal" style="background: #0a1520; padding: 50px 20px;">
+        <h2>🏛️ Your Voice in Washington</h2>
+        <p class="section-subtitle">Connecticut's federal delegation. These are the people who represent YOU in Congress.</p>
+        
+        <div class="officials-grid">
+            <div class="official-card">
+                <div class="level">U.S. Senate</div>
+                <h3>Richard Blumenthal</h3>
+                <div class="title">Senior Senator</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+            <div class="official-card">
+                <div class="level">U.S. Senate</div>
+                <h3>Chris Murphy</h3>
+                <div class="title">Junior Senator</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+            <div class="official-card">
+                <div class="level">U.S. House · CT-1</div>
+                <h3>John Larson</h3>
+                <div class="title">Representative</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+            <div class="official-card">
+                <div class="level">U.S. House · CT-2</div>
+                <h3>Joe Courtney</h3>
+                <div class="title">Representative</div>
+                <div class="party democrat">Democrat · Quiet Corner</div>
+            </div>
+            <div class="official-card">
+                <div class="level">U.S. House · CT-3</div>
+                <h3>Rosa DeLauro</h3>
+                <div class="title">Representative</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+            <div class="official-card">
+                <div class="level">U.S. House · CT-4</div>
+                <h3>Jim Himes</h3>
+                <div class="title">Representative</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+            <div class="official-card">
+                <div class="level">U.S. House · CT-5</div>
+                <h3>Jahana Hayes</h3>
+                <div class="title">Representative</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+        </div>
+        
+        <p style="text-align: center; margin-top: 25px; color: #888;">
+            <a href="/reps.php">Don't know your district? Find your representative by address →</a>
+        </p>
+    </section>
+    
+    <!-- QUICK NAV -->
+    <nav class="quick-nav">
+        <div class="quick-nav-inner">
+            <a href="#federal">🏛️ Federal Reps</a>
+            <a href="#benefits">💰 Benefits</a>
+            <a href="#housing">🏠 Housing</a>
+            <a href="#energy">⚡ Energy</a>
+            <a href="#seniors">👴 Seniors</a>
+            <a href="#ev">🚗 EV</a>
+            <a href="#dmv">🚘 DMV</a>
+            <a href="#education">🎓 Education</a>
+            <a href="#officials">🏛️ State Officials</a>
+            <a href="#towns">🏘️ Towns</a>
+            <a href="#contacts">📞 Contacts</a>
+        </div>
+    </nav>
+    
+    <!-- BENEFITS SECTION -->
+    <section class="benefits" id="benefits">
+        <h2>💰 Money Connecticut Owes You</h2>
+        <p class="section-subtitle">Programs exist. Most people don't know about them. Here's what you might qualify for.</p>
+        
+        <!-- HOUSING -->
+        <div class="benefits-category" id="housing">
+            <h3><span class="icon">🏠</span> First-Time Homebuyers</h3>
+            <div class="benefit-cards">
+                <div class="benefit-card">
+                    <h4>Time To Own</h4>
+                    <div class="benefit-amount">Up to $50,000</div>
+                    <p>Forgivable down payment loan. 0% interest, forgiven over 10 years. Up to 20% down + 5% closing costs.</p>
+                    <a href="https://www.chfa.org/homebuyers-homeowners/homebuyers/time-to-own-down-payment-assistance-program-loan/" class="benefit-link" target="_blank">CHFA Time To Own →</a>
+                    <p class="benefit-deadline">⚠️ Check funding availability</p>
+                </div>
+                <div class="benefit-card">
+                    <h4>CHFA DAP Loan</h4>
+                    <div class="benefit-amount">Up to $20,000</div>
+                    <p>Down payment assistance at just 1% interest. Second mortgage paid alongside your primary loan.</p>
+                    <a href="https://www.chfa.org/homebuyers-homeowners/homebuyers/downpayment-assistance-program-dap-loan/" class="benefit-link" target="_blank">CHFA DAP Program →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>SmartMove CT</h4>
+                    <div class="benefit-amount">3% Interest Loan</div>
+                    <p>Low-interest second mortgage for down payment and closing costs. As little as 1% down required.</p>
+                    <a href="https://www.hdfconnects.org/" class="benefit-link" target="_blank">Housing Development Fund →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Municipal Programs</h4>
+                    <div class="benefit-amount">$5K - $40K</div>
+                    <p>Hartford up to $40K, Bridgeport $15K, Hamden $5K matching, Fairfield varies. Check your city.</p>
+                    <a href="https://www.fha.com/fha-grants?state=CT" class="benefit-link" target="_blank">Find Local Programs →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ENERGY -->
+        <div class="benefits-category" id="energy">
+            <h3><span class="icon">⚡</span> Energy Rebates & Assistance</h3>
+            <div class="benefit-cards">
+                <div class="benefit-card">
+                    <h4>Heat Pump Rebate</h4>
+                    <div class="benefit-amount">Up to $15,000</div>
+                    <p>Air source heat pump installation. Reduce heating/cooling costs 25-50%. Must use Energize CT installer network.</p>
+                    <a href="https://www.energizect.com/rebates-incentives/heating-cooling/heat-pumps/residential-air-source" class="benefit-link" target="_blank">Energize CT Heat Pumps →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Heat Pump Water Heater</h4>
+                    <div class="benefit-amount">$750</div>
+                    <p>Energy Star certified heat pump water heater. Heats water faster with less energy.</p>
+                    <a href="https://www.energizect.com/rebates-and-incentives" class="benefit-link" target="_blank">Energize CT Rebates →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>0.99% Heating Loan</h4>
+                    <div class="benefit-amount">Up to $15,000</div>
+                    <p>Low-interest financing for heating system upgrades. Fixed rate through Energize CT Heating Loan Program.</p>
+                    <a href="https://www.energizect.com/" class="benefit-link" target="_blank">Energize CT →</a>
+                    <p class="benefit-deadline">Through Dec 31, 2025</p>
+                </div>
+                <div class="benefit-card">
+                    <h4>CEAP / LIHEAP</h4>
+                    <div class="benefit-amount">Heating Assistance</div>
+                    <p>Help paying heating bills. Income-eligible or if you receive SNAP/TFA/SSI. Apply Sept 1 - May.</p>
+                    <a href="https://portal.ct.gov/dss/economic-security/winter-heating-assistance/energy-assistance---winter-heating" class="benefit-link" target="_blank">CT Energy Assistance →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Home Energy Solutions</h4>
+                    <div class="benefit-amount">Free/Subsidized</div>
+                    <p>Income-eligible weatherization: insulation, air sealing, appliances. Call 1-877-WISE-USE.</p>
+                    <a href="https://www.energizect.com/" class="benefit-link" target="_blank">Energize CT →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Operation Fuel</h4>
+                    <div class="benefit-amount">Emergency Help</div>
+                    <p>For those who don't qualify for CEAP. Income 151-200% of federal poverty level.</p>
+                    <a href="https://www.operationfuel.org/get-help/" class="benefit-link" target="_blank">Operation Fuel →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SENIORS -->
+        <div class="benefits-category" id="seniors">
+            <h3><span class="icon">👴</span> Senior Benefits (65+)</h3>
+            <div class="benefit-cards">
+                <div class="benefit-card">
+                    <h4>Property Tax Credit</h4>
+                    <div class="benefit-amount">Up to $1,250</div>
+                    <p>Circuit Breaker program. Up to $1,250 married, $1,000 single. Based on income. Apply at Town Assessor.</p>
+                    <a href="https://portal.ct.gov/opm/igpp/grants/tax-relief-grants/homeowners--elderlydisabled-circuit-breaker-tax-relief-program" class="benefit-link" target="_blank">CT Property Tax Relief →</a>
+                    <p class="benefit-deadline">Apply Feb 1 - May 15</p>
+                </div>
+                <div class="benefit-card">
+                    <h4>Renters Rebate</h4>
+                    <div class="benefit-amount">Partial Rebate</div>
+                    <p>Low-income seniors/disabled renters get partial rebate of rent and utilities. Apply at Town Assessor.</p>
+                    <a href="https://uwc.211ct.org/property-tax-credit-for-elderlydisabled/" class="benefit-link" target="_blank">211 CT Info →</a>
+                    <p class="benefit-deadline">Apply Apr 1 - Oct 1</p>
+                </div>
+                <div class="benefit-card">
+                    <h4>2-Year License Renewal</h4>
+                    <div class="benefit-amount">$24</div>
+                    <p>Age 65+ can choose 2-year renewal instead of 8-year. Lower upfront cost.</p>
+                    <a href="https://portal.ct.gov/dmv/licenses-permits-ids/renew-driver-license" class="benefit-link" target="_blank">CT DMV →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Utility Discount Rate</h4>
+                    <div class="benefit-amount">Reduced Electric Rate</div>
+                    <p>Discounted rate if you participate in LIHEAP, SNAP, TANF, Head Start, etc.</p>
+                    <a href="https://liheapch.acf.gov/profiles/Connecticut.htm" class="benefit-link" target="_blank">LIHEAP Info →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- EV -->
+        <div class="benefits-category" id="ev">
+            <h3><span class="icon">🚗</span> Electric Vehicle Incentives</h3>
+            <div class="benefit-cards">
+                <div class="benefit-card">
+                    <h4>CHEAPR Standard - BEV</h4>
+                    <div class="benefit-amount">$1,000</div>
+                    <p>New battery electric vehicle rebate. Applied at dealer. MSRP must be under $50,000.</p>
+                    <a href="https://portal.ct.gov/deep/air/mobile-sources/cheapr/cheapr---home" class="benefit-link" target="_blank">CHEAPR Program →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>CHEAPR Rebate+ New</h4>
+                    <div class="benefit-amount">Up to $4,000 BEV</div>
+                    <p>Income-qualified (up to 3x poverty level). $4,000 BEV, $2,000 PHEV. Pre-qualify for voucher first.</p>
+                    <a href="https://portal.ct.gov/deep/air/mobile-sources/cheapr/cheapr---home" class="benefit-link" target="_blank">CHEAPR Rebate+ →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>CHEAPR Rebate+ Used</h4>
+                    <div class="benefit-amount">Up to $5,000 BEV</div>
+                    <p>Income-qualified used EV. $5,000 BEV, $3,000 PHEV. Apply after purchase.</p>
+                    <a href="https://portal.ct.gov/deep/air/mobile-sources/cheapr/cheapr---home" class="benefit-link" target="_blank">CHEAPR Used →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>EV Charger Rebates</h4>
+                    <div class="benefit-amount">$500 - $1,500</div>
+                    <p>Level 2 home charger installation. Varies by utility (Eversource, UI, municipal).</p>
+                    <a href="https://www.eversource.com/residential/save-money-energy/clean-energy-options/electric-vehicles/charging-stations/ct" class="benefit-link" target="_blank">Eversource EV →</a>
+                    <p class="benefit-deadline">Apply by Dec 31, 2025</p>
+                </div>
+                <div class="benefit-card">
+                    <h4>Lower Registration</h4>
+                    <div class="benefit-amount">$38/year</div>
+                    <p>EVs pay reduced registration fee. No emissions test required.</p>
+                    <a href="https://portal.ct.gov/dmv" class="benefit-link" target="_blank">CT DMV →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- DMV -->
+        <div class="benefits-category" id="dmv">
+            <h3><span class="icon">🚘</span> DMV Services</h3>
+            <div class="benefit-cards">
+                <div class="benefit-card">
+                    <h4>Online License Renewal</h4>
+                    <div class="benefit-amount">Skip the Line</div>
+                    <p>Renew driver's license online. Receive by mail in ~20 days. Same fees as in-person.</p>
+                    <a href="https://portal.ct.gov/dmv/licenses-permits-ids/renew-driver-license" class="benefit-link" target="_blank">Renew Online →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>REAL ID</h4>
+                    <div class="benefit-amount">Required for Domestic Flights</div>
+                    <p>Required since May 7, 2025 for domestic air travel. Check if your license has the gold star.</p>
+                    <a href="https://portal.ct.gov/dmv/licenses-permits-ids/get-real-id" class="benefit-link" target="_blank">Get REAL ID →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Military Fee Waiver</h4>
+                    <div class="benefit-amount">Free Renewal</div>
+                    <p>Active duty or honorably discharged within 2 years. CT resident when joined service.</p>
+                    <a href="https://portal.ct.gov/dmv" class="benefit-link" target="_blank">CT DMV →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>AAA DMV Services</h4>
+                    <div class="benefit-amount">$8 Non-member</div>
+                    <p>Select DMV services at AAA offices in Danbury, Fairfield, Norwalk. Members free.</p>
+                    <a href="https://northeast.aaa.com/automotive/registry-services/connecticut.html" class="benefit-link" target="_blank">AAA CT →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- EDUCATION -->
+    <section class="benefits" id="education" style="background: #0a1a0a;">
+        <h2>🎓 Education</h2>
+        <p class="section-subtitle">Connecticut's colleges, universities, and financial aid to help you afford them.</p>
+        
+        <!-- CT COLLEGES -->
+        <div class="benefits-category">
+            <h3><span class="icon">🏛️</span> Public Colleges & Universities</h3>
+            <div class="benefit-cards">
+                <div class="benefit-card">
+                    <h4>University of Connecticut</h4>
+                    <div class="benefit-amount">Storrs (+ 5 campuses)</div>
+                    <p>CT's flagship public research university. 100+ majors. Main campus in Storrs, regional campuses in Hartford, Stamford, Waterbury, Avery Point, and Torrington.</p>
+                    <a href="https://uconn.edu" class="benefit-link" target="_blank">uconn.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Central CT State University</h4>
+                    <div class="benefit-amount">New Britain</div>
+                    <p>CT's oldest public university. Liberal arts, sciences, and professional programs. ~$7,000/year tuition.</p>
+                    <a href="https://www.ccsu.edu" class="benefit-link" target="_blank">ccsu.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Eastern CT State University</h4>
+                    <div class="benefit-amount">Willimantic</div>
+                    <p>Public liberal arts university. Strong education and business programs. Closest state university to the Quiet Corner.</p>
+                    <a href="https://www.easternct.edu" class="benefit-link" target="_blank">easternct.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Southern CT State University</h4>
+                    <div class="benefit-amount">New Haven</div>
+                    <p>Public university with strong nursing, education, and business programs. Near downtown New Haven.</p>
+                    <a href="https://www.southernct.edu" class="benefit-link" target="_blank">southernct.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Western CT State University</h4>
+                    <div class="benefit-amount">Danbury</div>
+                    <p>Public university with undergraduate and graduate programs. Two campuses in Danbury.</p>
+                    <a href="https://www.wcsu.edu" class="benefit-link" target="_blank">wcsu.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>CT State Community College</h4>
+                    <div class="benefit-amount">12 Campuses Statewide</div>
+                    <p>Affordable 2-year degrees and certificates. Campuses across CT including Quinebaug Valley (Danielson/Willimantic).</p>
+                    <a href="https://ctstate.edu" class="benefit-link" target="_blank">ctstate.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Charter Oak State College</h4>
+                    <div class="benefit-amount">100% Online</div>
+                    <p>CT's public online college. Flexible degrees for working adults. Credit for prior learning.</p>
+                    <a href="https://www.charteroak.edu" class="benefit-link" target="_blank">charteroak.edu →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PRIVATE COLLEGES -->
+        <div class="benefits-category">
+            <h3><span class="icon">🎓</span> Private Colleges & Universities</h3>
+            <div class="benefit-cards">
+                <div class="benefit-card">
+                    <h4>Yale University</h4>
+                    <div class="benefit-amount">New Haven</div>
+                    <p>Ivy League research university. Founded 1701. Need-blind admissions with generous financial aid.</p>
+                    <a href="https://www.yale.edu" class="benefit-link" target="_blank">yale.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Wesleyan University</h4>
+                    <div class="benefit-amount">Middletown</div>
+                    <p>Highly selective liberal arts university. Strong arts and sciences programs.</p>
+                    <a href="https://www.wesleyan.edu" class="benefit-link" target="_blank">wesleyan.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Trinity College</h4>
+                    <div class="benefit-amount">Hartford</div>
+                    <p>Liberal arts college founded 1823. Historic campus in Hartford.</p>
+                    <a href="https://www.trincoll.edu" class="benefit-link" target="_blank">trincoll.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Connecticut College</h4>
+                    <div class="benefit-amount">New London</div>
+                    <p>Liberal arts college on Long Island Sound. Strong environmental and arts programs.</p>
+                    <a href="https://www.conncoll.edu" class="benefit-link" target="_blank">conncoll.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Quinnipiac University</h4>
+                    <div class="benefit-amount">Hamden</div>
+                    <p>Private university known for health sciences, business, communications, and law.</p>
+                    <a href="https://www.qu.edu" class="benefit-link" target="_blank">qu.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Fairfield University</h4>
+                    <div class="benefit-amount">Fairfield</div>
+                    <p>Jesuit university with business, nursing, and liberal arts programs.</p>
+                    <a href="https://www.fairfield.edu" class="benefit-link" target="_blank">fairfield.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Sacred Heart University</h4>
+                    <div class="benefit-amount">Fairfield</div>
+                    <p>Catholic university with health sciences, business, and education programs.</p>
+                    <a href="https://www.sacredheart.edu" class="benefit-link" target="_blank">sacredheart.edu →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>University of Hartford</h4>
+                    <div class="benefit-amount">West Hartford</div>
+                    <p>Private university with engineering, arts, business, and health programs.</p>
+                    <a href="https://www.hartford.edu" class="benefit-link" target="_blank">hartford.edu →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FINANCIAL AID -->
+        <div class="benefits-category">
+            <h3><span class="icon">💰</span> Financial Aid & Scholarships</h3>
+            <div class="benefit-cards">
+                <div class="benefit-card">
+                    <h4>Mary Ann Handley Award (MAHA)</h4>
+                    <div class="benefit-amount">Debt-Free Community College</div>
+                    <p>Covers gap between grants and tuition at CT State Community College. File FAFSA and register for 6+ credits.</p>
+                    <a href="https://www.ct.edu/admission/free" class="benefit-link" target="_blank">ct.edu - Debt-Free Tuition →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Roberta B. Willis Scholarship</h4>
+                    <div class="benefit-amount">Up to $5,250/year</div>
+                    <p>Need-merit scholarship for CT residents at 4-year CT colleges. SAT 1200+ or top 20% of class. FAFSA required.</p>
+                    <a href="https://portal.ct.gov/ohe/knowledge-base/articles/for-students/connecticut-student-aid-programs" class="benefit-link" target="_blank">CT Student Aid Programs →</a>
+                    <p class="benefit-deadline">Apply by Feb 15</p>
+                </div>
+                <div class="benefit-card">
+                    <h4>Roberta B. Willis Need-Based Grant</h4>
+                    <div class="benefit-amount">Up to $4,500/year</div>
+                    <p>Need-based grant for CT residents at 4-year CT public or private colleges. No separate application - file FAFSA.</p>
+                    <a href="https://portal.ct.gov/ohe/knowledge-base/articles/for-students/connecticut-student-aid-programs" class="benefit-link" target="_blank">CT Student Aid Programs →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Senior Citizens - Free Tuition</h4>
+                    <div class="benefit-amount">Age 62+ Tuition Waiver</div>
+                    <p>CT residents 62+ can attend any public college tuition-free! Degree-seeking or audit. Space-available basis. Fees still apply.</p>
+                    <a href="https://www.ccsu.edu/age-friendly-university" class="benefit-link" target="_blank">CCSU Age-Friendly Info →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>Federal Pell Grant</h4>
+                    <div class="benefit-amount">Up to $7,395/year</div>
+                    <p>Federal grant for undergraduates with financial need. No repayment. File FAFSA to apply.</p>
+                    <a href="https://studentaid.gov/understand-aid/types/grants/pell" class="benefit-link" target="_blank">studentaid.gov →</a>
+                </div>
+                <div class="benefit-card">
+                    <h4>FAFSA</h4>
+                    <div class="benefit-amount">Free Application</div>
+                    <p>Required for all federal and state aid. File at studentaid.gov. CT priority deadline: Feb 15 for most aid.</p>
+                    <a href="https://studentaid.gov/h/apply-for-aid/fafsa" class="benefit-link" target="_blank">Apply for FAFSA →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SPECIAL NOTE -->
+        <div style="background: #1a2a1a; border-radius: 10px; padding: 25px; margin-top: 30px; border-left: 4px solid #d4af37;">
+            <h4 style="color: #d4af37; margin-bottom: 10px;">💡 Tuition Frozen for 2025-2026</h4>
+            <p style="color: #aaa; margin: 0;">The CT State Colleges & Universities system has frozen tuition for the second year in a row. Average tuition at state universities is ~$7,000/year for in-state students. Community college tuition is ~$5,200/year.</p>
+        </div>
+    </section>
+    
+    <!-- STATE OFFICIALS -->
+    <section class="officials" id="officials">
+        <h2>🏛️ Connecticut State Officials</h2>
+        <p class="section-subtitle">Your state-level elected officials in Hartford.</p>
+        
+        <div class="officials-grid">
+            <div class="official-card">
+                <div class="level">Governor</div>
+                <h3>Ned Lamont</h3>
+                <div class="title">Governor of Connecticut</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+            <div class="official-card">
+                <div class="level">Lt. Governor</div>
+                <h3>Susan Bysiewicz</h3>
+                <div class="title">Lieutenant Governor</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+            <div class="official-card">
+                <div class="level">Attorney General</div>
+                <h3>William Tong</h3>
+                <div class="title">Attorney General</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+            <div class="official-card">
+                <div class="level">Secretary of State</div>
+                <h3>Stephanie Thomas</h3>
+                <div class="title">Secretary of the State</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+            <div class="official-card">
+                <div class="level">Treasurer</div>
+                <h3>Erick Russell</h3>
+                <div class="title">State Treasurer</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+            <div class="official-card">
+                <div class="level">Comptroller</div>
+                <h3>Sean Scanlon</h3>
+                <div class="title">State Comptroller</div>
+                <div class="party democrat">Democrat</div>
+            </div>
+        </div>
+        
+        <p style="text-align: center; margin-top: 30px; color: #888;">
+            <a href="/reps.php">Find your state senator and state representative by address →</a>
+        </p>
+    </section>
+    
+    <!-- TOWNS -->
+    <section class="towns" id="towns">
+        <h2>🏘️ Find Your Town</h2>
+        <p class="section-subtitle">Connecticut has 169 towns. Find yours to see local representatives and civic issues.</p>
+        
+        <div class="town-search">
+            <input type="text" id="townSearch" placeholder="Search for your town..." oninput="filterTowns()">
+        </div>
+        
+        <div class="towns-grid" id="townsGrid">
+            <!-- Active towns -->
+            <a href="brooklyn/" class="town-link active">Brooklyn ✓</a>
+            <a href="pomfret/" class="town-link active">Pomfret ✓</a>
+            <a href="putnam/" class="town-link active">Putnam ✓</a>
+            <a href="woodstock/" class="town-link active">Woodstock ✓</a>
+            
+            <!-- Coming soon - alphabetical sample -->
+            <span class="town-link coming-soon">Andover</span>
+            <span class="town-link coming-soon">Ansonia</span>
+            <span class="town-link coming-soon">Ashford</span>
+            <span class="town-link coming-soon">Avon</span>
+            <span class="town-link coming-soon">Barkhamsted</span>
+            <span class="town-link coming-soon">Beacon Falls</span>
+            <span class="town-link coming-soon">Berlin</span>
+            <span class="town-link coming-soon">Bethany</span>
+            <span class="town-link coming-soon">Bethel</span>
+            <span class="town-link coming-soon">Bethlehem</span>
+            <span class="town-link coming-soon">Bloomfield</span>
+            <span class="town-link coming-soon">Bolton</span>
+            <span class="town-link coming-soon">Bozrah</span>
+            <span class="town-link coming-soon">Branford</span>
+            <span class="town-link coming-soon">Bridgeport</span>
+            <span class="town-link coming-soon">Bridgewater</span>
+            <span class="town-link coming-soon">Bristol</span>
+            <span class="town-link coming-soon">Brookfield</span>
+            <span class="town-link coming-soon">Burlington</span>
+            <span class="town-link coming-soon">Canaan</span>
+            <span class="town-link coming-soon">Canterbury</span>
+            <span class="town-link coming-soon">Canton</span>
+            <span class="town-link coming-soon">Chaplin</span>
+            <span class="town-link coming-soon">Cheshire</span>
+            <span class="town-link coming-soon">Chester</span>
+            <span class="town-link coming-soon">Clinton</span>
+            <span class="town-link coming-soon">Colchester</span>
+            <span class="town-link coming-soon">Colebrook</span>
+            <span class="town-link coming-soon">Columbia</span>
+            <span class="town-link coming-soon">Cornwall</span>
+            <span class="town-link coming-soon">Coventry</span>
+            <span class="town-link coming-soon">Cromwell</span>
+            <span class="town-link coming-soon">Danbury</span>
+            <span class="town-link coming-soon">Darien</span>
+            <span class="town-link coming-soon">Deep River</span>
+            <span class="town-link coming-soon">Derby</span>
+            <span class="town-link coming-soon">Durham</span>
+            <span class="town-link coming-soon">East Granby</span>
+            <span class="town-link coming-soon">East Haddam</span>
+            <span class="town-link coming-soon">East Hampton</span>
+            <span class="town-link coming-soon">East Hartford</span>
+            <span class="town-link coming-soon">East Haven</span>
+            <span class="town-link coming-soon">East Lyme</span>
+            <span class="town-link coming-soon">East Windsor</span>
+            <span class="town-link coming-soon">Eastford</span>
+            <span class="town-link coming-soon">Easton</span>
+            <span class="town-link coming-soon">Ellington</span>
+            <span class="town-link coming-soon">Enfield</span>
+            <span class="town-link coming-soon">Essex</span>
+            <span class="town-link coming-soon">Fairfield</span>
+            <span class="town-link coming-soon">Farmington</span>
+            <span class="town-link coming-soon">Franklin</span>
+            <span class="town-link coming-soon">Glastonbury</span>
+            <span class="town-link coming-soon">Goshen</span>
+            <span class="town-link coming-soon">Granby</span>
+            <span class="town-link coming-soon">Greenwich</span>
+            <span class="town-link coming-soon">Griswold</span>
+            <span class="town-link coming-soon">Groton</span>
+            <span class="town-link coming-soon">Guilford</span>
+            <span class="town-link coming-soon">Haddam</span>
+            <span class="town-link coming-soon">Hamden</span>
+            <span class="town-link coming-soon">Hampton</span>
+            <span class="town-link coming-soon">Hartford</span>
+            <span class="town-link coming-soon">Hartland</span>
+            <span class="town-link coming-soon">Harwinton</span>
+            <span class="town-link coming-soon">Hebron</span>
+            <span class="town-link coming-soon">Kent</span>
+            <span class="town-link coming-soon">Killingly</span>
+            <span class="town-link coming-soon">Killingworth</span>
+            <span class="town-link coming-soon">Lebanon</span>
+            <span class="town-link coming-soon">Ledyard</span>
+            <span class="town-link coming-soon">Lisbon</span>
+            <span class="town-link coming-soon">Litchfield</span>
+            <span class="town-link coming-soon">Lyme</span>
+            <span class="town-link coming-soon">Madison</span>
+            <span class="town-link coming-soon">Manchester</span>
+            <span class="town-link coming-soon">Mansfield</span>
+            <span class="town-link coming-soon">Marlborough</span>
+            <span class="town-link coming-soon">Meriden</span>
+            <span class="town-link coming-soon">Middlebury</span>
+            <span class="town-link coming-soon">Middlefield</span>
+            <span class="town-link coming-soon">Middletown</span>
+            <span class="town-link coming-soon">Milford</span>
+            <span class="town-link coming-soon">Monroe</span>
+            <span class="town-link coming-soon">Montville</span>
+            <span class="town-link coming-soon">Morris</span>
+            <span class="town-link coming-soon">Naugatuck</span>
+            <span class="town-link coming-soon">New Britain</span>
+            <span class="town-link coming-soon">New Canaan</span>
+            <span class="town-link coming-soon">New Fairfield</span>
+            <span class="town-link coming-soon">New Hartford</span>
+            <span class="town-link coming-soon">New Haven</span>
+            <span class="town-link coming-soon">New London</span>
+            <span class="town-link coming-soon">New Milford</span>
+            <span class="town-link coming-soon">Newington</span>
+            <span class="town-link coming-soon">Newtown</span>
+            <span class="town-link coming-soon">Norfolk</span>
+            <span class="town-link coming-soon">North Branford</span>
+            <span class="town-link coming-soon">North Canaan</span>
+            <span class="town-link coming-soon">North Haven</span>
+            <span class="town-link coming-soon">North Stonington</span>
+            <span class="town-link coming-soon">Norwalk</span>
+            <span class="town-link coming-soon">Norwich</span>
+            <span class="town-link coming-soon">Old Lyme</span>
+            <span class="town-link coming-soon">Old Saybrook</span>
+            <span class="town-link coming-soon">Orange</span>
+            <span class="town-link coming-soon">Oxford</span>
+            <span class="town-link coming-soon">Plainfield</span>
+            <span class="town-link coming-soon">Plainville</span>
+            <span class="town-link coming-soon">Plymouth</span>
+            <span class="town-link coming-soon">Portland</span>
+            <span class="town-link coming-soon">Preston</span>
+            <span class="town-link coming-soon">Prospect</span>
+            <span class="town-link coming-soon">Redding</span>
+            <span class="town-link coming-soon">Ridgefield</span>
+            <span class="town-link coming-soon">Rocky Hill</span>
+            <span class="town-link coming-soon">Roxbury</span>
+            <span class="town-link coming-soon">Salem</span>
+            <span class="town-link coming-soon">Salisbury</span>
+            <span class="town-link coming-soon">Scotland</span>
+            <span class="town-link coming-soon">Seymour</span>
+            <span class="town-link coming-soon">Sharon</span>
+            <span class="town-link coming-soon">Shelton</span>
+            <span class="town-link coming-soon">Sherman</span>
+            <span class="town-link coming-soon">Simsbury</span>
+            <span class="town-link coming-soon">Somers</span>
+            <span class="town-link coming-soon">South Windsor</span>
+            <span class="town-link coming-soon">Southbury</span>
+            <span class="town-link coming-soon">Southington</span>
+            <span class="town-link coming-soon">Sprague</span>
+            <span class="town-link coming-soon">Stafford</span>
+            <span class="town-link coming-soon">Stamford</span>
+            <span class="town-link coming-soon">Sterling</span>
+            <span class="town-link coming-soon">Stonington</span>
+            <span class="town-link coming-soon">Stratford</span>
+            <span class="town-link coming-soon">Suffield</span>
+            <span class="town-link coming-soon">Thomaston</span>
+            <span class="town-link coming-soon">Thompson</span>
+            <span class="town-link coming-soon">Tolland</span>
+            <span class="town-link coming-soon">Torrington</span>
+            <span class="town-link coming-soon">Trumbull</span>
+            <span class="town-link coming-soon">Union</span>
+            <span class="town-link coming-soon">Vernon</span>
+            <span class="town-link coming-soon">Voluntown</span>
+            <span class="town-link coming-soon">Wallingford</span>
+            <span class="town-link coming-soon">Warren</span>
+            <span class="town-link coming-soon">Washington</span>
+            <span class="town-link coming-soon">Waterbury</span>
+            <span class="town-link coming-soon">Waterford</span>
+            <span class="town-link coming-soon">Watertown</span>
+            <span class="town-link coming-soon">West Hartford</span>
+            <span class="town-link coming-soon">West Haven</span>
+            <span class="town-link coming-soon">Westbrook</span>
+            <span class="town-link coming-soon">Weston</span>
+            <span class="town-link coming-soon">Westport</span>
+            <span class="town-link coming-soon">Wethersfield</span>
+            <span class="town-link coming-soon">Willington</span>
+            <span class="town-link coming-soon">Wilton</span>
+            <span class="town-link coming-soon">Winchester</span>
+            <span class="town-link coming-soon">Windham</span>
+            <span class="town-link coming-soon">Windsor</span>
+            <span class="town-link coming-soon">Windsor Locks</span>
+            <span class="town-link coming-soon">Wolcott</span>
+            <span class="town-link coming-soon">Woodbridge</span>
+            <span class="town-link coming-soon">Woodbury</span>
+        </div>
+        
+        <p style="text-align: center; margin-top: 30px; color: #888;">
+            Want your town added? <a href="/volunteer/">Volunteer to help build it →</a>
+        </p>
+    </section>
+    
+    <!-- KEY CONTACTS -->
+    <section class="contacts" id="contacts">
+        <h2>📞 Key Contacts</h2>
+        <p class="section-subtitle">When you need help, these are the numbers to call.</p>
+        
+        <div class="contacts-grid">
+            <div class="contact-card">
+                <h4>211 Connecticut</h4>
+                <div class="phone">2-1-1</div>
+                <div class="website"><a href="https://211ct.org" target="_blank">211ct.org</a></div>
+                <p class="description">All services directory. Housing, food, healthcare, utilities, childcare, and more.</p>
+            </div>
+            <div class="contact-card">
+                <h4>DSS Benefits Center</h4>
+                <div class="phone">1-855-626-6632</div>
+                <div class="website"><a href="https://portal.ct.gov/dss" target="_blank">portal.ct.gov/dss</a></div>
+                <p class="description">SNAP, cash assistance, Medicaid, childcare subsidies.</p>
+            </div>
+            <div class="contact-card">
+                <h4>Energy Assistance</h4>
+                <div class="phone">1-800-842-1132</div>
+                <div class="website"><a href="https://portal.ct.gov/dss/economic-security/winter-heating-assistance" target="_blank">ct.gov/staywarm</a></div>
+                <p class="description">CEAP heating assistance. Apply Sept through May.</p>
+            </div>
+            <div class="contact-card">
+                <h4>CHFA Housing</h4>
+                <div class="phone">1-860-571-3502</div>
+                <div class="website"><a href="https://www.chfa.org" target="_blank">chfa.org</a></div>
+                <p class="description">First-time homebuyer programs, down payment assistance.</p>
+            </div>
+            <div class="contact-card">
+                <h4>Energize CT</h4>
+                <div class="phone">1-877-WISE-USE</div>
+                <div class="website"><a href="https://www.energizect.com" target="_blank">energizect.com</a></div>
+                <p class="description">Energy rebates, home efficiency, heat pumps, weatherization.</p>
+            </div>
+            <div class="contact-card">
+                <h4>CT DMV</h4>
+                <div class="phone">1-800-842-8222</div>
+                <div class="website"><a href="https://portal.ct.gov/dmv" target="_blank">portal.ct.gov/dmv</a></div>
+                <p class="description">License, registration, REAL ID. Many services available online.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- FOOTER -->
+    <footer>
+        <p style="margin-bottom: 15px;">
+            <a href="/">The People's Branch</a> · 
+            <a href="/index.php">Join</a> · 
+            <a href="/volunteer/">Volunteer</a> · 
+            <a href="/read.php">Read Thoughts</a>
+        </p>
+        <p style="font-size: 0.85em;">
+            Information compiled from official CT sources. Always verify with agencies before making decisions.<br>
+            Last updated: December 2025
+        </p>
+    </footer>
+    
+    <script>
+        // Town search filter
+        function filterTowns() {
+            const search = document.getElementById('townSearch').value.toLowerCase();
+            const towns = document.querySelectorAll('.town-link');
+            
+            towns.forEach(town => {
+                const name = town.textContent.toLowerCase();
+                if (name.includes(search)) {
+                    town.style.display = '';
+                } else {
+                    town.style.display = 'none';
+                }
+            });
+        }
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

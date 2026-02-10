@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Putnam Town Code Reference | The People's Branch</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0d1117;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a2a1a 0%, #0a1a2a 100%);
+            padding: 30px 20px;
+            border-bottom: 2px solid #d4af37;
+        }
+        .header-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .breadcrumb {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        .breadcrumb a { color: #88c0d0; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .header h1 {
+            color: #d4af37;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        .header .subtitle {
+            color: #aaa;
+            font-size: 1.1rem;
+        }
+        
+        /* Main content */
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        section {
+            margin-bottom: 40px;
+        }
+        section h2 {
+            color: #d4af37;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+        }
+        section h3 {
+            color: #88c0d0;
+            font-size: 1.1rem;
+            margin: 20px 0 10px 0;
+        }
+        
+        /* Info box */
+        .info-box {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+        .info-box p { color: #ccc; }
+        .info-box a { color: #88c0d0; }
+        
+        /* Code sections grid */
+        .code-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .code-card {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4a7c4a;
+            transition: transform 0.2s;
+        }
+        .code-card:hover {
+            transform: translateX(5px);
+        }
+        .code-card.highlight { border-left-color: #d4af37; }
+        .code-card.administrative { border-left-color: #3498db; }
+        .code-card.general { border-left-color: #9b59b6; }
+        .code-card h4 {
+            color: #7cb77c;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        .code-card.highlight h4 { color: #d4af37; }
+        .code-card.administrative h4 { color: #3498db; }
+        .code-card.general h4 { color: #9b59b6; }
+        .code-card p {
+            color: #999;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        .code-card .chapter {
+            color: #666;
+            font-size: 0.8rem;
+        }
+        .code-card a {
+            color: #88c0d0;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .code-card a:hover { text-decoration: underline; }
+        
+        /* Chapter list */
+        .chapter-list {
+            background: #1a1a2e;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .chapter-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #2a2a3e;
+            transition: background 0.2s;
+        }
+        .chapter-item:last-child { border-bottom: none; }
+        .chapter-item:hover { background: rgba(255,255,255,0.02); }
+        .chapter-item .name { color: #ccc; }
+        .chapter-item .number { color: #888; font-size: 0.85rem; }
+        .chapter-item a {
+            color: #88c0d0;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .chapter-item a:hover { text-decoration: underline; }
+        
+        /* Key points */
+        .key-points {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .key-points h4 {
+            color: #d4af37;
+            margin-bottom: 15px;
+        }
+        .key-points ul {
+            margin-left: 20px;
+            color: #ccc;
+        }
+        .key-points li {
+            margin: 10px 0;
+        }
+        .key-points .ref {
+            color: #888;
+            font-size: 0.85rem;
+        }
+        
+        /* External link button */
+        .ext-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #d4af37;
+            color: #000;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .ext-link:hover { background: #e4bf47; }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: #666;
+            font-size: 0.85rem;
+            border-top: 1px solid #222;
+            margin-top: 40px;
+        }
+        footer a { color: #88c0d0; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="breadcrumb">
+                <a href="/">TPB</a> → 
+                <a href="/z-states/ct/">Connecticut</a> → 
+                <a href="/z-states/ct/putnam/">Putnam</a> → 
+                Town Code
+            </div>
+            <h1>📜 Putnam Town Code Reference</h1>
+            <div class="subtitle">Charter, Ordinances & Regulations</div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="info-box">
+            <p>
+                The Town of Putnam's municipal code is hosted on eCode360. This page summarizes key sections 
+                relevant to residents. For the complete, official code, visit 
+                <a href="https://ecode360.com/PU1474" target="_blank">ecode360.com/PU1474 ↗</a>
+            </p>
+        </div>
+        
+        <!-- KEY SECTIONS FOR RESIDENTS -->
+        <section>
+            <h2>Key Sections for Residents</h2>
+            
+            <div class="code-grid">
+                <div class="code-card highlight">
+                    <h4>📋 Town Charter</h4>
+                    <p>The foundational document defining Putnam's government structure, powers, and procedures.</p>
+                    <div class="chapter">Chapter C</div>
+                    <a href="https://ecode360.com/PU1474/laws/LF1605499.pdf" target="_blank">View Charter ↗</a>
+                </div>
+                
+                <div class="code-card highlight">
+                    <h4>⚖️ Ethics Code</h4>
+                    <p>Standards of conduct for town officers and employees, conflict of interest rules, financial disclosure.</p>
+                    <div class="chapter">Chapter 32, §32-1 – §32-12</div>
+                    <a href="https://ecode360.com/11579893" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card highlight">
+                    <h4>🏛️ Boards & Commissions</h4>
+                    <p>Rules governing all town boards, commissions and committees including membership and duties.</p>
+                    <div class="chapter">Chapter 10, §10-1 – §10-53</div>
+                    <a href="https://ecode360.com/11579543" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card highlight">
+                    <h4>💰 Taxation</h4>
+                    <p>Property tax exemptions, motor vehicle taxes, tax abatement programs, and collection procedures.</p>
+                    <div class="chapter">Chapter 285, §285-1 – §285-12</div>
+                    <a href="https://ecode360.com/11580826" target="_blank">View Code ↗</a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- PROPERTY & HOUSING -->
+        <section>
+            <h2>Property & Housing</h2>
+            
+            <div class="code-grid">
+                <div class="code-card">
+                    <h4>🏚️ Blighted Properties</h4>
+                    <p>Definitions, enforcement procedures, fines for neglected or abandoned properties.</p>
+                    <div class="chapter">Chapter 172, §172-1 – §172-10</div>
+                    <a href="https://ecode360.com/11580412" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🏗️ Building Construction</h4>
+                    <p>Permits, inspections, building codes, and construction standards.</p>
+                    <div class="chapter">Chapter 175, §175-1 – §175-12</div>
+                    <a href="https://ecode360.com/11580426" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🏠 Rental Property</h4>
+                    <p>Registration requirements, inspections, landlord responsibilities.</p>
+                    <div class="chapter">Chapter 260, §260-1 – §260-5</div>
+                    <a href="https://ecode360.com/11580760" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🌊 Flood Damage Prevention</h4>
+                    <p>Floodplain regulations, development restrictions, permit requirements.</p>
+                    <div class="chapter">Chapter 211, §211-1 – §211-24</div>
+                    <a href="https://ecode360.com/11580573" target="_blank">View Code ↗</a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- PUBLIC SAFETY & NUISANCES -->
+        <section>
+            <h2>Public Safety & Nuisances</h2>
+            
+            <div class="code-grid">
+                <div class="code-card">
+                    <h4>🔊 Nuisances</h4>
+                    <p>Noise, litter, weeds, abandoned vehicles, and other nuisance definitions and enforcement.</p>
+                    <div class="chapter">Chapter 235, §235-1 – §235-23</div>
+                    <a href="https://ecode360.com/11580652" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🔥 Open Burning</h4>
+                    <p>Permits, restrictions, and prohibited burning activities.</p>
+                    <div class="chapter">Chapter 178, §178-1 – §178-12</div>
+                    <a href="https://ecode360.com/11580445" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🚨 Alarm Systems</h4>
+                    <p>Registration, false alarm fees, and requirements for security systems.</p>
+                    <div class="chapter">Chapter 151, §151-1 – §151-5</div>
+                    <a href="https://ecode360.com/11580338" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🐕 Animals</h4>
+                    <p>Dog licensing, leash laws, animal control, and prohibited animals.</p>
+                    <div class="chapter">Chapter 162, §162-1 – §162-4</div>
+                    <a href="https://ecode360.com/11580373" target="_blank">View Code ↗</a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- STREETS & UTILITIES -->
+        <section>
+            <h2>Streets & Utilities</h2>
+            
+            <div class="code-grid">
+                <div class="code-card">
+                    <h4>🚗 Vehicles & Traffic</h4>
+                    <p>Parking regulations, traffic control, and vehicle restrictions.</p>
+                    <div class="chapter">Chapter 304, §304-1 – §304-12</div>
+                    <a href="https://ecode360.com/11580894" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🚶 Streets & Sidewalks</h4>
+                    <p>Maintenance responsibilities, permits for work, encroachments.</p>
+                    <div class="chapter">Chapter 273, §273-1 – §273-18</div>
+                    <a href="https://ecode360.com/11580785" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>💧 Water & Sewers</h4>
+                    <p>Connection requirements, rates, WPCA regulations, and service rules.</p>
+                    <div class="chapter">Chapter 312, §312-1 – §312-85</div>
+                    <a href="https://ecode360.com/11580920" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🗑️ Solid Waste</h4>
+                    <p>Collection schedules, recycling requirements, disposal rules.</p>
+                    <div class="chapter">Chapter 264, §264-1 – §264-22</div>
+                    <a href="https://ecode360.com/11580765" target="_blank">View Code ↗</a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- BUSINESS & PERMITS -->
+        <section>
+            <h2>Business & Permits</h2>
+            
+            <div class="code-grid">
+                <div class="code-card">
+                    <h4>🏪 Peddling & Soliciting</h4>
+                    <p>Permits for door-to-door sales, vendor licenses, and restrictions.</p>
+                    <div class="chapter">Chapter 250, §250-1 – §250-20</div>
+                    <a href="https://ecode360.com/11580720" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🏷️ Tag Sales</h4>
+                    <p>Permit requirements, frequency limits, and signage rules for yard sales.</p>
+                    <div class="chapter">Chapter 280, §280-1 – §280-6</div>
+                    <a href="https://ecode360.com/11580812" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🍺 Alcoholic Beverages</h4>
+                    <p>Permits for public consumption, special events, and restrictions.</p>
+                    <div class="chapter">Chapter 154, §154-1 – §154-7</div>
+                    <a href="https://ecode360.com/11580350" target="_blank">View Code ↗</a>
+                </div>
+                
+                <div class="code-card">
+                    <h4>🎪 Parades & Processions</h4>
+                    <p>Permit requirements for public events, marches, and processions.</p>
+                    <div class="chapter">Chapter 242, §242-1 – §242-3</div>
+                    <a href="https://ecode360.com/11580696" target="_blank">View Code ↗</a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- FEES SUMMARY -->
+        <section>
+            <h2>Common Fees & Charges</h2>
+            
+            <div class="key-points">
+                <h4>Chapter 206: Fees and Charges</h4>
+                <p style="color: #888; margin-bottom: 15px;">Key fees established by town ordinance (verify current amounts with Town Hall):</p>
+                <ul>
+                    <li>Building permits <span class="ref">§206-3</span></li>
+                    <li>Zoning permits and applications <span class="ref">§206-4</span></li>
+                    <li>Planning & Zoning Commission fees <span class="ref">§206-5</span></li>
+                    <li>Inland Wetlands permits <span class="ref">§206-6</span></li>
+                    <li>Health permits <span class="ref">§206-7</span></li>
+                    <li>Fire Marshal permits <span class="ref">§206-8</span></li>
+                    <li>Police services fees <span class="ref">§206-9</span></li>
+                    <li>Recreation fees <span class="ref">§206-10</span></li>
+                    <li>Sewer connection fees <span class="ref">§206-11</span></li>
+                    <li>Copying and document fees <span class="ref">§206-12</span></li>
+                </ul>
+                <a href="https://ecode360.com/11580521" target="_blank" style="color: #88c0d0; display: inline-block; margin-top: 15px;">View Full Fee Schedule ↗</a>
+            </div>
+        </section>
+        
+        <!-- ADMINISTRATIVE CHAPTERS -->
+        <section>
+            <h2>Part I: Administrative Legislation</h2>
+            <p style="color: #888; margin-bottom: 15px;">Town government structure and operations</p>
+            
+            <div class="chapter-list">
+                <div class="chapter-item">
+                    <span class="name">General Provisions</span>
+                    <span class="number">Ch. 1</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Aquifer Protection Agency</span>
+                    <span class="number">Ch. 7</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Boards, Commissions and Committees</span>
+                    <span class="number">Ch. 10</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Cemeteries</span>
+                    <span class="number">Ch. 16</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Community Development Action Plan Agency</span>
+                    <span class="number">Ch. 20</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Elections</span>
+                    <span class="number">Ch. 28</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Ethics, Code of</span>
+                    <span class="number">Ch. 32</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Finances</span>
+                    <span class="number">Ch. 37</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Fire Districts</span>
+                    <span class="number">Ch. 41</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Funds</span>
+                    <span class="number">Ch. 45</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Officers and Employees</span>
+                    <span class="number">Ch. 88</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Purchasing and Contracts</span>
+                    <span class="number">Ch. 101</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Town Government</span>
+                    <span class="number">Ch. 134</span>
+                </div>
+            </div>
+        </section>
+        
+        <!-- GENERAL LEGISLATION -->
+        <section>
+            <h2>Part II: General Legislation</h2>
+            <p style="color: #888; margin-bottom: 15px;">Laws affecting residents, businesses, and property</p>
+            
+            <div class="chapter-list">
+                <div class="chapter-item">
+                    <span class="name">Adult Businesses</span>
+                    <span class="number">Ch. 140</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Alarm Systems</span>
+                    <span class="number">Ch. 151</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Alcoholic Beverages</span>
+                    <span class="number">Ch. 154</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Animals</span>
+                    <span class="number">Ch. 162</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Blighted Properties</span>
+                    <span class="number">Ch. 172</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Building Construction</span>
+                    <span class="number">Ch. 175</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Burning, Open</span>
+                    <span class="number">Ch. 178</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Driveways</span>
+                    <span class="number">Ch. 187</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Emergency Management</span>
+                    <span class="number">Ch. 193</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Fees and Charges</span>
+                    <span class="number">Ch. 206</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Flood Damage Prevention</span>
+                    <span class="number">Ch. 211</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Nuisances</span>
+                    <span class="number">Ch. 235</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Parks and Recreation Facilities</span>
+                    <span class="number">Ch. 246</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Peddling and Soliciting</span>
+                    <span class="number">Ch. 250</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Rental Property</span>
+                    <span class="number">Ch. 260</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Solid Waste</span>
+                    <span class="number">Ch. 264</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Streets and Sidewalks</span>
+                    <span class="number">Ch. 273</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Tag Sales</span>
+                    <span class="number">Ch. 280</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Taxation</span>
+                    <span class="number">Ch. 285</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Vehicles and Traffic</span>
+                    <span class="number">Ch. 304</span>
+                </div>
+                <div class="chapter-item">
+                    <span class="name">Water and Sewers</span>
+                    <span class="number">Ch. 312</span>
+                </div>
+            </div>
+        </section>
+        
+        <a href="https://ecode360.com/PU1474" target="_blank" class="ext-link">
+            📜 View Complete Town Code on eCode360 ↗
+        </a>
+    </main>
+    
+    <footer>
+        <p>Reference guide to Putnam Town Code · Last updated October 2025</p>
+        <p style="margin-top: 5px;">
+            <a href="/z-states/ct/putnam/">← Back to Putnam Town Page</a> · 
+            <a href="/">The People's Branch</a>
+        </p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Putnam Board of Education — FY 2025–2026 Budget Summary</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0f1219;
+    --bg-card: #1a1f2e;
+    --bg-hover: #222839;
+    --border: #2a3040;
+    --gold: #d4a843;
+    --gold-dim: #a8842f;
+    --text-primary: #e8e6e1;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --green: #4ade80;
+    --green-bg: rgba(74,222,128,0.1);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.1);
+    --blue: #60a5fa;
+    --bar-track: #252b3b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #141926 0%, #1e2538 60%, #1a2040 100%);
+    padding: 3rem 2rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 70%, rgba(212,168,67,0.06) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(96,165,250,0.04) 0%, transparent 40%);
+    pointer-events: none;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.3rem;
+    position: relative;
+    color: #fff;
+  }
+  header .subtitle {
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+    position: relative;
+  }
+  header .badge {
+    display: inline-block;
+    margin-top: 1rem;
+    background: var(--gold);
+    color: #0f1219;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.35rem 1rem;
+    border-radius: 2rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    position: relative;
+  }
+
+  /* ── MAIN ── */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  /* ── TOP-LINE CARDS ── */
+  .topline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .topline .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.4rem 1.2rem;
+    text-align: center;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .topline .card:hover { transform: translateY(-2px); background: var(--bg-hover); }
+  .topline .card .label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+  .topline .card .value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  .topline .card .note {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+  }
+  .up { color: var(--red) !important; }
+  .down { color: var(--green) !important; }
+
+  /* ── SECTION HEADINGS ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 2.5rem 0 0.4rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--gold-dim);
+    display: inline-block;
+  }
+  .section-intro {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 1.2rem;
+    max-width: 720px;
+  }
+
+  /* ── BAR CHART ── */
+  .bar-chart {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 90px;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .bar-row:last-child { border-bottom: none; }
+  .bar-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .bar-track {
+    height: 22px;
+    background: var(--bar-track);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease;
+  }
+  .bar-amount {
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: right;
+    color: var(--text-primary);
+  }
+
+  /* ── CHANGE TABLE ── */
+  .change-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .change-table thead {
+    background: #161b28;
+  }
+  .change-table th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.8rem 1rem;
+    text-align: left;
+    font-weight: 700;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border);
+  }
+  .change-table th:nth-child(3),
+  .change-table th:nth-child(4) { text-align: right; }
+  .change-table td {
+    padding: 0.65rem 1rem;
+    font-size: 0.88rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+  .change-table td:nth-child(2) { color: var(--text-secondary); }
+  .change-table td:nth-child(3),
+  .change-table td:nth-child(4) { text-align: right; font-weight: 600; }
+  .change-table tbody tr:hover { background: var(--bg-hover); }
+  .pill {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: 1rem;
+  }
+  .pill-up { background: var(--red-bg); color: var(--red); }
+  .pill-down { background: var(--green-bg); color: var(--green); }
+
+  /* ── DONUT ── */
+  .donut-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+  .donut-wrap { flex: 0 0 220px; text-align: center; }
+  .donut-legend { flex: 1; min-width: 260px; }
+  .donut-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+  }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+  .legend-label { flex: 1; color: var(--text-primary); }
+  .legend-pct { font-weight: 700; min-width: 45px; text-align: right; color: #fff; }
+  .legend-amt { color: var(--text-muted); min-width: 90px; text-align: right; font-size: 0.85rem; }
+  .donut-svg { width: 200px; height: 200px; }
+
+  /* ── HIGHLIGHTS ── */
+  .highlights {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 600px) { .highlights { grid-template-columns: 1fr; } }
+  .highlight-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem;
+    border-left: 4px solid var(--gold-dim);
+  }
+  .highlight-card:hover { background: var(--bg-hover); }
+  .highlight-card h4 {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    margin-bottom: 0.35rem;
+  }
+  .highlight-card p {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+  .highlight-card strong { color: #fff; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+  }
+  footer a { color: var(--blue); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .bar-row { grid-template-columns: 1fr; gap: 0.3rem; }
+    .bar-amount { text-align: left; }
+    .topline { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Putnam Public Schools Budget</h1>
+  <div class="subtitle">Proposed FY 2025–2026 &middot; A Citizen's Summary</div>
+  <div class="badge">Total: $21.93 Million</div>
+</header>
+
+<main>
+
+  <div class="topline">
+    <div class="card">
+      <div class="label">Current Budget</div>
+      <div class="value">$20.96M</div>
+      <div class="note">FY 2024–25 Adopted</div>
+    </div>
+    <div class="card">
+      <div class="label">Proposed Budget</div>
+      <div class="value">$21.93M</div>
+      <div class="note">FY 2025–26</div>
+    </div>
+    <div class="card">
+      <div class="label">Dollar Increase</div>
+      <div class="value up">+$976,843</div>
+      <div class="note">Year over year</div>
+    </div>
+    <div class="card">
+      <div class="label">Percent Change</div>
+      <div class="value up">+4.66%</div>
+      <div class="note">Overall increase</div>
+    </div>
+  </div>
+
+  <div class="section-title">Where the Money Goes</div>
+  <p class="section-intro">The budget grouped into major spending categories. Bar widths show each category's share of the total $21.93 million.</p>
+  <div class="bar-chart" id="barChart"></div>
+
+  <div class="section-title">At a Glance</div>
+  <p class="section-intro">A proportional view of the proposed budget by category.</p>
+  <div class="donut-section">
+    <div class="donut-wrap">
+      <svg class="donut-svg" viewBox="0 0 42 42" id="donutSvg"></svg>
+    </div>
+    <div class="donut-legend" id="donutLegend"></div>
+  </div>
+
+  <div class="section-title">Biggest Increases</div>
+  <p class="section-intro">Line items with the largest dollar increases driving the budget change.</p>
+  <table class="change-table">
+    <thead><tr><th>Item</th><th>What Changed</th><th>Change</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>Special Ed Transportation</td><td>New mandated routes and rising service costs</td><td>+$229,081</td><td><span class="pill pill-up">+150%</span></td></tr>
+      <tr><td>Health &amp; Life Benefits</td><td>Insurance premium increases</td><td>+$185,881</td><td><span class="pill pill-up">+9.3%</span></td></tr>
+      <tr><td>Tuition (Out-placement)</td><td>More students in specialized programs</td><td>+$181,880</td><td><span class="pill pill-up">+15.2%</span></td></tr>
+      <tr><td>Software (New Lines)</td><td>Instructional &amp; non-instructional software now itemized</td><td>+$200,679</td><td><span class="pill pill-up">new</span></td></tr>
+      <tr><td>Certified Salaries</td><td>Contractual &amp; step increases for teachers</td><td>+$139,821</td><td><span class="pill pill-up">+1.5%</span></td></tr>
+      <tr><td>Non-Certified Salaries</td><td>Contractual &amp; step increases for staff</td><td>+$117,917</td><td><span class="pill pill-up">+3.9%</span></td></tr>
+      <tr><td>Electricity</td><td>Rate increases</td><td>+$71,250</td><td><span class="pill pill-up">+36%</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Notable Savings</div>
+  <p class="section-intro">Areas where spending is decreasing, partially offsetting the increases above.</p>
+  <table class="change-table">
+    <thead><tr><th>Item</th><th>What Changed</th><th>Change</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>Prof. Educational Services</td><td>Contracts restructured or completed</td><td>−$108,085</td><td><span class="pill pill-down">−77%</span></td></tr>
+      <tr><td>Purchased Prof/Tech</td><td>Service contracts renegotiated</td><td>−$72,627</td><td><span class="pill pill-down">−72%</span></td></tr>
+      <tr><td>Tech Service Contracts</td><td>Moved to other budget lines</td><td>−$41,463</td><td><span class="pill pill-down">−100%</span></td></tr>
+      <tr><td>Worker's Compensation</td><td>Lower experience rating / claims</td><td>−$25,501</td><td><span class="pill pill-down">−17%</span></td></tr>
+      <tr><td>Vehicle Rental</td><td>Lease ended</td><td>−$18,181</td><td><span class="pill pill-down">−100%</span></td></tr>
+      <tr><td>Coaching Salaries</td><td>Position adjustments</td><td>−$17,639</td><td><span class="pill pill-down">−8.5%</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Key Takeaways</div>
+  <div class="highlights">
+    <div class="highlight-card">
+      <h4>People Cost Money</h4>
+      <p>Salaries and benefits make up about <strong>76%</strong> of the entire budget — roughly $16.7 million. Most of the increase is driven by contractual obligations and health insurance.</p>
+    </div>
+    <div class="highlight-card">
+      <h4>Special Ed Costs Surging</h4>
+      <p>Special education transportation alone jumps <strong>$229K (+150%)</strong>, and out-of-district tuition rises <strong>$182K</strong>. These are largely mandated costs the district must cover.</p>
+    </div>
+    <div class="highlight-card">
+      <h4>Energy Bills Rising</h4>
+      <p>Electricity costs jump <strong>36%</strong> (+$71K), fuel oil rises <strong>11%</strong>. Together, energy spending will exceed <strong>$581K</strong> next year.</p>
+    </div>
+    <div class="highlight-card">
+      <h4>Some Real Savings Found</h4>
+      <p>The district cut over <strong>$180K</strong> from professional services contracts and eliminated some vehicle and technology line items, helping offset increases elsewhere.</p>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Prepared for the citizens of Putnam, CT &middot; Data source: Putnam Board of Education Proposed Budget FY 2025–2026<br>
+  Published by <a href="https://4tpb.org" target="_blank">The People's Branch</a> &middot; Civic transparency for every resident
+</footer>
+
+<script>
+const categories = [
+  { name: "Salaries & Wages",      amount: 13415729, color: "#60a5fa" },
+  { name: "Benefits & Insurance",   amount: 3319765,  color: "#d4a843" },
+  { name: "Transportation",         amount: 1297765,  color: "#4ade80" },
+  { name: "Tuition & Programs",     amount: 1537138,  color: "#f87171" },
+  { name: "Facilities & Utilities", amount: 808006,   color: "#a78bfa" },
+  { name: "Supplies & Materials",   amount: 653252,   color: "#fb923c" },
+  { name: "Technology",             amount: 561821,   color: "#38bdf8" },
+  { name: "Services & Fees",        amount: 341274,   color: "#818cf8" },
+];
+const total = 21934750;
+
+const barContainer = document.getElementById('barChart');
+categories.forEach(cat => {
+  const pct = cat.amount / total * 100;
+  const row = document.createElement('div');
+  row.className = 'bar-row';
+  row.innerHTML = `
+    <div class="bar-label">${cat.name}</div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width:${pct}%;background:${cat.color}"></div>
+    </div>
+    <div class="bar-amount">$${(cat.amount/1e6).toFixed(1)}M</div>
+  `;
+  barContainer.appendChild(row);
+});
+
+const svg = document.getElementById('donutSvg');
+const legendEl = document.getElementById('donutLegend');
+const radius = 15.9155;
+const circumference = 2 * Math.PI * radius;
+let offset = 0;
+
+categories.forEach(cat => {
+  const pct = cat.amount / total * 100;
+  const dashLen = circumference * pct / 100;
+  const dashGap = circumference - dashLen;
+
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("cx", "21");
+  circle.setAttribute("cy", "21");
+  circle.setAttribute("r", String(radius));
+  circle.setAttribute("fill", "none");
+  circle.setAttribute("stroke", cat.color);
+  circle.setAttribute("stroke-width", "6");
+  circle.setAttribute("stroke-dasharray", `${dashLen} ${dashGap}`);
+  circle.setAttribute("stroke-dashoffset", String(-offset));
+  circle.setAttribute("transform", "rotate(-90 21 21)");
+  svg.appendChild(circle);
+  offset += dashLen;
+
+  const row = document.createElement('div');
+  row.className = 'donut-legend-row';
+  row.innerHTML = `
+    <div class="legend-swatch" style="background:${cat.color}"></div>
+    <div class="legend-label">${cat.name}</div>
+    <div class="legend-pct">${pct.toFixed(1)}%</div>
+    <div class="legend-amt">$${(cat.amount/1e6).toFixed(1)}M</div>
+  `;
+  legendEl.appendChild(row);
+});
+
+const centerText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+centerText.setAttribute("x", "21");
+centerText.setAttribute("y", "20");
+centerText.setAttribute("text-anchor", "middle");
+centerText.setAttribute("font-size", "3.2");
+centerText.setAttribute("font-weight", "700");
+centerText.setAttribute("fill", "#ffffff");
+centerText.setAttribute("font-family", "'Playfair Display', serif");
+centerText.textContent = "$21.9M";
+svg.appendChild(centerText);
+
+const subText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+subText.setAttribute("x", "21");
+subText.setAttribute("y", "24");
+subText.setAttribute("text-anchor", "middle");
+subText.setAttribute("font-size", "2");
+subText.setAttribute("fill", "#6b7280");
+subText.setAttribute("font-family", "'Source Sans 3', sans-serif");
+subText.textContent = "TOTAL";
+svg.appendChild(subText);
+</script>
+
+</body>
+</html>

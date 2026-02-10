@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPB2 Modal Help System - POC Demo</title>
+
+<!-- Modal Help System CSS -->
+<link rel="stylesheet" href="/assets/modal-help.css">
+
+<style>
+    /* Page styles (your app styles) */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 100%);
+        color: #d4af37;
+        min-height: 100vh;
+        padding: 30px;
+    }
+    
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    h1 {
+        text-align: center;
+        color: #ffdb58;
+        margin-bottom: 10px;
+        font-size: 2.2em;
+    }
+    
+    .subtitle {
+        text-align: center;
+        color: #888;
+        margin-bottom: 40px;
+    }
+    
+    .demo-section {
+        background: #1a1a1a;
+        border: 2px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 25px;
+    }
+    
+    .demo-section h2 {
+        color: #ffdb58;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #3a3a3a;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .demo-section h3 {
+        color: #d4af37;
+        margin: 20px 0 15px 0;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        color: #d4af37;
+        font-weight: 600;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        background: #252525;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        color: #d4af37;
+        font-size: 1em;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #d4af37;
+    }
+    
+    .btn {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 6px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-right: 10px;
+    }
+    
+    .btn-primary {
+        background: #d4af37;
+        color: #0d0d0d;
+    }
+    
+    .btn-primary:hover {
+        background: #ffdb58;
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background: #333;
+        color: #d4af37;
+        border: 1px solid #d4af37;
+    }
+    
+    .btn-secondary:hover {
+        background: #444;
+    }
+    
+    .vote-buttons {
+        display: flex;
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .vote-btn {
+        flex: 1;
+        padding: 15px 30px;
+        font-size: 1.2em;
+        border: 2px solid;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .vote-yes {
+        background: #1a3d1a;
+        color: #66bb6a;
+        border-color: #4caf50;
+    }
+    
+    .vote-yes:hover {
+        background: #2d5a2d;
+        transform: translateY(-3px);
+    }
+    
+    .vote-no {
+        background: #3d1a1a;
+        color: #ff6b6b;
+        border-color: #f44336;
+    }
+    
+    .vote-no:hover {
+        background: #5a2d2d;
+        transform: translateY(-3px);
+    }
+    
+    .milestone-card {
+        background: #252525;
+        border: 1px solid #3a3a3a;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+    
+    .milestone-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .milestone-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #ffdb58;
+        font-size: 1.1em;
+    }
+    
+    .progress-bar {
+        height: 10px;
+        background: #1a1a1a;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #d4af37, #ffdb58);
+        border-radius: 5px;
+        transition: width 0.3s ease;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+    }
+    
+    .badge-verified {
+        background: #1a3d1a;
+        color: #66bb6a;
+    }
+    
+    .badge-pending {
+        background: #3d3d1a;
+        color: #ffdb58;
+    }
+    
+    .icon-demo-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .icon-demo-item {
+        background: #252525;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #3a3a3a;
+    }
+    
+    .icon-demo-item:hover {
+        border-color: #d4af37;
+    }
+    
+    .icon-demo-item .emoji {
+        font-size: 2em;
+        display: block;
+        margin-bottom: 8px;
+    }
+    
+    .icon-demo-item .label {
+        font-size: 0.85em;
+        color: #888;
+    }
+    
+    .footer-note {
+        text-align: center;
+        color: #666;
+        margin-top: 30px;
+        padding: 20px;
+        background: #1a1a1a;
+        border-radius: 8px;
+    }
+    
+    .manual-trigger {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 15px 0;
+    }
+    
+    .manual-trigger button {
+        padding: 8px 15px;
+        background: #333;
+        color: #d4af37;
+        border: 1px solid #555;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+    
+    .manual-trigger button:hover {
+        background: #444;
+        border-color: #d4af37;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎪 TPB2 Modal Help System</h1>
+    <p class="subtitle">Proof of Concept - All 16 Icon Types Working</p>
+    
+    <!-- ================================================================== -->
+    <!-- SECTION 1: Registration Form Demo -->
+    <!-- ================================================================== -->
+    <div class="demo-section">
+        <h2>
+            📝 Registration Form
+            <span class="tpb-help" data-modal="who_can_participate"></span>
+        </h2>
+        
+        <div class="form-group">
+            <label>
+                Email Address
+                <span class="tpb-help" data-modal="why_verify_email"></span>
+            </label>
+            <input type="email" placeholder="your@email.com">
+        </div>
+        
+        <div class="form-group">
+            <label>
+                Password
+                <span class="tpb-help" data-modal="security_demo"></span>
+            </label>
+            <input type="password" placeholder="Create a strong password">
+        </div>
+        
+        <div class="form-group">
+            <label>
+                Location
+                <span class="tpb-help" data-modal="location_demo"></span>
+            </label>
+            <select>
+                <option>Select your district...</option>
+                <option>CT-2 - Connecticut Second District</option>
+                <option>CT-1 - Connecticut First District</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox"> I agree to the Terms of Service
+                <span class="tpb-help" data-modal="philosophy_demo"></span>
+            </label>
+        </div>
+        
+        <button class="btn btn-primary">Create Account</button>
+    </div>
+    
+    <!-- ================================================================== -->
+    <!-- SECTION 2: Voting Interface Demo -->
+    <!-- ================================================================== -->
+    <div class="demo-section">
+        <h2>
+            🗳️ Community Vote
+            <span class="tpb-help" data-modal="how_voting_works"></span>
+        </h2>
+        
+        <p style="margin-bottom: 15px;">
+            <strong>Proposal:</strong> Should the town invest in solar panels for public buildings?
+        </p>
+        
+        <div class="vote-buttons">
+            <button class="vote-btn vote-yes">
+                👍 Yes, Support
+                <span class="tpb-help" data-modal="tip_demo"></span>
+            </button>
+            <button class="vote-btn vote-no">
+                👎 No, Oppose
+                <span class="tpb-help" data-modal="warning_demo"></span>
+            </button>
+        </div>
+        
+        <p style="color: #888; font-size: 0.9em;">
+            Your vote is anonymous 
+            <span class="tpb-help" data-modal="how_voting_works"></span>
+        </p>
+    </div>
+    
+    <!-- ================================================================== -->
+    <!-- SECTION 3: Milestone Progress Demo -->
+    <!-- ================================================================== -->
+    <div class="demo-section">
+        <h2>
+            🎯 Your Progress
+            <span class="tpb-help" data-modal="milestone_system"></span>
+        </h2>
+        
+        <div class="milestone-card">
+            <div class="milestone-header">
+                <div class="milestone-title">
+                    Milestone Progress
+                    <span class="tpb-help" data-modal="milestone_system"></span>
+                </div>
+                <span class="status-badge badge-verified">75 points</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 55%;"></div>
+            </div>
+            <p style="margin-top: 10px; color: #888; font-size: 0.9em;">
+                55% to next unlock 
+                <span class="tpb-help" data-modal="feature_demo"></span>
+            </p>
+        </div>
+        
+        <h3>
+            🚀 New Feature Available!
+            <span class="tpb-help" data-modal="new_demo"></span>
+        </h3>
+        <p>Analytics dashboard is now live. Track your community impact!</p>
+        
+        <h3>
+            ⏳ Coming Soon
+            <span class="tpb-help" data-modal="preview_demo"></span>
+        </h3>
+        <p>Virtual town halls launching next quarter.</p>
+    </div>
+    
+    <!-- ================================================================== -->
+    <!-- SECTION 4: Mentorship Demo -->
+    <!-- ================================================================== -->
+    <div class="demo-section">
+        <h2>
+            🤝 Become a Mentor
+            <span class="tpb-help" data-modal="mentorship_explained"></span>
+        </h2>
+        
+        <p style="margin-bottom: 15px;">
+            Help others learn and earn trust together through our mutual mentorship system.
+        </p>
+        
+        <button class="btn btn-primary">
+            Apply to Mentor
+            <span class="tpb-help" data-modal="tutorial_demo"></span>
+        </button>
+        <button class="btn btn-secondary">
+            Read Full Guide
+            <span class="tpb-help" data-modal="docs_demo"></span>
+        </button>
+        
+        <h3 style="margin-top: 25px;">
+            👥 Community Stats
+            <span class="tpb-help" data-modal="social_demo"></span>
+        </h3>
+        <p>Join 234 active mentors in your district.</p>
+    </div>
+    
+    <!-- ================================================================== -->
+    <!-- SECTION 5: All 16 Icons Demo -->
+    <!-- ================================================================== -->
+    <div class="demo-section">
+        <h2>🎨 All 16 Icon Types</h2>
+        <p style="margin-bottom: 15px;">Click any icon to see its modal:</p>
+        
+        <div class="icon-demo-grid">
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="why_verify_email" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">info</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="how_voting_works" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">help</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="preview_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">preview</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="warning_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">warning</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="tip_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">tip</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="docs_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">docs</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="tutorial_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">tutorial</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="feature_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">feature</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="success_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">success</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="new_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">new</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="security_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">security</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="important_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">important</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="location_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">location</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="external_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">external</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="social_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">social</span>
+            </div>
+            <div class="icon-demo-item">
+                <span class="tpb-help" data-modal="philosophy_demo" style="display: inline-block; font-size: 2em; opacity: 1;"></span>
+                <span class="label">philosophy</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ================================================================== -->
+    <!-- SECTION 6: Manual Trigger Demo -->
+    <!-- ================================================================== -->
+    <div class="demo-section">
+        <h2>🔧 Programmatic API</h2>
+        <p>Open modals with JavaScript:</p>
+        
+        <div class="manual-trigger">
+            <button onclick="TPBModalHelp.show('who_can_participate')">Show "Who Can Participate"</button>
+            <button onclick="TPBModalHelp.show('how_voting_works')">Show "How Voting Works"</button>
+            <button onclick="TPBModalHelp.show('mentorship_explained')">Show "Mentorship"</button>
+            <button onclick="TPBModalHelp.show('milestone_system')">Show "Milestones"</button>
+        </div>
+        
+        <pre style="background: #252525; padding: 15px; border-radius: 8px; margin-top: 15px; overflow-x: auto;">
+<code style="color: #66bb6a;">// Initialize on page load
+TPBModalHelp.init({
+    apiBase: '/api/modal',
+    page: 'poc_demo',
+    enableAnalytics: true,
+    debug: true
+});
+
+// Manually open a modal
+TPBModalHelp.show('voting_explained');
+
+// Close current modal
+TPBModalHelp.hide();</code></pre>
+    </div>
+    
+    <div class="footer-note">
+        <p><strong>TPB2 Modal Help System - Proof of Concept</strong></p>
+        <p style="margin-top: 10px;">
+            16 icon types • Dynamic loading from database • Analytics tracking • Responsive design
+        </p>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            November 25, 2025
+        </p>
+    </div>
+</div>
+
+<!-- Modal Help System JavaScript -->
+<script src="/assets/modal-help.js"></script>
+<script>
+    // Initialize the Modal Help System
+    TPBModalHelp.init({
+        apiBase: '/api/modal',
+        page: 'poc_demo',
+        enableAnalytics: true,
+        enableTooltips: true,
+        debug: true  // Set to false in production
+    });
+    
+    console.log('TPB2 Modal Help System initialized!');
+    console.log('Available icons:', TPBModalHelp.ICONS);
+</script>
+
+</body>
+</html>

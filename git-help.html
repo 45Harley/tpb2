@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git Cheat Sheet — TPB</title>
+<style>
+  :root {
+    --bg: #0f1219;
+    --bg-card: #1a1f2e;
+    --border: #2a3040;
+    --gold: #d4a843;
+    --white: #f0ede6;
+    --text: #c8c4bb;
+    --muted: #7a7670;
+    --green: #6abf7b;
+    --blue: #5b9bd5;
+    --red: #d4756a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  h1 {
+    color: var(--white);
+    font-size: 1.8rem;
+    margin-bottom: 0.3rem;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+  h2 {
+    color: var(--gold);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 2rem 0 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.8rem;
+  }
+  .card .label {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+  }
+  code {
+    display: block;
+    background: #0a0d12;
+    color: var(--green);
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.95rem;
+    margin: 0.4rem 0;
+    overflow-x: auto;
+  }
+  .card p {
+    color: var(--text);
+    font-size: 0.9rem;
+    margin-top: 0.4rem;
+  }
+  .warning {
+    border-left: 3px solid var(--red);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .warning strong { color: var(--red); }
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+  }
+  .flow-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  .flow-arrow { color: var(--gold); }
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>Git Cheat Sheet</h1>
+<div class="subtitle">TPB — tpb2.sandgems.net — Genesis: Feb 2, 2026</div>
+
+<h2>Daily Workflow</h2>
+
+<div class="flow">
+  <span class="flow-step">Edit files</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">Upload via cPanel</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">SSH in</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">git add . && git commit</span>
+</div>
+
+<div class="card">
+  <div class="label">Save your work (do this after every change)</div>
+  <code>git add .</code>
+  <code>git commit -m "what you changed"</code>
+</div>
+
+<h2>See What's Happening</h2>
+
+<div class="card">
+  <div class="label">What files have changed?</div>
+  <code>git status</code>
+</div>
+
+<div class="card">
+  <div class="label">What exactly changed in those files?</div>
+  <code>git diff</code>
+</div>
+
+<div class="card">
+  <div class="label">See your commit history</div>
+  <code>git log --oneline</code>
+</div>
+
+<div class="card">
+  <div class="label">See what changed in the last commit</div>
+  <code>git diff HEAD~1</code>
+</div>
+
+<h2>Undo Mistakes</h2>
+
+<div class="card">
+  <div class="label">Discard changes to ONE file (restore to last commit)</div>
+  <code>git checkout -- filename.php</code>
+  <p>Example: <code style="display:inline;padding:0.2rem 0.4rem;">git checkout -- index.php</code></p>
+</div>
+
+<div class="card">
+  <div class="label">Discard ALL changes (restore everything to last commit)</div>
+  <code>git checkout -- .</code>
+</div>
+
+<div class="warning">
+  <strong>⚠️ Warning:</strong> checkout throws away uncommitted changes. Make sure you really want to lose them.
+</div>
+
+<h2>SSH Connection</h2>
+
+<div class="card">
+  <div class="label">Connect to server</div>
+  <code>ssh sandge5@ecngx308.inmotionhosting.com -p 2222</code>
+</div>
+
+<div class="card">
+  <div class="label">Go to site folder</div>
+  <code>cd /home/sandge5/tpb2.sandgems.net</code>
+</div>
+
+<h2>Files Git Ignores</h2>
+
+<div class="card">
+  <div class="label">These are in .gitignore — never committed</div>
+  <code>*.zip, *.mp3, *.mp4, *.log, config.php, config-claude.php</code>
+  <p>Your API keys and database passwords stay safe.</p>
+</div>
+
+<h2>Quick Reference</h2>
+
+<div class="card">
+  <div class="label">The 4 commands you'll use 90% of the time</div>
+  <code>git add .                    # stage all changes</code>
+  <code>git status                   # see what's staged</code>
+  <code>git commit -m "message"      # save checkpoint</code>
+  <code>git log --oneline            # see history</code>
+</div>
+
+<div class="footer">
+  TPB Genesis Commit: b6e55dd — 150 files, 65,929 lines<br>
+  Keep this at: /home/sandge5/tpb2.sandgems.net/git-help.html
+</div>
+
+</body>
+</html>

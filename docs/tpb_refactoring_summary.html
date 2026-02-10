@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TPB Refactoring Summary</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      line-height: 1.7;
+    }
+    h1 {
+      text-align: center;
+      border-bottom: 3px solid #ffd700;
+      padding-bottom: 15px;
+      color: #ffd700;
+    }
+    h2 {
+      color: #4a90d9;
+      margin-top: 40px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 8px;
+    }
+    h3 {
+      color: #da70d6;
+      margin-top: 25px;
+    }
+    .section {
+      background: #252525;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid #4a90d9;
+    }
+    .before { border-left-color: #f44; }
+    .after { border-left-color: #4f4; }
+    .future { border-left-color: #ffd700; }
+    .foundation { border-left-color: #da70d6; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background: #333;
+      color: #ffd700;
+    }
+    .highlight {
+      color: #ffd700;
+      font-weight: bold;
+    }
+    .updated {
+      text-align: center;
+      color: #888;
+      font-size: 0.9em;
+    }
+    ul {
+      padding-left: 25px;
+    }
+    li {
+      margin: 8px 0;
+    }
+    code {
+      background: #333;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      color: #4f4;
+    }
+  </style>
+</head>
+<body>
+
+<h1>TPB REFACTORING SUMMARY</h1>
+<p class="updated">December 2025</p>
+
+<h2>WHAT IS TPB?</h2>
+<div class="section">
+  <p><strong>The People's Branch</strong> — a "fourth branch of government" where citizens have voice beyond election cycles. Citizens submit "thoughts" (concerns, ideas, aspirations) that route to appropriate elected officials at town, state, and federal levels.</p>
+  <p class="highlight">"Every government action begins as someone's thought. Why not yours?"</p>
+  <p><strong>Model Town:</strong> Putnam, Connecticut<br>
+  <strong>Dev Site:</strong> tpb2.sandgems.net<br>
+  <strong>Prod Site:</strong> 4tpb.org</p>
+</div>
+
+<h2>BEFORE: The Monolithic Era</h2>
+<div class="section before">
+  
+  <h3>Code Structure</h3>
+  <ul>
+    <li><code>demo.php</code> — 3,000+ lines, all-in-one page handling everything</li>
+    <li><code>join.php</code> — 1,400+ lines, registration flow</li>
+    <li><code>read.php</code> — thoughts display</li>
+    <li><code>thought.php</code> — thought submission</li>
+    <li>Massive code duplication across files (location modals, verification logic, thought cards, forms)</li>
+    <li>All CSS inline in each file (~1,000 lines per file)</li>
+    <li>No shared includes or components</li>
+  </ul>
+
+  <h3>Location System</h3>
+  <ul>
+    <li>Complex geolocation using Nominatim API calls</li>
+    <li>External API dependency for every location lookup</li>
+    <li>Complicated "summersaults" for location detection</li>
+    <li>Fragile and slow</li>
+  </ul>
+
+  <h3>Navigation</h3>
+  <ul>
+    <li>Modal popups for everything</li>
+    <li>Inconsistent headers/footers across pages</li>
+    <li>"Dead ends" with "Coming Soon" messages</li>
+    <li>No clear user journey</li>
+  </ul>
+
+  <h3>Officials Data</h3>
+  <ul>
+    <li>Only federal and CT state officials populated</li>
+    <li>No local town officials</li>
+    <li>Manual data entry</li>
+  </ul>
+
+  <h3>AI Integration</h3>
+  <ul>
+    <li>Context lost between conversations</li>
+    <li>Different Claudes (web/desktop) didn't share knowledge</li>
+    <li>AI had to relearn project every session</li>
+  </ul>
+</div>
+
+<h2>AFTER: The Modular Era</h2>
+<div class="section after">
+
+  <h3>Code Structure</h3>
+  <table>
+    <tr>
+      <th>Before</th>
+      <th>After</th>
+    </tr>
+    <tr>
+      <td>demo.php (3000+ lines)</td>
+      <td>Split into:<br>
+        • <code>profile.php</code> (user identity/verification)<br>
+        • <code>voice.php</code> (thoughts/civic engagement)<br>
+        • <code>story.php</code> (TPB origins)</td>
+    </tr>
+    <tr>
+      <td>Duplicated code everywhere</td>
+      <td>Shared includes:<br>
+        • <code>includes/header.php</code><br>
+        • <code>includes/nav.php</code><br>
+        • <code>includes/footer.php</code><br>
+        • <code>includes/location-lookup.php</code></td>
+    </tr>
+    <tr>
+      <td>Inline CSS per file</td>
+      <td>Modular CSS in <code>/assets/</code></td>
+    </tr>
+  </table>
+
+  <h3>Location System</h3>
+  <ul>
+    <li><strong>Local zip code database</strong> — 41,481 US zip codes imported</li>
+    <li><strong>Local towns database</strong> — 29,386 towns populated</li>
+    <li>No external API calls needed</li>
+    <li><code>api/zip-lookup.php</code> for fast local queries</li>
+    <li><code>assets/location-module.js</code> for client-side handling</li>
+    <li>Simple: user enters zip → instant town lookup</li>
+  </ul>
+
+  <h3>Navigation</h3>
+  <ul>
+    <li><strong>Dialog-based flow</strong> instead of modal popups</li>
+    <li>Three main sections: Me | My Voice | My Government</li>
+    <li>Consistent navigation across all pages</li>
+    <li>No dead ends — inactive states show CT as model, invite founder signup</li>
+    <li>State clicks open engagement opportunities, not "Coming Soon"</li>
+  </ul>
+
+  <h3>Landing Page</h3>
+  <ul>
+    <li><strong>Interactive USA map</strong> — SVG with clickable states</li>
+    <li>Connecticut highlighted gold (active)</li>
+    <li>Other states gray with engagement path</li>
+    <li>Manifesto: "You are the Fourth Branch"</li>
+    <li>Nine branches serve you (3 levels × 3 branches)</li>
+  </ul>
+
+  <h3>Officials Data</h3>
+  <table>
+    <tr>
+      <th>Level</th>
+      <th>Count</th>
+    </tr>
+    <tr><td>U.S. Senators</td><td>100</td></tr>
+    <tr><td>U.S. Representatives</td><td>439+</td></tr>
+    <tr><td>Governors</td><td>50+</td></tr>
+    <tr><td>State Senators</td><td>2,012+</td></tr>
+    <tr><td>State Representatives</td><td>5,663+</td></tr>
+    <tr><td>Local Officials (Putnam area)</td><td>50+</td></tr>
+    <tr><td><strong>TOTAL</strong></td><td><strong>8,600+</strong></td></tr>
+  </table>
+
+  <h3>CT Towns Built</h3>
+  <ul>
+    <li><strong>Putnam</strong> — Model town, complete</li>
+    <li><strong>Brooklyn</strong> — Active with officials</li>
+    <li><strong>Pomfret</strong> — Active with officials</li>
+    <li><strong>Woodstock</strong> — Active with officials</li>
+  </ul>
+  <p>Town Builder Template created for consistent future builds.</p>
+
+  <h3>Civic Points System</h3>
+  <ul>
+    <li>Points thread through ALL interactions</li>
+    <li>Every action logged to <code>civic_clicks</code> table</li>
+    <li>Anonymous users build points via session</li>
+    <li>"Shadow" user records created for anonymous engagement</li>
+    <li>Points visible in navigation header</li>
+  </ul>
+
+  <h3>AI Integration</h3>
+  <ul>
+    <li><strong>system_documentation table</strong> — persistent context in database</li>
+    <li><strong>MCP server</strong> — Desktop Claude can query database directly</li>
+    <li><strong>claude-startup.txt</strong> — startup instructions for any Claude</li>
+    <li>7 documentation records including foundations, architecture, rules</li>
+  </ul>
+</div>
+
+<h2>THE FOUNDATION</h2>
+<div class="section foundation">
+  <p>TPB is built on metaphysical foundations documented in the database:</p>
+  
+  <h3>The Structure of Reality (Top to Bottom)</h3>
+  <table>
+    <tr>
+      <th>Level</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>LEVEL 1 - VISIBLE</td>
+      <td>Physical world: laws, policies, documents. Founding Fathers' ideals. What the 5 senses perceive.</td>
+    </tr>
+    <tr>
+      <td>LEVEL 2 - MENTAL</td>
+      <td>Intelligence, consciousness, concepts, ideas of Good. The individual as infinitely unique.</td>
+    </tr>
+    <tr>
+      <td>LEVEL 3 - EXPRESSIONS</td>
+      <td>mind, spirit, soul, life, truth, love (lowercase = effects, not the Cause)</td>
+    </tr>
+    <tr>
+      <td>LEVEL 4 - THE ROCK</td>
+      <td><span class="highlight">Mind. Spirit. Soul. Principle. Life. Truth. Love.</span><br>
+      The indivisible Christ idea, Truth expressed.</td>
+    </tr>
+  </table>
+
+  <p class="highlight">TPB's Fundamental Purpose: Elevate thought toward Truth.</p>
+  
+  <p>Citizens submit thoughts at Level 1. The structure points upward. Those who climb, climb. Those who stay at Level 1, that's OK — the path exists.</p>
+</div>
+
+<h2>FUTURE DIRECTIONS</h2>
+<div class="section future">
+
+  <h3>Technical</h3>
+  <ul>
+    <li><strong>MCP POST fix</strong> — Switch from GET to POST to bypass ModSecurity blocking SQL keywords</li>
+    <li><strong>Site consolidation</strong> — Fold tpb.sandgems.net into tpb2.sandgems.net</li>
+    <li><strong>Write API</strong> — Allow AI to INSERT/UPDATE database (currently read-only)</li>
+  </ul>
+
+  <h3>Content</h3>
+  <ul>
+    <li><strong>More CT towns</strong> — Expand Quiet Corner coverage</li>
+    <li><strong>Other states</strong> — Founder signup for inactive states</li>
+    <li><strong>Town officials</strong> — Continue populating local officials</li>
+  </ul>
+
+  <h3>Features</h3>
+  <ul>
+    <li><strong>Thoughts aggregation</strong> — AI synthesis of citizen input</li>
+    <li><strong>Official accountability</strong> — Track response rates</li>
+    <li><strong>Volunteer system</strong> — 12 skill categories for platform contribution</li>
+    <li><strong>Mentorship</strong> — Mutual teaching/learning with bidirectional points</li>
+  </ul>
+
+  <h3>Vision (4 Years)</h3>
+  <ul>
+    <li>AI that can write, test, debug, and deploy iteratively</li>
+    <li>Harley can chat about metaphysics and new possibilities</li>
+    <li>AI grown in accord with true reality</li>
+    <li>TPB as infrastructure for "more perfect union"</li>
+    <li>Town → State → Nation scaling</li>
+  </ul>
+</div>
+
+<h2>DATABASE DOCUMENTATION</h2>
+<div class="section">
+  <table>
+    <tr>
+      <th>doc_key</th>
+      <th>Purpose</th>
+    </tr>
+    <tr><td>foundations_metaphysical</td><td>The Rock — metaphysical foundation TPB is built on</td></tr>
+    <tr><td>ai_context</td><td>Who is Harley, what is TPB, how to help</td></tr>
+    <tr><td>tpb_overview</td><td>Mission, problem, solution, trust progression</td></tr>
+    <tr><td>tpb_architecture</td><td>Database structure and relationships</td></tr>
+    <tr><td>dev_rules</td><td>Development practices and guidelines</td></tr>
+    <tr><td>file_delivery_rules</td><td>How AI should deliver files</td></tr>
+    <tr><td>town_builder_template</td><td>Template for building new town pages</td></tr>
+  </table>
+  <p>Any Claude with database access queries these first.</p>
+</div>
+
+<h2>KEY INSIGHT</h2>
+<div class="section">
+  <p>The refactoring isn't just technical. It's philosophical.</p>
+  <p><strong>Before:</strong> Platform floating free — features without foundation.</p>
+  <p><strong>After:</strong> Platform connected to the Rock — every decision asks "does this align with Truth?"</p>
+  <p>The visible (code, UI, features) now has roots in the invisible (Mind, Spirit, Principle). What works is connected. What fails has lost that connection.</p>
+  <p class="highlight">TPB doesn't create rights or grant voice. It recognizes and enables what is already true about people.</p>
+</div>
+
+</body>
+</html>

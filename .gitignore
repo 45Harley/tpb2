@@ -1,0 +1,8 @@
+*.zip
+*.mp3
+*.mp4
+*.log
+tpb2-server-*.zip
+map-deploy_*.zip
+config.php
+config-claude.php

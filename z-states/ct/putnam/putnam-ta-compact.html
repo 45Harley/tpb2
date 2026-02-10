@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Putnam TA Reports</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        :root {
+            --bg: #e0e0e0; --bg2: #fff; --bg3: #f5f5f5;
+            --text: #000; --text2: #333; --muted: #555;
+            --accent: #0a2540; --border: #999;
+        }
+        [data-theme="dark"] {
+            --bg: #0a0a0a; --bg2: #1a1a1a; --bg3: #222;
+            --text: #fff; --text2: #ccc; --muted: #999;
+            --accent: #6af; --border: #555;
+        }
+        
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.4; }
+        
+        .header { background: #0a2540; color: #fff; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.1rem; }
+        .theme-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 0.3rem 0.5rem; border-radius: 4px; cursor: pointer; }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 0.5rem; }
+        
+        .toolbar { display: none; background: var(--bg2); padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; gap: 0.5rem; flex-wrap: wrap; align-items: center; border: 1px solid var(--border); }
+        .toolbar.show { display: flex; }
+        .toolbar button { padding: 0.3rem 0.6rem; border: 1px solid var(--border); background: var(--bg2); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 13px; }
+        .toolbar button:hover { background: var(--bg3); }
+        .toolbar button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .toolbar select { padding: 0.3rem; border: 1px solid var(--border); background: var(--bg2); color: var(--text); border-radius: 3px; font-size: 13px; }
+        
+        .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; padding: 0.75rem; }
+        .panel-title { font-weight: 700; margin-bottom: 0.5rem; color: var(--text); border-bottom: 2px solid var(--accent); padding-bottom: 0.25rem; }
+        
+        /* FILE PICKER */
+        .picker { text-align: center; padding: 2rem; }
+        .picker button { padding: 0.75rem 1.5rem; font-size: 1rem; background: #0055aa; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .picker button:hover { background: #003d7a; }
+        .picker p { margin-top: 0.5rem; color: var(--muted); }
+        #file-input { display: none; }
+        
+        /* TABLES */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 0.35rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: var(--bg3); font-weight: 600; color: var(--text); position: sticky; top: 0; }
+        tr:hover { background: var(--bg3); }
+        td { color: var(--text2); }
+        
+        /* Status pills - compact */
+        .st { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .st-done { background: #070; color: #fff; }
+        .st-prog { background: #b60; color: #fff; }
+        .st-design { background: #05a; color: #fff; }
+        .st-plan { background: #555; color: #fff; }
+        .st-vote { background: #909; color: #fff; }
+        
+        /* Stats row */
+        .stats { display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+        .stat { background: var(--bg3); padding: 0.5rem 1rem; border-radius: 4px; text-align: center; border: 1px solid var(--border); }
+        .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+        .stat-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+        
+        /* Key date row */
+        .kd { background: #fff8e0; border-left: 3px solid #c80; padding: 0.3rem 0.5rem; margin-bottom: 0.25rem; display: flex; gap: 1rem; font-size: 13px; }
+        [data-theme="dark"] .kd { background: #332800; }
+        .kd-date { font-weight: 600; color: #850; min-width: 90px; }
+        [data-theme="dark"] .kd-date { color: #fc0; }
+        
+        /* Comparison grid */
+        .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+        .cmp-col { border: 1px solid var(--border); border-radius: 4px; padding: 0.5rem; }
+        .cmp-col h4 { margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+        
+        @media (max-width: 768px) { .cmp { grid-template-columns: 1fr; } }
+        
+        /* Always show scrollbars */
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: var(--bg3); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+        * { scrollbar-width: auto; scrollbar-color: var(--border) var(--bg3); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 Putnam TA Reports</h1>
+        <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
+    </div>
+    
+    <div class="container">
+        <div class="toolbar" id="toolbar">
+            <button class="active" data-v="monthly">Monthly</button>
+            <button data-v="annual">Annual</button>
+            <button data-v="projects">Projects</button>
+            <button data-v="timeline">Timeline</button>
+            <button data-v="upcoming">Upcoming</button>
+            <button data-v="glossary">Glossary</button>
+            <select id="sel1"></select>
+            <select id="sel2" style="display:none;"></select>
+        </div>
+        
+        <div class="panel" id="panel">
+            <div class="picker">
+                <input type="file" id="file-input" accept=".json">
+                <button onclick="document.getElementById('file-input').click()">📂 Open JSON</button>
+                <p>Select putnam_ta_reports.json</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let D = null;
+        
+        function toggleTheme() {
+            const h = document.documentElement, b = document.getElementById('theme-btn');
+            if (h.getAttribute('data-theme') === 'dark') { h.removeAttribute('data-theme'); b.textContent = '🌙'; localStorage.setItem('theme','light'); }
+            else { h.setAttribute('data-theme', 'dark'); b.textContent = '☀️'; localStorage.setItem('theme','dark'); }
+        }
+        (function(){ const s = localStorage.getItem('theme'); if (s==='dark'||(!s&&matchMedia('(prefers-color-scheme:dark)').matches)) { document.documentElement.setAttribute('data-theme','dark'); document.getElementById('theme-btn').textContent='☀️'; } })();
+        
+        document.getElementById('file-input').addEventListener('change', e => {
+            const f = e.target.files[0]; if (!f) return;
+            const r = new FileReader();
+            r.onload = e => { try { D = JSON.parse(e.target.result); init(); } catch(e) { alert('Error: '+e.message); } };
+            r.readAsText(f);
+        });
+        
+        // Auto-fetch JSON on server, fallback to file picker
+        (function autoLoad() {
+            fetch('putnam_ta_reports.json')
+                .then(r => { if (!r.ok) throw new Error('Not found'); return r.json(); })
+                .then(json => { D = json; init(); })
+                .catch(e => {
+                    // Show file picker button
+                    document.getElementById('panel').innerHTML = `
+                        <div class="picker">
+                            <input type="file" id="file-input2" accept=".json">
+                            <button onclick="document.getElementById('file-input2').click()">📂 Open JSON</button>
+                            <p>Select putnam_ta_reports.json</p>
+                        </div>`;
+                    document.getElementById('file-input2').addEventListener('change', e => {
+                        const f = e.target.files[0]; if (!f) return;
+                        const r = new FileReader();
+                        r.onload = e => { try { D = JSON.parse(e.target.result); init(); } catch(e) { alert('Error: '+e.message); } };
+                        r.readAsText(f);
+                    });
+                });
+        })();
+        
+        function init() {
+            document.getElementById('toolbar').classList.add('show');
+            document.querySelectorAll('.toolbar button[data-v]').forEach(b => {
+                b.onclick = () => { document.querySelectorAll('.toolbar button[data-v]').forEach(x => x.classList.remove('active')); b.classList.add('active'); render(b.dataset.v); };
+            });
+            render('monthly');
+        }
+        
+        function render(v) {
+            const s1 = document.getElementById('sel1'), s2 = document.getElementById('sel2'), p = document.getElementById('panel');
+            s1.innerHTML = ''; s2.style.display = 'none'; s1.onchange = null;
+            
+            if (v === 'monthly') {
+                D.reports.forEach((r,i) => s1.innerHTML += `<option value="${i}">${r.month}</option>`);
+                s1.value = D.reports.length - 1;
+                s1.onchange = () => renderMonth(+s1.value);
+                renderMonth(D.reports.length - 1);
+            }
+            else if (v === 'annual') { renderAnnual(); }
+            else if (v === 'projects') {
+                s1.innerHTML = '<option value="">All Projects</option>';
+                Object.keys(D.projects).forEach(k => s1.innerHTML += `<option value="${k}">${D.projects[k].name}</option>`);
+                s1.onchange = () => s1.value ? renderProject(s1.value) : renderAllProjects();
+                renderAllProjects();
+            }
+            else if (v === 'timeline') { renderTimeline(); }
+            else if (v === 'upcoming') { renderUpcoming(); }
+            else if (v === 'glossary') { renderGlossary(); }
+        }
+        
+        function renderGlossary() {
+            const p = document.getElementById('panel');
+            const terms = [
+                ['ACOE', 'Army Corps of Engineers'],
+                ['ARPA', 'American Rescue Plan Act (federal COVID funds)'],
+                ['BOE', 'Board of Education'],
+                ['BOF', 'Board of Finance'],
+                ['BOS', 'Board of Selectmen'],
+                ['CHRO', 'Commission on Human Rights & Opportunities'],
+                ['CIP', 'Capital Improvement Plan'],
+                ['DECD', 'Dept of Economic & Community Development'],
+                ['DEEP', 'Dept of Energy & Environmental Protection'],
+                ['DOT', 'Department of Transportation'],
+                ['ECD', 'Economic & Community Development'],
+                ['ECHIP', 'Eastern CT Health Insurance Program'],
+                ['EMS', 'Emergency Medical Services'],
+                ['FAP', 'Financial Assistance Plan'],
+                ['FICA', 'Federal Insurance Contributions Act (Social Security tax)'],
+                ['FMLA', 'Family and Medical Leave Act'],
+                ['LOCIP', 'Local Capital Improvement Program (state grant)'],
+                ['LOTCIP', 'Local Transportation Capital Improvement Program (state grant)'],
+                ['P&Z', 'Planning & Zoning'],
+                ['POCD', 'Plan of Conservation and Development'],
+                ['RFQ', 'Request for Qualifications'],
+                ['SSD', 'Sewer Service District'],
+                ['STEAP', 'Small Town Economic Assistance Program (state grant)'],
+                ['STM', 'Special Town Meeting'],
+                ['TAP', 'Transportation Alternatives Program'],
+                ['VAC', 'Veterans Affairs Committee'],
+                ['WPCA', 'Water Pollution Control Authority (sewer/water)']
+            ];
+            
+            let h = '<div class="panel-title">Acronym Glossary</div>';
+            h += '<table><tr><th style="width:80px;">Acronym</th><th>Meaning</th></tr>';
+            terms.forEach(t => h += `<tr><td><strong>${t[0]}</strong></td><td>${t[1]}</td></tr>`);
+            h += '</table>';
+            p.innerHTML = h;
+        }
+        
+        function renderMonth(i) {
+            const r = D.reports[i], s = r.sections, p = document.getElementById('panel');
+            let h = `<div class="panel-title">${r.month} (${r.date})</div>`;
+            h += '<table><tr><th style="width:100px;">Section</th><th>Items</th></tr>';
+            
+            if (s.administration?.contract_updates?.length) h += `<tr><td><strong>Contracts</strong></td><td>${s.administration.contract_updates.map(x=>hl(x)).join('<br>')}</td></tr>`;
+            if (s.administration?.recent?.length) h += `<tr><td><strong>Admin</strong></td><td>${s.administration.recent.map(x=>hl(x)).join('<br>')}</td></tr>`;
+            if (s.administration?.upcoming?.length) h += `<tr><td><strong>Upcoming</strong></td><td>${s.administration.upcoming.join('<br>')}</td></tr>`;
+            if (s.roads?.status?.length) h += `<tr><td><strong>Roads</strong></td><td>${s.roads.status.map(x=>hl(x)).join('<br>')}</td></tr>`;
+            if (s.bridges?.status?.length) h += `<tr><td><strong>Bridges</strong></td><td>${s.bridges.status.map(x=>hl(x)).join('<br>')}</td></tr>`;
+            if (s.recreation?.status?.length) h += `<tr><td><strong>Recreation</strong></td><td>${s.recreation.status.map(x=>hl(x)).join('<br>')}</td></tr>`;
+            if (s.other?.length) h += `<tr><td><strong>Other</strong></td><td>${s.other.join('<br>')}</td></tr>`;
+            
+            h += '</table>';
+            p.innerHTML = h;
+        }
+        
+        function renderAnnual() {
+            const a = D.annual_summary, p = document.getElementById('panel');
+            let h = `<div class="panel-title">${a.year} Summary</div>`;
+            h += `<div class="stats"><div class="stat"><div class="stat-num">${a.completed.length}</div><div class="stat-lbl">Completed</div></div>`;
+            h += `<div class="stat"><div class="stat-num">${a.started.length}</div><div class="stat-lbl">Started</div></div>`;
+            h += `<div class="stat"><div class="stat-num">${a.cancelled?.length||0}</div><div class="stat-lbl">Cancelled</div></div>`;
+            h += `<div class="stat"><div class="stat-num">${D.reports.length}</div><div class="stat-lbl">Reports</div></div></div>`;
+            
+            h += '<table><tr><th>Project</th><th style="width:90px;">Date</th><th>Notes</th></tr>';
+            h += '<tr><td colspan="3" style="background:var(--bg3);font-weight:600;">✅ Completed</td></tr>';
+            a.completed.forEach(x => h += `<tr><td>${x.project}</td><td>${x.date}</td><td>${x.notes||''}</td></tr>`);
+            h += '<tr><td colspan="3" style="background:var(--bg3);font-weight:600;">🚧 Started</td></tr>';
+            a.started.forEach(x => h += `<tr><td>${x.project}</td><td>${x.date}</td><td></td></tr>`);
+            if (a.cancelled?.length) { h += '<tr><td colspan="3" style="background:var(--bg3);font-weight:600;">❌ Cancelled</td></tr>'; a.cancelled.forEach(x => h += `<tr><td>${x.project}</td><td>${x.date}</td><td>${x.notes||''}</td></tr>`); }
+            h += '</table>';
+            
+            if (a.key_dates?.length) {
+                h += '<div style="margin-top:0.75rem;"><strong>📆 Key Dates:</strong></div>';
+                a.key_dates.forEach(x => h += `<div class="kd"><span class="kd-date">${fmtDate(x.date)}</span><span>${x.event}</span></div>`);
+            }
+            p.innerHTML = h;
+        }
+        
+        function renderAllProjects() {
+            const p = document.getElementById('panel');
+            let h = '<div class="panel-title">All Projects</div>';
+            h += '<table><tr><th>Project</th><th style="width:80px;">Status</th><th>Lead</th><th>Funding</th><th>Next Action</th></tr>';
+            Object.keys(D.projects).forEach(k => {
+                const pr = D.projects[k];
+                h += `<tr style="cursor:pointer;" onclick="document.getElementById('sel1').value='${k}';renderProject('${k}');">`;
+                h += `<td><strong>${pr.name}</strong></td>`;
+                h += `<td>${stPill(pr.status)}</td>`;
+                h += `<td>${pr.lead||''}</td>`;
+                h += `<td>${pr.funding||''}</td>`;
+                h += `<td>${pr.next_action||''}</td></tr>`;
+            });
+            h += '</table>';
+            p.innerHTML = h;
+        }
+        
+        function renderProject(k) {
+            const pr = D.projects[k], p = document.getElementById('panel');
+            let h = `<div class="panel-title">${pr.name} ${stPill(pr.status)}</div>`;
+            h += '<table style="width:auto;margin-bottom:0.5rem;"><tr>';
+            if (pr.lead) h += `<td><strong>Lead:</strong> ${pr.lead}</td>`;
+            if (pr.location) h += `<td><strong>Location:</strong> ${pr.location}</td>`;
+            if (pr.engineer) h += `<td><strong>Engineer:</strong> ${pr.engineer}</td>`;
+            if (pr.contractor) h += `<td><strong>Contractor:</strong> ${pr.contractor}</td>`;
+            if (pr.funding) h += `<td><strong>Funding:</strong> ${pr.funding}</td>`;
+            h += '</tr></table>';
+            if (pr.next_action) h += `<p style="margin-bottom:0.5rem;"><strong>⚡ Next:</strong> <span style="color:#c00;font-weight:600;">${pr.next_action}</span></p>`;
+            
+            if (pr.timeline?.length) {
+                h += '<table><tr><th style="width:100px;">Month</th><th>Status</th></tr>';
+                pr.timeline.forEach(t => h += `<tr><td>${t.month}</td><td>${hl(t.status)}</td></tr>`);
+                h += '</table>';
+            }
+            p.innerHTML = h;
+        }
+        
+        function renderTimeline() {
+            const p = document.getElementById('panel');
+            let h = '<div class="panel-title">Project Timeline Grid</div>';
+            
+            // Get all months from reports
+            const months = D.reports.map(r => r.month);
+            
+            h += '<div style="overflow-x:scroll; max-width:100%; border:1px solid var(--border);"><table><tr><th style="width:140px;max-width:140px;position:sticky;left:0;background:var(--bg3);z-index:1;">Project</th>';
+            months.forEach(m => {
+                // Convert "February 2025" to "Feb-25"
+                const parts = m.split(' ');
+                const short = parts[0].substring(0,3) + '-' + (parts[1]?.substring(2)||'');
+                h += `<th style="font-size:11px;white-space:nowrap;padding:0.25rem;">${short}</th>`;
+            });
+            h += '</tr>';
+            
+            Object.keys(D.projects).forEach(k => {
+                const pr = D.projects[k];
+                h += `<tr><td style="width:140px;max-width:140px;position:sticky;left:0;background:var(--bg2);z-index:1;"><strong>${pr.name}</strong></td>`;
+                months.forEach(m => {
+                    const t = pr.timeline?.find(x => x.month === m || m.includes(x.month.split(' ')[0]));
+                    if (t) {
+                        const short = t.status.substring(0,25) + (t.status.length > 25 ? '…' : '');
+                        h += `<td style="font-size:11px;" title="${t.status}">${hl(short)}</td>`;
+                    } else {
+                        h += '<td style="color:var(--muted);">—</td>';
+                    }
+                });
+                h += '</tr>';
+            });
+            h += '</table></div>';
+            p.innerHTML = h;
+        }
+        
+        function renderUpcoming() {
+            const p = document.getElementById('panel'), today = new Date().toISOString().split('T')[0];
+            let h = '<div class="panel-title">Upcoming</div>';
+            
+            const dates = (D.annual_summary.key_dates||[]).filter(d => d.date >= today).sort((a,b) => a.date.localeCompare(b.date));
+            if (dates.length) {
+                h += '<strong>📆 Key Dates:</strong>';
+                dates.forEach(x => h += `<div class="kd"><span class="kd-date">${fmtDate(x.date)}</span><span>${x.event}</span></div>`);
+            }
+            
+            h += '<table style="margin-top:0.75rem;"><tr><th>Project</th><th>Status</th><th>Next Action</th></tr>';
+            Object.keys(D.projects).forEach(k => {
+                const pr = D.projects[k];
+                if (pr.next_action || ['construction','in_progress','design','permitting'].includes(pr.status)) {
+                    h += `<tr><td><strong>${pr.name}</strong></td><td>${stPill(pr.status)}</td><td>${pr.next_action||''}</td></tr>`;
+                }
+            });
+            h += '</table>';
+            p.innerHTML = h;
+        }
+        
+        function stPill(s) {
+            const map = {completed:'done',approved:'done',in_progress:'prog',construction:'prog',design:'design',permitting:'design',planned:'plan',scoping:'plan',pending_vote:'vote'};
+            return `<span class="st st-${map[s]||'plan'}">${s.replace('_',' ')}</span>`;
+        }
+        function fmtDate(d) { return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+        function hl(t) { return t.replace(/APPROVED|COMPLETE|AWARDED|LAUNCHED|SIGNED|FINALIZED/gi, m => `<span class="st st-done">${m}</span>`); }
+    </script>
+</body>
+</html>

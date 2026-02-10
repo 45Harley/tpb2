@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amendment 28: National Ballot Initiative | The People's Branch</title>
+    <meta name="description" content="Give Americans the power to propose and pass laws directly - the same power 26 states already have.">
+    <style>
+        :root {
+            --primary: #0d1b2a;
+            --secondary: #1b263b;
+            --accent: #ed8936;
+            --light: #0d1117;
+            --text: #e6edf3;
+            --muted: #8b949e;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            line-height: 1.7;
+            color: var(--text);
+            background: var(--light);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            background: #161b22;
+            color: var(--text);
+            padding: 3rem 2rem;
+            text-align: center;
+            border-bottom: 2px solid var(--accent);
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+        
+        header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-style: italic;
+        }
+        
+        .hook {
+            background: #1c2128;
+            color: var(--text);
+            padding: 2rem;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        .hook strong {
+            color: var(--accent);
+        }
+        
+        section {
+            background: #161b22;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            border: 1px solid #30363d;
+        }
+        
+        h2 {
+            color: var(--accent);
+            border-bottom: 2px solid #30363d;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        h3 {
+            color: #58a6ff;
+            margin: 1.5rem 0 0.5rem;
+        }
+        
+        blockquote {
+            border-left: 4px solid var(--accent);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            background: #1c2128;
+            font-style: italic;
+        }
+        
+        blockquote cite {
+            display: block;
+            margin-top: 0.5rem;
+            font-style: normal;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        .amendment-text {
+            background: #0d1117;
+            color: var(--text);
+            padding: 2rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 1.5rem 0;
+            border: 2px solid var(--accent);
+        }
+        
+        .amendment-text h3 {
+            color: var(--accent);
+            margin-top: 0;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+            padding-left: 1rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-left: -4.5px;
+        }
+        
+        .timeline-year {
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .state-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .state-item {
+            background: #21262d;
+            padding: 0.5rem;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            border: 1px solid #30363d;
+        }
+        
+        .cta {
+            background: #21262d;
+            color: var(--text);
+            padding: 2rem;
+            text-align: center;
+            border-radius: 8px;
+            margin: 2rem 0;
+            border: 2px solid var(--accent);
+        }
+        
+        .cta h2 {
+            color: var(--accent);
+            border-bottom: none;
+        }
+        
+        .cta a {
+            display: inline-block;
+            background: var(--accent);
+            color: #0d1117;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        
+        .cta a:hover {
+            background: #f6ad55;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        @media (max-width: 600px) {
+            .comparison { grid-template-columns: 1fr; }
+        }
+        
+        .comparison > div {
+            padding: 1rem;
+            border-radius: 4px;
+        }
+        
+        .comparison .now {
+            background: #3d1f1f;
+            border: 1px solid #6b3030;
+        }
+        
+        .comparison .after {
+            background: #1f3d2a;
+            border: 1px solid #2d5a3d;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        
+        footer a {
+            color: #58a6ff;
+        }
+        
+        a {
+            color: #58a6ff;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Amendment 28</h1>
+    <div class="subtitle">The National Ballot Initiative</div>
+</header>
+
+<div class="hook">
+    26 states let citizens propose laws directly.<br>
+    The federal government does not.<br>
+    <strong>It's time to change that.</strong>
+</div>
+
+<div class="container">
+
+<section>
+    <h2>The Problem</h2>
+    <p>Congress has a <strong>17% approval rating</strong>. Yet Congress is the only way to change federal law.</p>
+    <p>Americans can vote for representatives, but we cannot vote on issues directly. We have no mechanism to:</p>
+    <ul style="margin: 1rem 0 1rem 2rem;">
+        <li>Propose term limits (Congress won't limit itself)</li>
+        <li>Reform campaign finance (Congress won't cut its own funding)</li>
+        <li>Fix the Electoral College (the parties benefit from it)</li>
+        <li>Address any issue Congress refuses to touch</li>
+    </ul>
+    <p>The Founders gave us a representative democracy. But they also said:</p>
+    
+    <blockquote>
+        "The people were in fact, the fountain of all power, and by resorting to them, all difficulties were got over. They could alter constitutions as they pleased."
+        <cite>— James Madison, Constitutional Convention, 1787</cite>
+    </blockquote>
+</section>
+
+<section>
+    <h2>The Solution: Amendment 28</h2>
+    <p>Create a <strong>National Ballot Initiative</strong> — giving citizens the power to propose and pass federal laws directly, bypassing Congress when necessary.</p>
+    
+    <div class="amendment-text">
+        <h3>Proposed Text</h3>
+        <p><strong>Section 1.</strong> The People of the United States shall have the power to propose and enact laws and constitutional amendments through national ballot initiative.</p>
+        
+        <p><strong>Section 2.</strong> An initiative shall appear on the national ballot upon petition by registered voters equal to five percent of votes cast in the preceding presidential election, collected from at least three-fourths of the states.</p>
+        
+        <p><strong>Section 3.</strong> A proposed law shall become law upon approval by a majority of voters in a majority of states. A proposed constitutional amendment shall become part of this Constitution upon approval by a majority of voters in three-fourths of the states.</p>
+        
+        <p><strong>Section 4.</strong> Congress shall have power to enforce this article by appropriate legislation, including provisions for petition verification, ballot access, and election administration.</p>
+    </div>
+</section>
+
+<section>
+    <h2>How It Would Work</h2>
+    
+    <div class="comparison">
+        <div class="now">
+            <h3>Now (Article V)</h3>
+            <p>To amend the Constitution:</p>
+            <ol style="margin-left: 1.5rem;">
+                <li>2/3 of House votes yes</li>
+                <li>2/3 of Senate votes yes</li>
+                <li>3/4 of state legislatures ratify</li>
+            </ol>
+            <p><em>Congress controls the gate.</em></p>
+        </div>
+        <div class="after">
+            <h3>With Amendment 28</h3>
+            <p>Alternative path:</p>
+            <ol style="margin-left: 1.5rem;">
+                <li>Citizens petition (5% in 38 states)</li>
+                <li>Issue goes on national ballot</li>
+                <li>Majority in 3/4 of states = passes</li>
+            </ol>
+            <p><em>The People control the gate.</em></p>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>This Already Works in 26 States</h2>
+    <p>Ballot initiatives aren't radical — they're American tradition. These states already let citizens propose laws directly:</p>
+    
+    <div class="state-grid">
+        <div class="state-item">Alaska</div>
+        <div class="state-item">Arizona</div>
+        <div class="state-item">Arkansas</div>
+        <div class="state-item">California</div>
+        <div class="state-item">Colorado</div>
+        <div class="state-item">Florida</div>
+        <div class="state-item">Idaho</div>
+        <div class="state-item">Illinois</div>
+        <div class="state-item">Maine</div>
+        <div class="state-item">Maryland</div>
+        <div class="state-item">Massachusetts</div>
+        <div class="state-item">Michigan</div>
+        <div class="state-item">Mississippi</div>
+        <div class="state-item">Missouri</div>
+        <div class="state-item">Montana</div>
+        <div class="state-item">Nebraska</div>
+        <div class="state-item">Nevada</div>
+        <div class="state-item">North Dakota</div>
+        <div class="state-item">Ohio</div>
+        <div class="state-item">Oklahoma</div>
+        <div class="state-item">Oregon</div>
+        <div class="state-item">South Dakota</div>
+        <div class="state-item">Utah</div>
+        <div class="state-item">Washington</div>
+        <div class="state-item">Wyoming</div>
+    </div>
+    
+    <p>Red states. Blue states. It works. Citizens can handle it.</p>
+</section>
+
+<section>
+    <h2>The History of Trying</h2>
+    <p>Americans have fought for this power for over a century:</p>
+    
+    <div class="timeline">
+        <div class="timeline-item">
+            <span class="timeline-year">1907</span><br>
+            Rep. Elmer Fulton (D-OK) introduces H.R. 44 — the first national initiative proposal. <strong>Failed.</strong>
+        </div>
+        
+        <div class="timeline-item">
+            <span class="timeline-year">1977</span><br>
+            After Vietnam and Watergate, Senators James Abourezk (D-SD) and Mark Hatfield (R-OR) introduce S.J.R. 67 — the National Voter Initiative. Rep. Guy Vander Jagt (R-MI) introduces H.J.R. 544 in the House. <strong>Both failed.</strong>
+        </div>
+        
+        <div class="timeline-item">
+            <span class="timeline-year">2003</span><br>
+            Former Senator Mike Gravel (D-AK) launches the National Initiative for Democracy (ni4d.us), attempting to have citizens ratify the initiative directly without Congress. The effort stalled after Gravel's death in 2021.
+        </div>
+        
+        <div class="timeline-item">
+            <span class="timeline-year">2025</span><br>
+            The People's Branch relaunches the effort with modern infrastructure. <strong>This time, we don't stop.</strong>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>We the People Demand That Congress Enact Amendment 28</h2>
+    <p>Every previous attempt failed for the same reason: <strong>Congress must vote to limit its own power.</strong></p>
+    <p>That's like asking a king to abolish the monarchy.</p>
+    <p>But the Constitution provides another path. Article V allows 2/3 of state legislatures to call a Constitutional Convention. And Amendment 28, once passed, creates a permanent path for future amendments that bypasses Congress entirely.</p>
+    <p><strong>One amendment unlocks all future amendments.</strong></p>
+</section>
+
+<section>
+    <h2>Common Objections</h2>
+    
+    <h3>"The Founders rejected direct democracy"</h3>
+    <p>They rejected <em>pure</em> direct democracy. They created a republic with democratic elements. Twenty-six states have added ballot initiatives since then — and remain republics. This isn't replacing representative government; it's adding a safety valve when representatives fail.</p>
+    
+    <h3>"People will vote for stupid things"</h3>
+    <p>People already vote for representatives who do stupid things. At least with a ballot initiative, citizens have to read the actual proposal — not just a party label. The 3/4 state supermajority requirement for amendments ensures broad consensus.</p>
+    
+    <h3>"Special interests will buy signatures"</h3>
+    <p>Special interests already buy representatives. The difference: you can't bribe 150 million voters. A national initiative actually makes corruption <em>harder</em>, not easier.</p>
+    
+    <h3>"This is unconstitutional"</h3>
+    <p>Constitutional amendments can't be unconstitutional — they <em>become</em> the Constitution. The 17th Amendment changed how we elect senators. The 19th gave women the vote. The 22nd limited presidential terms. Each changed the system. That's what amendments do.</p>
+</section>
+
+<div class="cta">
+    <h2>What You Can Do</h2>
+    <p>Contact your representatives. Demand they introduce a National Ballot Initiative amendment.</p>
+    <p>Be specific. Be persistent. Follow up every 14 days until the election.</p>
+    <a href="/letters/">Get the Letter Templates</a>
+</div>
+
+<section>
+    <h2>The Bottom Line</h2>
+    <blockquote>
+        "We the People of the United States..."
+        <cite>— The very first words of the Constitution</cite>
+    </blockquote>
+    <p>Not "We the Congress." Not "We the Representatives."</p>
+    <p><strong>We the People.</strong></p>
+    <p>It's time we had the power that phrase promises.</p>
+</section>
+
+</div>
+
+<footer>
+    <p><a href="/">The People's Branch</a> — Democracy that works</p>
+    <p>Sources: <a href="https://ballotpedia.org/National_initiative" target="_blank">Ballotpedia</a> | <a href="https://ballotpedia.org/States_with_initiative_or_referendum" target="_blank">States with Ballot Initiatives</a></p>
+</footer>
+
+</body>
+</html>

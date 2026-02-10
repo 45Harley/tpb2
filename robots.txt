@@ -1,0 +1,50 @@
+# The People's Branch - robots.txt
+# https://4tpb.org
+
+User-agent: *
+Allow: /
+
+# Block internal/API directories
+Disallow: /api/
+Disallow: /config/
+Disallow: /includes/
+Disallow: /cgi-bin/
+Disallow: /sql/
+Disallow: /tpb-claude/
+Disallow: /tpb2/
+Disallow: /modal-tests/
+Disallow: /docs/
+
+# Block admin and dev files
+Disallow: /admin.php
+Disallow: /import_openstates.php
+Disallow: /import_runner.html
+Disallow: /probe_openstates.php
+Disallow: /test_openstates.php
+Disallow: /test-location.php
+Disallow: /tpb-query-api.php
+
+# Block demo/poc files
+Disallow: /demo.php
+Disallow: /poc-demo.html
+Disallow: /putnam-links-poc.html
+Disallow: /modal-admin*.html
+
+# Allow public pages
+Allow: /index.php
+Allow: /index.html
+Allow: /story.php
+Allow: /voice.php
+Allow: /read.php
+Allow: /reps.php
+Allow: /join.php
+Allow: /login.php
+Allow: /profile.php
+Allow: /thought.php
+Allow: /volunteer/
+Allow: /poll/
+Allow: /talk/
+Allow: /z-states/
+
+# Sitemap
+Sitemap: https://4tpb.org/sitemap.xml

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TPB Map Color Picker</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .layout {
+            display: flex;
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        .controls {
+            flex: 0 0 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .preview {
+            flex: 1;
+            min-width: 400px;
+        }
+        h1 {
+            color: #d4af37;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            width: 100%;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 0.85rem;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        /* Color control row */
+        .color-row {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .color-row label {
+            flex: 1;
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+        .color-row .hint {
+            display: block;
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 0.1rem;
+        }
+        .color-row input[type="color"] {
+            width: 40px;
+            height: 32px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
+            padding: 1px;
+        }
+        .color-row .hex-val {
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #999;
+            width: 65px;
+            text-align: right;
+        }
+
+        /* Border width slider */
+        .slider-row {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .slider-row label { flex: 1; font-size: 0.85rem; color: #ccc; }
+        .slider-row input[type="range"] { width: 80px; }
+        .slider-row .val { font-family: monospace; font-size: 0.8rem; color: #999; width: 35px; text-align: right; }
+
+        /* Preview map */
+        .map-preview {
+            background: #0f0f1a;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .map-preview svg {
+            width: 100%;
+            max-width: 600px;
+        }
+        .map-legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .legend-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            border: 1px solid #444;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        .btn {
+            flex: 1;
+            padding: 0.7rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-reset { background: #2a2a4a; color: #e0e0e0; border: 1px solid #444; }
+        .btn-copy { background: #2a6a3a; color: white; }
+        .btn-preset { background: #3a3a5a; color: #e0e0e0; border: 1px solid #555; }
+
+        /* Output */
+        .output {
+            background: #12121f;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 0.8rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.75rem;
+            white-space: pre;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            width: 100%;
+        }
+
+        .presets-label {
+            font-size: 0.8rem;
+            color: #888;
+            width: 100%;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 TPB Map Color Picker</h1>
+    <p class="subtitle">Pick colors, see them live. Hover states in the preview.</p>
+
+    <div class="layout">
+        <div class="controls">
+            <div class="color-row">
+                <label>State Fill<span class="hint">Default state color</span></label>
+                <input type="color" id="cFill" value="#2a2a2a">
+                <span class="hex-val" id="vFill">#2a2a2a</span>
+            </div>
+            <div class="color-row">
+                <label>State Hover<span class="hint">Mouse over inactive state</span></label>
+                <input type="color" id="cHover" value="#3a3a3a">
+                <span class="hex-val" id="vHover">#3a3a3a</span>
+            </div>
+            <div class="color-row">
+                <label>Active Fill<span class="hint">States with users</span></label>
+                <input type="color" id="cActive" value="#d4af37">
+                <span class="hex-val" id="vActive">#d4af37</span>
+            </div>
+            <div class="color-row">
+                <label>Active Hover<span class="hint">Mouse over active state</span></label>
+                <input type="color" id="cActiveHover" value="#f4cf57">
+                <span class="hex-val" id="vActiveHover">#f4cf57</span>
+            </div>
+            <div class="color-row">
+                <label>Borders<span class="hint">State border lines</span></label>
+                <input type="color" id="cBorder" value="#0a0a0a">
+                <span class="hex-val" id="vBorder">#0a0a0a</span>
+            </div>
+            <div class="slider-row">
+                <label>Border Width</label>
+                <input type="range" id="sBorderWidth" min="0.5" max="4" step="0.25" value="2">
+                <span class="val" id="vBorderWidth">2px</span>
+            </div>
+
+            <div class="presets-label">Presets:</div>
+            <div class="btn-row">
+                <button class="btn btn-preset" onclick="applyPreset('current')">Current</button>
+                <button class="btn btn-preset" onclick="applyPreset('softGreen')">Soft Green</button>
+                <button class="btn btn-preset" onclick="applyPreset('mutedGold')">Muted Gold</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-preset" onclick="applyPreset('slate')">Slate</button>
+                <button class="btn btn-preset" onclick="applyPreset('midnight')">Midnight</button>
+                <button class="btn btn-preset" onclick="applyPreset('earthen')">Earthen</button>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-reset" onclick="applyPreset('current')">↩ Reset</button>
+                <button class="btn btn-copy" onclick="copyCSS()">📋 Copy CSS</button>
+            </div>
+        </div>
+
+        <div class="preview">
+            <div class="map-preview">
+                <svg id="mapSvg" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Simplified US-ish map shapes for preview -->
+                    <!-- Row 1: Northwest -->
+                    <path class="state" id="s-wa" d="M80,40 L160,35 L165,90 L75,95 Z"/>
+                    <path class="state" id="s-or" d="M75,95 L165,90 L170,155 L70,160 Z"/>
+                    <path class="state" id="s-mt" d="M165,35 L310,30 L305,90 L160,90 Z"/>
+                    <path class="state" id="s-id" d="M160,90 L205,88 L210,160 L170,155 Z"/>
+                    <path class="state active" id="s-nd" d="M310,30 L420,28 L418,85 L305,88 Z"/>
+                    <path class="state" id="s-mn" d="M420,28 L510,32 L505,100 L418,95 Z"/>
+
+                    <!-- Row 2 -->
+                    <path class="state" id="s-ca" d="M60,160 L130,155 L125,310 L50,305 Z"/>
+                    <path class="state" id="s-nv" d="M130,155 L200,150 L195,270 L125,275 Z"/>
+                    <path class="state" id="s-wy" d="M200,88 L305,88 L300,160 L205,162 Z"/>
+                    <path class="state" id="s-sd" d="M305,88 L418,85 L415,155 L300,158 Z"/>
+                    <path class="state" id="s-ne" d="M310,158 L415,155 L410,215 L305,218 Z"/>
+                    <path class="state" id="s-ia" d="M415,95 L505,100 L500,170 L410,165 Z"/>
+                    <path class="state" id="s-wi" d="M505,32 L580,40 L575,110 L500,105 Z"/>
+
+                    <!-- Row 3: Middle -->
+                    <path class="state" id="s-ut" d="M195,155 L265,152 L260,245 L190,248 Z"/>
+                    <path class="state" id="s-co" d="M265,155 L375,152 L370,230 L260,232 Z"/>
+                    <path class="state" id="s-ks" d="M305,218 L415,215 L410,278 L300,280 Z"/>
+                    <path class="state active" id="s-mo" d="M415,170 L510,168 L505,260 L410,262 Z"/>
+                    <path class="state" id="s-il" d="M510,105 L575,110 L570,220 L505,215 Z"/>
+                    <path class="state" id="s-in" d="M575,110 L630,115 L625,220 L570,215 Z"/>
+                    <path class="state" id="s-oh" d="M630,105 L700,100 L695,200 L625,205 Z"/>
+
+                    <!-- Row 4 -->
+                    <path class="state" id="s-az" d="M115,275 L195,270 L190,370 L110,375 Z"/>
+                    <path class="state" id="s-nm" d="M195,250 L280,248 L275,365 L190,368 Z"/>
+                    <path class="state" id="s-ok" d="M280,248 L405,245 L400,310 L275,312 Z"/>
+                    <path class="state" id="s-ar" d="M415,262 L500,260 L495,330 L410,332 Z"/>
+                    <path class="state" id="s-tn" d="M505,225 L660,220 L655,270 L500,275 Z"/>
+                    <path class="state" id="s-ky" d="M580,195 L700,190 L695,240 L575,245 Z"/>
+                    <path class="state active" id="s-va" d="M660,180 L760,175 L755,230 L655,235 Z"/>
+
+                    <!-- Row 5: South -->
+                    <path class="state active" id="s-tx" d="M220,310 L400,305 L395,440 L215,445 Z"/>
+                    <path class="state" id="s-la" d="M405,330 L490,328 L485,400 L400,402 Z"/>
+                    <path class="state" id="s-ms" d="M490,278 L545,275 L540,385 L485,388 Z"/>
+                    <path class="state" id="s-al" d="M545,270 L610,268 L605,385 L540,388 Z"/>
+                    <path class="state" id="s-ga" d="M610,260 L690,255 L685,375 L605,380 Z"/>
+                    <path class="state active" id="s-nc" d="M655,210 L770,205 L765,255 L650,260 Z"/>
+                    <path class="state" id="s-sc" d="M670,255 L750,252 L745,315 L665,318 Z"/>
+                    <path class="state" id="s-fl" d="M610,380 L710,375 L740,460 L650,465 Z"/>
+
+                    <!-- Northeast cluster -->
+                    <path class="state" id="s-pa" d="M640,95 L740,90 L735,150 L635,155 Z"/>
+                    <path class="state" id="s-ny" d="M640,45 L750,40 L745,95 L635,100 Z"/>
+                    <path class="state active" id="s-ct" d="M740,60 L785,58 L782,90 L737,92 Z"/>
+                    <path class="state" id="s-nj" d="M740,100 L775,98 L772,145 L737,147 Z"/>
+                    <path class="state" id="s-ma" d="M750,42 L790,40 L788,62 L747,64 Z"/>
+
+                    <!-- Border lines overlay -->
+                    <g class="borders">
+                        <path class="state" id="b-wa" d="M80,40 L160,35 L165,90 L75,95 Z"/>
+                        <path class="state" id="b-or" d="M75,95 L165,90 L170,155 L70,160 Z"/>
+                        <path class="state" id="b-mt" d="M165,35 L310,30 L305,90 L160,90 Z"/>
+                        <path class="state" id="b-id" d="M160,90 L205,88 L210,160 L170,155 Z"/>
+                        <path class="state" id="b-nd" d="M310,30 L420,28 L418,85 L305,88 Z"/>
+                        <path class="state" id="b-mn" d="M420,28 L510,32 L505,100 L418,95 Z"/>
+                        <path class="state" id="b-ca" d="M60,160 L130,155 L125,310 L50,305 Z"/>
+                        <path class="state" id="b-nv" d="M130,155 L200,150 L195,270 L125,275 Z"/>
+                        <path class="state" id="b-wy" d="M200,88 L305,88 L300,160 L205,162 Z"/>
+                        <path class="state" id="b-sd" d="M305,88 L418,85 L415,155 L300,158 Z"/>
+                        <path class="state" id="b-ne" d="M310,158 L415,155 L410,215 L305,218 Z"/>
+                        <path class="state" id="b-ia" d="M415,95 L505,100 L500,170 L410,165 Z"/>
+                        <path class="state" id="b-wi" d="M505,32 L580,40 L575,110 L500,105 Z"/>
+                        <path class="state" id="b-ut" d="M195,155 L265,152 L260,245 L190,248 Z"/>
+                        <path class="state" id="b-co" d="M265,155 L375,152 L370,230 L260,232 Z"/>
+                        <path class="state" id="b-ks" d="M305,218 L415,215 L410,278 L300,280 Z"/>
+                        <path class="state" id="b-mo" d="M415,170 L510,168 L505,260 L410,262 Z"/>
+                        <path class="state" id="b-il" d="M510,105 L575,110 L570,220 L505,215 Z"/>
+                        <path class="state" id="b-in" d="M575,110 L630,115 L625,220 L570,215 Z"/>
+                        <path class="state" id="b-oh" d="M630,105 L700,100 L695,200 L625,205 Z"/>
+                        <path class="state" id="b-az" d="M115,275 L195,270 L190,370 L110,375 Z"/>
+                        <path class="state" id="b-nm" d="M195,250 L280,248 L275,365 L190,368 Z"/>
+                        <path class="state" id="b-ok" d="M280,248 L405,245 L400,310 L275,312 Z"/>
+                        <path class="state" id="b-ar" d="M415,262 L500,260 L495,330 L410,332 Z"/>
+                        <path class="state" id="b-tn" d="M505,225 L660,220 L655,270 L500,275 Z"/>
+                        <path class="state" id="b-ky" d="M580,195 L700,190 L695,240 L575,245 Z"/>
+                        <path class="state" id="b-va" d="M660,180 L760,175 L755,230 L655,235 Z"/>
+                        <path class="state" id="b-tx" d="M220,310 L400,305 L395,440 L215,445 Z"/>
+                        <path class="state" id="b-la" d="M405,330 L490,328 L485,400 L400,402 Z"/>
+                        <path class="state" id="b-ms" d="M490,278 L545,275 L540,385 L485,388 Z"/>
+                        <path class="state" id="b-al" d="M545,270 L610,268 L605,385 L540,388 Z"/>
+                        <path class="state" id="b-ga" d="M610,260 L690,255 L685,375 L605,380 Z"/>
+                        <path class="state" id="b-nc" d="M655,210 L770,205 L765,255 L650,260 Z"/>
+                        <path class="state" id="b-sc" d="M670,255 L750,252 L745,315 L665,318 Z"/>
+                        <path class="state" id="b-fl" d="M610,380 L710,375 L740,460 L650,465 Z"/>
+                        <path class="state" id="b-pa" d="M640,95 L740,90 L735,150 L635,155 Z"/>
+                        <path class="state" id="b-ny" d="M640,45 L750,40 L745,95 L635,100 Z"/>
+                        <path class="state" id="b-ct" d="M740,60 L785,58 L782,90 L737,92 Z"/>
+                        <path class="state" id="b-nj" d="M740,100 L775,98 L772,145 L737,147 Z"/>
+                        <path class="state" id="b-ma" d="M750,42 L790,40 L788,62 L747,64 Z"/>
+                    </g>
+                </svg>
+                <div class="map-legend">
+                    <div class="legend-item"><div class="legend-swatch" id="legInactive"></div> Inactive</div>
+                    <div class="legend-item"><div class="legend-swatch" id="legActive"></div> Active</div>
+                    <div class="legend-item"><div class="legend-swatch" id="legBorder"></div> Borders</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <pre class="output" id="cssOutput"></pre>
+
+    <script>
+        const presets = {
+            current: {
+                fill: '#2a2a2a', hover: '#3a3a3a',
+                active: '#d4af37', activeHover: '#f4cf57',
+                border: '#0a0a0a', borderWidth: 2
+            },
+            softGreen: {
+                fill: '#2d3a2d', hover: '#3a4a3a',
+                active: '#5a8a4a', activeHover: '#6a9a5a',
+                border: '#1a251a', borderWidth: 1.5
+            },
+            mutedGold: {
+                fill: '#2f2f2a', hover: '#3f3f35',
+                active: '#8a7a3a', activeHover: '#9a8a4a',
+                border: '#1a1a15', borderWidth: 1.5
+            },
+            slate: {
+                fill: '#2a3040', hover: '#354055',
+                active: '#5080a0', activeHover: '#6090b0',
+                border: '#1a2030', borderWidth: 1.5
+            },
+            midnight: {
+                fill: '#252535', hover: '#303045',
+                active: '#6a5aaa', activeHover: '#7a6abb',
+                border: '#18182a', borderWidth: 1.5
+            },
+            earthen: {
+                fill: '#35302a', hover: '#453f38',
+                active: '#8a6a3a', activeHover: '#9a7a4a',
+                border: '#201c18', borderWidth: 1.5
+            }
+        };
+
+        const ids = ['Fill', 'Hover', 'Active', 'ActiveHover', 'Border'];
+        const keys = ['fill', 'hover', 'active', 'activeHover', 'border'];
+
+        function applyPreset(name) {
+            const p = presets[name];
+            for (let i = 0; i < ids.length; i++) {
+                document.getElementById('c' + ids[i]).value = p[keys[i]];
+                document.getElementById('v' + ids[i]).textContent = p[keys[i]];
+            }
+            document.getElementById('sBorderWidth').value = p.borderWidth;
+            document.getElementById('vBorderWidth').textContent = p.borderWidth + 'px';
+            updatePreview();
+        }
+
+        // Wire up color inputs
+        ids.forEach(id => {
+            const input = document.getElementById('c' + id);
+            const val = document.getElementById('v' + id);
+            input.addEventListener('input', () => {
+                val.textContent = input.value;
+                updatePreview();
+            });
+        });
+
+        document.getElementById('sBorderWidth').addEventListener('input', function() {
+            document.getElementById('vBorderWidth').textContent = this.value + 'px';
+            updatePreview();
+        });
+
+        function updatePreview() {
+            const fill = document.getElementById('cFill').value;
+            const hover = document.getElementById('cHover').value;
+            const active = document.getElementById('cActive').value;
+            const activeHover = document.getElementById('cActiveHover').value;
+            const border = document.getElementById('cBorder').value;
+            const borderWidth = document.getElementById('sBorderWidth').value;
+
+            // Update state fills
+            document.querySelectorAll('#mapSvg > path.state:not(.active)').forEach(p => {
+                p.style.fill = fill;
+                p.style.stroke = 'none';
+                p.onmouseenter = () => p.style.fill = hover;
+                p.onmouseleave = () => p.style.fill = fill;
+            });
+
+            document.querySelectorAll('#mapSvg > path.state.active').forEach(p => {
+                p.style.fill = active;
+                p.style.stroke = 'none';
+                p.onmouseenter = () => p.style.fill = activeHover;
+                p.onmouseleave = () => p.style.fill = active;
+            });
+
+            // Update borders
+            document.querySelectorAll('.borders path').forEach(p => {
+                p.style.fill = 'none';
+                p.style.stroke = border;
+                p.style.strokeWidth = borderWidth + 'px';
+                p.style.pointerEvents = 'none';
+            });
+
+            // Legend swatches
+            document.getElementById('legInactive').style.background = fill;
+            document.getElementById('legActive').style.background = active;
+            document.getElementById('legBorder').style.background = border;
+        }
+
+        function copyCSS() {
+            const fill = document.getElementById('cFill').value;
+            const hover = document.getElementById('cHover').value;
+            const active = document.getElementById('cActive').value;
+            const activeHover = document.getElementById('cActiveHover').value;
+            const border = document.getElementById('cBorder').value;
+            const borderWidth = document.getElementById('sBorderWidth').value;
+
+            const css = `/* TPB Map Colors — generated ${new Date().toLocaleDateString()} */
+        .map-container svg .state path,
+        .map-container svg .state circle {
+            fill: ${fill} !important;
+            stroke: ${fill} !important;
+            stroke-width: 1.5 !important;
+            cursor: pointer;
+            transition: fill 0.2s;
+        }
+        
+        .map-container svg .state path:hover,
+        .map-container svg .state circle:hover {
+            fill: ${hover} !important;
+        }
+        
+        /* Active states with users */
+        .map-container svg .state path.active-gold,
+        .map-container svg .state circle.active-gold {
+            fill: ${active} !important;
+            stroke: ${active} !important;
+            stroke-width: 2px !important;
+        }
+        
+        .map-container svg .state path.active-gold:hover,
+        .map-container svg .state circle.active-gold:hover {
+            fill: ${activeHover} !important;
+            stroke: ${activeHover} !important;
+        }
+        
+        /* Border lines */
+        .map-container svg .borders path {
+            pointer-events: none !important;
+            stroke: ${border} !important;
+            stroke-width: ${borderWidth} !important;
+            fill: none !important;
+        }`;
+
+            const output = document.getElementById('cssOutput');
+            output.textContent = css;
+            output.style.display = 'block';
+
+            navigator.clipboard.writeText(css).then(() => {
+                const btn = document.querySelector('.btn-copy');
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => btn.textContent = '📋 Copy CSS', 2000);
+            });
+        }
+
+        // Init
+        updatePreview();
+    </script>
+</body>
+</html>
