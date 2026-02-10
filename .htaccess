@@ -1,11 +1,77 @@
+# ============================================
+# BOT & ATTACK BLOCKING
+# Added: 2026-02-09
+# Purpose: Reduce NPROC usage from bot traffic
+# ============================================
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# --- SEO Crawlers (not needed, waste resources) ---
+RewriteCond %{HTTP_USER_AGENT} AhrefsBot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} SemrushBot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} PetalBot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} MJ12bot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} DotBot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} BLEXBot [NC,OR]
+
+# --- AI Crawlers ---
+RewriteCond %{HTTP_USER_AGENT} OAI-SearchBot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} GPTBot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} CCBot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} anthropic-ai [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} ClaudeBot [NC,OR]
+
+# --- Scanners & Attack Tools ---
+RewriteCond %{HTTP_USER_AGENT} python-requests [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} Palo\ Alto [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} Expanse [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} Censys [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} Shodan [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} Nmap [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} masscan [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} ZmEu [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} nikto [NC,OR]
+
+# --- Facebook Crawlers ---
+RewriteCond %{HTTP_USER_AGENT} facebookexternalhit [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} meta-externalagent [NC]
+
+# Block them - 403 with no PHP process spawned
+RewriteRule ^ - [F,L]
+
+# --- Block WordPress probe URLs (you don't run WP) ---
+RewriteRule ^wp-login\.php$ - [F,L]
+RewriteRule ^wp-admin - [F,L]
+RewriteRule ^xmlrpc\.php$ - [F,L]
+RewriteRule ^wp-sitemap\.xml$ - [F,L]
+RewriteRule ^readme\.html$ - [F,L]
+
+# --- Block Outlook Web Access probes ---
+RewriteRule ^owa/ - [F,L]
+</IfModule>
+
+# --- Block .env and sensitive file access ---
+<FilesMatch "\.(env|git|sql|bak|old|orig|swp)$">
+    Require all denied
+</FilesMatch>
+
+# ============================================
+# EXISTING SITE RULES (original .htaccess)
+# ============================================
 
 DirectoryIndex index.php index.html
 
-# Block access to config files
+# Clean state/town URLs (case-insensitive)
+<IfModule mod_rewrite.c>
 RewriteEngine On
+
+# Block access to config files
 RewriteRule ^config/ - [F,L]
 
-# Clean state/town URLs (case-insensitive)
+# Exclude qt from state rewrite
+RewriteRule ^qt/ - [L]
+
 RewriteCond %{REQUEST_URI} ^/([a-zA-Z]{2})/(.*)$
 RewriteRule ^([a-zA-Z]{2})/(.*)$ z-states/$1/$2 [L,NC]
 
@@ -18,9 +84,10 @@ RewriteRule ^z-states/([a-zA-Z]{2})/?$ /town.php?state=$1 [L,NC]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^z-states/([a-zA-Z]{2})/([a-zA-Z-]+)/?$ /town.php?state=$1&town=$2 [L,NC]
+</IfModule>
 
 # php -- BEGIN cPanel-generated handler, do not edit
-# Set the “ea-php84” package as the default “PHP” programming language.
+# Set the "ea-php84" package as the default "PHP" programming language.
 <IfModule mime_module>
   AddHandler application/x-httpd-ea-php84 .php .php8 .phtml
 </IfModule>
