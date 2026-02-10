@@ -5,19 +5,16 @@
  */
 
 // Database configuration
-$db_host = 'localhost';
-$db_name = 'sandge5_tpb2';
-$db_user = 'sandge5_tpb2';
-$db_pass = '.YeO6kSJAHh5';
+$config = require __DIR__ . '/../config.php';
 
 $thoughts = [];
 $error = null;
 
 try {
     $pdo = new PDO(
-        "mysql:host=$db_host;dbname=$db_name;charset=utf8mb4",
-        $db_user,
-        $db_pass,
+        "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}",
+        $config['username'],
+        $config['password'],
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
     
@@ -34,7 +31,7 @@ try {
     $thoughts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
 } catch (PDOException $e) {
-    $error = $e->getMessage();
+    $error = 'Database error';
 }
 
 $icons = [
@@ -190,7 +187,7 @@ $icons = [
         </div>
         
         <?php if ($error): ?>
-            <div class="error">Database error: <?= htmlspecialchars($error) ?></div>
+            <div class="error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
         
         <?php if (empty($thoughts)): ?>

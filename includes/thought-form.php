@@ -143,7 +143,7 @@ $categories = $pdo->query("
         <div class="form-group">
             <label>Your Thought</label>
             <div style="position: relative;">
-                <textarea id="tf_content" placeholder="What civic issue matters to you? Share an idea, concern, or suggestion..." maxlength="1000" <?= !$canPost ? 'disabled' : '' ?>></textarea>
+                <textarea id="tf_content" placeholder="What civic issue matters to you? Share an idea, concern, or suggestion..." maxlength="1000" style="min-height: 150px;" <?= !$canPost ? 'disabled' : '' ?>></textarea>
                 <button type="button" id="tf_dictateBtn" class="dictate-btn" <?= !$canPost ? 'disabled' : '' ?>>🎤</button>
             </div>
             <div style="text-align: right; margin-top: 0.25rem;">
@@ -235,62 +235,52 @@ $categories = $pdo->query("
     }
     
     // Dictation (speech recognition)
+    // Uses continuous=false to avoid stutter — user taps mic per utterance
     let recognition = null;
     let isRecording = false;
-    
+
     if (dictateBtn && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognition = new SpeechRecognition();
-        recognition.continuous = true;
+        recognition.continuous = false;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
-        
-        let finalTranscript = '';
-        
+
+        let preExistingText = '';
+
         recognition.onstart = function() {
             isRecording = true;
             dictateBtn.classList.add('recording');
             dictateBtn.textContent = '⏹️';
+            preExistingText = contentEl.value;
         };
-        
+
         recognition.onend = function() {
             isRecording = false;
             dictateBtn.classList.remove('recording');
             dictateBtn.textContent = '🎤';
         };
-        
+
         recognition.onresult = function(event) {
-            let interimTranscript = '';
+            let transcript = '';
             for (let i = event.resultIndex; i < event.results.length; i++) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + ' ';
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
-                }
+                transcript += event.results[i][0].transcript;
             }
-            
-            const existingText = contentEl.value.substring(0, contentEl.selectionStart);
-            const afterCursor = contentEl.value.substring(contentEl.selectionEnd);
-            contentEl.value = existingText + finalTranscript + interimTranscript + afterCursor;
-            
-            // Update char counter
-            const count = contentEl.value.length;
-            charCounter.textContent = count + ' / 1000';
+            contentEl.value = preExistingText + (preExistingText ? ' ' : '') + transcript;
+            charCounter.textContent = contentEl.value.length + ' / 1000';
         };
-        
+
         recognition.onerror = function(event) {
             console.error('Speech recognition error:', event.error);
             isRecording = false;
             dictateBtn.classList.remove('recording');
             dictateBtn.textContent = '🎤';
         };
-        
+
         dictateBtn.addEventListener('click', function() {
             if (isRecording) {
                 recognition.stop();
-                finalTranscript = '';
             } else {
-                finalTranscript = '';
                 recognition.start();
             }
         });
