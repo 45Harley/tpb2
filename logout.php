@@ -3,21 +3,13 @@
  * TPB Logout
  * Clears all session/user cookies and redirects to home
  */
-require_once __DIR__ . '/includes/get-user.php';
-$dbUser = getUser($pdo);
 $sessionId = $_COOKIE['tpb_civic_session'] ?? null;
 
 if ($sessionId) {
-    $config = [
-        'host' => 'localhost',
-        'database' => 'sandge5_tpb2',
-        'username' => 'sandge5_tpb2',
-        'password' => '.YeO6kSJAHh5',
-        'charset' => 'utf8mb4'
-    ];
+    $config = require __DIR__ . '/config.php';
     try {
         $pdo = new PDO(
-            "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}",
+            "mysql:host={$config['host']};dbname={$config['database']};charset=utf8mb4",
             $config['username'],
             $config['password'],
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
