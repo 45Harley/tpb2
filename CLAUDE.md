@@ -44,6 +44,21 @@ ssh sandge5@ecngx308.inmotionhosting.com -p 2222 "cd /home/sandge5/tpb2.sandgems
 scp -P 2222 config.php sandge5@ecngx308.inmotionhosting.com:/home/sandge5/tpb2.sandgems.net/
 ```
 
+### Collaborative workflow (multiple contributors)
+If more than one person is working on the code, use branches and pull requests instead of pushing directly to `master`:
+```bash
+# 1. Create a branch for your change
+git checkout -b fix-logout
+
+# 2. Make changes, commit, push the branch
+git add <files> && git commit -m "description" && git push origin fix-logout
+
+# 3. Open a PR on GitHub, review the diff, merge to master
+
+# 4. Pull the merged result on the server
+ssh sandge5@ecngx308.inmotionhosting.com -p 2222 "cd /home/sandge5/tpb2.sandgems.net && git pull"
+```
+
 ## Conventions
 - URL routing for states/towns is handled by `.htaccess` rewrite rules
 - `.htaccess` includes a cPanel-generated PHP handler (`ea-php84`) — don't remove it
