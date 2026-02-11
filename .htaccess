@@ -56,6 +56,37 @@ RewriteRule ^owa/ - [F,L]
     Require all denied
 </FilesMatch>
 
+# --- Block .git directory ---
+RedirectMatch 403 /\.git
+
+# --- Block config files (credentials, API keys) ---
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^config\.php$ - [F,L]
+RewriteRule ^config-claude\.php$ - [F,L]
+</IfModule>
+
+# --- Block dev/build files from web access ---
+# Mapped: who needs what (volunteer vs dev-only)
+#   PUBLIC:  docs/state-builder/* (volunteer build kit)
+#   PUBLIC:  volunteer/*.php (volunteer portal)
+#   BLOCKED: everything else dev-only
+<IfModule mod_rewrite.c>
+RewriteEngine On
+# Dev-only directories
+RewriteRule ^tests/ - [F,L]
+RewriteRule ^scripts/ - [F,L]
+# Internal docs (NOT the volunteer build kit)
+RewriteRule ^docs/media-management\.md$ - [F,L]
+RewriteRule ^docs/TPB-PHS-Partnership-Proposal\.docx$ - [F,L]
+RewriteRule ^docs/tpb_refactoring_summary\.html$ - [F,L]
+# Dev config files
+RewriteRule ^CLAUDE\.md$ - [F,L]
+RewriteRule ^package\.json$ - [F,L]
+RewriteRule ^package-lock\.json$ - [F,L]
+RewriteRule ^playwright\.config\.js$ - [F,L]
+</IfModule>
+
 # ============================================
 # EXISTING SITE RULES (original .htaccess)
 # ============================================

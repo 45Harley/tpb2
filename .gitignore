@@ -6,4 +6,10 @@ tpb2-server-*.zip
 map-deploy_*.zip
 config.php
 config-claude.php
+includes/c-widget.php
+index2.php
 nul
+node_modules/
+playwright-report/
+test-results/
+.claude/

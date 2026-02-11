@@ -1,0 +1,24 @@
+{
+  "name": "tpb2",
+  "version": "1.0.0",
+  "description": "The People's Branch - Civic engagement platform",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ethics": "playwright test tests/ethics.spec.js",
+    "test:security": "playwright test tests/security.spec.js",
+    "test:staging": "cross-env SITE_URL=https://tpb2.sandgems.net playwright test tests/security.spec.js",
+    "test:ui": "playwright test --ui"
+  },
+  "keywords": [
+    "civic",
+    "democracy",
+    "golden-rule"
+  ],
+  "author": "The People's Branch",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}
