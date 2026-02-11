@@ -91,6 +91,7 @@ $electionSite = 'https://tpb.sandgems.net';
     .nav-row-2 {
         padding: 0.25rem 1rem;
         max-height: 50px;
+        overflow: visible;
         transition: max-height 0.3s ease, padding 0.3s ease;
     }
     .nav-row-2.collapsed {

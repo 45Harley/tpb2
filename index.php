@@ -704,7 +704,7 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
             #googleMap { min-height: 300px; }
         }
         
-        /* State Info Modal - floats beside state on hover */
+        /* State Info Modal - floats beside state on hover, draggable */
         .state-info-modal {
             display: none;
             position: absolute;
@@ -716,6 +716,11 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
             max-width: 320px;
             z-index: 1000;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            cursor: grab;
+        }
+        .state-info-modal.dragging {
+            cursor: grabbing;
+            opacity: 0.92;
         }
         
         .state-info-modal .modal-close-btn {
@@ -2069,7 +2074,64 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
         
         // Modal close
         document.getElementById('modalCloseBtn').addEventListener('click', hideStateInfoModal);
-        
+
+        // Modal drag — let users reposition when it covers content
+        (function() {
+            var modal = document.getElementById('stateInfoModal');
+            var dragging = false, startX, startY, origLeft, origTop;
+
+            modal.addEventListener('mousedown', function(e) {
+                // Don't drag from buttons/links/inputs
+                if (e.target.closest('button, a, input')) return;
+                dragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                origLeft = parseInt(modal.style.left) || 0;
+                origTop = parseInt(modal.style.top) || 0;
+                modal.classList.add('dragging');
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!dragging) return;
+                modal.style.left = (origLeft + e.clientX - startX) + 'px';
+                modal.style.top = (origTop + e.clientY - startY) + 'px';
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (dragging) {
+                    dragging = false;
+                    modal.classList.remove('dragging');
+                }
+            });
+
+            // Touch support for mobile
+            modal.addEventListener('touchstart', function(e) {
+                if (e.target.closest('button, a, input')) return;
+                dragging = true;
+                var t = e.touches[0];
+                startX = t.clientX;
+                startY = t.clientY;
+                origLeft = parseInt(modal.style.left) || 0;
+                origTop = parseInt(modal.style.top) || 0;
+                modal.classList.add('dragging');
+            }, {passive: true});
+
+            document.addEventListener('touchmove', function(e) {
+                if (!dragging) return;
+                var t = e.touches[0];
+                modal.style.left = (origLeft + t.clientX - startX) + 'px';
+                modal.style.top = (origTop + t.clientY - startY) + 'px';
+            }, {passive: true});
+
+            document.addEventListener('touchend', function() {
+                if (dragging) {
+                    dragging = false;
+                    modal.classList.remove('dragging');
+                }
+            });
+        })();
+
         // Click outside map/modal → close modal
         document.addEventListener('click', function(e) {
             const modal = document.getElementById('stateInfoModal');
