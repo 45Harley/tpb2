@@ -1121,7 +1121,12 @@ $deviceAdded = isset($_GET['verified']) && $_GET['verified'] === 'device_added';
                     _form_load_time: parseInt(formLoadTime) || null,
                     state_code: hasMapLocation ? mapLocation.state_code : null,
                     town_name: hasMapLocation ? mapLocation.town_name : null,
-                    zip_code: hasMapLocation ? mapLocation.zip_code : null
+                    zip_code: hasMapLocation ? mapLocation.zip_code : null,
+                    lat: hasMapLocation ? mapLocation.lat : null,
+                    lng: hasMapLocation ? mapLocation.lng : null,
+                    us_congress_district: hasMapLocation ? mapLocation.us_congress_district : null,
+                    state_senate_district: hasMapLocation ? mapLocation.state_senate_district : null,
+                    state_house_district: hasMapLocation ? mapLocation.state_house_district : null
                 })
             });
             
@@ -1147,5 +1152,6 @@ $deviceAdded = isset($_GET['verified']) && $_GET['verified'] === 'device_added';
         }
     });
     </script>
+
 </body>
 </html>

@@ -81,6 +81,11 @@ $returnUrl = trim($input['return_url'] ?? '');
 $stateCode = strtoupper(trim($input['state_code'] ?? ''));
 $townName = trim($input['town_name'] ?? '');
 $zipCode = trim($input['zip_code'] ?? '');
+$lat = isset($input['lat']) && $input['lat'] !== '' ? (float)$input['lat'] : null;
+$lng = isset($input['lng']) && $input['lng'] !== '' ? (float)$input['lng'] : null;
+$usCongressDistrict = trim($input['us_congress_district'] ?? '');
+$stateSenateDistrict = trim($input['state_senate_district'] ?? '');
+$stateHouseDistrict = trim($input['state_house_district'] ?? '');
 
 // Validate age bracket if provided
 $validAgeBrackets = ['13-17', '18-24', '25-44', '45-64', '65+'];
@@ -267,33 +272,40 @@ try {
         }
     }
 
-    // Save location if provided (from town picker flow) - ONLY for new users
-    if ($stateCode && $townName && $userId && $isNewUser) {
+    // Save location if provided (from map/town picker flow)
+    if ($stateCode && $townName && $userId) {
         // Get state_id
         $stmt = $pdo->prepare("SELECT state_id FROM states WHERE abbreviation = ?");
         $stmt->execute([$stateCode]);
         $stateId = $stmt->fetchColumn();
-        
+
         if ($stateId) {
             // Get or create town_id
             $stmt = $pdo->prepare("SELECT town_id FROM towns WHERE LOWER(town_name) = LOWER(?) AND state_id = ?");
             $stmt->execute([$townName, $stateId]);
             $townId = $stmt->fetchColumn();
-            
+
             if (!$townId) {
                 // Create town if it doesn't exist
                 $stmt = $pdo->prepare("INSERT INTO towns (town_name, state_id) VALUES (?, ?)");
                 $stmt->execute([$townName, $stateId]);
                 $townId = $pdo->lastInsertId();
             }
-            
-            // Update user with location
+
+            // Update user with full location data
             $stmt = $pdo->prepare("
-                UPDATE users 
-                SET current_state_id = ?, current_town_id = ?, zip_code = ?
+                UPDATE users
+                SET current_state_id = ?, current_town_id = ?, zip_code = ?,
+                    latitude = ?, longitude = ?,
+                    us_congress_district = ?, state_senate_district = ?, state_house_district = ?
                 WHERE user_id = ?
             ");
-            $stmt->execute([$stateId, $townId, $zipCode ?: null, $userId]);
+            $stmt->execute([
+                $stateId, $townId, $zipCode ?: null,
+                $lat, $lng,
+                $usCongressDistrict ?: null, $stateSenateDistrict ?: null, $stateHouseDistrict ?: null,
+                $userId
+            ]);
         }
     }
 
