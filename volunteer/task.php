@@ -6,13 +6,7 @@
  */
 
 // Database connection
-$config = [
-    'host' => 'localhost',
-    'database' => 'sandge5_tpb2',
-    'username' => 'sandge5_tpb2',
-    'password' => '.YeO6kSJAHh5',
-    'charset' => 'utf8mb4'
-];
+$config = require __DIR__ . '/../config.php';
 
 try {
     $pdo = new PDO(
