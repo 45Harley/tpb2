@@ -8,6 +8,7 @@
  *   $currentPage - string: 'help', 'profile', 'voice', 'government', 'town', 'action', 'power', 'volunteer', 'story', 'login', 'home'
  * 
  * Optional variables (for status display):
+ *   $userId - int, user's numeric ID (e.g., 1, 10)
  *   $trustLevel - string, e.g., 'Verified (2FA)'
  *   $points - int, civic points
  *   $userTrustLevel - int, 0-4 for routing (if not set, defaults to 0)
@@ -32,6 +33,7 @@
  */
 
 $currentPage = isset($currentPage) ? $currentPage : '';
+$userId = isset($userId) ? (int)$userId : 0;
 $trustLevel = isset($trustLevel) ? $trustLevel : 'Visitor';
 $points = isset($points) ? (int)$points : 0;
 $userTrustLevel = isset($userTrustLevel) ? (int)$userTrustLevel : 0;
@@ -159,6 +161,11 @@ $electionSite = 'https://tpb.sandgems.net';
     }
     .nav-status .divider {
         color: #555;
+    }
+    .nav-status .user-id {
+        color: #888;
+        font-family: monospace;
+        font-size: 0.9em;
     }
     .nav-status .points {
         color: #888;
@@ -346,6 +353,8 @@ $electionSite = 'https://tpb.sandgems.net';
             </div>
             <div class="nav-status">
                 <?php if ($isLoggedIn): ?>
+                    <span class="user-id"><?= $userId ?></span>
+                    <span class="divider">|</span>
                     <?php if ($hasEmail): ?>
                     <a href="/profile.php#email" class="email-link" title="<?= htmlspecialchars($userEmail) ?>"><?= htmlspecialchars($emailDisplay) ?></a>
                     <?php else: ?>

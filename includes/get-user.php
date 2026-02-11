@@ -126,6 +126,7 @@ function getUserBasicBySession($pdo, $sessionId) {
 function getNavVarsForUser($dbUser, $sessionPoints = 0) {
     if (!$dbUser) {
         return [
+            'userId' => 0,
             'trustLevel' => 'Visitor',
             'userTrustLevel' => 0,
             'points' => $sessionPoints,
@@ -137,12 +138,13 @@ function getNavVarsForUser($dbUser, $sessionPoints = 0) {
             'userStateDisplay' => ''
         ];
     }
-    
+
     $levelId = (int)($dbUser['identity_level_id'] ?? 1);
     $levelName = ucfirst($dbUser['identity_level_name'] ?? 'anonymous');
     $townName = $dbUser['town_name'] ?? '';
-    
+
     return [
+        'userId' => (int)($dbUser['user_id'] ?? 0),
         'trustLevel' => "Level {$levelId}: {$levelName}",
         'userTrustLevel' => $levelId,
         'points' => (int)($dbUser['civic_points'] ?? 0),

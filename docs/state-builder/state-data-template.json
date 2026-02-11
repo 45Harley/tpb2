@@ -1,0 +1,597 @@
+{
+  "_meta": {
+    "state_name": "Connecticut",
+    "state_abbr": "CT",
+    "state_id": 7,
+    "builder_name": "",
+    "build_date": "",
+    "version": "1.0",
+    "sources_count": 0,
+    "ai_assisted": true,
+    "estimated_hours": 0,
+    "notes": "Replace this template data with your state's actual data"
+  },
+
+  "hero": {
+    "state_badge": "THE CONSTITUTION STATE",
+    "state_name": "Connecticut",
+    "tagline": "Your Voice. Your Representatives. Your Benefits.",
+    "description": "Frustrated with Washington? Tired of Hartford? Your voice matters — but only if it's counted. Share what Connecticut's leaders need to hear.",
+    "cta_primary": {
+      "text": "Find Your Town",
+      "link": "#towns"
+    },
+    "cta_secondary": [
+      {"text": "Share Your Thought", "link": "/thought.php"},
+      {"text": "Read CT Thoughts", "link": "/read.php"}
+    ]
+  },
+
+  "overview": {
+    "nickname": "The Constitution State",
+    "capital": "Hartford",
+    "largest_city": "Bridgeport",
+    "largest_city_population": 148654,
+    "population": 3605944,
+    "population_census_2020": 3605944,
+    "population_estimate_year": 2025,
+    "area_sq_mi": 5543,
+    "founded": "1788",
+    "founded_description": "5th state to ratify the U.S. Constitution",
+    "electoral_votes": 7,
+    "congressional_districts": 5,
+    "time_zone": "Eastern",
+    "fun_facts": [
+      "First state constitution (Fundamental Orders, 1639)",
+      "Insurance Capital of the World (Hartford)",
+      "Home of Yale University (1701)",
+      "Invented the hamburger, Frisbee, and submarine sandwich"
+    ],
+    "geographic_features": ["Long Island Sound", "Connecticut River", "Appalachian Trail"],
+    "official_website": "https://portal.ct.gov"
+  },
+
+  "history": {
+    "audio_url": null,
+    "audio_duration_min": null,
+    "founding_summary": "The area was inhabited by Native American tribes for thousands of years before English settlers arrived in the 1630s. The Fundamental Orders of 1638-39 created the framework for Connecticut's government, often called the first written constitution. Connecticut played a pivotal role in the American Revolution and was the 5th state to ratify the U.S. Constitution on January 9, 1788.",
+    "key_moments": [
+      {"year": "Pre-1600s", "event": "Native American tribes (Pequot, Mohegan, Niantic)", "description": "Indigenous peoples inhabited the region for millennia"},
+      {"year": "1630s", "event": "English settlement begins", "description": "Thomas Hooker leads settlers from Massachusetts to Hartford area"},
+      {"year": "1638-1639", "event": "Fundamental Orders", "description": "First written constitution creating framework for self-government"},
+      {"year": "1788", "event": "Ratified U.S. Constitution", "description": "5th state to ratify, January 9, 1788"},
+      {"year": "1800s", "event": "Industrial Revolution", "description": "Manufacturing hub for firearms, clocks, and textiles"},
+      {"year": "1954", "event": "USS Nautilus launched", "description": "World's first nuclear submarine, built in Groton"}
+    ],
+    "historical_significance": "Connecticut earned the nickname 'The Provisions State' during the Revolutionary War for supplying the Continental Army. It later became a manufacturing powerhouse, producing firearms (Colt), clocks, typewriters, and submarines. The state's insurance industry, centered in Hartford, became the largest in the nation.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Connecticut",
+    "historical_society_url": "https://chs.org"
+  },
+
+  "government": {
+    "form": "Constitutional",
+    "governor": {
+      "name": "Ned Lamont",
+      "party": "Democrat",
+      "elected": "2018",
+      "term_start": "2019",
+      "term_end": "2027",
+      "website": "https://portal.ct.gov/governor",
+      "phone": "(860) 566-4840"
+    },
+    "lt_governor": {
+      "name": "Susan Bysiewicz",
+      "party": "Democrat",
+      "term_start": "2019"
+    },
+    "legislature": {
+      "name": "Connecticut General Assembly",
+      "website": "https://www.cga.ct.gov",
+      "type": "bicameral",
+      "senate": {
+        "name": "Senate",
+        "seats": 36,
+        "party_breakdown": {"Democrat": 24, "Republican": 12},
+        "term_years": 2,
+        "current_session": "2025-2026"
+      },
+      "house": {
+        "name": "House of Representatives",
+        "seats": 151,
+        "party_breakdown": {"Democrat": 98, "Republican": 53},
+        "term_years": 2,
+        "current_session": "2025-2026"
+      },
+      "session_info": {
+        "regular_session_start": "January",
+        "regular_session_end": "June",
+        "description": "Short session in even years (Feb-May), long session in odd years (Jan-Jun)",
+        "session_type": "Annual"
+      }
+    },
+    "statewide_officials": [
+      {"title": "Attorney General", "name": "William Tong", "party": "Democrat", "website": "https://portal.ct.gov/ag"},
+      {"title": "Secretary of State", "name": "Stephanie Thomas", "party": "Democrat", "website": "https://portal.ct.gov/sots"},
+      {"title": "Treasurer", "name": "Erick Russell", "party": "Democrat", "website": "https://portal.ct.gov/ott"},
+      {"title": "Comptroller", "name": "Sean Scanlon", "party": "Democrat", "website": "https://osc.ct.gov"}
+    ],
+    "judicial": {
+      "supreme_court": "Connecticut Supreme Court",
+      "justices": 7,
+      "chief_justice": "Andrew J. McDonald",
+      "website": "https://jud.ct.gov"
+    },
+    "capitol": {
+      "building": "Connecticut State Capitol",
+      "address": "210 Capitol Avenue, Hartford, CT 06106",
+      "tours_available": true,
+      "tours_url": "https://portal.ct.gov/cga/tour"
+    }
+  },
+
+  "budget": {
+    "fiscal_year": "2025-2026",
+    "total_budget": 27200000000,
+    "budget_type": "biennial",
+    "budget_year_note": "Connecticut uses two-year (biennial) budgets",
+    "revenue_sources": [
+      {"category": "Income Tax", "amount": 12800000000, "percent": 47},
+      {"category": "Sales Tax", "amount": 5980000000, "percent": 22},
+      {"category": "Federal Funds", "amount": 4350000000, "percent": 16},
+      {"category": "Other Taxes & Fees", "amount": 4070000000, "percent": 15}
+    ],
+    "major_spending": [
+      {"category": "Education (K-12 + Higher Ed)", "amount": 11700000000, "percent": 43},
+      {"category": "Health & Human Services", "amount": 8430000000, "percent": 31},
+      {"category": "Debt Service", "amount": 2720000000, "percent": 10},
+      {"category": "Transportation", "amount": 1630000000, "percent": 6},
+      {"category": "Other", "amount": 2720000000, "percent": 10}
+    ],
+    "budget_document_url": "https://portal.ct.gov/OPM/Budget/Budget-Overview",
+    "deficit_or_surplus": "surplus",
+    "deficit_surplus_amount": 350000000,
+    "rainy_day_fund": 3800000000,
+    "rainy_day_fund_note": "Budget Reserve Fund, healthy reserve for economic downturns",
+    "sources": [
+      {"title": "OPM Fiscal Accountability Report", "url": "https://portal.ct.gov/OPM/Budget"}
+    ]
+  },
+
+  "elections": {
+    "voter_registration": {
+      "total_registered": 2252714,
+      "registration_date": "October 2024",
+      "democrat": 792887,
+      "democrat_percent": 35.2,
+      "republican": 489905,
+      "republican_percent": 21.7,
+      "independent": 935892,
+      "independent_percent": 41.5,
+      "minor_parties": 34030,
+      "minor_parties_percent": 1.5,
+      "source_url": "https://portal.ct.gov/SOTS/Election-Services/Statistics-and-Data"
+    },
+    "recent_elections": [
+      {
+        "year": 2024,
+        "type": "Presidential",
+        "winner": "Kamala Harris (D)",
+        "margin": "+15.2%",
+        "turnout_percent": 78,
+        "notes": "High turnout presidential election"
+      },
+      {
+        "year": 2022,
+        "type": "Gubernatorial",
+        "winner": "Ned Lamont (D)",
+        "margin": "+11.4%",
+        "turnout_percent": 62,
+        "notes": "Lamont re-elected to second term"
+      },
+      {
+        "year": 2020,
+        "type": "Presidential",
+        "winner": "Joe Biden (D)",
+        "margin": "+20.1%",
+        "turnout_percent": 80
+      }
+    ],
+    "upcoming_elections": [
+      {"date": "2026-11-03", "type": "Gubernatorial", "description": "Governor, all state representatives"},
+      {"date": "2028-11-05", "type": "Presidential", "description": "Presidential election"}
+    ],
+    "voting_info": {
+      "registration_deadline": "7 days before election (in-person), 14 days (online)",
+      "early_voting": true,
+      "early_voting_dates": "Typically 14 days before election",
+      "vote_by_mail": true,
+      "absentee_voting": true,
+      "voter_id_required": false,
+      "sos_elections_url": "https://portal.ct.gov/SOTS/Election-Services",
+      "register_to_vote_url": "https://voterregistration.ct.gov",
+      "check_registration_url": "https://portaldir.ct.gov/sots/LookUp.aspx"
+    }
+  },
+
+  "economy": {
+    "gdp": 345900000000,
+    "gdp_year": 2023,
+    "gdp_growth_rate": 5.6,
+    "unemployment_rate": 4.2,
+    "unemployment_date": "December 2025",
+    "median_household_income": 83572,
+    "median_income_year": 2023,
+    "poverty_rate": 10.1,
+    "poverty_year": 2023,
+    "key_industries": [
+      {
+        "sector": "Insurance & Finance",
+        "description": "Hartford is the Insurance Capital of the World, home to major insurance companies",
+        "gdp_percent": 16.4,
+        "major_employers": ["Cigna", "Travelers", "Aetna", "Hartford Financial Services"]
+      },
+      {
+        "sector": "Aerospace & Manufacturing",
+        "description": "Defense manufacturing hub producing jet engines, helicopters, and submarines",
+        "gdp_percent": 11.9,
+        "major_employers": ["Pratt & Whitney", "Sikorsky Aircraft", "Electric Boat", "General Dynamics"]
+      },
+      {
+        "sector": "Healthcare",
+        "description": "Major hospital systems and Yale School of Medicine research hub",
+        "gdp_percent": 8.5,
+        "major_employers": ["Yale New Haven Health", "Hartford HealthCare", "Trinity Health"]
+      },
+      {
+        "sector": "Education",
+        "description": "UConn, Yale, and numerous colleges and universities",
+        "major_employers": ["Yale University", "University of Connecticut"]
+      }
+    ],
+    "fortune_500_companies": ["Cigna", "Travelers", "Hartford Financial Services"],
+    "major_exports": ["Aircraft engines", "Helicopters", "Submarines", "Insurance services"],
+    "sources": [
+      {"title": "Bureau of Labor Statistics - CT", "url": "https://www.bls.gov/eag/eag.ct.htm"},
+      {"title": "CT Economic Digest", "url": "https://www1.ctdol.state.ct.us/lmi/ctdigest.asp"}
+    ]
+  },
+
+  "benefits": {
+    "housing": [
+      {
+        "program_name": "CHFA Down Payment Assistance",
+        "amount": "$20,000 to $50,000",
+        "description": "Down payment and closing cost assistance for first-time homebuyers in Connecticut. Amount varies based on location and program.",
+        "eligibility": "First-time buyers, income limits apply, must complete homebuyer education course, use CHFA-approved lender",
+        "how_to_apply": "Apply through CHFA-approved lenders. Find lender list on CHFA website.",
+        "website": "https://www.chfa.org",
+        "phone": "(860) 721-9501",
+        "deadline": null,
+        "source_url": "https://www.chfa.org/homebuyer-programs"
+      },
+      {
+        "program_name": "Time To Own Program",
+        "amount": "Up to 20% down payment + 5% closing costs (max $50,000 high-opportunity areas, $25,000 other areas)",
+        "description": "Forgivable loan for down payment and closing costs assistance",
+        "eligibility": "Income limits, must be first-time buyer or not owned home in 3 years",
+        "how_to_apply": "Through participating lenders",
+        "website": "https://www.chfa.org",
+        "phone": "(860) 721-9501",
+        "deadline": null,
+        "source_url": "https://www.chfa.org"
+      }
+    ],
+    "energy": [
+      {
+        "program_name": "EnergizeCT Heat Pump Rebates",
+        "amount": "$250 per ton, up to $10,000 per home",
+        "description": "Rebates for installing air source heat pumps to replace oil, propane, natural gas, or electric resistance heating as primary heat source",
+        "eligibility": "CT homeowners replacing primary heating system. Must register online BEFORE installation.",
+        "how_to_apply": "Register online before installation at EnergizeCT.com. Apply within 60 days of install.",
+        "website": "https://www.energizect.com/rebates-incentives/heating-cooling/heat-pumps",
+        "phone": "888-855-0282",
+        "deadline": "Must register before install; apply within 60 days of installation",
+        "source_url": "https://www.energizect.com"
+      },
+      {
+        "program_name": "CEAP - Connecticut Energy Assistance Program",
+        "amount": "Varies based on income, household size, and heating type",
+        "description": "Winter heating bill assistance for eligible households. Covers oil, natural gas, electricity, propane, kerosene, coal, wood, and wood pellets.",
+        "eligibility": "Income limits apply. Available to homeowners and renters.",
+        "how_to_apply": "Apply through DSS or 211 Connecticut",
+        "website": "https://portal.ct.gov/dss",
+        "phone": "1-855-626-6632 (DSS) or 211",
+        "deadline": "November 15 - March 15 annually",
+        "source_url": "https://portal.ct.gov/dss/economic-security/winter-heating-assistance"
+      }
+    ],
+    "seniors": [
+      {
+        "program_name": "Elderly Homeowners Property Tax Credit",
+        "amount": "Up to $1,250 credit",
+        "description": "Tax credit for elderly homeowners with limited income",
+        "eligibility": "Age 65+, income limits, own and occupy home",
+        "how_to_apply": "File with state income tax return",
+        "website": "https://portal.ct.gov/DRS",
+        "phone": null,
+        "deadline": "Tax filing deadline",
+        "source_url": "https://portal.ct.gov/DRS"
+      }
+    ],
+    "ev": [
+      {
+        "program_name": "CHEAPR - Connecticut Hydrogen and Electric Automobile Purchase Rebate",
+        "amount": "$2,250 to $7,500 depending on vehicle and income",
+        "description": "Rebate for purchasing or leasing new electric vehicles. Higher rebates for moderate-income buyers.",
+        "eligibility": "CT residents, vehicle must be new or unused, price limits apply",
+        "how_to_apply": "Apply online within 6 months of purchase through CHEAPR portal",
+        "website": "https://portal.ct.gov/deep/air/cleanvehicles/cheapr",
+        "phone": null,
+        "deadline": "Within 6 months of purchase/lease",
+        "source_url": "https://portal.ct.gov/deep/air/cleanvehicles/cheapr"
+      }
+    ],
+    "dmv": [
+      {
+        "program_name": "Online Driver's License Renewal",
+        "amount": "Free service (standard renewal fee applies)",
+        "description": "Renew driver's license online without visiting DMV",
+        "eligibility": "License must not have restrictions requiring in-person renewal",
+        "how_to_apply": "Visit ct.gov/dmv and renew online",
+        "website": "https://portal.ct.gov/dmv",
+        "phone": "1-800-842-8222",
+        "deadline": null,
+        "source_url": "https://portal.ct.gov/dmv"
+      },
+      {
+        "program_name": "REAL ID",
+        "amount": "$30 (add-on to license renewal)",
+        "description": "Enhanced driver's license or state ID compliant with federal REAL ID Act, required for domestic flights starting May 2025",
+        "eligibility": "All CT residents can apply",
+        "how_to_apply": "Visit DMV with required documents (birth certificate, SSN proof, 2 proofs of residency)",
+        "website": "https://portal.ct.gov/dmv/licenses/licenses/real-id",
+        "phone": "1-800-842-8222",
+        "deadline": "May 7, 2025 for domestic flights",
+        "source_url": "https://portal.ct.gov/dmv/licenses/licenses/real-id"
+      }
+    ],
+    "education": [
+      {
+        "program_name": "Connecticut Aid to Public College Students (CAPCS)",
+        "amount": "Up to $2,000 per year",
+        "description": "Need-based grant for CT residents attending in-state public colleges and universities",
+        "eligibility": "CT residents, attending CT public institution, FAFSA required, income limits",
+        "how_to_apply": "File FAFSA; awarded automatically if eligible",
+        "website": "https://portal.ct.gov/ohe",
+        "phone": null,
+        "deadline": "FAFSA priority deadline: varies by school",
+        "source_url": "https://portal.ct.gov/ohe"
+      },
+      {
+        "program_name": "CT529 College Savings Plan",
+        "amount": "State income tax deduction for contributions",
+        "description": "Tax-advantaged 529 savings plan for college expenses",
+        "eligibility": "Any CT resident can open account",
+        "how_to_apply": "Open account online at CHET website",
+        "website": "https://www.aboutchet.com",
+        "phone": null,
+        "deadline": null,
+        "source_url": "https://www.aboutchet.com"
+      }
+    ]
+  },
+
+  "agencies": [
+    {
+      "name": "Department of Motor Vehicles",
+      "abbr": "DMV",
+      "category": "Transportation",
+      "website": "https://portal.ct.gov/dmv",
+      "phone": "1-800-842-8222",
+      "services": ["Driver's licenses", "Vehicle registration", "REAL ID", "Title transfers", "Online renewals"],
+      "search_keywords": ["license", "registration", "dmv", "car", "driver", "real id", "vehicle", "title"]
+    },
+    {
+      "name": "Department of Social Services",
+      "abbr": "DSS",
+      "category": "Health & Human Services",
+      "website": "https://portal.ct.gov/dss",
+      "phone": "1-855-626-6632",
+      "services": ["SNAP (food stamps)", "Medicaid", "Cash assistance", "Childcare subsidies", "Energy assistance"],
+      "search_keywords": ["benefits", "snap", "medicaid", "assistance", "food stamps", "welfare", "healthcare", "energy", "ceap"]
+    },
+    {
+      "name": "Department of Education",
+      "abbr": "DOE",
+      "category": "Education",
+      "website": "https://portal.ct.gov/sde",
+      "phone": "(860) 713-6543",
+      "services": ["K-12 oversight", "School funding", "Teacher certification", "Special education", "School performance data"],
+      "search_keywords": ["schools", "education", "teachers", "k-12", "students", "certification"]
+    },
+    {
+      "name": "Department of Public Health",
+      "abbr": "DPH",
+      "category": "Health",
+      "website": "https://portal.ct.gov/dph",
+      "phone": "(860) 509-8000",
+      "services": ["Vital records (birth/death certificates)", "Health inspections", "Disease surveillance", "Public health programs"],
+      "search_keywords": ["health", "birth certificate", "death certificate", "vital records", "inspection"]
+    },
+    {
+      "name": "Department of Labor",
+      "abbr": "DOL",
+      "category": "Labor & Employment",
+      "website": "https://www.ctdol.state.ct.us",
+      "phone": "(860) 263-6000",
+      "services": ["Unemployment benefits", "Job search assistance", "Workforce training", "Labor law enforcement"],
+      "search_keywords": ["unemployment", "jobs", "training", "career", "employment", "benefits"]
+    },
+    {
+      "name": "Department of Revenue Services",
+      "abbr": "DRS",
+      "category": "Revenue & Taxation",
+      "website": "https://portal.ct.gov/drs",
+      "phone": "(860) 297-5962",
+      "services": ["Income tax", "Sales tax", "Business tax", "Tax refunds", "Property tax credits"],
+      "search_keywords": ["tax", "taxes", "income", "sales", "refund", "filing"]
+    },
+    {
+      "name": "Department of Energy and Environmental Protection",
+      "abbr": "DEEP",
+      "category": "Environment",
+      "website": "https://portal.ct.gov/deep",
+      "phone": "(860) 424-3000",
+      "services": ["State parks", "Fishing/hunting licenses", "Environmental permits", "Energy programs", "Waste management"],
+      "search_keywords": ["parks", "fishing", "hunting", "environment", "permits", "energy", "conservation"]
+    }
+  ],
+
+  "education": {
+    "flagship_university": {
+      "name": "University of Connecticut (UConn)",
+      "location": "Storrs, CT",
+      "website": "https://uconn.edu",
+      "enrollment": 32000,
+      "founded": 1881,
+      "description": "Flagship public research university, member of prestigious research associations"
+    },
+    "state_university_system": {
+      "name": "Connecticut State University System (CSCU)",
+      "campuses": 4,
+      "schools": ["Central Connecticut State University", "Eastern Connecticut State University", "Southern Connecticut State University", "Western Connecticut State University"],
+      "website": "https://www.ct.edu",
+      "total_enrollment": 32000
+    },
+    "community_colleges": {
+      "count": 12,
+      "system_name": "Connecticut Community Colleges",
+      "website": "https://www.ctcommunitycollges.org",
+      "total_enrollment": 50000,
+      "colleges": ["Asnuntuck", "Capital", "Gateway", "Housatonic", "Manchester", "Middlesex", "Naugatuck Valley", "Northwestern", "Norwalk", "Quinebaug Valley", "Three Rivers", "Tunxis"]
+    },
+    "private_universities": [
+      {"name": "Yale University", "location": "New Haven", "founded": 1701, "website": "https://www.yale.edu"},
+      {"name": "Trinity College", "location": "Hartford", "founded": 1823},
+      {"name": "Wesleyan University", "location": "Middletown", "founded": 1831}
+    ],
+    "financial_aid": [
+      {
+        "program_name": "Connecticut Aid to Public College Students (CAPCS)",
+        "amount": "Up to $2,000/year",
+        "eligibility": "CT residents attending in-state public colleges, FAFSA required",
+        "website": "https://portal.ct.gov/ohe"
+      }
+    ],
+    "fafsa_url": "https://portal.ct.gov/ohe/fafsa"
+  },
+
+  "towns": {
+    "total_count": 169,
+    "active_towns": [
+      {"name": "Brooklyn", "slug": "brooklyn", "population": 8357, "county": "Windham"},
+      {"name": "Pomfret", "slug": "pomfret", "population": 4470, "county": "Windham"},
+      {"name": "Putnam", "slug": "putnam", "population": 9347, "county": "Windham"},
+      {"name": "Woodstock", "slug": "woodstock", "population": 8221, "county": "Windham"}
+    ],
+    "coming_soon": [
+      {"name": "Andover", "population": 3303, "county": "Tolland"},
+      {"name": "Ansonia", "population": 18918, "county": "New Haven"}
+    ],
+    "note": "Full list of 165 coming-soon towns to be populated by builder"
+  },
+
+  "contacts": [
+    {
+      "name": "211 Connecticut",
+      "phone": "2-1-1",
+      "website": "https://211ct.org",
+      "description": "All services directory. Housing, food, healthcare, utilities, childcare, and more. Free, confidential referrals."
+    },
+    {
+      "name": "DSS Benefits Center",
+      "phone": "1-855-626-6632",
+      "website": "https://portal.ct.gov/dss",
+      "description": "SNAP, cash assistance, Medicaid, childcare subsidies, energy assistance"
+    },
+    {
+      "name": "CT DMV",
+      "phone": "1-800-842-8222",
+      "website": "https://portal.ct.gov/dmv",
+      "description": "Driver's licenses, vehicle registration, REAL ID, online renewals"
+    },
+    {
+      "name": "Unemployment Benefits (DOL)",
+      "phone": "(860) 263-6000",
+      "website": "https://www.ctdol.state.ct.us",
+      "description": "File for unemployment, check claim status, job search assistance"
+    }
+  ],
+
+  "sources": [
+    {
+      "id": 1,
+      "title": "Connecticut General Assembly",
+      "url": "https://www.cga.ct.gov",
+      "accessed": "2026-02-10",
+      "type": "official",
+      "used_for": "Legislature composition, session info"
+    },
+    {
+      "id": 2,
+      "title": "CT Office of Policy and Management - Budget",
+      "url": "https://portal.ct.gov/OPM/Budget",
+      "accessed": "2026-02-10",
+      "type": "official",
+      "used_for": "Budget data, revenue, spending"
+    },
+    {
+      "id": 3,
+      "title": "CT Secretary of State - Election Statistics",
+      "url": "https://portal.ct.gov/SOTS/Election-Services/Statistics-and-Data",
+      "accessed": "2026-02-10",
+      "type": "official",
+      "used_for": "Voter registration statistics"
+    },
+    {
+      "id": 4,
+      "title": "CHFA - Connecticut Housing Finance Authority",
+      "url": "https://www.chfa.org",
+      "accessed": "2026-02-10",
+      "type": "official",
+      "used_for": "Housing assistance programs"
+    },
+    {
+      "id": 5,
+      "title": "EnergizeCT",
+      "url": "https://www.energizect.com",
+      "accessed": "2026-02-10",
+      "type": "official",
+      "used_for": "Energy rebates and assistance programs"
+    },
+    {
+      "id": 6,
+      "title": "Portal.ct.gov - Departments and Agencies",
+      "url": "https://portal.ct.gov/en/government/departments-and-agencies",
+      "accessed": "2026-02-10",
+      "type": "official",
+      "used_for": "State agencies directory"
+    },
+    {
+      "id": 7,
+      "title": "Bureau of Labor Statistics - Connecticut",
+      "url": "https://www.bls.gov/eag/eag.ct.htm",
+      "accessed": "2026-02-10",
+      "type": "federal",
+      "used_for": "Unemployment rate, employment data"
+    },
+    {
+      "id": 8,
+      "title": "U.S. Census Bureau - Connecticut",
+      "url": "https://data.census.gov/profile/Connecticut",
+      "accessed": "2026-02-10",
+      "type": "federal",
+      "used_for": "Population, demographics, income data"
+    }
+  ]
+}
