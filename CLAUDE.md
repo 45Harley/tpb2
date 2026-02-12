@@ -122,6 +122,25 @@ git add <files> && git commit -m "description" && git push origin fix-logout
 ssh sandge5@ecngx308.inmotionhosting.com -p 2222 "cd /home/sandge5/tpb2.sandgems.net && git pull"
 ```
 
+## Remote MySQL Queries via CLI
+
+To query databases on the server from Claude Code, use SSH + a temp PHP script (inline PHP escaping breaks over SSH):
+
+```bash
+ssh sandge5@ecngx308.inmotionhosting.com -p 2222 "cat > /tmp/q.php << 'SCRIPT'
+<?php
+\$c = require '/home/sandge5/tpb2.sandgems.net/config.php';
+\$p = new PDO('mysql:host='.\$c['host'].';dbname=sandge5_tpb2', \$c['username'], \$c['password']);
+\$r = \$p->query('SELECT ... FROM ...');
+while(\$row=\$r->fetch(PDO::FETCH_ASSOC)) echo implode(' | ', \$row).PHP_EOL;
+SCRIPT
+php /tmp/q.php && rm /tmp/q.php"
+```
+
+- Change `dbname=sandge5_tpb2` to `sandge5_election` for the election database
+- Credentials from config.php work for both databases
+- Always `rm /tmp/q.php` after execution
+
 ## Conventions
 - URL routing for states/towns is handled by `.htaccess` rewrite rules
 - `.htaccess` includes a cPanel-generated PHP handler (`ea-php84`) — don't remove it

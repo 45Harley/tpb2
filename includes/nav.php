@@ -404,6 +404,11 @@ $electionSite = 'https://tpb.sandgems.net';
                 <?php else: ?>
                 <a href="/profile.php#town" class="add-link">Add Town</a>
                 <?php endif; ?>
+                <?php if ($userStateAbbr): ?>
+                <a href="/<?= htmlspecialchars($userStateAbbr) ?>/">my State</a>
+                <?php else: ?>
+                <a href="/profile.php#town" class="add-link">Add State</a>
+                <?php endif; ?>
                 <a href="/voice.php" <?= $currentPage === 'voice' ? 'class="active"' : '' ?>>My Voice</a>
                 
                 <!-- My Government Dropdown -->
