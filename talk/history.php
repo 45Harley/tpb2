@@ -182,6 +182,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                 <?php elseif ($currentUserId && $showAll): ?>
                     <a href="?category=<?= urlencode($category) ?>&status=<?= urlencode($status) ?>">My ideas</a>
                 <?php endif; ?>
+                <a href="brainstorm.php">🧠 Brainstorm</a>
                 <a href="index.php">← New thought</a>
             </div>
         </header>

@@ -230,6 +230,8 @@
         <div class="status" id="status"></div>
         
         <p class="history-link">
+            <a href="brainstorm.php">🧠 Brainstorm with AI</a>
+            &nbsp;·&nbsp;
             <a href="history.php">View recent thoughts →</a>
         </p>
     </div>
