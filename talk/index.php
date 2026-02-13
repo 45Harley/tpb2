@@ -42,7 +42,7 @@
         
         .subtitle {
             font-size: 0.9rem;
-            color: #888;
+            color: #aaa;
             margin-bottom: 2rem;
         }
         
@@ -93,7 +93,7 @@
             padding: 15px;
             border: 2px solid #333;
             border-radius: 12px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.08);
             color: #eee;
             font-size: 1rem;
             resize: vertical;
@@ -109,7 +109,7 @@
         }
         
         .text-input::placeholder {
-            color: #666;
+            color: #999;
         }
         
         .category-row {
@@ -125,7 +125,7 @@
             border: 2px solid #333;
             border-radius: 20px;
             background: transparent;
-            color: #888;
+            color: #aaa;
             font-size: 0.85rem;
             cursor: pointer;
             transition: all 0.3s;
@@ -205,7 +205,7 @@
         
         .no-speech {
             font-size: 0.85rem;
-            color: #666;
+            color: #999;
             margin-top: 0.5rem;
         }
         

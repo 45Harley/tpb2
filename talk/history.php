@@ -177,14 +177,14 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
 
         .filter-btn {
             padding: 6px 14px; border: 2px solid #333; border-radius: 20px;
-            background: transparent; color: #888; font-size: 0.8rem;
+            background: transparent; color: #aaa; font-size: 0.8rem;
             cursor: pointer; text-decoration: none; transition: all 0.3s;
         }
         .filter-btn:hover { border-color: #4fc3f7; color: #4fc3f7; }
         .filter-btn.active { background: #4fc3f7; border-color: #4fc3f7; color: #1a1a2e; }
 
         .thought {
-            background: rgba(255,255,255,0.05); border-radius: 12px;
+            background: rgba(255,255,255,0.08); border-radius: 12px;
             padding: 15px; margin-bottom: 12px; border-left: 4px solid #4fc3f7;
         }
         .thought.decision { border-left-color: #4caf50; }
@@ -195,7 +195,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
 
         .thought-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 8px; font-size: 0.8rem; color: #888; flex-wrap: wrap; gap: 4px;
+            margin-bottom: 8px; font-size: 0.8rem; color: #aaa; flex-wrap: wrap; gap: 4px;
         }
 
         .thought-meta { display: flex; align-items: center; gap: 8px; }
@@ -209,7 +209,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
 
         .thought-footer {
             display: flex; justify-content: space-between; align-items: center;
-            margin-top: 8px; font-size: 0.75rem; color: #666; flex-wrap: wrap; gap: 4px;
+            margin-top: 8px; font-size: 0.75rem; color: #999; flex-wrap: wrap; gap: 4px;
         }
 
         .thread-info { display: flex; gap: 10px; align-items: center; }
@@ -218,7 +218,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
         .thread-info a:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; border-radius: 2px; }
 
         .promote-btn {
-            background: none; border: 1px solid #555; color: #888;
+            background: none; border: 1px solid #555; color: #aaa;
             padding: 2px 8px; border-radius: 6px; font-size: 0.75rem;
             cursor: pointer; transition: all 0.3s;
         }
@@ -227,7 +227,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
 
         .user-name { color: #4fc3f7; font-weight: 600; }
 
-        .empty { text-align: center; padding: 3rem; color: #666; }
+        .empty { text-align: center; padding: 3rem; color: #999; }
         .error { background: rgba(244,67,54,0.2); color: #e57373; padding: 15px; border-radius: 8px; margin-bottom: 1rem; z-index: 10; position: relative; }
         
         .filter-btn:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
@@ -258,7 +258,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
             gap: 4px;
             cursor: pointer;
             font-size: 0.75rem;
-            color: #666;
+            color: #999;
             user-select: none;
         }
 
@@ -274,7 +274,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
             display: flex; gap: 8px; margin-bottom: 0.75rem; align-items: center;
         }
 
-        .view-toggle .label { font-size: 0.8rem; color: #666; margin-right: 4px; }
+        .view-toggle .label { font-size: 0.8rem; color: #999; margin-right: 4px; }
 
         .thread-depth-1 { margin-left: 24px; }
         .thread-depth-2 { margin-left: 48px; }

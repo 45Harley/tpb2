@@ -57,7 +57,7 @@
             align-items: center;
             gap: 6px;
             font-size: 0.8rem;
-            color: #888;
+            color: #aaa;
             cursor: pointer;
             user-select: none;
         }
@@ -99,7 +99,7 @@
             outline-offset: 2px;
         }
 
-        .share-toggle .label { color: #888; transition: color 0.2s; }
+        .share-toggle .label { color: #aaa; transition: color 0.2s; }
         .share-toggle input:checked ~ .label { color: #81c784; }
 
         .chat-area {
@@ -175,7 +175,7 @@
         .message.thinking {
             align-self: flex-start;
             background: rgba(255, 255, 255, 0.05);
-            color: #888;
+            color: #aaa;
             font-style: italic;
             border-bottom-left-radius: 4px;
         }
@@ -233,7 +233,7 @@
         .send-btn:hover { background: #039be5; }
         .send-btn:active { transform: scale(0.93); }
         .send-btn:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
-        .send-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+        .send-btn:disabled { background: #333; color: #999; cursor: not-allowed; }
 
         .chat-input {
             flex: 1;
@@ -253,7 +253,7 @@
 
         .chat-input:focus { outline: none; border-color: #4fc3f7; }
         .chat-input:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
-        .chat-input::placeholder { color: #666; }
+        .chat-input::placeholder { color: #999; }
 
         .chat-area::-webkit-scrollbar { width: 8px; }
         .chat-area::-webkit-scrollbar-track { background: transparent; }
