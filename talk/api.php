@@ -5,11 +5,22 @@
  * Action-based routing for the /talk brainstorming system.
  *
  * Actions:
- *   (none)/save  — POST: Save an idea
- *   history      — GET:  Read back ideas with filters
- *   promote      — POST: Advance idea status
- *   link         — POST: Set parent_id on an idea
- *   brainstorm   — POST: AI-assisted brainstorming via clerk
+ *   (none)/save       — POST: Save an idea
+ *   history           — GET:  Read back ideas with filters
+ *   promote           — POST: Advance idea status
+ *   link              — POST: Set parent_id on an idea
+ *   brainstorm        — POST: AI-assisted brainstorming via clerk
+ *   toggle_shareable  — POST: Flip shareable flag
+ *   create_link       — POST: Create thematic link between ideas (Phase 3)
+ *   get_links         — GET:  Get links for an idea (Phase 3)
+ *   create_group      — POST: Create a deliberation group (Phase 3)
+ *   list_groups       — GET:  List groups (Phase 3)
+ *   get_group         — GET:  Get group details (Phase 3)
+ *   join_group        — POST: Join a group (Phase 3)
+ *   leave_group       — POST: Leave a group (Phase 3)
+ *   update_group      — POST: Update group settings (Phase 3)
+ *   gather            — POST: Run gatherer clerk on group (Phase 3)
+ *   crystallize       — POST: Produce crystallized proposal (Phase 3)
  *
  * User identified server-side via getUser() from cookies.
  * Session ID provided by client (JS crypto.randomUUID()).
@@ -80,6 +91,43 @@ try {
         case 'toggle_shareable':
             echo json_encode(handleToggleShareable($pdo, $input, $userId));
             break;
+
+        // Phase 3: Idea Links
+        case 'create_link':
+            echo json_encode(handleCreateLink($pdo, $input, $userId));
+            break;
+        case 'get_links':
+            echo json_encode(handleGetLinks($pdo));
+            break;
+
+        // Phase 3: Groups
+        case 'create_group':
+            echo json_encode(handleCreateGroup($pdo, $input, $userId));
+            break;
+        case 'list_groups':
+            echo json_encode(handleListGroups($pdo, $userId));
+            break;
+        case 'get_group':
+            echo json_encode(handleGetGroup($pdo, $userId));
+            break;
+        case 'join_group':
+            echo json_encode(handleJoinGroup($pdo, $input, $userId));
+            break;
+        case 'leave_group':
+            echo json_encode(handleLeaveGroup($pdo, $input, $userId));
+            break;
+        case 'update_group':
+            echo json_encode(handleUpdateGroup($pdo, $input, $userId));
+            break;
+
+        // Phase 3: Gatherer + Crystallization
+        case 'gather':
+            echo json_encode(handleGather($pdo, $input, $userId));
+            break;
+        case 'crystallize':
+            echo json_encode(handleCrystallize($pdo, $input, $userId));
+            break;
+
         default:
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action]);
@@ -112,12 +160,13 @@ function handleSave($pdo, $input, $userId) {
     }
 
     // Validate source
-    $validSources = ['web', 'voice', 'claude-web', 'claude-desktop', 'api'];
+    $validSources = ['web', 'voice', 'claude-web', 'claude-desktop', 'api', 'clerk-brainstorm', 'clerk-gatherer'];
     if (!in_array($source, $validSources)) {
         $source = 'web';
     }
 
     $shareable = (int)($input['shareable'] ?? 0);
+    $clerkKey  = $input['clerk_key'] ?? null;
 
     // Validate parent_id exists if provided
     if ($parentId !== null) {
@@ -130,8 +179,8 @@ function handleSave($pdo, $input, $userId) {
     }
 
     $stmt = $pdo->prepare("
-        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, tags, source, shareable)
-        VALUES (:user_id, :session_id, :parent_id, :content, :category, 'raw', :tags, :source, :shareable)
+        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, tags, source, shareable, clerk_key)
+        VALUES (:user_id, :session_id, :parent_id, :content, :category, 'raw', :tags, :source, :shareable, :clerk_key)
     ");
 
     $stmt->execute([
@@ -142,7 +191,8 @@ function handleSave($pdo, $input, $userId) {
         ':category'   => $category,
         ':tags'       => $tags,
         ':source'     => $source,
-        ':shareable'  => $shareable
+        ':shareable'  => $shareable,
+        ':clerk_key'  => $clerkKey
     ]);
 
     $id = (int)$pdo->lastInsertId();
@@ -199,6 +249,7 @@ function handleHistory($pdo, $userId) {
     $sql = "
         SELECT i.id, i.user_id, i.session_id, i.parent_id,
                i.content{$aiColumn}, i.category, i.status, i.tags, i.source,
+               i.shareable, i.clerk_key,
                i.created_at, i.updated_at,
                u.first_name AS user_first_name,
                (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id) AS children_count
@@ -374,9 +425,26 @@ function handleBrainstorm($pdo, $input, $userId) {
     $history   = $input['history'] ?? [];
     $sessionId = $input['session_id'] ?? null;
     $shareable = (int)($input['shareable'] ?? 0);
+    $groupId   = isset($input['group_id']) ? (int)$input['group_id'] : null;
 
     if ($message === '') {
         return ['success' => false, 'error' => 'Message is required'];
+    }
+
+    // Validate group membership if group_id provided
+    if ($groupId) {
+        if (!$userId) {
+            return ['success' => false, 'error' => 'Login required for group brainstorming'];
+        }
+        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $stmt->execute([$groupId, $userId]);
+        $membership = $stmt->fetch();
+        if (!$membership) {
+            return ['success' => false, 'error' => 'You are not a member of this group'];
+        }
+        if ($membership['role'] === 'observer') {
+            return ['success' => false, 'error' => 'Observers cannot brainstorm in a group'];
+        }
     }
 
     require_once __DIR__ . '/../config-claude.php';
@@ -389,8 +457,41 @@ function handleBrainstorm($pdo, $input, $userId) {
 
     $systemPrompt = buildClerkPrompt($pdo, $clerk, ['brainstorm', 'talk']);
 
-    // Inject recent session ideas
-    if ($sessionId) {
+    // Context injection: group-aware or personal
+    if ($groupId) {
+        // Group context: shareable ideas from all group members
+        $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
+        $stmt->execute([$groupId]);
+        $group = $stmt->fetch();
+
+        if ($group) {
+            $systemPrompt .= "\n\n## Group Context\n";
+            $systemPrompt .= "You are brainstorming within the group \"{$group['name']}\".\n";
+            if ($group['description']) $systemPrompt .= "Group purpose: {$group['description']}\n";
+            $systemPrompt .= "When you see connections between this user's thoughts and other group members' shareable ideas, highlight them.\n";
+        }
+
+        $stmt = $pdo->prepare("
+            SELECT i.id, i.content, i.category, i.tags, u.first_name AS author
+            FROM idea_log i
+            JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
+            LEFT JOIN users u ON i.user_id = u.user_id
+            WHERE i.shareable = 1 AND i.category != 'chat'
+            ORDER BY i.created_at DESC LIMIT 30
+        ");
+        $stmt->execute([$groupId]);
+        $groupIdeas = $stmt->fetchAll();
+
+        if ($groupIdeas) {
+            $systemPrompt .= "\n## Shareable ideas from group members\n";
+            foreach ($groupIdeas as $idea) {
+                $systemPrompt .= "- #{$idea['id']} [{$idea['category']}] ({$idea['author']}): {$idea['content']}";
+                if ($idea['tags']) $systemPrompt .= " (tags: {$idea['tags']})";
+                $systemPrompt .= "\n";
+            }
+        }
+    } elseif ($sessionId) {
+        // Personal context: recent session ideas
         $stmt = $pdo->prepare("SELECT id, content, category, tags FROM idea_log WHERE session_id = ? AND category != 'chat' ORDER BY created_at DESC LIMIT 20");
         $stmt->execute([$sessionId]);
         $recentIdeas = $stmt->fetchAll();
@@ -438,17 +539,29 @@ function handleBrainstorm($pdo, $input, $userId) {
     $cleanMessage = cleanBrainstormActionTags($claudeMessage);
     logClerkInteraction($pdo, $clerk['clerk_id']);
 
-    // Log the full exchange as a chat row
-    $chatStmt = $pdo->prepare("
-        INSERT INTO idea_log (user_id, session_id, content, ai_response, category, status, source, shareable)
-        VALUES (:user_id, :session_id, :content, :ai_response, 'chat', 'raw', 'claude-web', :shareable)
+    // Log the exchange as two separate nodes (Phase 3: AI as first-class entity)
+    // 1. User message
+    $userStmt = $pdo->prepare("
+        INSERT INTO idea_log (user_id, session_id, content, category, status, source, shareable)
+        VALUES (:user_id, :session_id, :content, 'chat', 'raw', 'web', :shareable)
     ");
-    $chatStmt->execute([
-        ':user_id'     => $userId,
-        ':session_id'  => $sessionId,
-        ':content'     => $message,
-        ':ai_response' => $cleanMessage,
-        ':shareable'   => $shareable
+    $userStmt->execute([
+        ':user_id'    => $userId,
+        ':session_id' => $sessionId,
+        ':content'    => $message,
+        ':shareable'  => $shareable
+    ]);
+    $userRowId = (int)$pdo->lastInsertId();
+
+    // 2. AI response as child node
+    $aiStmt = $pdo->prepare("
+        INSERT INTO idea_log (session_id, parent_id, content, category, status, source, clerk_key)
+        VALUES (:session_id, :parent_id, :content, 'chat', 'raw', 'clerk-brainstorm', 'brainstorm')
+    ");
+    $aiStmt->execute([
+        ':session_id' => $sessionId,
+        ':parent_id'  => $userRowId,
+        ':content'    => $cleanMessage
     ]);
 
     return [
@@ -546,8 +659,8 @@ function processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable 
             }
 
             $stmt = $pdo->prepare("
-                INSERT INTO idea_log (user_id, session_id, content, category, status, tags, source, shareable)
-                VALUES (:user_id, :session_id, :content, :category, 'raw', :tags, 'claude-web', :shareable)
+                INSERT INTO idea_log (user_id, session_id, content, category, status, tags, source, shareable, clerk_key)
+                VALUES (:user_id, :session_id, :content, :category, 'raw', :tags, 'clerk-brainstorm', :shareable, 'brainstorm')
             ");
             $stmt->execute([
                 ':user_id'    => $userId,
@@ -646,8 +759,8 @@ function processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable 
             }
 
             $stmt = $pdo->prepare("
-                INSERT INTO idea_log (user_id, session_id, content, category, status, tags, source, shareable)
-                VALUES (:user_id, :session_id, :content, 'digest', 'raw', :tags, 'claude-web', 1)
+                INSERT INTO idea_log (user_id, session_id, content, category, status, tags, source, shareable, clerk_key)
+                VALUES (:user_id, :session_id, :content, 'digest', 'raw', :tags, 'clerk-brainstorm', 1, 'brainstorm')
             ");
             $stmt->execute([
                 ':user_id'    => $userId,
@@ -716,4 +829,877 @@ function talkCallClaudeAPI($systemPrompt, $messages, $model = null, $enableWebSe
     }
 
     return json_decode($response, true);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 3: Idea Links
+// ═══════════════════════════════════════════════════════════════════
+
+function handleCreateLink($pdo, $input, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $ideaIdA  = (int)($input['idea_id_a'] ?? 0);
+    $ideaIdB  = (int)($input['idea_id_b'] ?? 0);
+    $linkType = trim($input['link_type'] ?? 'related');
+
+    if (!$ideaIdA || !$ideaIdB) {
+        return ['success' => false, 'error' => 'idea_id_a and idea_id_b are required'];
+    }
+    if ($ideaIdA === $ideaIdB) {
+        return ['success' => false, 'error' => 'Cannot link an idea to itself'];
+    }
+
+    $validTypes = ['related', 'supports', 'challenges', 'synthesizes', 'builds_on'];
+    if (!in_array($linkType, $validTypes)) {
+        return ['success' => false, 'error' => 'Invalid link_type. Valid: ' . implode(', ', $validTypes)];
+    }
+
+    // Verify both ideas exist
+    $stmt = $pdo->prepare("SELECT id FROM idea_log WHERE id IN (?, ?)");
+    $stmt->execute([$ideaIdA, $ideaIdB]);
+    if ($stmt->rowCount() < 2) {
+        return ['success' => false, 'error' => 'One or both ideas not found'];
+    }
+
+    // Normalize order (smaller ID first) to prevent duplicate reverse links
+    if ($ideaIdA > $ideaIdB && $linkType === 'related') {
+        [$ideaIdA, $ideaIdB] = [$ideaIdB, $ideaIdA];
+    }
+
+    $stmt = $pdo->prepare("
+        INSERT INTO idea_links (idea_id_a, idea_id_b, link_type, created_by)
+        VALUES (:a, :b, :type, :user)
+        ON DUPLICATE KEY UPDATE id = id
+    ");
+    $stmt->execute([
+        ':a'    => $ideaIdA,
+        ':b'    => $ideaIdB,
+        ':type' => $linkType,
+        ':user' => $userId
+    ]);
+
+    return [
+        'success' => true,
+        'link_id' => (int)$pdo->lastInsertId(),
+        'idea_id_a' => $ideaIdA,
+        'idea_id_b' => $ideaIdB,
+        'link_type' => $linkType
+    ];
+}
+
+function handleGetLinks($pdo) {
+    $ideaId = (int)($_GET['idea_id'] ?? 0);
+    if (!$ideaId) {
+        return ['success' => false, 'error' => 'idea_id is required'];
+    }
+
+    $stmt = $pdo->prepare("
+        SELECT l.id, l.idea_id_a, l.idea_id_b, l.link_type, l.clerk_key, l.created_at,
+               CASE WHEN l.idea_id_a = :id THEN l.idea_id_b ELSE l.idea_id_a END AS linked_idea_id,
+               i.content AS linked_content, i.category AS linked_category, i.status AS linked_status,
+               u.first_name AS created_by_name
+        FROM idea_links l
+        JOIN idea_log i ON i.id = CASE WHEN l.idea_id_a = :id2 THEN l.idea_id_b ELSE l.idea_id_a END
+        LEFT JOIN users u ON l.created_by = u.user_id
+        WHERE l.idea_id_a = :id3 OR l.idea_id_b = :id4
+        ORDER BY l.created_at DESC
+    ");
+    $stmt->execute([':id' => $ideaId, ':id2' => $ideaId, ':id3' => $ideaId, ':id4' => $ideaId]);
+
+    return [
+        'success' => true,
+        'links'   => $stmt->fetchAll()
+    ];
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 3: Groups
+// ═══════════════════════════════════════════════════════════════════
+
+function handleCreateGroup($pdo, $input, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $name        = trim($input['name'] ?? '');
+    $description = trim($input['description'] ?? '') ?: null;
+    $tags        = trim($input['tags'] ?? '') ?: null;
+    $accessLevel = $input['access_level'] ?? 'observable';
+    $parentId    = isset($input['parent_group_id']) ? (int)$input['parent_group_id'] : null;
+
+    if ($name === '') {
+        return ['success' => false, 'error' => 'Group name is required'];
+    }
+    if (strlen($name) > 100) {
+        return ['success' => false, 'error' => 'Group name must be 100 characters or less'];
+    }
+
+    $validAccess = ['open', 'closed', 'observable'];
+    if (!in_array($accessLevel, $validAccess)) {
+        $accessLevel = 'observable';
+    }
+
+    // Validate parent group if provided
+    if ($parentId) {
+        $stmt = $pdo->prepare("
+            SELECT g.id FROM idea_groups g
+            JOIN idea_group_members m ON m.group_id = g.id AND m.user_id = ? AND m.role = 'facilitator'
+            WHERE g.id = ?
+        ");
+        $stmt->execute([$userId, $parentId]);
+        if (!$stmt->fetch()) {
+            return ['success' => false, 'error' => 'Parent group not found or you are not a facilitator'];
+        }
+    }
+
+    // Create the group
+    $stmt = $pdo->prepare("
+        INSERT INTO idea_groups (parent_group_id, name, description, tags, access_level, created_by)
+        VALUES (:parent, :name, :desc, :tags, :access, :user)
+    ");
+    $stmt->execute([
+        ':parent' => $parentId,
+        ':name'   => $name,
+        ':desc'   => $description,
+        ':tags'   => $tags,
+        ':access' => $accessLevel,
+        ':user'   => $userId
+    ]);
+    $groupId = (int)$pdo->lastInsertId();
+
+    // Creator becomes facilitator
+    $stmt = $pdo->prepare("
+        INSERT INTO idea_group_members (group_id, user_id, role) VALUES (?, ?, 'facilitator')
+    ");
+    $stmt->execute([$groupId, $userId]);
+
+    return [
+        'success'  => true,
+        'group_id' => $groupId,
+        'name'     => $name,
+        'role'     => 'facilitator'
+    ];
+}
+
+function handleListGroups($pdo, $userId) {
+    $mine = (bool)($_GET['mine'] ?? false);
+
+    if ($mine && !$userId) {
+        return ['success' => false, 'error' => 'Login required for my groups'];
+    }
+
+    if ($mine) {
+        // Groups the user belongs to
+        $stmt = $pdo->prepare("
+            SELECT g.*, m.role AS user_role,
+                   (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id) AS member_count
+            FROM idea_groups g
+            JOIN idea_group_members m ON m.group_id = g.id AND m.user_id = ?
+            ORDER BY g.created_at DESC
+        ");
+        $stmt->execute([$userId]);
+    } else {
+        // All discoverable groups: open + observable + user's closed groups
+        if ($userId) {
+            $stmt = $pdo->prepare("
+                SELECT g.*,
+                       m.role AS user_role,
+                       (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id) AS member_count
+                FROM idea_groups g
+                LEFT JOIN idea_group_members m ON m.group_id = g.id AND m.user_id = ?
+                WHERE g.access_level IN ('open', 'observable') OR m.user_id IS NOT NULL
+                ORDER BY g.created_at DESC
+            ");
+            $stmt->execute([$userId]);
+        } else {
+            $stmt = $pdo->query("
+                SELECT g.*, NULL AS user_role,
+                       (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id) AS member_count
+                FROM idea_groups g
+                WHERE g.access_level IN ('open', 'observable')
+                ORDER BY g.created_at DESC
+            ");
+        }
+    }
+
+    return [
+        'success' => true,
+        'groups'  => $stmt->fetchAll()
+    ];
+}
+
+function handleGetGroup($pdo, $userId) {
+    $groupId = (int)($_GET['group_id'] ?? 0);
+    if (!$groupId) {
+        return ['success' => false, 'error' => 'group_id is required'];
+    }
+
+    // Fetch group
+    $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
+    $stmt->execute([$groupId]);
+    $group = $stmt->fetch();
+
+    if (!$group) {
+        return ['success' => false, 'error' => 'Group not found'];
+    }
+
+    // Check access for closed groups
+    $userRole = null;
+    if ($userId) {
+        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $stmt->execute([$groupId, $userId]);
+        $membership = $stmt->fetch();
+        $userRole = $membership ? $membership['role'] : null;
+    }
+
+    if ($group['access_level'] === 'closed' && !$userRole) {
+        return ['success' => false, 'error' => 'This group is closed'];
+    }
+
+    // Members
+    $stmt = $pdo->prepare("
+        SELECT m.user_id, m.role, m.joined_at, u.first_name
+        FROM idea_group_members m
+        JOIN users u ON u.user_id = m.user_id
+        WHERE m.group_id = ?
+        ORDER BY m.role = 'facilitator' DESC, m.joined_at ASC
+    ");
+    $stmt->execute([$groupId]);
+    $members = $stmt->fetchAll();
+
+    // Recent shareable ideas from group members
+    $stmt = $pdo->prepare("
+        SELECT i.id, i.content, i.category, i.status, i.tags, i.source, i.clerk_key,
+               i.created_at, u.first_name AS user_first_name,
+               (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id) AS children_count,
+               (SELECT COUNT(*) FROM idea_links l WHERE l.idea_id_a = i.id OR l.idea_id_b = i.id) AS link_count
+        FROM idea_log i
+        JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
+        LEFT JOIN users u ON i.user_id = u.user_id
+        WHERE i.shareable = 1 AND i.category != 'chat'
+        ORDER BY i.created_at DESC
+        LIMIT 50
+    ");
+    $stmt->execute([$groupId]);
+    $ideas = $stmt->fetchAll();
+
+    // Sub-groups
+    $stmt = $pdo->prepare("
+        SELECT id, name, status, tags,
+               (SELECT COUNT(*) FROM idea_group_members WHERE group_id = idea_groups.id) AS member_count
+        FROM idea_groups
+        WHERE parent_group_id = ?
+        ORDER BY created_at ASC
+    ");
+    $stmt->execute([$groupId]);
+    $subGroups = $stmt->fetchAll();
+
+    return [
+        'success'    => true,
+        'group'      => $group,
+        'user_role'  => $userRole,
+        'members'    => $members,
+        'ideas'      => $ideas,
+        'sub_groups' => $subGroups
+    ];
+}
+
+function handleJoinGroup($pdo, $input, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $groupId = (int)($input['group_id'] ?? 0);
+    if (!$groupId) {
+        return ['success' => false, 'error' => 'group_id is required'];
+    }
+
+    // Fetch group
+    $stmt = $pdo->prepare("SELECT id, access_level, status FROM idea_groups WHERE id = ?");
+    $stmt->execute([$groupId]);
+    $group = $stmt->fetch();
+
+    if (!$group) {
+        return ['success' => false, 'error' => 'Group not found'];
+    }
+
+    if ($group['status'] === 'archived') {
+        return ['success' => false, 'error' => 'Cannot join an archived group'];
+    }
+
+    // Determine role based on access level
+    $role = 'member';
+    if ($group['access_level'] === 'closed') {
+        return ['success' => false, 'error' => 'This group is closed. Ask a facilitator to add you.'];
+    }
+    if ($group['access_level'] === 'observable') {
+        $role = 'observer';
+    }
+
+    // Check if already a member
+    $stmt = $pdo->prepare("SELECT id FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $userId]);
+    if ($stmt->fetch()) {
+        return ['success' => false, 'error' => 'You are already in this group'];
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO idea_group_members (group_id, user_id, role) VALUES (?, ?, ?)");
+    $stmt->execute([$groupId, $userId, $role]);
+
+    return [
+        'success'  => true,
+        'group_id' => $groupId,
+        'role'     => $role
+    ];
+}
+
+function handleLeaveGroup($pdo, $input, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $groupId = (int)($input['group_id'] ?? 0);
+    if (!$groupId) {
+        return ['success' => false, 'error' => 'group_id is required'];
+    }
+
+    // Check membership
+    $stmt = $pdo->prepare("SELECT id, role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $userId]);
+    $membership = $stmt->fetch();
+
+    if (!$membership) {
+        return ['success' => false, 'error' => 'You are not in this group'];
+    }
+
+    // If leaving facilitator is the last one, promote oldest member
+    if ($membership['role'] === 'facilitator') {
+        $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM idea_group_members WHERE group_id = ? AND role = 'facilitator'");
+        $stmt->execute([$groupId]);
+        $facCount = (int)$stmt->fetch()['cnt'];
+
+        if ($facCount === 1) {
+            // Promote oldest non-facilitator member
+            $stmt = $pdo->prepare("
+                SELECT id FROM idea_group_members
+                WHERE group_id = ? AND user_id != ? AND role != 'facilitator'
+                ORDER BY joined_at ASC LIMIT 1
+            ");
+            $stmt->execute([$groupId, $userId]);
+            $next = $stmt->fetch();
+            if ($next) {
+                $pdo->prepare("UPDATE idea_group_members SET role = 'facilitator' WHERE id = ?")->execute([$next['id']]);
+            }
+        }
+    }
+
+    $pdo->prepare("DELETE FROM idea_group_members WHERE group_id = ? AND user_id = ?")->execute([$groupId, $userId]);
+
+    return ['success' => true, 'group_id' => $groupId];
+}
+
+function handleUpdateGroup($pdo, $input, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $groupId = (int)($input['group_id'] ?? 0);
+    if (!$groupId) {
+        return ['success' => false, 'error' => 'group_id is required'];
+    }
+
+    // Facilitator check
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $userId]);
+    $membership = $stmt->fetch();
+
+    if (!$membership || $membership['role'] !== 'facilitator') {
+        return ['success' => false, 'error' => 'Only facilitators can update group settings'];
+    }
+
+    // Fetch current group
+    $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
+    $stmt->execute([$groupId]);
+    $group = $stmt->fetch();
+
+    if (!$group) {
+        return ['success' => false, 'error' => 'Group not found'];
+    }
+
+    // Build update fields
+    $updates = [];
+    $params = [];
+
+    if (isset($input['name']) && trim($input['name']) !== '') {
+        $updates[] = 'name = ?';
+        $params[] = trim($input['name']);
+    }
+    if (array_key_exists('description', $input)) {
+        $updates[] = 'description = ?';
+        $params[] = trim($input['description'] ?? '') ?: null;
+    }
+    if (array_key_exists('tags', $input)) {
+        $updates[] = 'tags = ?';
+        $params[] = trim($input['tags'] ?? '') ?: null;
+    }
+    if (isset($input['access_level'])) {
+        $validAccess = ['open', 'closed', 'observable'];
+        if (in_array($input['access_level'], $validAccess)) {
+            $updates[] = 'access_level = ?';
+            $params[] = $input['access_level'];
+        }
+    }
+    if (isset($input['status'])) {
+        $validStatuses = ['forming', 'active', 'crystallizing', 'crystallized', 'archived'];
+        if (in_array($input['status'], $validStatuses)) {
+            // Validate status transition
+            $statusOrder = ['forming' => 0, 'active' => 1, 'crystallizing' => 2, 'crystallized' => 3, 'archived' => 99];
+            $currentRank = $statusOrder[$group['status']] ?? 0;
+            $newRank     = $statusOrder[$input['status']] ?? 0;
+
+            if ($newRank > $currentRank || $input['status'] === 'archived' || $input['status'] === 'active') {
+                $updates[] = 'status = ?';
+                $params[] = $input['status'];
+            } else {
+                return ['success' => false, 'error' => 'Invalid status transition: ' . $group['status'] . ' → ' . $input['status']];
+            }
+        }
+    }
+
+    if (empty($updates)) {
+        return ['success' => false, 'error' => 'No valid fields to update'];
+    }
+
+    $params[] = $groupId;
+    $sql = "UPDATE idea_groups SET " . implode(', ', $updates) . " WHERE id = ?";
+    $pdo->prepare($sql)->execute($params);
+
+    // Return updated group
+    $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
+    $stmt->execute([$groupId]);
+
+    return [
+        'success' => true,
+        'group'   => $stmt->fetch()
+    ];
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 3: Gatherer Clerk
+// ═══════════════════════════════════════════════════════════════════
+
+function handleGather($pdo, $input, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $groupId = (int)($input['group_id'] ?? 0);
+    if (!$groupId) {
+        return ['success' => false, 'error' => 'group_id is required'];
+    }
+
+    // Facilitator check
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $userId]);
+    $membership = $stmt->fetch();
+    if (!$membership || $membership['role'] !== 'facilitator') {
+        return ['success' => false, 'error' => 'Only facilitators can run the gatherer'];
+    }
+
+    require_once __DIR__ . '/../config-claude.php';
+    require_once __DIR__ . '/../includes/ai-context.php';
+
+    $clerk = getClerk($pdo, 'gatherer');
+    if (!$clerk) {
+        return ['success' => false, 'error' => 'Gatherer clerk not available'];
+    }
+
+    // Fetch group info
+    $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
+    $stmt->execute([$groupId]);
+    $group = $stmt->fetch();
+
+    // Fetch all shareable non-chat ideas from group members
+    $stmt = $pdo->prepare("
+        SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
+               u.first_name AS author
+        FROM idea_log i
+        JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
+        LEFT JOIN users u ON i.user_id = u.user_id
+        WHERE i.shareable = 1 AND i.category != 'chat'
+        ORDER BY i.created_at ASC
+    ");
+    $stmt->execute([$groupId]);
+    $ideas = $stmt->fetchAll();
+
+    if (count($ideas) < 2) {
+        return ['success' => false, 'error' => 'Need at least 2 shareable ideas to gather'];
+    }
+
+    // Fetch existing links to avoid duplicates
+    $ideaIds = array_column($ideas, 'id');
+    $placeholders = implode(',', array_fill(0, count($ideaIds), '?'));
+    $stmt = $pdo->prepare("
+        SELECT idea_id_a, idea_id_b, link_type FROM idea_links
+        WHERE idea_id_a IN ($placeholders) OR idea_id_b IN ($placeholders)
+    ");
+    $stmt->execute(array_merge($ideaIds, $ideaIds));
+    $existingLinks = $stmt->fetchAll();
+
+    // Build system prompt
+    $systemPrompt = buildClerkPrompt($pdo, $clerk, ['gatherer', 'talk']);
+    $systemPrompt .= "\n\n## Group Context\n";
+    $systemPrompt .= "Group: {$group['name']}\n";
+    if ($group['description']) $systemPrompt .= "Purpose: {$group['description']}\n";
+
+    $systemPrompt .= "\n## Shareable Ideas from Group Members\n";
+    foreach ($ideas as $idea) {
+        $systemPrompt .= "- #{$idea['id']} [{$idea['category']}] ({$idea['author']}): {$idea['content']}";
+        if ($idea['tags']) $systemPrompt .= " [tags: {$idea['tags']}]";
+        $systemPrompt .= "\n";
+    }
+
+    if ($existingLinks) {
+        $systemPrompt .= "\n## Existing Links (do not duplicate)\n";
+        foreach ($existingLinks as $link) {
+            $systemPrompt .= "- #{$link['idea_id_a']} ←{$link['link_type']}→ #{$link['idea_id_b']}\n";
+        }
+    }
+
+    $systemPrompt .= "\n\n" . getGathererActionInstructions();
+
+    $messages = [['role' => 'user', 'content' => 'Analyze these shareable ideas. Find thematic connections and create a summary of the key clusters.']];
+
+    $response = talkCallClaudeAPI($systemPrompt, $messages, $clerk['model'], false);
+
+    if (isset($response['error'])) {
+        return ['success' => false, 'error' => $response['error']];
+    }
+
+    $claudeMessage = '';
+    foreach (($response['content'] ?? []) as $block) {
+        if ($block['type'] === 'text') $claudeMessage .= $block['text'];
+    }
+
+    $actions = parseBrainstormActions($claudeMessage);
+    $actionResults = [];
+    foreach ($actions as $action) {
+        $result = processGathererAction($pdo, $action, $userId, $groupId);
+        if ($result) $actionResults[] = $result;
+    }
+
+    logClerkInteraction($pdo, $clerk['clerk_id']);
+
+    return [
+        'success'  => true,
+        'actions'  => $actionResults,
+        'analysis' => cleanBrainstormActionTags($claudeMessage),
+        'usage'    => $response['usage'] ?? null
+    ];
+}
+
+function getGathererActionInstructions() {
+    return <<<'INSTRUCTIONS'
+## Action Tags
+
+After your analysis, include action tags to create links and summaries.
+
+### Link two related ideas
+[ACTION: LINK]
+idea_id_a: {first idea number}
+idea_id_b: {second idea number}
+link_type: {related|supports|challenges|builds_on}
+reason: {brief explanation of the connection}
+
+### Summarize a cluster of related ideas
+[ACTION: SUMMARIZE]
+content: {clear summary of the thematic cluster}
+tags: {comma-separated theme tags}
+source_ids: {comma-separated idea numbers that form this cluster}
+
+## Rules
+- Only link ideas that have genuine thematic connections.
+- Do not duplicate existing links.
+- Create one SUMMARIZE for each distinct cluster you identify.
+- A cluster needs at least 2 ideas.
+- Write summaries as if presenting to the group — clear, non-partisan, civic-focused.
+INSTRUCTIONS;
+}
+
+function processGathererAction($pdo, $action, $userId, $groupId) {
+    switch ($action['type']) {
+        case 'LINK':
+            $ideaIdA  = (int)($action['params']['idea_id_a'] ?? 0);
+            $ideaIdB  = (int)($action['params']['idea_id_b'] ?? 0);
+            $linkType = trim($action['params']['link_type'] ?? 'related');
+
+            if (!$ideaIdA || !$ideaIdB || $ideaIdA === $ideaIdB) {
+                return ['action' => 'LINK', 'success' => false, 'error' => 'Invalid idea IDs'];
+            }
+
+            $validTypes = ['related', 'supports', 'challenges', 'synthesizes', 'builds_on'];
+            if (!in_array($linkType, $validTypes)) $linkType = 'related';
+
+            // Normalize order for symmetric types
+            if ($ideaIdA > $ideaIdB && $linkType === 'related') {
+                [$ideaIdA, $ideaIdB] = [$ideaIdB, $ideaIdA];
+            }
+
+            $stmt = $pdo->prepare("
+                INSERT INTO idea_links (idea_id_a, idea_id_b, link_type, created_by, clerk_key)
+                VALUES (?, ?, ?, ?, 'gatherer')
+                ON DUPLICATE KEY UPDATE id = id
+            ");
+            $stmt->execute([$ideaIdA, $ideaIdB, $linkType, $userId]);
+
+            return [
+                'action'  => 'LINK',
+                'success' => true,
+                'idea_id_a' => $ideaIdA,
+                'idea_id_b' => $ideaIdB,
+                'link_type' => $linkType
+            ];
+
+        case 'SUMMARIZE':
+            $content   = trim($action['params']['content'] ?? '');
+            $tags      = trim($action['params']['tags'] ?? '') ?: null;
+            $sourceIds = trim($action['params']['source_ids'] ?? '');
+
+            if ($content === '') {
+                return ['action' => 'SUMMARIZE', 'success' => false, 'error' => 'Empty summary'];
+            }
+
+            // Insert digest node
+            $stmt = $pdo->prepare("
+                INSERT INTO idea_log (user_id, content, category, status, tags, source, shareable, clerk_key)
+                VALUES (:user_id, :content, 'digest', 'raw', :tags, 'clerk-gatherer', 1, 'gatherer')
+            ");
+            $stmt->execute([
+                ':user_id' => $userId,
+                ':content' => $content,
+                ':tags'    => $tags
+            ]);
+            $digestId = (int)$pdo->lastInsertId();
+
+            // Create synthesizes links to source ideas
+            if ($sourceIds) {
+                $ids = array_map('intval', explode(',', $sourceIds));
+                $linkStmt = $pdo->prepare("
+                    INSERT INTO idea_links (idea_id_a, idea_id_b, link_type, clerk_key)
+                    VALUES (?, ?, 'synthesizes', 'gatherer')
+                    ON DUPLICATE KEY UPDATE id = id
+                ");
+                foreach ($ids as $srcId) {
+                    if ($srcId > 0) {
+                        $linkStmt->execute([$srcId, $digestId]);
+                    }
+                }
+            }
+
+            return [
+                'action'  => 'SUMMARIZE',
+                'success' => true,
+                'id'      => $digestId,
+                'message' => "Digest #{$digestId} created with " . count(explode(',', $sourceIds)) . " source ideas"
+            ];
+
+        default:
+            return ['action' => $action['type'], 'success' => false, 'error' => 'Unknown gatherer action'];
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 3: Crystallization
+// ═══════════════════════════════════════════════════════════════════
+
+function handleCrystallize($pdo, $input, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $groupId = (int)($input['group_id'] ?? 0);
+    if (!$groupId) {
+        return ['success' => false, 'error' => 'group_id is required'];
+    }
+
+    // Facilitator check
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $userId]);
+    $membership = $stmt->fetch();
+    if (!$membership || $membership['role'] !== 'facilitator') {
+        return ['success' => false, 'error' => 'Only facilitators can crystallize'];
+    }
+
+    // Fetch group
+    $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
+    $stmt->execute([$groupId]);
+    $group = $stmt->fetch();
+
+    if (!$group) {
+        return ['success' => false, 'error' => 'Group not found'];
+    }
+    if (!in_array($group['status'], ['active', 'crystallizing'])) {
+        return ['success' => false, 'error' => 'Group must be active or crystallizing. Current: ' . $group['status']];
+    }
+
+    // Update status to crystallizing
+    $pdo->prepare("UPDATE idea_groups SET status = 'crystallizing' WHERE id = ?")->execute([$groupId]);
+
+    require_once __DIR__ . '/../config-claude.php';
+    require_once __DIR__ . '/../includes/ai-context.php';
+
+    $clerk = getClerk($pdo, 'brainstorm');
+    if (!$clerk) {
+        return ['success' => false, 'error' => 'Brainstorm clerk not available'];
+    }
+
+    // Fetch all shareable ideas from group members
+    $stmt = $pdo->prepare("
+        SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
+               u.first_name AS author
+        FROM idea_log i
+        JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
+        LEFT JOIN users u ON i.user_id = u.user_id
+        WHERE i.shareable = 1 AND i.category != 'chat'
+        ORDER BY i.created_at ASC
+    ");
+    $stmt->execute([$groupId]);
+    $ideas = $stmt->fetchAll();
+
+    // Fetch existing digests (from gatherer)
+    $stmt = $pdo->prepare("
+        SELECT i.id, i.content, i.tags FROM idea_log i
+        WHERE i.clerk_key = 'gatherer' AND i.category = 'digest'
+        AND EXISTS (
+            SELECT 1 FROM idea_links l
+            JOIN idea_log src ON src.id = l.idea_id_a
+            JOIN idea_group_members m ON m.user_id = src.user_id AND m.group_id = ?
+            WHERE l.idea_id_b = i.id AND l.link_type = 'synthesizes'
+        )
+        ORDER BY i.created_at DESC LIMIT 10
+    ");
+    $stmt->execute([$groupId]);
+    $digests = $stmt->fetchAll();
+
+    // Fetch members
+    $stmt = $pdo->prepare("
+        SELECT u.first_name FROM idea_group_members m
+        JOIN users u ON u.user_id = m.user_id
+        WHERE m.group_id = ? AND m.role != 'observer'
+    ");
+    $stmt->execute([$groupId]);
+    $memberNames = array_column($stmt->fetchAll(), 'first_name');
+
+    // Build crystallization prompt
+    $systemPrompt = buildClerkPrompt($pdo, $clerk, ['brainstorm', 'talk']);
+    $systemPrompt .= "\n\n## Crystallization Task\n";
+    $systemPrompt .= "You are producing a structured proposal for the group \"{$group['name']}\".\n";
+    if ($group['description']) $systemPrompt .= "Group purpose: {$group['description']}\n";
+    $systemPrompt .= "Contributing members: " . implode(', ', $memberNames) . "\n";
+
+    $systemPrompt .= "\n## All Shareable Ideas\n";
+    foreach ($ideas as $idea) {
+        $systemPrompt .= "- #{$idea['id']} [{$idea['category']}] ({$idea['author']}): {$idea['content']}";
+        if ($idea['tags']) $systemPrompt .= " [tags: {$idea['tags']}]";
+        $systemPrompt .= "\n";
+    }
+
+    if ($digests) {
+        $systemPrompt .= "\n## Existing Digests (from gatherer analysis)\n";
+        foreach ($digests as $d) {
+            $systemPrompt .= "- Digest #{$d['id']}: {$d['content']}\n";
+        }
+    }
+
+    $messages = [['role' => 'user', 'content' => <<<PROMPT
+Produce a structured proposal in markdown format:
+
+# Proposal: {$group['name']}
+
+## Summary
+(2-3 sentence overview of what the group concluded)
+
+## Key Findings
+(Bullet points of main insights, attributed to contributors)
+
+## Proposed Actions
+(Numbered list of concrete next steps)
+
+## Contributing Thoughts
+(List each source idea with attribution: "- #ID Author: quote")
+
+## Sources
+(Any external references mentioned in the ideas)
+
+Write it as a real civic proposal — clear, non-partisan, actionable. Attribute every claim to the person who said it.
+PROMPT]];
+
+    $response = talkCallClaudeAPI($systemPrompt, $messages, $clerk['model'], false);
+
+    if (isset($response['error'])) {
+        // Revert status
+        $pdo->prepare("UPDATE idea_groups SET status = 'active' WHERE id = ?")->execute([$groupId]);
+        return ['success' => false, 'error' => $response['error']];
+    }
+
+    $markdown = '';
+    foreach (($response['content'] ?? []) as $block) {
+        if ($block['type'] === 'text') $markdown .= $block['text'];
+    }
+
+    // Save digest to idea_log
+    $stmt = $pdo->prepare("
+        INSERT INTO idea_log (user_id, content, category, status, tags, source, shareable, clerk_key)
+        VALUES (:user_id, :content, 'digest', 'distilled', :tags, 'clerk-brainstorm', 1, 'brainstorm')
+    ");
+    $stmt->execute([
+        ':user_id' => $userId,
+        ':content' => $markdown,
+        ':tags'    => $group['tags']
+    ]);
+    $digestId = (int)$pdo->lastInsertId();
+
+    // Create synthesizes links to all source ideas
+    $linkStmt = $pdo->prepare("
+        INSERT INTO idea_links (idea_id_a, idea_id_b, link_type, clerk_key)
+        VALUES (?, ?, 'synthesizes', 'brainstorm')
+        ON DUPLICATE KEY UPDATE id = id
+    ");
+    foreach ($ideas as $idea) {
+        $linkStmt->execute([(int)$idea['id'], $digestId]);
+    }
+
+    // Write .md file
+    $outputDir = __DIR__ . '/output';
+    if (!is_dir($outputDir)) {
+        mkdir($outputDir, 0755, true);
+    }
+    $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($group['name']));
+    $filePath = "output/group-{$groupId}-{$slug}.md";
+    file_put_contents($outputDir . "/group-{$groupId}-{$slug}.md", $markdown);
+
+    // Update group status to crystallized
+    $pdo->prepare("UPDATE idea_groups SET status = 'crystallized' WHERE id = ?")->execute([$groupId]);
+
+    // If parent group exists, insert digest as shareable idea in parent context
+    if ($group['parent_group_id']) {
+        // The digest is already shareable and linked to the user who triggered it
+        // It will appear in parent group's feed through membership
+    }
+
+    logClerkInteraction($pdo, $clerk['clerk_id']);
+
+    return [
+        'success'   => true,
+        'idea_id'   => $digestId,
+        'file_path' => $filePath,
+        'markdown'  => $markdown,
+        'usage'     => $response['usage'] ?? null
+    ];
 }

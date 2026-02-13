@@ -42,9 +42,11 @@ try {
         // We'll do a broader fetch and filter in PHP for deep trees
     } else {
         // User-scoped by default (unless ?all or filtering by session)
+        // Include AI child nodes (user_id IS NULL with parent_id pointing to user's thoughts)
         if ($currentUserId && !$showAll && !$session) {
-            $where[] = 'i.user_id = :user_id';
+            $where[] = '(i.user_id = :user_id OR (i.clerk_key IS NOT NULL AND i.parent_id IN (SELECT id FROM idea_log WHERE user_id = :user_id2)))';
             $params[':user_id'] = $currentUserId;
+            $params[':user_id2'] = $currentUserId;
         }
 
         if ($category !== 'all') {
@@ -269,6 +271,21 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
 
         .share-check.active { color: #81c784; }
 
+        /* AI clerk nodes */
+        .thought.clerk-node { border-left-color: #7c4dff; background: rgba(124, 77, 255, 0.06); }
+
+        .clerk-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: rgba(124, 77, 255, 0.2);
+            color: #b388ff;
+            margin-left: 4px;
+        }
+
         /* Thread view */
         .view-toggle {
             display: flex; gap: 8px; margin-bottom: 0.75rem; align-items: center;
@@ -323,6 +340,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                 <?php elseif ($currentUserId && $showAll): ?>
                     <a href="?category=<?= urlencode($category) ?>&status=<?= urlencode($status) ?>">My ideas</a>
                 <?php endif; ?>
+                <a href="groups.php">👥 Groups</a>
                 <a href="brainstorm.php">🧠 Brainstorm</a>
                 <a href="index.php">← New thought</a>
             </div>
@@ -400,13 +418,16 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                         $childCount = (int)($t['children_count'] ?? 0);
                         $depthClass = $depth > 0 ? ' thread-depth-' . min($depth, 4) : '';
                         $hasParent = $depth > 0 ? ' has-parent' : '';
+                        $isClerk = !empty($t['clerk_key']);
+                        $clerkClass = $isClerk ? ' clerk-node' : '';
                 ?>
-                    <div class="thought <?= htmlspecialchars($t['category'] ?? 'idea') ?><?= $depthClass ?><?= $hasParent ?>" id="idea-<?= (int)$t['id'] ?>">
+                    <div class="thought <?= htmlspecialchars($t['category'] ?? 'idea') ?><?= $depthClass ?><?= $hasParent ?><?= $clerkClass ?>" id="idea-<?= (int)$t['id'] ?>">
                         <div class="thought-header">
                             <div class="thought-meta">
                                 <span>
                                     <?= $icons[$t['category'] ?? 'idea'] ?? '💭' ?>
-                                    <span class="user-name"><?= htmlspecialchars($displayName) ?></span>
+                                    <span class="user-name"><?= $isClerk ? 'AI' : htmlspecialchars($displayName) ?></span>
+                                    <?php if ($isClerk): ?><span class="clerk-badge"><?= htmlspecialchars($t['clerk_key']) ?></span><?php endif; ?>
                                 </span>
                                 <span class="status-badge" style="background: <?= $statusColor ?>20; color: <?= $statusColor ?>;">
                                     <?= htmlspecialchars($t['status'] ?? 'raw') ?>
@@ -462,12 +483,17 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                 $nextStatus = $statusOrder[$t['status'] ?? 'raw'] ?? null;
                 $childCount = (int)($t['children_count'] ?? 0);
             ?>
-                <div class="thought <?= htmlspecialchars($t['category'] ?? 'idea') ?>" id="idea-<?= (int)$t['id'] ?>">
+                <?php
+                    $isClerk = !empty($t['clerk_key']);
+                    $clerkClass = $isClerk ? ' clerk-node' : '';
+                ?>
+                <div class="thought <?= htmlspecialchars($t['category'] ?? 'idea') ?><?= $clerkClass ?>" id="idea-<?= (int)$t['id'] ?>">
                     <div class="thought-header">
                         <div class="thought-meta">
                             <span>
                                 <?= $icons[$t['category'] ?? 'idea'] ?? '💭' ?>
-                                <span class="user-name"><?= htmlspecialchars($displayName) ?></span>
+                                <span class="user-name"><?= $isClerk ? 'AI' : htmlspecialchars($displayName) ?></span>
+                                <?php if ($isClerk): ?><span class="clerk-badge"><?= htmlspecialchars($t['clerk_key']) ?></span><?php endif; ?>
                             </span>
                             <span class="status-badge" style="background: <?= $statusColor ?>20; color: <?= $statusColor ?>;">
                                 <?= htmlspecialchars($t['status'] ?? 'raw') ?>

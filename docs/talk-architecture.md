@@ -422,14 +422,214 @@ The "thousandfold expansion" is literally this: same circuit, from kitchen table
 
 The existing `ai_clerks` table supports multiple clerk personas. Phase 3 adds:
 
-| Clerk key | Role | Capabilities | When active |
-|-----------|------|-------------|-------------|
-| `brainstorm` | Responder | save_idea, read_back, tag_idea, summarize | 1:1 brainstorm sessions |
-| `moderator` | Moderator | flag, redirect, cool_down | Group discussions |
-| `resolver` | Resolver | reframe, find_common_ground, propose_compromise | Blocked threads |
-| `gatherer` | Linker/Summarizer | link, cluster, summarize | Background processing of shareable thoughts |
+| Clerk key | Role | Capabilities | When active | Status |
+|-----------|------|-------------|-------------|--------|
+| `brainstorm` | Responder | save_idea, read_back, tag_idea, summarize | 1:1 brainstorm sessions | **Built (Phase 3)** |
+| `gatherer` | Linker/Summarizer | link, cluster, summarize | Background processing of shareable thoughts | **Built (Phase 3)** |
+| `moderator` | Moderator | flag, redirect, cool_down | Group discussions | Future |
+| `resolver` | Resolver | reframe, find_common_ground, propose_compromise | Blocked threads | Future |
 
 Each creates nodes with its `clerk_key` stamped on the row.
+
+### 5h. Builder kits as group use case
+
+TPB has two volunteer-driven builder kits — **state pages** (11 sections, benefits-heavy) and **town pages** (8 sections, local government focus). Both currently use a solo workflow: one volunteer downloads the kit, works with Claude on claude.ai, packages a ZIP, uploads it through the volunteer dashboard.
+
+`/talk` groups replace the solo workflow with collaborative building:
+
+```
+Current (solo):
+  Volunteer → claude.ai (external) → ZIP → upload → review
+
+With /talk groups:
+  Group "Build: Fort Mill SC"
+    → Kit template defines WHAT to research (JSON sections)
+    → Group members scatter research across sections
+    → /talk AI replaces the external Claude session
+    → AI cross-links findings across members
+    → Crystallize → structured .md that maps to template sections
+    → Output feeds the actual page build
+```
+
+#### How kit sections map to the group
+
+The kit templates (town-data-template.json, state-data-template.json) define the sections to research — overview, government, budget, schools, benefits, etc. Each section is a natural topic within the group. Volunteers can divide labor ("I'll research schools, you take budget") and the AI cross-links their work.
+
+For larger builds, sections become sub-groups:
+
+```
+Group: "Build CT State Page" (parent)
+  ├── Group: "CT Benefits Research"     → crystallizes benefits section
+  ├── Group: "CT Government & Budget"   → crystallizes gov/budget sections
+  ├── Group: "CT Towns Grid"            → crystallizes towns listing
+  └── ...each sub-group's .md maps to a template section
+```
+
+#### Connection to volunteer task system
+
+The volunteer task chain (Build → Test → Deploy, documented in `docs/TPB-Volunteer-Task-Workflow.md`) connects to groups:
+
+- **Claiming a build task** auto-creates or links to a `/talk` group for that town/state
+- **Group membership** = the volunteers working on that task
+- **Crystallized output** = the deliverable that gets tested and deployed
+- **Group lifecycle** mirrors task status: forming (claimed) → active (in_progress) → crystallized (review) → archived (completed)
+
+#### Groups keep the kit generic
+
+Groups don't hardcode "state build" or "town build" structure. The kit docs guide the human on what to research; the group is just the circuit where the research happens collaboratively. A `tags` column on `idea_groups` (e.g., `state-build, CT` or `town-build, fort-mill-sc`) provides discoverability without imposing structure.
+
+This means the same group mechanism works for:
+- Building a town page (8 sections, 30-60 min)
+- Building a state page (11 sections, 4-6 hours)
+- Deliberating on local issues (open-ended)
+- Any future use case that follows the Scatter → Gather → Refine → Crystallize pipeline
+
+#### Builder kit docs
+
+```
+docs/
+  state-builder/              — State page building kit
+    STATE-BUILDER-AI-GUIDE.md     Guide for working with AI
+    state-data-template.json      JSON schema (CT as example)
+    state-build-checklist.md      QA checklist before submission
+    ETHICS-FOUNDATION.md          Golden Rule, selfless service
+    VOLUNTEER-ORIENTATION.md      Maria, Tom, Jamal personas
+    README.md                     Kit overview
+
+  town-builder/               — Town page building kit
+    TOWN-BUILDER-AI-GUIDE.md      Guide for working with AI
+    town-data-template.json       JSON schema (blank template)
+    TOWN-TEMPLATE.md              PHP/HTML template guide
+
+  TPB-Volunteer-Task-Workflow.md — Build→Test→Deploy task chain
+```
+
+Both kits will evolve to reference `/talk` groups as the collaboration layer, replacing the solo "download kit + use claude.ai" pattern with in-platform group brainstorming.
+
+### 5i. Thought form as gateway into /talk
+
+The existing thought submission form (`includes/thought-form.php`) on town and state pages is the **on-ramp** into `/talk`. It captures the moment someone cares enough to type — and turns it into an invitation to go deeper.
+
+#### The engagement gradient
+
+There is no wall between "citizen" and "volunteer." Civic engagement is a gradient:
+
+```
+Submit a thought (thought form)     → you showed up
+Brainstorm with AI (/talk)          → you went deeper
+Join a group                        → you're collaborating
+Crystallize a proposal              → you're building
+```
+
+The thought form is the first rung. `/talk` is the ladder.
+
+#### How the gateway works
+
+After submitting a thought, the confirmation can invite the person into `/talk`:
+
+```
+Person submits "childcare is too expensive" on Putnam page
+  → category: Housing
+  ↓
+Confirmation: "Thought shared! ✓"
+  + "3 other Putnam residents are discussing Housing. Join the conversation?"
+  ↓
+Click → /talk group "Putnam Housing"
+  → They see others' shareable thoughts
+  → AI connects: "Sarah said the same — and found Care4Kids covers $9,600/year"
+  → Now they're in the circuit
+```
+
+#### Civic categories as seed groups
+
+The `thought_categories` table already defines what people care about:
+
+| Category | Maps to /talk group |
+|----------|-------------------|
+| Infrastructure | "[Town] Infrastructure" |
+| Education | "[Town] Education" |
+| Housing | "[Town] Housing" |
+| Healthcare | "[Town] Healthcare" |
+| Environment | "[Town] Environment" |
+| Transportation | "[Town] Transportation" |
+| Public Safety | "[Town] Public Safety" |
+| Economy | "[Town] Economy" |
+| Government | "[Town] Government" |
+| Community | "[Town] Community" |
+
+These are the natural seed groups for every town. They don't need to be pre-created — when the first person submits a Housing thought and clicks through, the group forms organically around them.
+
+#### Two systems, one pipeline
+
+The thought form and `/talk` are not parallel systems to merge — they're **two stages** of the same pipeline:
+
+| | Thought form | /talk |
+|--|-------------|-------|
+| **Stage** | Scatter | Gather → Refine → Crystallize |
+| **Table** | `thoughts` | `idea_log` |
+| **Metadata** | Jurisdiction, branch, category | Status, tags, shareable, parent_id, groups |
+| **AI** | None | Brainstorm, summarize, cross-link, moderate |
+| **Groups** | None (but category = implicit topic) | Explicit groups with membership |
+| **Who** | Anyone who cares enough to type | Anyone who cares enough to stay |
+
+The `thoughts` table captures the scatter. The `idea_log` table powers the pipeline. The gateway invitation is the bridge between them — the moment a raw civic thought enters the circuit.
+
+#### Volunteer-only categories stay operational
+
+The `is_volunteer_only` categories (Open Task, TPB Build, Task Update, Task Completed) are operational — they belong in the task system, not the civic pipeline. These may evolve separately or fold into `/talk` as task-linked groups (see 5h).
+
+### 5j. Future: Batch processing ideas
+
+Three batch job concepts that extend the `/talk` pipeline using the Anthropic Batch API (50% cost reduction for async jobs):
+
+#### 1. Thought responder
+
+After new civic thoughts are submitted via the thought form, a batch job processes them overnight:
+
+- Pull unresponded `thoughts` rows since last run
+- For each, generate a personalized response acknowledging their concern
+- Include relevant data ("CT has a childcare subsidy — Care4Kids covers up to $9,600/year")
+- End with a `/talk` group invitation ("3 others in Putnam are discussing Housing — join?")
+- Store response for delivery (email or in-app notification)
+
+This turns a one-way submission into the start of a conversation, without real-time API cost.
+
+#### 2. Threat collector
+
+Automates the existing manual process documented in `docs/collect-threats-process.md`:
+
+- Batch job searches news sources (NPR, CNN, AP, Reuters, .gov sites)
+- Compares findings against existing `trump_threats` table for deduplication
+- Generates INSERT SQL with proper `official_id` mapping
+- Outputs a review file for human approval before loading
+
+Currently manual (last run: January 2026, 107 threats). Batch API makes this runnable weekly at ~50% cost.
+
+#### 3. Monthly town digest
+
+A synthesis job that pulls from multiple TPB data sources to create a local news update:
+
+```
+Inputs:
+  - Recent thoughts from thought form (anonymized/aggregated)
+  - Business listings from directory_listings (map.php ?mode=directory, future)
+  - /talk group activity and crystallized proposals
+  - Community calendar events (calendar.php, future)
+  - .gov announcements relevant to the town
+
+Output:
+  - Structured markdown digest: "What happened in Putnam this month"
+  - Publishable to town page, email newsletter, or /talk
+```
+
+This is the "local newspaper" function — synthesizing what's happening in town from multiple civic data streams. The batch API makes it affordable to run monthly per town.
+
+#### Implementation notes
+
+- All three use the Anthropic [Message Batches API](https://docs.anthropic.com/en/docs/build-with-claude/batch-processing) — 50% cost, 24-hour turnaround
+- Could be triggered by cron, manual script, or volunteer dashboard button
+- Each produces output for human review before any public action
+- None of these are built yet — they're ideas for when the core `/talk` pipeline is solid
 
 ---
 
@@ -462,6 +662,7 @@ CREATE TABLE idea_groups (
     parent_group_id INT NULL,
     name VARCHAR(100) NOT NULL,
     description TEXT NULL,
+    tags VARCHAR(255) NULL,
     status ENUM('forming','active','crystallizing','crystallized','archived') DEFAULT 'forming',
     access_level ENUM('open','closed','observable') DEFAULT 'observable',
     created_by INT NULL,
@@ -512,6 +713,10 @@ docs/
   talk-phase3-seeds.md       — Pre-brainstorm notes for Phase 3 vision
   talk-philosophical-grounding.md — Why the method works (spiritual foundation)
   talk-csps-article-draft.md — Publishable article for CSPS
+  TPB-Volunteer-Task-Workflow.md — Build→Test→Deploy chain, task system
+
+  state-builder/             — State page builder kit (11 sections)
+  town-builder/              — Town page builder kit (8 sections)
 ```
 
 ---
@@ -523,3 +728,6 @@ docs/
 - **[talk-phase3-seeds.md](talk-phase3-seeds.md)** — Open questions that led to this architecture
 - **[talk-philosophical-grounding.md](talk-philosophical-grounding.md)** — Spiritual/philosophical foundation
 - **[talk-csps-article-draft.md](talk-csps-article-draft.md)** — CSPS article framing the vision
+- **[TPB-Volunteer-Task-Workflow.md](TPB-Volunteer-Task-Workflow.md)** — Volunteer system, task chaining, mentorship
+- **[state-builder/README.md](state-builder/README.md)** — State page builder kit
+- **[town-builder/TOWN-BUILDER-AI-GUIDE.md](town-builder/TOWN-BUILDER-AI-GUIDE.md)** — Town page builder kit

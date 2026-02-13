@@ -268,12 +268,16 @@
 <body>
 
     <div class="header">
-        <h1>&#x1f9e0; Brainstorm</h1>
+        <h1 id="headerTitle">&#x1f9e0; Brainstorm</h1>
         <div class="header-links">
+            <select id="groupSelect" title="Brainstorm in a group context" style="background: rgba(255,255,255,0.1); color: #eee; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer;">
+                <option value="">Personal</option>
+            </select>
             <label class="share-toggle" title="Mark thoughts as shareable for collective brainstorming">
                 <input type="checkbox" id="shareToggle">
                 <span class="label">Shareable</span>
             </label>
+            <a href="groups.php">Groups</a>
             <a href="index.php">Quick Capture</a>
             <a href="history.php">History</a>
         </div>
@@ -301,6 +305,47 @@
 
         var conversationHistory = [];
         var isWaiting = false;
+        var currentGroupId = null;
+
+        // Group selector
+        var groupSelect = document.getElementById('groupSelect');
+        var headerTitle = document.getElementById('headerTitle');
+
+        // Load user's groups
+        (async function loadGroups() {
+            try {
+                var resp = await fetch('api.php?action=list_groups&mine=1');
+                var data = await resp.json();
+                if (data.success && data.groups) {
+                    data.groups.forEach(function(g) {
+                        var opt = document.createElement('option');
+                        opt.value = g.id;
+                        opt.textContent = g.name;
+                        groupSelect.appendChild(opt);
+                    });
+                }
+                // Check URL param ?group=ID
+                var urlGroup = new URLSearchParams(window.location.search).get('group');
+                if (urlGroup) {
+                    groupSelect.value = urlGroup;
+                    currentGroupId = parseInt(urlGroup);
+                    updateHeaderForGroup();
+                }
+            } catch (e) { /* groups not available, personal mode only */ }
+        })();
+
+        groupSelect.addEventListener('change', function() {
+            currentGroupId = this.value ? parseInt(this.value) : null;
+            updateHeaderForGroup();
+        });
+
+        function updateHeaderForGroup() {
+            if (currentGroupId && groupSelect.selectedOptions[0]) {
+                headerTitle.textContent = '🧠 ' + groupSelect.selectedOptions[0].textContent;
+            } else {
+                headerTitle.innerHTML = '&#x1f9e0; Brainstorm';
+            }
+        }
 
         // Shareable toggle — persisted in localStorage
         var shareToggle = document.getElementById('shareToggle');
@@ -412,15 +457,18 @@
             conversationHistory.push({ role: 'user', content: text });
 
             try {
+                var reqBody = {
+                    message: text,
+                    history: conversationHistory,
+                    session_id: sessionId,
+                    shareable: shareToggle.checked ? 1 : 0
+                };
+                if (currentGroupId) reqBody.group_id = currentGroupId;
+
                 var response = await fetch('api.php?action=brainstorm', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: text,
-                        history: conversationHistory,
-                        session_id: sessionId,
-                        shareable: shareToggle.checked ? 1 : 0
-                    })
+                    body: JSON.stringify(reqBody)
                 });
 
                 var data = await response.json();
