@@ -22,15 +22,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 20px;
             color: #eee;
+            overflow-y: auto;
         }
         
         .container {
             width: 100%;
             max-width: 500px;
             text-align: center;
+            margin: 0 auto;
         }
         
         h1 {
@@ -71,6 +72,11 @@
             transform: scale(0.95);
         }
         
+        .mic-button:focus-visible {
+            outline: 3px solid #4fc3f7;
+            outline-offset: 4px;
+        }
+        
         .mic-button.listening {
             animation: pulse 1.5s infinite;
             background: linear-gradient(145deg, #f44336, #d32f2f);
@@ -93,6 +99,8 @@
             resize: vertical;
             margin: 1rem 0;
             transition: border-color 0.3s;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         
         .text-input:focus {
@@ -128,6 +136,11 @@
             color: #4fc3f7;
         }
         
+        .category-btn:focus-visible {
+            outline: 2px solid #4fc3f7;
+            outline-offset: 2px;
+        }
+        
         .category-btn.active {
             background: #4fc3f7;
             border-color: #4fc3f7;
@@ -156,6 +169,11 @@
         .submit-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+        }
+        
+        .submit-btn:focus-visible {
+            outline: 2px solid #4fc3f7;
+            outline-offset: 2px;
         }
         
         .submit-btn:disabled {

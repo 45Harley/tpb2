@@ -36,6 +36,7 @@
             padding: 12px 16px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(0, 0, 0, 0.2);
+            z-index: 10;
         }
 
         .header h1 { font-size: 1.1rem; font-weight: 600; color: #eee; }
@@ -88,6 +89,8 @@
             font-size: 0.95rem;
             line-height: 1.5;
             word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
             animation: fadeIn 0.2s ease-out;
         }
 
@@ -144,6 +147,7 @@
             padding: 10px 12px;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(0, 0, 0, 0.25);
+            z-index: 10;
         }
 
         .mic-btn, .send-btn {
@@ -162,6 +166,7 @@
 
         .mic-btn { background: rgba(255, 255, 255, 0.1); color: #eee; }
         .mic-btn:hover { background: rgba(255, 255, 255, 0.18); }
+        .mic-btn:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
 
         .mic-btn.listening {
             background: #d32f2f;
@@ -177,6 +182,7 @@
         .send-btn { background: #0288d1; color: #fff; }
         .send-btn:hover { background: #039be5; }
         .send-btn:active { transform: scale(0.93); }
+        .send-btn:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
         .send-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
 
         .chat-input {
@@ -196,11 +202,12 @@
         }
 
         .chat-input:focus { outline: none; border-color: #4fc3f7; }
+        .chat-input:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
         .chat-input::placeholder { color: #666; }
 
-        .chat-area::-webkit-scrollbar { width: 4px; }
+        .chat-area::-webkit-scrollbar { width: 8px; }
         .chat-area::-webkit-scrollbar-track { background: transparent; }
-        .chat-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 2px; }
+        .chat-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
 
         @supports (padding-top: env(safe-area-inset-top)) {
             .header { padding-top: calc(12px + env(safe-area-inset-top)); }

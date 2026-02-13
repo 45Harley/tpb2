@@ -113,6 +113,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
 
         .header-links { display: flex; gap: 1rem; font-size: 0.9rem; }
         .header-links a { color: #4fc3f7; text-decoration: none; }
+        .header-links a:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; border-radius: 2px; }
 
         .filters, .status-filters {
             display: flex; gap: 8px; margin-bottom: 0.75rem; flex-wrap: wrap;
@@ -148,7 +149,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
             font-weight: 600; text-transform: uppercase;
         }
 
-        .thought-content { font-size: 1rem; line-height: 1.5; }
+        .thought-content { font-size: 1rem; line-height: 1.5; word-break: break-word; overflow-wrap: break-word; }
 
         .thought-footer {
             display: flex; justify-content: space-between; align-items: center;
@@ -158,6 +159,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
         .thread-info { display: flex; gap: 10px; align-items: center; }
         .thread-info a { color: #4fc3f7; text-decoration: none; }
         .thread-info a:hover { text-decoration: underline; }
+        .thread-info a:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; border-radius: 2px; }
 
         .promote-btn {
             background: none; border: 1px solid #555; color: #888;
@@ -165,11 +167,14 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
             cursor: pointer; transition: all 0.3s;
         }
         .promote-btn:hover { border-color: #4fc3f7; color: #4fc3f7; }
+        .promote-btn:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
 
         .user-name { color: #4fc3f7; font-weight: 600; }
 
         .empty { text-align: center; padding: 3rem; color: #666; }
-        .error { background: rgba(244,67,54,0.2); color: #e57373; padding: 15px; border-radius: 8px; margin-bottom: 1rem; }
+        .error { background: rgba(244,67,54,0.2); color: #e57373; padding: 15px; border-radius: 8px; margin-bottom: 1rem; z-index: 10; position: relative; }
+        
+        .filter-btn:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
     </style>
 </head>
 <body>
