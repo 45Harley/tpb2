@@ -133,6 +133,11 @@
             border-color: #4fc3f7;
             color: #1a1a2e;
         }
+
+        .category-btn.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
         
         .submit-btn {
             width: 100%;
@@ -216,6 +221,8 @@
             <button class="category-btn" data-category="decision">✅ Decision</button>
             <button class="category-btn" data-category="todo">📋 Todo</button>
             <button class="category-btn" data-category="note">📝 Note</button>
+            <button class="category-btn" data-category="question">❓ Question</button>
+            <button class="category-btn disabled" data-category="reaction" id="reactionBtn" title="Available when reacting to an idea">↩️ Reaction</button>
         </div>
         
         <button class="submit-btn" id="submitBtn">Save Thought</button>
@@ -237,6 +244,14 @@
         
         let selectedCategory = 'idea';
         let recognition = null;
+        let lastInputSource = 'web';
+
+        // Session ID — one per tab, persists across saves in same tab
+        let sessionId = sessionStorage.getItem('tpb_session');
+        if (!sessionId) {
+            sessionId = crypto.randomUUID();
+            sessionStorage.setItem('tpb_session', sessionId);
+        }
         
         // Check for speech recognition support
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -263,6 +278,7 @@
                     transcript += event.results[i][0].transcript;
                 }
                 textInput.value = transcript;
+                lastInputSource = 'voice';
             };
             
             recognition.onerror = (event) => {
@@ -283,47 +299,59 @@
             noSpeech.style.display = 'block';
         }
         
-        // Category selection
+        // Category selection (skip disabled buttons)
         categoryBtns.forEach(btn => {
             btn.addEventListener('click', () => {
+                if (btn.classList.contains('disabled')) return;
                 categoryBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 selectedCategory = btn.dataset.category;
             });
         });
-        
+
+        // Reset source when typing
+        textInput.addEventListener('input', () => {
+            lastInputSource = 'web';
+        });
+
         // Submit
         submitBtn.addEventListener('click', async () => {
             const content = textInput.value.trim();
-            
+
             if (!content) {
                 showStatus('Please enter a thought first', 'error');
                 return;
             }
-            
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'Saving...';
-            
+
             try {
-                const params = new URLSearchParams({
-                    content: content,
-                    category: selectedCategory,
-                    source: recognition ? 'voice' : 'web'
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: content,
+                        category: selectedCategory,
+                        source: lastInputSource,
+                        session_id: sessionId,
+                        parent_id: null,
+                        tags: null
+                    })
                 });
-                
-                const response = await fetch('api.php?' + params.toString());
                 const data = await response.json();
-                
+
                 if (data.success) {
                     showStatus('✓ ' + data.message, 'success');
                     textInput.value = '';
+                    lastInputSource = 'web';
                 } else {
                     showStatus('Error: ' + data.error, 'error');
                 }
             } catch (err) {
                 showStatus('Network error - try again', 'error');
             }
-            
+
             submitBtn.disabled = false;
             submitBtn.textContent = 'Save Thought';
         });
