@@ -258,17 +258,167 @@ Summaries can cascade:
 - Thread summary (discussion/debate on a topic)
 - Meta-summary (summary of summaries — Crystallize stage)
 
-### 5d. Groups
+### 5d. Groups as circuits
 
-Groups define who's in the circuit. Thoughts enter the group space when marked shareable.
+A group is a feedback/amplification circuit — 2+ users whose shareable thoughts flow through the AI-powered pipeline together.
+
+#### Formation
+
+- **Manual**: User creates a group, names it, invites others ("Let's talk about Main St roads")
+- **Topic-seeded**: Created around a question or problem — the question IS the group
+- **Organic** (later): AI notices shared themes across users' shareable thoughts and suggests a group
+
+#### Structure
+
+Each group has:
+- **Name**: "Roads & Infrastructure"
+- **Description/Purpose**: Focuses the circuit; the AI moderator uses this to keep things on track
+- **Creator**: Becomes default facilitator
+- **Tags**: For discoverability and AI linking
+
+#### Membership & roles
+
+| Role | Can do |
+|------|--------|
+| **Facilitator** | Create, manage membership, moderate, call crystallization |
+| **Member** | Contribute thoughts, participate in refinement |
+| **Observer** | Read only |
+
+Multiple facilitators allowed. Creator is first facilitator.
+
+#### Access levels
+
+| Level | Who sees | Who contributes |
+|-------|---------|----------------|
+| **Open** | Anyone | Anyone who joins |
+| **Closed** | Members only | Members only |
+| **Observable** | Anyone | Members only |
+
+Civic deliberation defaults toward **observable** — transparency matters.
+
+#### Lifecycle
+
+```
+forming → active → crystallizing → crystallized → archived
+```
+
+- **Forming**: Members joining, raw thoughts scattering
+- **Active**: Gathering and refining
+- **Crystallizing**: Converging on proposals
+- **Crystallized**: Output produced (.md deliverable), group fulfilled its purpose
+- **Archived**: Read-only historical record
+
+Re-openable: new information or members can reactivate a crystallized group. Any facilitator can reopen.
+
+#### How thoughts enter the group
+
+The shareable gate is the valve:
+- Your thoughts marked `shareable = 1` become visible to groups you belong to
+- Existing shareable thoughts auto-surface when you join — you don't re-enter everything
+- AI can suggest: "You have 3 thoughts about taxes that relate to this group — share them?"
+
+#### Group-aware AI context
+
+The key value: when you brainstorm inside a group, the AI sees all shareable thoughts from group members, not just your own session.
+
+Current context injection (Phase 2):
+```sql
+WHERE session_id = ? AND category != 'chat'
+```
+
+Group context injection (Phase 3):
+```sql
+WHERE user_id IN (SELECT user_id FROM idea_group_members WHERE group_id = ?)
+  AND shareable = 1 AND category != 'chat'
+```
+
+This enables the circuit: you say "I'm worried about property taxes" and the AI says "Tom shared something similar — he found a senior relief program. Here's how your thought builds on his."
+
+#### AI as group participant
+
+AI roles are assigned per group, not global. A small brainstorm might only need the responder. A 50-person deliberation needs moderator + gatherer + summarizer.
+
+| AI Role | Group function | Creates nodes as |
+|---------|---------------|-----------------|
+| Responder | Reacts to individual thoughts | `clerk-brainstorm` |
+| Gatherer | Cross-links thoughts, suggests clusters | `clerk-gatherer` |
+| Summarizer | Digests clusters/threads | `clerk-summarizer` |
+| Moderator | Keeps discussion constructive | `clerk-moderator` |
+| Resolver | Reframes blockers | `clerk-resolver` |
+
+AI creates nodes in `idea_log` with `source` and `clerk_key` identifying the role. Its contributions appear in the group feed alongside user thoughts.
 
 New tables:
-- `idea_groups` — name, description, creator
-- `idea_group_members` — who's in, what role (member, facilitator, observer)
+- `idea_groups` — name, description, status, access level, creator
+- `idea_group_members` — who's in, what role
 
-Optional: `idea_log.group_id` to directly assign a thought to a group, or derive group membership through `shareable` + author's group membership.
+### 5e. Crystallization output (.md documents)
 
-### 5e. AI roles via clerk system
+The pipeline's end product is a **deliverable**, not just a database row. When a group is ready, the AI produces a structured markdown document:
+
+```markdown
+# Proposal: Main Street Infrastructure Plan
+
+## Summary
+Three community members identified overlapping concerns...
+
+## Key Findings
+- Property tax revenue funds both roads and schools (Tom, Maria)
+- Main St bridge needs engineering assessment (Jamal)
+
+## Proposed Actions
+1. Apply for federal infrastructure grant (IIJA)
+2. Commission bridge assessment — est. $15k
+
+## Contributing Thoughts
+- #12 Tom: "Property taxes are too high"
+- #15 Maria: "School funding is tight"
+- #20 Jamal: "Main St bridge is the priority"
+
+## Sources
+- CT DOT bridge inspection database (.gov)
+```
+
+**Storage**: Both DB and file.
+- **DB**: Saved as `category='digest'` in `idea_log`, linked to source thoughts via `idea_links` (`link_type='synthesizes'`)
+- **File**: Written to `talk/output/group-{id}-{slug}.md` for download/sharing
+
+**On demand**: Group asks for it ("summarize this into a proposal"), the AI produces it, the group reviews. Not automatic.
+
+**Provenance**: The "Contributing Thoughts" section traces every claim back to the person who said it. Maria's $9,600 doesn't get lost in abstraction.
+
+### 5f. Recursive groups (groups of groups)
+
+A group's crystallized .md output can be the **input** to a higher-level group. Same circuit, recursive:
+
+```
+Group A (Putnam): 3 people → pipeline → proposal-putnam.md
+Group B (Bridgeport): 4 people → pipeline → proposal-bridgeport.md
+    ↓                                                    ↓
+Group C (CT Roads): Takes A.md + B.md as INPUT
+    → scatter (the proposals are the raw thoughts now)
+    → gather (AI cross-links the proposals)
+    → crystallize → ct-roads-proposal.md
+        ↓
+Group D (Northeast): Takes CT.md + MA.md + ...
+    → same pipeline → regional-proposal.md
+```
+
+Each level uses the exact same mechanism:
+- Same `idea_log` nodes (the .md content becomes a thought)
+- Same `idea_links` (AI connects proposals across sub-groups)
+- Same AI roles (gatherer, summarizer, moderator)
+- Same pipeline (Scatter → Gather → Refine → Crystallize)
+
+The .md is the **portable unit** that flows between levels. It carries provenance — original contributors are cited all the way up.
+
+This supports:
+- `idea_groups.parent_group_id` — optional FK to self, for group hierarchy
+- A crystallized group's .md auto-enters the parent group as a shareable thought
+
+The "thousandfold expansion" is literally this: same circuit, from kitchen table to 1,900 towns to 50 states.
+
+### 5g. AI roles via clerk system
 
 The existing `ai_clerks` table supports multiple clerk personas. Phase 3 adds:
 
@@ -309,10 +459,14 @@ CREATE TABLE idea_links (
 -- 3. Create idea_groups
 CREATE TABLE idea_groups (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    parent_group_id INT NULL,
     name VARCHAR(100) NOT NULL,
     description TEXT NULL,
+    status ENUM('forming','active','crystallizing','crystallized','archived') DEFAULT 'forming',
+    access_level ENUM('open','closed','observable') DEFAULT 'observable',
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_group_id) REFERENCES idea_groups(id) ON DELETE SET NULL,
     FOREIGN KEY (created_by) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -347,7 +501,9 @@ talk/
   index.php        — Quick Capture (fire-and-forget)
   brainstorm.php   — AI brainstorm chat
   history.php      — View/filter/promote/thread thoughts
+  groups.php       — Create/list/manage groups (Phase 3)
   api.php          — All API actions
+  output/          — Crystallized .md deliverables (Phase 3)
 
 docs/
   talk-architecture.md       — This document (system architecture)
