@@ -52,6 +52,56 @@
 
         .header-links a:hover { text-decoration: underline; }
 
+        .share-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: #888;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .share-toggle input {
+            appearance: none;
+            width: 32px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 9px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .share-toggle input::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            background: #888;
+            border-radius: 50%;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .share-toggle input:checked {
+            background: rgba(76, 175, 80, 0.5);
+        }
+
+        .share-toggle input:checked::after {
+            transform: translateX(14px);
+            background: #81c784;
+        }
+
+        .share-toggle input:focus-visible {
+            outline: 2px solid #4fc3f7;
+            outline-offset: 2px;
+        }
+
+        .share-toggle .label { color: #888; transition: color 0.2s; }
+        .share-toggle input:checked ~ .label { color: #81c784; }
+
         .chat-area {
             flex: 1;
             overflow-y: auto;
@@ -220,6 +270,10 @@
     <div class="header">
         <h1>&#x1f9e0; Brainstorm</h1>
         <div class="header-links">
+            <label class="share-toggle" title="Mark thoughts as shareable for collective brainstorming">
+                <input type="checkbox" id="shareToggle">
+                <span class="label">Shareable</span>
+            </label>
             <a href="index.php">Quick Capture</a>
             <a href="history.php">History</a>
         </div>
@@ -247,6 +301,13 @@
 
         var conversationHistory = [];
         var isWaiting = false;
+
+        // Shareable toggle — persisted in localStorage
+        var shareToggle = document.getElementById('shareToggle');
+        shareToggle.checked = localStorage.getItem('tpb_brainstorm_shareable') === '1';
+        shareToggle.addEventListener('change', function() {
+            localStorage.setItem('tpb_brainstorm_shareable', shareToggle.checked ? '1' : '0');
+        });
 
         // Session ID (shared with index.php)
         var sessionId = sessionStorage.getItem('tpb_session');
@@ -357,7 +418,8 @@
                     body: JSON.stringify({
                         message: text,
                         history: conversationHistory,
-                        session_id: sessionId
+                        session_id: sessionId,
+                        shareable: shareToggle.checked ? 1 : 0
                     })
                 });
 
@@ -384,6 +446,9 @@
                                     break;
                                 case 'READ_BACK':
                                     addMessage('📋 ' + action.count + ' ideas in session', 'system');
+                                    break;
+                                case 'SUMMARIZE':
+                                    addMessage('📊 Digest #' + action.id + ' saved (shareable)', 'system');
                                     break;
                             }
                         }

@@ -77,6 +77,9 @@ try {
         case 'brainstorm':
             echo json_encode(handleBrainstorm($pdo, $input, $userId));
             break;
+        case 'toggle_shareable':
+            echo json_encode(handleToggleShareable($pdo, $input, $userId));
+            break;
         default:
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action]);
@@ -103,7 +106,7 @@ function handleSave($pdo, $input, $userId) {
     }
 
     // Validate category
-    $validCategories = ['idea', 'decision', 'todo', 'note', 'question', 'reaction', 'distilled', 'digest'];
+    $validCategories = ['idea', 'decision', 'todo', 'note', 'question', 'reaction', 'distilled', 'digest', 'chat'];
     if (!in_array($category, $validCategories)) {
         $category = 'idea';
     }
@@ -113,6 +116,8 @@ function handleSave($pdo, $input, $userId) {
     if (!in_array($source, $validSources)) {
         $source = 'web';
     }
+
+    $shareable = (int)($input['shareable'] ?? 0);
 
     // Validate parent_id exists if provided
     if ($parentId !== null) {
@@ -125,8 +130,8 @@ function handleSave($pdo, $input, $userId) {
     }
 
     $stmt = $pdo->prepare("
-        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, tags, source)
-        VALUES (:user_id, :session_id, :parent_id, :content, :category, 'raw', :tags, :source)
+        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, tags, source, shareable)
+        VALUES (:user_id, :session_id, :parent_id, :content, :category, 'raw', :tags, :source, :shareable)
     ");
 
     $stmt->execute([
@@ -136,7 +141,8 @@ function handleSave($pdo, $input, $userId) {
         ':content'    => $content,
         ':category'   => $category,
         ':tags'       => $tags,
-        ':source'     => $source
+        ':source'     => $source,
+        ':shareable'  => $shareable
     ]);
 
     $id = (int)$pdo->lastInsertId();
@@ -324,12 +330,50 @@ function handleLink($pdo, $input, $userId) {
 }
 
 
+// ── Toggle Shareable ──────────────────────────────────────────────
+
+function handleToggleShareable($pdo, $input, $userId) {
+    $ideaId    = (int)($input['idea_id'] ?? 0);
+    $shareable = (int)($input['shareable'] ?? 0);
+
+    if (!$ideaId) {
+        return ['success' => false, 'error' => 'idea_id is required'];
+    }
+
+    $stmt = $pdo->prepare("SELECT id, user_id FROM idea_log WHERE id = ?");
+    $stmt->execute([$ideaId]);
+    $idea = $stmt->fetch();
+
+    if (!$idea) {
+        return ['success' => false, 'error' => 'Idea not found'];
+    }
+
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    if ($idea['user_id'] && (int)$idea['user_id'] !== $userId) {
+        return ['success' => false, 'error' => 'You can only change your own ideas'];
+    }
+
+    $stmt = $pdo->prepare("UPDATE idea_log SET shareable = ? WHERE id = ?");
+    $stmt->execute([$shareable ? 1 : 0, $ideaId]);
+
+    return [
+        'success'   => true,
+        'idea_id'   => $ideaId,
+        'shareable' => $shareable ? 1 : 0
+    ];
+}
+
+
 // -- Brainstorm (AI-assisted) ------------------------------------------
 
 function handleBrainstorm($pdo, $input, $userId) {
     $message   = trim($input['message'] ?? '');
     $history   = $input['history'] ?? [];
     $sessionId = $input['session_id'] ?? null;
+    $shareable = (int)($input['shareable'] ?? 0);
 
     if ($message === '') {
         return ['success' => false, 'error' => 'Message is required'];
@@ -347,7 +391,7 @@ function handleBrainstorm($pdo, $input, $userId) {
 
     // Inject recent session ideas
     if ($sessionId) {
-        $stmt = $pdo->prepare("SELECT id, content, category, tags FROM idea_log WHERE session_id = ? ORDER BY created_at DESC LIMIT 20");
+        $stmt = $pdo->prepare("SELECT id, content, category, tags FROM idea_log WHERE session_id = ? AND category != 'chat' ORDER BY created_at DESC LIMIT 20");
         $stmt->execute([$sessionId]);
         $recentIdeas = $stmt->fetchAll();
         if ($recentIdeas) {
@@ -386,13 +430,26 @@ function handleBrainstorm($pdo, $input, $userId) {
     $actionResults = [];
     foreach ($actions as $action) {
         if (clerkCan($clerk, strtolower($action['type']))) {
-            $result = processBrainstormAction($pdo, $action, $userId, $sessionId);
+            $result = processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable);
             if ($result) $actionResults[] = $result;
         }
     }
 
     $cleanMessage = cleanBrainstormActionTags($claudeMessage);
     logClerkInteraction($pdo, $clerk['clerk_id']);
+
+    // Log the full exchange as a chat row
+    $chatStmt = $pdo->prepare("
+        INSERT INTO idea_log (user_id, session_id, content, ai_response, category, status, source, shareable)
+        VALUES (:user_id, :session_id, :content, :ai_response, 'chat', 'raw', 'claude-web', :shareable)
+    ");
+    $chatStmt->execute([
+        ':user_id'     => $userId,
+        ':session_id'  => $sessionId,
+        ':content'     => $message,
+        ':ai_response' => $cleanMessage,
+        ':shareable'   => $shareable
+    ]);
 
     return [
         'success'  => true,
@@ -431,6 +488,14 @@ When the user asks to review, list, or read back their ideas:
 category: {optional category filter}
 status: {optional status filter}
 
+### Summarize the session
+When the user asks to summarize, wrap up, or create a digest of the brainstorm:
+[ACTION: SUMMARIZE]
+content: {a clear, concise summary of the key ideas and themes from this session}
+tags: {comma-separated tags covering the main themes}
+
+The summary is automatically marked as shareable. Write it as if presenting to a group — clear, organized, non-partisan.
+
 ## Rules
 - Only include action tags when the intent is clear.
 - You can include multiple action tags in one response.
@@ -464,7 +529,7 @@ function cleanBrainstormActionTags($message) {
 
 // -- Process Brainstorm Actions ----------------------------------------
 
-function processBrainstormAction($pdo, $action, $userId, $sessionId) {
+function processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable = 0) {
     switch ($action['type']) {
         case 'SAVE_IDEA':
             $content  = trim($action['params']['content'] ?? '');
@@ -481,15 +546,16 @@ function processBrainstormAction($pdo, $action, $userId, $sessionId) {
             }
 
             $stmt = $pdo->prepare("
-                INSERT INTO idea_log (user_id, session_id, content, category, status, tags, source)
-                VALUES (:user_id, :session_id, :content, :category, 'raw', :tags, 'claude-web')
+                INSERT INTO idea_log (user_id, session_id, content, category, status, tags, source, shareable)
+                VALUES (:user_id, :session_id, :content, :category, 'raw', :tags, 'claude-web', :shareable)
             ");
             $stmt->execute([
                 ':user_id'    => $userId,
                 ':session_id' => $sessionId,
                 ':content'    => $content,
                 ':category'   => $category,
-                ':tags'       => $tags
+                ':tags'       => $tags,
+                ':shareable'  => $shareable
             ]);
 
             $id = (int)$pdo->lastInsertId();
@@ -569,6 +635,33 @@ function processBrainstormAction($pdo, $action, $userId, $sessionId) {
                 'success' => true,
                 'ideas'   => $ideas,
                 'count'   => count($ideas)
+            ];
+
+        case 'SUMMARIZE':
+            $content = trim($action['params']['content'] ?? '');
+            $tags    = trim($action['params']['tags'] ?? '') ?: null;
+
+            if ($content === '') {
+                return ['action' => 'SUMMARIZE', 'success' => false, 'error' => 'Empty summary'];
+            }
+
+            $stmt = $pdo->prepare("
+                INSERT INTO idea_log (user_id, session_id, content, category, status, tags, source, shareable)
+                VALUES (:user_id, :session_id, :content, 'digest', 'raw', :tags, 'claude-web', 1)
+            ");
+            $stmt->execute([
+                ':user_id'    => $userId,
+                ':session_id' => $sessionId,
+                ':content'    => $content,
+                ':tags'       => $tags
+            ]);
+
+            $id = (int)$pdo->lastInsertId();
+            return [
+                'action'  => 'SUMMARIZE',
+                'success' => true,
+                'id'      => $id,
+                'message' => "Digest #{$id} saved (shareable)"
             ];
 
         default:

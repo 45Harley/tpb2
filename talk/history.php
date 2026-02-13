@@ -26,29 +26,41 @@ try {
     $status   = $_GET['status']   ?? 'all';
     $session  = $_GET['session']  ?? '';
     $showAll  = isset($_GET['all']);
+    $view     = $_GET['view']     ?? 'flat';  // flat or thread
+    $threadId = (int)($_GET['thread'] ?? 0);   // single-thread focus
 
     $where = [];
     $params = [];
 
-    // User-scoped by default (unless ?all or filtering by session)
-    if ($currentUserId && !$showAll && !$session) {
-        $where[] = 'i.user_id = :user_id';
-        $params[':user_id'] = $currentUserId;
-    }
+    // Single-thread focus: show one root and all its descendants
+    if ($threadId) {
+        // Fetch the root + all descendants via recursive walk
+        $where[] = '(i.id = :thread_root OR i.parent_id = :thread_root2)';
+        $params[':thread_root'] = $threadId;
+        $params[':thread_root2'] = $threadId;
+        // Also grab deeper descendants (up to 3 levels deep)
+        // We'll do a broader fetch and filter in PHP for deep trees
+    } else {
+        // User-scoped by default (unless ?all or filtering by session)
+        if ($currentUserId && !$showAll && !$session) {
+            $where[] = 'i.user_id = :user_id';
+            $params[':user_id'] = $currentUserId;
+        }
 
-    if ($category !== 'all') {
-        $where[] = 'i.category = :category';
-        $params[':category'] = $category;
-    }
+        if ($category !== 'all') {
+            $where[] = 'i.category = :category';
+            $params[':category'] = $category;
+        }
 
-    if ($status !== 'all') {
-        $where[] = 'i.status = :status';
-        $params[':status'] = $status;
-    }
+        if ($status !== 'all') {
+            $where[] = 'i.status = :status';
+            $params[':status'] = $status;
+        }
 
-    if ($session) {
-        $where[] = 'i.session_id = :session_id';
-        $params[':session_id'] = $session;
+        if ($session) {
+            $where[] = 'i.session_id = :session_id';
+            $params[':session_id'] = $session;
+        }
     }
 
     $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -60,13 +72,56 @@ try {
         FROM idea_log i
         LEFT JOIN users u ON i.user_id = u.user_id
         {$whereClause}
-        ORDER BY i.created_at DESC
-        LIMIT 50
+        ORDER BY i.created_at " . ($view === 'thread' || $threadId ? 'ASC' : 'DESC') . "
+        LIMIT 100
     ";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $thoughts = $stmt->fetchAll();
+
+    // For single-thread focus, fetch deeper descendants (levels 3+)
+    if ($threadId && $thoughts) {
+        $allIds = array_column($thoughts, 'id');
+        $depth = 0;
+        while ($depth < 5) {
+            $placeholders = implode(',', array_fill(0, count($allIds), '?'));
+            $deepStmt = $pdo->prepare("
+                SELECT i.*, u.first_name AS user_first_name,
+                       (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id) AS children_count
+                FROM idea_log i
+                LEFT JOIN users u ON i.user_id = u.user_id
+                WHERE i.parent_id IN ({$placeholders}) AND i.id NOT IN ({$placeholders})
+            ");
+            $deepStmt->execute(array_merge($allIds, $allIds));
+            $deeper = $deepStmt->fetchAll();
+            if (empty($deeper)) break;
+            $thoughts = array_merge($thoughts, $deeper);
+            $allIds = array_merge($allIds, array_column($deeper, 'id'));
+            $depth++;
+        }
+    }
+
+    // Build tree structure for threaded view
+    $tree = [];
+    $byId = [];
+    if ($view === 'thread' || $threadId) {
+        foreach ($thoughts as &$t) {
+            $t['children'] = [];
+            $byId[(int)$t['id']] = &$t;
+        }
+        unset($t);
+
+        foreach ($byId as $id => &$t) {
+            $pid = (int)($t['parent_id'] ?? 0);
+            if ($pid && isset($byId[$pid])) {
+                $byId[$pid]['children'][] = &$t;
+            } else {
+                $tree[] = &$t;
+            }
+        }
+        unset($t);
+    }
 
 } catch (PDOException $e) {
     $error = 'Database error';
@@ -74,7 +129,8 @@ try {
 
 $icons = [
     'idea' => '💡', 'decision' => '✅', 'todo' => '📋', 'note' => '📝',
-    'question' => '❓', 'reaction' => '↩️', 'distilled' => '✨', 'digest' => '📊'
+    'question' => '❓', 'reaction' => '↩️', 'distilled' => '✨', 'digest' => '📊',
+    'chat' => '💬'
 ];
 
 $statusColors = [
@@ -175,6 +231,86 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
         .error { background: rgba(244,67,54,0.2); color: #e57373; padding: 15px; border-radius: 8px; margin-bottom: 1rem; z-index: 10; position: relative; }
         
         .filter-btn:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
+
+        .thought.chat { border-left-color: #78909c; }
+
+        .ai-response {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #bbb;
+            line-height: 1.5;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .ai-response::before {
+            content: 'AI: ';
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+
+        .share-check {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: #666;
+            user-select: none;
+        }
+
+        .share-check input {
+            cursor: pointer;
+            accent-color: #81c784;
+        }
+
+        .share-check.active { color: #81c784; }
+
+        /* Thread view */
+        .view-toggle {
+            display: flex; gap: 8px; margin-bottom: 0.75rem; align-items: center;
+        }
+
+        .view-toggle .label { font-size: 0.8rem; color: #666; margin-right: 4px; }
+
+        .thread-depth-1 { margin-left: 24px; }
+        .thread-depth-2 { margin-left: 48px; }
+        .thread-depth-3 { margin-left: 72px; }
+        .thread-depth-4 { margin-left: 96px; }
+
+        .threaded .thought {
+            position: relative;
+        }
+
+        .threaded .thought.has-parent::before {
+            content: '';
+            position: absolute;
+            left: -16px;
+            top: 0;
+            width: 12px;
+            height: 20px;
+            border-left: 2px solid rgba(79, 195, 247, 0.25);
+            border-bottom: 2px solid rgba(79, 195, 247, 0.25);
+            border-bottom-left-radius: 8px;
+        }
+
+        .thread-focus-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1rem;
+            padding: 10px 14px;
+            background: rgba(79, 195, 247, 0.08);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .thread-focus-header a { color: #4fc3f7; text-decoration: none; }
+        .thread-focus-header a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -195,7 +331,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
         <!-- Category filters -->
         <div class="filters">
             <?php
-            $catFilters = ['all' => 'All', 'idea' => '💡 Ideas', 'decision' => '✅ Decisions', 'todo' => '📋 Todos', 'note' => '📝 Notes', 'question' => '❓ Questions'];
+            $catFilters = ['all' => 'All', 'idea' => '💡 Ideas', 'decision' => '✅ Decisions', 'todo' => '📋 Todos', 'note' => '📝 Notes', 'question' => '❓ Questions', 'chat' => '💬 Chat'];
             foreach ($catFilters as $val => $label):
                 $active = ($category === $val) ? 'active' : '';
                 $extra = ($status !== 'all') ? '&status=' . urlencode($status) : '';
@@ -220,6 +356,28 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
             <?php endforeach; ?>
         </div>
 
+        <!-- View toggle -->
+        <?php if (!$threadId): ?>
+        <div class="view-toggle">
+            <span class="label">View:</span>
+            <?php
+            $viewExtra = ($category !== 'all' ? '&category=' . urlencode($category) : '')
+                       . ($status !== 'all' ? '&status=' . urlencode($status) : '')
+                       . ($showAll ? '&all' : '')
+                       . ($session ? '&session=' . urlencode($session) : '');
+            ?>
+            <a href="?view=flat<?= $viewExtra ?>" class="filter-btn <?= $view === 'flat' ? 'active' : '' ?>">Flat</a>
+            <a href="?view=thread<?= $viewExtra ?>" class="filter-btn <?= $view === 'thread' ? 'active' : '' ?>">Threaded</a>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($threadId): ?>
+        <div class="thread-focus-header">
+            <a href="?view=thread<?= $category !== 'all' ? '&category=' . urlencode($category) : '' ?><?= $status !== 'all' ? '&status=' . urlencode($status) : '' ?><?= $showAll ? '&all' : '' ?>">← Back to all</a>
+            <span>Thread #<?= $threadId ?></span>
+        </div>
+        <?php endif; ?>
+
         <?php if ($error): ?>
             <div class="error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
@@ -229,9 +387,76 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                 <p>No thoughts yet.</p>
                 <p><a href="index.php" style="color: #4fc3f7;">Add your first one →</a></p>
             </div>
+        <?php elseif ($view === 'thread' || $threadId): ?>
+            <!-- Threaded view -->
+            <div class="threaded">
+                <?php
+                function renderThread($nodes, $depth, $icons, $statusColors, $statusOrder, $currentUserId, $view) {
+                    foreach ($nodes as $t):
+                        $isOwner = $currentUserId && ((int)($t['user_id'] ?? 0) === $currentUserId || empty($t['user_id']));
+                        $displayName = $isOwner ? 'You' : ($t['user_first_name'] ?? 'Anonymous');
+                        $statusColor = $statusColors[$t['status'] ?? 'raw'] ?? '#888';
+                        $nextStatus = $statusOrder[$t['status'] ?? 'raw'] ?? null;
+                        $childCount = (int)($t['children_count'] ?? 0);
+                        $depthClass = $depth > 0 ? ' thread-depth-' . min($depth, 4) : '';
+                        $hasParent = $depth > 0 ? ' has-parent' : '';
+                ?>
+                    <div class="thought <?= htmlspecialchars($t['category'] ?? 'idea') ?><?= $depthClass ?><?= $hasParent ?>" id="idea-<?= (int)$t['id'] ?>">
+                        <div class="thought-header">
+                            <div class="thought-meta">
+                                <span>
+                                    <?= $icons[$t['category'] ?? 'idea'] ?? '💭' ?>
+                                    <span class="user-name"><?= htmlspecialchars($displayName) ?></span>
+                                </span>
+                                <span class="status-badge" style="background: <?= $statusColor ?>20; color: <?= $statusColor ?>;">
+                                    <?= htmlspecialchars($t['status'] ?? 'raw') ?>
+                                </span>
+                            </div>
+                            <span><?= date('M j, g:ia', strtotime($t['created_at'])) ?></span>
+                        </div>
+                        <div class="thought-content">
+                            <?= nl2br(htmlspecialchars($t['content'])) ?>
+                        </div>
+                        <?php if (!empty($t['ai_response'])): ?>
+                            <div class="ai-response"><?= nl2br(htmlspecialchars($t['ai_response'])) ?></div>
+                        <?php endif; ?>
+                        <div class="thought-footer">
+                            <div class="thread-info">
+                                <?php if ($childCount > 0 && empty($t['children'])): ?>
+                                    <a href="?thread=<?= (int)$t['id'] ?>"><?= $childCount ?> build<?= $childCount > 1 ? 's' : '' ?> →</a>
+                                <?php elseif ($childCount > 0): ?>
+                                    <span><?= $childCount ?> build<?= $childCount > 1 ? 's' : '' ?></span>
+                                <?php endif; ?>
+                                <span>via <?= htmlspecialchars($t['source'] ?? 'web') ?></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label class="share-check <?= !empty($t['shareable']) ? 'active' : '' ?>">
+                                    <input type="checkbox" <?= !empty($t['shareable']) ? 'checked' : '' ?>
+                                           onchange="toggleShareable(<?= (int)$t['id'] ?>, this.checked, this.parentElement)"
+                                           <?= !$isOwner ? 'disabled' : '' ?>>
+                                    Share
+                                </label>
+                                <?php if ($isOwner && $nextStatus): ?>
+                                    <button class="promote-btn" onclick="promote(<?= (int)$t['id'] ?>, '<?= $nextStatus ?>')">
+                                        ⬆ <?= $nextStatus ?>
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php if (!empty($t['children'])): ?>
+                        <?php renderThread($t['children'], $depth + 1, $icons, $statusColors, $statusOrder, $currentUserId, $view); ?>
+                    <?php endif; ?>
+                <?php endforeach;
+                }
+
+                renderThread($tree ?: $thoughts, 0, $icons, $statusColors, $statusOrder, $currentUserId, $view);
+                ?>
+            </div>
         <?php else: ?>
+            <!-- Flat view (default) -->
             <?php foreach ($thoughts as $t):
-                $isOwner = $currentUserId && (int)($t['user_id'] ?? 0) === $currentUserId;
+                $isOwner = $currentUserId && ((int)($t['user_id'] ?? 0) === $currentUserId || empty($t['user_id']));
                 $displayName = $isOwner ? 'You' : ($t['user_first_name'] ?? 'Anonymous');
                 $statusColor = $statusColors[$t['status'] ?? 'raw'] ?? '#888';
                 $nextStatus = $statusOrder[$t['status'] ?? 'raw'] ?? null;
@@ -253,17 +478,26 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                     <div class="thought-content">
                         <?= nl2br(htmlspecialchars($t['content'])) ?>
                     </div>
+                    <?php if (!empty($t['ai_response'])): ?>
+                        <div class="ai-response"><?= nl2br(htmlspecialchars($t['ai_response'])) ?></div>
+                    <?php endif; ?>
                     <div class="thought-footer">
                         <div class="thread-info">
                             <?php if ($t['parent_id']): ?>
                                 <span>builds on <a href="#idea-<?= (int)$t['parent_id'] ?>">#<?= (int)$t['parent_id'] ?></a></span>
                             <?php endif; ?>
                             <?php if ($childCount > 0): ?>
-                                <span><?= $childCount ?> build<?= $childCount > 1 ? 's' : '' ?></span>
+                                <a href="?thread=<?= (int)$t['id'] ?>"><?= $childCount ?> build<?= $childCount > 1 ? 's' : '' ?> →</a>
                             <?php endif; ?>
                             <span>via <?= htmlspecialchars($t['source'] ?? 'web') ?></span>
                         </div>
-                        <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label class="share-check <?= !empty($t['shareable']) ? 'active' : '' ?>">
+                                <input type="checkbox" <?= !empty($t['shareable']) ? 'checked' : '' ?>
+                                       onchange="toggleShareable(<?= (int)$t['id'] ?>, this.checked, this.parentElement)"
+                                       <?= !$isOwner ? 'disabled' : '' ?>>
+                                Share
+                            </label>
                             <?php if ($isOwner && $nextStatus): ?>
                                 <button class="promote-btn" onclick="promote(<?= (int)$t['id'] ?>, '<?= $nextStatus ?>')">
                                     ⬆ <?= $nextStatus ?>
@@ -277,6 +511,26 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
     </div>
 
     <script>
+    async function toggleShareable(ideaId, checked, label) {
+        try {
+            const response = await fetch('api.php?action=toggle_shareable', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idea_id: ideaId, shareable: checked ? 1 : 0 })
+            });
+            const data = await response.json();
+            if (data.success) {
+                label.classList.toggle('active', checked);
+            } else {
+                alert('Error: ' + data.error);
+                label.querySelector('input').checked = !checked;
+            }
+        } catch (err) {
+            alert('Network error');
+            label.querySelector('input').checked = !checked;
+        }
+    }
+
     async function promote(ideaId, newStatus) {
         const btn = event.target;
         btn.disabled = true;

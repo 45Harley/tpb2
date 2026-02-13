@@ -82,7 +82,10 @@ Both environments are on the same InMotion hosting server.
 - **Database**: Both environments share the same databases
 
 ### Deploy to production (4tpb.org)
-Create a zip of the project excluding `.git/`, upload and extract into the production doc root:
+**DO NOT deploy to 4tpb.org unless the human explicitly overrides this rule.**
+Production deploys require explicit human approval each time.
+
+When authorized by the human, create a zip excluding `.git/`, upload and extract:
 ```bash
 # From project root — create zip without .git/
 zip -r tpb2-deploy.zip . -x ".git/*"
