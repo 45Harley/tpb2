@@ -29,7 +29,7 @@ try {
     $view     = $_GET['view']     ?? 'flat';  // flat or thread
     $threadId = (int)($_GET['thread'] ?? 0);   // single-thread focus
 
-    $where = [];
+    $where = ['i.deleted_at IS NULL'];
     $params = [];
 
     // Single-thread focus: show one root and all its descendants
@@ -70,7 +70,8 @@ try {
     $sql = "
         SELECT i.*,
                u.first_name AS user_first_name,
-               (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id) AS children_count
+               (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id AND c.deleted_at IS NULL) AS children_count,
+               (SELECT COUNT(*) FROM idea_links l WHERE l.idea_id_a = i.id AND l.link_type = 'synthesizes') AS synth_link_count
         FROM idea_log i
         LEFT JOIN users u ON i.user_id = u.user_id
         {$whereClause}
@@ -90,10 +91,10 @@ try {
             $placeholders = implode(',', array_fill(0, count($allIds), '?'));
             $deepStmt = $pdo->prepare("
                 SELECT i.*, u.first_name AS user_first_name,
-                       (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id) AS children_count
+                       (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id AND c.deleted_at IS NULL) AS children_count
                 FROM idea_log i
                 LEFT JOIN users u ON i.user_id = u.user_id
-                WHERE i.parent_id IN ({$placeholders}) AND i.id NOT IN ({$placeholders})
+                WHERE i.parent_id IN ({$placeholders}) AND i.id NOT IN ({$placeholders}) AND i.deleted_at IS NULL
             ");
             $deepStmt->execute(array_merge($allIds, $allIds));
             $deeper = $deepStmt->fetchAll();
@@ -229,6 +230,26 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
         }
         .promote-btn:hover { border-color: #4fc3f7; color: #4fc3f7; }
         .promote-btn:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
+
+        .edit-btn, .delete-btn {
+            background: none; border: 1px solid #555; color: #aaa;
+            padding: 2px 8px; border-radius: 6px; font-size: 0.75rem;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .edit-btn:hover { border-color: #ff9800; color: #ff9800; }
+        .delete-btn:hover { border-color: #e57373; color: #e57373; }
+
+        .edited-tag { color: #ff9800; font-size: 0.7rem; margin-left: 6px; }
+
+        .inline-edit { margin-top: 8px; }
+        .inline-edit textarea {
+            width: 100%; padding: 8px; border: 1px solid #4fc3f7; border-radius: 8px;
+            background: rgba(255,255,255,0.08); color: #eee; font-family: inherit;
+            font-size: 0.9rem; min-height: 60px; resize: vertical;
+        }
+        .inline-edit .edit-actions {
+            display: flex; gap: 8px; margin-top: 6px; justify-content: flex-end;
+        }
 
         .user-name { color: #4fc3f7; font-weight: 600; }
 
@@ -441,7 +462,12 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                                     <?= htmlspecialchars($t['status'] ?? 'raw') ?>
                                 </span>
                             </div>
-                            <span><?= date('M j, g:ia', strtotime($t['created_at'])) ?></span>
+                            <span>
+                                <?= date('M j, g:ia', strtotime($t['created_at'])) ?>
+                                <?php if ((int)($t['edit_count'] ?? 0) > 0): ?>
+                                    <span class="edited-tag" title="Edited <?= (int)$t['edit_count'] ?> time(s), last: <?= date('M j, g:ia', strtotime($t['updated_at'])) ?>">(edited)</span>
+                                <?php endif; ?>
+                            </span>
                         </div>
                         <div class="thought-content">
                             <?= nl2br(htmlspecialchars($t['content'])) ?>
@@ -459,6 +485,10 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                                 <span>via <?= htmlspecialchars($t['source'] ?? 'web') ?></span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
+                                <?php if ($isOwner && empty($t['clerk_key'])): ?>
+                                    <button class="edit-btn" onclick="startEdit(<?= (int)$t['id'] ?>)" title="Edit">&#9998;</button>
+                                    <button class="delete-btn" onclick="deleteIdea(<?= (int)$t['id'] ?>, <?= ((int)($t['synth_link_count'] ?? 0) > 0) ? 'true' : 'false' ?>)" title="Delete">&times;</button>
+                                <?php endif; ?>
                                 <label class="share-check <?= !empty($t['shareable']) ? 'active' : '' ?>">
                                     <input type="checkbox" <?= !empty($t['shareable']) ? 'checked' : '' ?>
                                            onchange="toggleShareable(<?= (int)$t['id'] ?>, this.checked, this.parentElement)"
@@ -507,7 +537,12 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                                 <?= htmlspecialchars($t['status'] ?? 'raw') ?>
                             </span>
                         </div>
-                        <span><?= date('M j, g:ia', strtotime($t['created_at'])) ?></span>
+                        <span>
+                            <?= date('M j, g:ia', strtotime($t['created_at'])) ?>
+                            <?php if ((int)($t['edit_count'] ?? 0) > 0): ?>
+                                <span class="edited-tag" title="Edited <?= (int)$t['edit_count'] ?> time(s), last: <?= date('M j, g:ia', strtotime($t['updated_at'])) ?>">(edited)</span>
+                            <?php endif; ?>
+                        </span>
                     </div>
                     <div class="thought-content">
                         <?= nl2br(htmlspecialchars($t['content'])) ?>
@@ -526,6 +561,10 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                             <span>via <?= htmlspecialchars($t['source'] ?? 'web') ?></span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
+                            <?php if ($isOwner && empty($t['clerk_key'])): ?>
+                                <button class="edit-btn" onclick="startEdit(<?= (int)$t['id'] ?>)" title="Edit">&#9998;</button>
+                                <button class="delete-btn" onclick="deleteIdea(<?= (int)$t['id'] ?>, <?= ((int)($t['synth_link_count'] ?? 0) > 0) ? 'true' : 'false' ?>)" title="Delete">&times;</button>
+                            <?php endif; ?>
                             <label class="share-check <?= !empty($t['shareable']) ? 'active' : '' ?>">
                                 <input type="checkbox" <?= !empty($t['shareable']) ? 'checked' : '' ?>
                                        onchange="toggleShareable(<?= (int)$t['id'] ?>, this.checked, this.parentElement)"
@@ -590,6 +629,89 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
             btn.disabled = false;
             btn.textContent = '⬆ ' + newStatus;
         }
+    }
+
+    function startEdit(ideaId) {
+        var card = document.getElementById('idea-' + ideaId);
+        if (!card || card.querySelector('.inline-edit')) return;
+
+        var contentEl = card.querySelector('.thought-content');
+        var currentText = contentEl.textContent.trim();
+
+        var form = document.createElement('div');
+        form.className = 'inline-edit';
+        form.innerHTML = '<textarea>' + escapeHtml(currentText) + '</textarea>' +
+            '<div class="edit-actions">' +
+            '<button class="promote-btn" onclick="cancelEdit(' + ideaId + ')">Cancel</button>' +
+            '<button class="promote-btn" style="border-color:#4fc3f7;color:#4fc3f7;" onclick="saveEdit(' + ideaId + ')">Save</button>' +
+            '</div>';
+
+        contentEl.style.display = 'none';
+        contentEl.parentNode.insertBefore(form, contentEl.nextSibling);
+    }
+
+    function cancelEdit(ideaId) {
+        var card = document.getElementById('idea-' + ideaId);
+        var form = card.querySelector('.inline-edit');
+        if (form) form.remove();
+        card.querySelector('.thought-content').style.display = '';
+    }
+
+    async function saveEdit(ideaId) {
+        var card = document.getElementById('idea-' + ideaId);
+        var textarea = card.querySelector('.inline-edit textarea');
+        var newContent = textarea.value.trim();
+        if (!newContent) { alert('Content cannot be empty'); return; }
+
+        try {
+            var response = await fetch('api.php?action=edit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idea_id: ideaId, content: newContent })
+            });
+            var data = await response.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (err) {
+            alert('Network error');
+        }
+    }
+
+    async function deleteIdea(ideaId, hasSynthLinks) {
+        var msg = hasSynthLinks
+            ? 'This idea was used in a gather/crystallize. It will be hidden but preserved for integrity. Delete?'
+            : 'Delete this idea?';
+        if (!confirm(msg)) return;
+
+        var hard = false;
+        if (!hasSynthLinks) {
+            hard = confirm('Permanently delete? (OK = permanent, Cancel = soft delete)');
+        }
+
+        try {
+            var response = await fetch('api.php?action=delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idea_id: ideaId, hard: hard })
+            });
+            var data = await response.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (err) {
+            alert('Network error');
+        }
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
     </script>
 </body>

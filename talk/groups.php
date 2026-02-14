@@ -110,6 +110,16 @@ $mode = $groupId ? 'detail' : 'list';
         .btn-primary:hover { background: #039be5; }
         .btn-secondary { background: rgba(255,255,255,0.1); color: #4fc3f7; border: 1px solid rgba(79,195,247,0.3); }
         .btn-secondary:hover { background: rgba(79,195,247,0.15); }
+
+        .staleness-banner {
+            background: rgba(255, 152, 0, 0.12);
+            border: 1px solid rgba(255, 152, 0, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-top: 1rem;
+            color: #ffb74d;
+            font-size: 0.85rem;
+        }
         .btn-danger { background: rgba(244,67,54,0.2); color: #e57373; border: 1px solid rgba(244,67,54,0.3); }
         .btn-danger:hover { background: rgba(244,67,54,0.3); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -400,6 +410,9 @@ $mode = $groupId ? 'detail' : 'list';
         }
         html += '</div>';
 
+        // Staleness check placeholder
+        html += '<div id="stalenessArea"></div>';
+
         // Members
         html += '<div class="section" style="margin-top:1.5rem;"><h2>Members</h2><div class="members-list">';
         members.forEach(function(m) {
@@ -453,6 +466,30 @@ $mode = $groupId ? 'detail' : 'list';
         html += '</div></div>';
 
         el.innerHTML = html;
+
+        // Check staleness for facilitators
+        if (isFacilitator && ['active', 'crystallizing', 'crystallized'].includes(g.status)) {
+            var staleData = await apiGet('check_staleness', { group_id: groupId });
+            if (staleData.success && staleData.stale) {
+                var area = document.getElementById('stalenessArea');
+                var banner = '<div class="staleness-banner"><strong>&#9888; Some outputs may be stale</strong>';
+                staleData.digests.forEach(function(d) {
+                    if (!d.is_stale) return;
+                    var label = d.type === 'gather' ? 'Gather digest' : 'Crystallized proposal';
+                    var details = [];
+                    if (d.edited_count > 0) details.push(d.edited_count + ' edited');
+                    if (d.deleted_count > 0) details.push(d.deleted_count + ' deleted');
+                    banner += '<div style="margin-top:4px;font-size:0.8rem;">' +
+                        label + ' #' + d.digest_id + ': ' +
+                        details.join(', ') + ' source idea(s) since ' +
+                        d.created_at.substring(0, 16) +
+                        '</div>';
+                });
+                banner += '<div style="margin-top:8px;font-size:0.8rem;color:#aaa;">Re-run gatherer or re-crystallize to update.</div>';
+                banner += '</div>';
+                area.innerHTML = banner;
+            }
+        }
     }
 
     async function joinGroup(id) {

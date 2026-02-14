@@ -92,6 +92,12 @@ try {
         case 'toggle_shareable':
             echo json_encode(handleToggleShareable($pdo, $input, $userId));
             break;
+        case 'edit':
+            echo json_encode(handleEdit($pdo, $input, $userId));
+            break;
+        case 'delete':
+            echo json_encode(handleDelete($pdo, $input, $userId));
+            break;
 
         // Phase 3: Idea Links
         case 'create_link':
@@ -130,6 +136,9 @@ try {
             break;
         case 'crystallize':
             echo json_encode(handleCrystallize($pdo, $input, $userId));
+            break;
+        case 'check_staleness':
+            echo json_encode(handleCheckStaleness($pdo, $userId));
             break;
 
         default:
@@ -222,7 +231,7 @@ function handleHistory($pdo, $userId) {
 
     if ($limit < 1) $limit = 50;
 
-    $where = [];
+    $where = ['i.deleted_at IS NULL'];
     $params = [];
 
     // User-scoped by default if logged in
@@ -256,7 +265,7 @@ function handleHistory($pdo, $userId) {
                i.shareable, i.clerk_key,
                i.created_at, i.updated_at,
                u.first_name AS user_first_name,
-               (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id) AS children_count
+               (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id AND c.deleted_at IS NULL) AS children_count
         FROM idea_log i
         LEFT JOIN users u ON i.user_id = u.user_id
         {$whereClause}
@@ -291,12 +300,15 @@ function handlePromote($pdo, $input, $userId) {
     }
 
     // Fetch the idea
-    $stmt = $pdo->prepare("SELECT id, user_id, status FROM idea_log WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, user_id, status, deleted_at FROM idea_log WHERE id = ?");
     $stmt->execute([$ideaId]);
     $idea = $stmt->fetch();
 
     if (!$idea) {
         return ['success' => false, 'error' => 'Idea not found'];
+    }
+    if ($idea['deleted_at']) {
+        return ['success' => false, 'error' => 'Cannot promote a deleted idea'];
     }
 
     // Owner check (skip if idea has no owner or user not logged in)
@@ -340,7 +352,7 @@ function handleLink($pdo, $input, $userId) {
     }
 
     // Fetch both ideas
-    $stmt = $pdo->prepare("SELECT id, user_id, parent_id FROM idea_log WHERE id IN (?, ?)");
+    $stmt = $pdo->prepare("SELECT id, user_id, parent_id, deleted_at FROM idea_log WHERE id IN (?, ?)");
     $stmt->execute([$ideaId, $parentId]);
     $rows = $stmt->fetchAll();
 
@@ -353,6 +365,7 @@ function handleLink($pdo, $input, $userId) {
 
     if (!$idea)   return ['success' => false, 'error' => 'Idea not found'];
     if (!$parent) return ['success' => false, 'error' => 'Parent idea not found'];
+    if ($idea['deleted_at'] || $parent['deleted_at']) return ['success' => false, 'error' => 'Cannot link deleted ideas'];
 
     // Owner check
     if ($idea['user_id'] && $userId && (int)$idea['user_id'] !== $userId) {
@@ -395,12 +408,15 @@ function handleToggleShareable($pdo, $input, $userId) {
         return ['success' => false, 'error' => 'idea_id is required'];
     }
 
-    $stmt = $pdo->prepare("SELECT id, user_id FROM idea_log WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, user_id, deleted_at FROM idea_log WHERE id = ?");
     $stmt->execute([$ideaId]);
     $idea = $stmt->fetch();
 
     if (!$idea) {
         return ['success' => false, 'error' => 'Idea not found'];
+    }
+    if ($idea['deleted_at']) {
+        return ['success' => false, 'error' => 'Cannot modify a deleted idea'];
     }
 
     if (!$userId) {
@@ -419,6 +435,85 @@ function handleToggleShareable($pdo, $input, $userId) {
         'idea_id'   => $ideaId,
         'shareable' => $shareable ? 1 : 0
     ];
+}
+
+
+// ── Edit Idea ────────────────────────────────────────────────────
+
+function handleEdit($pdo, $input, $userId) {
+    $ideaId    = (int)($input['idea_id'] ?? 0);
+    $newContent = trim($input['content'] ?? '');
+
+    if (!$ideaId) return ['success' => false, 'error' => 'idea_id is required'];
+    if ($newContent === '') return ['success' => false, 'error' => 'Content cannot be empty'];
+    if (!$userId) return ['success' => false, 'error' => 'Login required'];
+
+    $stmt = $pdo->prepare("SELECT id, user_id, content, deleted_at, clerk_key FROM idea_log WHERE id = ?");
+    $stmt->execute([$ideaId]);
+    $idea = $stmt->fetch();
+
+    if (!$idea) return ['success' => false, 'error' => 'Idea not found'];
+    if ($idea['deleted_at']) return ['success' => false, 'error' => 'Cannot edit a deleted idea'];
+    if ($idea['clerk_key']) return ['success' => false, 'error' => 'Cannot edit AI-generated content'];
+    if ($idea['user_id'] && (int)$idea['user_id'] !== $userId) {
+        return ['success' => false, 'error' => 'You can only edit your own ideas'];
+    }
+    if ($idea['content'] === $newContent) {
+        return ['success' => true, 'idea_id' => $ideaId, 'message' => 'No changes'];
+    }
+
+    $stmt = $pdo->prepare("UPDATE idea_log SET content = ?, edit_count = edit_count + 1 WHERE id = ?");
+    $stmt->execute([$newContent, $ideaId]);
+
+    return ['success' => true, 'idea_id' => $ideaId, 'content' => $newContent, 'message' => 'Idea updated'];
+}
+
+
+// ── Delete Idea ──────────────────────────────────────────────────
+
+function handleDelete($pdo, $input, $userId) {
+    $ideaId = (int)($input['idea_id'] ?? 0);
+    $hard   = (bool)($input['hard'] ?? false);
+
+    if (!$ideaId) return ['success' => false, 'error' => 'idea_id is required'];
+    if (!$userId) return ['success' => false, 'error' => 'Login required'];
+
+    $stmt = $pdo->prepare("SELECT id, user_id, deleted_at, clerk_key FROM idea_log WHERE id = ?");
+    $stmt->execute([$ideaId]);
+    $idea = $stmt->fetch();
+
+    if (!$idea) return ['success' => false, 'error' => 'Idea not found'];
+    if ($idea['deleted_at']) return ['success' => false, 'error' => 'Already deleted'];
+    if ($idea['clerk_key']) return ['success' => false, 'error' => 'Cannot delete AI-generated content'];
+    if ($idea['user_id'] && (int)$idea['user_id'] !== $userId) {
+        return ['success' => false, 'error' => 'You can only delete your own ideas'];
+    }
+
+    // Check if idea was gathered/crystallized
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM idea_links WHERE idea_id_a = ? AND link_type = 'synthesizes'");
+    $stmt->execute([$ideaId]);
+    $hasSynthLinks = (int)$stmt->fetch()['cnt'] > 0;
+
+    if ($hard) {
+        if ($hasSynthLinks) {
+            return ['success' => false, 'error' => 'Cannot permanently delete: this idea was used in a gather or crystallization'];
+        }
+        $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM idea_log WHERE parent_id = ?");
+        $stmt->execute([$ideaId]);
+        if ((int)$stmt->fetch()['cnt'] > 0) {
+            return ['success' => false, 'error' => 'Cannot permanently delete: other ideas build on this one'];
+        }
+
+        $pdo->prepare("DELETE FROM idea_links WHERE idea_id_a = ? OR idea_id_b = ?")->execute([$ideaId, $ideaId]);
+        $pdo->prepare("DELETE FROM idea_log WHERE id = ?")->execute([$ideaId]);
+
+        return ['success' => true, 'idea_id' => $ideaId, 'action' => 'hard_deleted'];
+    }
+
+    // Soft delete
+    $pdo->prepare("UPDATE idea_log SET deleted_at = NOW() WHERE id = ?")->execute([$ideaId]);
+
+    return ['success' => true, 'idea_id' => $ideaId, 'action' => 'soft_deleted', 'had_links' => $hasSynthLinks];
 }
 
 
@@ -480,7 +575,7 @@ function handleBrainstorm($pdo, $input, $userId) {
             FROM idea_log i
             JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
             LEFT JOIN users u ON i.user_id = u.user_id
-            WHERE i.shareable = 1
+            WHERE i.shareable = 1 AND i.deleted_at IS NULL
             ORDER BY i.created_at DESC LIMIT 30
         ");
         $stmt->execute([$groupId]);
@@ -496,7 +591,7 @@ function handleBrainstorm($pdo, $input, $userId) {
         }
     } elseif ($sessionId) {
         // Personal context: recent session ideas
-        $stmt = $pdo->prepare("SELECT id, content, category, tags FROM idea_log WHERE session_id = ? AND category != 'chat' ORDER BY created_at DESC LIMIT 20");
+        $stmt = $pdo->prepare("SELECT id, content, category, tags FROM idea_log WHERE session_id = ? AND category != 'chat' AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 20");
         $stmt->execute([$sessionId]);
         $recentIdeas = $stmt->fetchAll();
         if ($recentIdeas) {
@@ -740,7 +835,7 @@ function processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable 
             $category = $action['params']['category'] ?? null;
             $status   = $action['params']['status'] ?? null;
 
-            $where  = [];
+            $where  = ['deleted_at IS NULL'];
             $params = [];
 
             if ($userId) {
@@ -760,7 +855,7 @@ function processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable 
                 $params[] = $status;
             }
 
-            $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+            $whereClause = 'WHERE ' . implode(' AND ', $where);
             $stmt = $pdo->prepare("SELECT id, content, category, status, tags, created_at FROM idea_log {$whereClause} ORDER BY created_at DESC LIMIT 20");
             $stmt->execute($params);
             $ideas = $stmt->fetchAll();
@@ -1097,12 +1192,12 @@ function handleGetGroup($pdo, $userId) {
     $stmt = $pdo->prepare("
         SELECT i.id, i.content, i.category, i.status, i.tags, i.source, i.clerk_key,
                i.created_at, u.first_name AS user_first_name,
-               (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id) AS children_count,
+               (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id AND c.deleted_at IS NULL) AS children_count,
                (SELECT COUNT(*) FROM idea_links l WHERE l.idea_id_a = i.id OR l.idea_id_b = i.id) AS link_count
         FROM idea_log i
         JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.shareable = 1
+        WHERE i.shareable = 1 AND i.deleted_at IS NULL
         ORDER BY i.created_at DESC
         LIMIT 50
     ");
@@ -1364,6 +1459,82 @@ function handleUpdateMember($pdo, $input, $userId) {
 
 
 // ═══════════════════════════════════════════════════════════════════
+// Phase 4: Staleness Detection
+// ═══════════════════════════════════════════════════════════════════
+
+function handleCheckStaleness($pdo, $userId) {
+    $groupId = (int)($_GET['group_id'] ?? 0);
+    if (!$groupId) return ['success' => false, 'error' => 'group_id is required'];
+
+    // Get group member user IDs
+    $stmt = $pdo->prepare("SELECT user_id FROM idea_group_members WHERE group_id = ?");
+    $stmt->execute([$groupId]);
+    $memberIds = array_column($stmt->fetchAll(), 'user_id');
+
+    if (empty($memberIds)) {
+        return ['success' => true, 'stale' => false, 'digests' => []];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($memberIds), '?'));
+
+    // Find all digest nodes linked via synthesizes to this group's ideas
+    $stmt = $pdo->prepare("
+        SELECT DISTINCT d.id AS digest_id, d.clerk_key, d.status, d.created_at AS digest_created_at
+        FROM idea_log d
+        JOIN idea_links l ON l.idea_id_b = d.id AND l.link_type = 'synthesizes'
+        JOIN idea_log src ON src.id = l.idea_id_a AND src.user_id IN ($placeholders)
+        WHERE d.category = 'digest'
+        ORDER BY d.created_at DESC
+    ");
+    $stmt->execute($memberIds);
+    $digests = $stmt->fetchAll();
+
+    if (empty($digests)) {
+        return ['success' => true, 'stale' => false, 'digests' => []];
+    }
+
+    // For each digest, check if source ideas changed after it was created
+    $results = [];
+    foreach ($digests as $digest) {
+        $stmt = $pdo->prepare("
+            SELECT src.id,
+                   CASE
+                       WHEN src.deleted_at IS NOT NULL AND src.deleted_at > ? THEN 'deleted'
+                       WHEN src.edit_count > 0 AND src.updated_at > ? THEN 'edited'
+                       ELSE 'unchanged'
+                   END AS change_type
+            FROM idea_links l
+            JOIN idea_log src ON src.id = l.idea_id_a
+            WHERE l.idea_id_b = ? AND l.link_type = 'synthesizes'
+              AND (
+                  (src.deleted_at IS NOT NULL AND src.deleted_at > ?)
+                  OR (src.edit_count > 0 AND src.updated_at > ?)
+              )
+        ");
+        $dc = $digest['digest_created_at'];
+        $stmt->execute([$dc, $dc, $digest['digest_id'], $dc, $dc]);
+        $changed = $stmt->fetchAll();
+
+        $isStale = count($changed) > 0;
+        $label = $digest['clerk_key'] === 'gatherer' ? 'gather' : 'crystallize';
+
+        $results[] = [
+            'digest_id'     => (int)$digest['digest_id'],
+            'type'          => $label,
+            'created_at'    => $digest['digest_created_at'],
+            'is_stale'      => $isStale,
+            'edited_count'  => count(array_filter($changed, fn($c) => $c['change_type'] === 'edited')),
+            'deleted_count' => count(array_filter($changed, fn($c) => $c['change_type'] === 'deleted'))
+        ];
+    }
+
+    $anyStale = array_reduce($results, fn($carry, $item) => $carry || $item['is_stale'], false);
+
+    return ['success' => true, 'stale' => $anyStale, 'digests' => $results];
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
 // Phase 3: Gatherer Clerk
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1405,7 +1576,7 @@ function handleGather($pdo, $input, $userId) {
         FROM idea_log i
         JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.shareable = 1
+        WHERE i.shareable = 1 AND i.deleted_at IS NULL
           AND (i.clerk_key IS NULL OR i.clerk_key != 'gatherer')
         ORDER BY i.created_at ASC
     ");
@@ -1698,7 +1869,7 @@ function handleCrystallize($pdo, $input, $userId) {
         FROM idea_log i
         JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.shareable = 1
+        WHERE i.shareable = 1 AND i.deleted_at IS NULL
         ORDER BY i.created_at ASC
     ");
     $stmt->execute([$groupId]);
