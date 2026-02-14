@@ -139,6 +139,18 @@ $secondaryNav = [
 10. **Your Town** - Interactive grid of all towns (active vs coming soon)
 11. **Brainstorm [State]** - State-level thought submission
 
+### Hero Civic Metrics (auto-populated)
+
+The hero section includes a **civic metrics strip** below the CTA buttons showing live numbers from the database. These are NOT manually filled in — they're queried at runtime:
+
+- **Members** — total users with `current_state_id` matching this state
+- **Civic Points** — sum of all citizen points in the state
+- **Towns Active** — count of distinct towns with at least one member
+- **Active Groups** — deliberation groups created by state members
+- **Tasks** — volunteer tasks in progress for this state
+
+When generating the hero PHP, include the query block (see CT state page for reference) and the `.hero-stats` / `.hero-stat` HTML/CSS pattern. Groups and Tasks only display when > 0.
+
 ---
 
 ## The Workflow (6 Phases)

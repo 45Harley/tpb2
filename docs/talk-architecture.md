@@ -1,8 +1,8 @@
 # /talk Architecture
 
-**Living document — last updated 2026-02-13**
+**Living document — last updated 2026-02-13 (Phase 3 complete, digest sources expanded)**
 
-This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built, what's designed, and the conceptual model that drives both.
+This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built (Phase 1–3), what's designed for the future, and the conceptual model that drives both.
 
 ---
 
@@ -137,30 +137,44 @@ Summarizing is the operation that makes both structures work together: the AI re
 
 ---
 
-## 4. What's Built (Phase 1 + 2)
+## 4. What's Built (Phase 1–3)
 
 ### Pages
 
-| Page | URL | Purpose |
-|------|-----|---------|
-| Quick Capture | `/talk/index.php` | Fire-and-forget thought entry (voice or text) |
-| Brainstorm | `/talk/brainstorm.php` | AI-assisted chat, saves distilled ideas + full conversation |
-| History | `/talk/history.php` | View, filter, promote, share thoughts |
+| Page | URL | Purpose | Phase |
+|------|-----|---------|-------|
+| Quick Capture | `/talk/index.php` | Fire-and-forget thought entry (voice or text) | 1 |
+| Brainstorm | `/talk/brainstorm.php` | AI-assisted chat, group-aware context | 1+3 |
+| History | `/talk/history.php` | View, filter, promote, thread thoughts (AI nodes + clerk badges) | 1+3 |
+| Groups | `/talk/groups.php` | Create/browse/manage deliberation groups, run gatherer, crystallize | 3 |
 
 ### API: `/talk/api.php`
 
-| Action | Method | What it does |
-|--------|--------|-------------|
-| `save` | POST | Save a thought (with category, source, tags, parent_id, shareable) |
-| `history` | GET | Read back ideas with filters |
-| `promote` | POST | Advance idea status (raw → refining → distilled → actionable) |
-| `link` | POST | Set parent_id on an idea (tree linking) |
-| `brainstorm` | POST | AI-assisted brainstorming via clerk |
-| `toggle_shareable` | POST | Flip shareable flag on an idea |
+| Action | Method | What it does | Phase |
+|--------|--------|-------------|-------|
+| `save` | POST | Save a thought (with category, source, tags, parent_id, shareable, clerk_key) | 1 |
+| `history` | GET | Read back ideas with filters | 1 |
+| `promote` | POST | Advance idea status (raw → refining → distilled → actionable) | 1 |
+| `link` | POST | Set parent_id on an idea (tree linking) | 1 |
+| `brainstorm` | POST | AI-assisted brainstorming via clerk (group-aware context) | 1+3 |
+| `toggle_shareable` | POST | Flip shareable flag on an idea | 2 |
+| `create_link` | POST | Create thematic link between ideas (`idea_links`) | 3 |
+| `get_links` | GET | Get all thematic links for an idea | 3 |
+| `create_group` | POST | Create a deliberation group (with optional parent) | 3 |
+| `list_groups` | GET | List discoverable groups (or `?mine=1` for user's groups) | 3 |
+| `get_group` | GET | Group details + members + shareable ideas + sub-groups | 3 |
+| `join_group` | POST | Join a group (open → member, observable → observer) | 3 |
+| `leave_group` | POST | Leave a group (auto-promotes facilitator if last one) | 3 |
+| `update_group` | POST | Update group settings/status (facilitator only) | 3 |
+| `update_member` | POST | Change member role or remove member (facilitator only) | 3 |
+| `gather` | POST | Run gatherer clerk on group — incremental link + digest creation | 3 |
+| `crystallize` | POST | Produce crystallized .md proposal from group (re-runnable) | 3 |
 
-### AI Clerk Actions (brainstorm)
+### AI Clerk Actions
 
-The brainstorm clerk responds conversationally and can embed action tags:
+#### Brainstorm clerk (`clerk_key = 'brainstorm'`)
+
+Responds conversationally and can embed action tags:
 
 | Action | What it does |
 |--------|-------------|
@@ -169,62 +183,85 @@ The brainstorm clerk responds conversationally and can embed action tags:
 | `READ_BACK` | Lists ideas from the session |
 | `SUMMARIZE` | Creates a digest of the session (auto-shareable) |
 
-### Conversation Logging
+#### Gatherer clerk (`clerk_key = 'gatherer'`)
 
-Every brainstorm exchange is logged to `idea_log` with `category='chat'`:
-- `content` = user's raw message
-- `ai_response` = AI's cleaned response (on same row — Phase 2 model)
-- `source` = `'claude-web'`
-- `shareable` = user's toggle state
+Analyzes shareable ideas across a group and creates connections:
 
-Chat rows are excluded from the clerk's session context injection (so it only sees distilled ideas, not raw conversation noise).
+| Action | What it does |
+|--------|-------------|
+| `LINK` | Creates `idea_links` row between two thematically related ideas |
+| `SUMMARIZE` | Creates a digest node with `synthesizes` links to source ideas |
+
+The gatherer is **incremental** — it tracks which ideas were already gathered (via `synthesizes` links to existing digests) and marks new ideas with 🆕 so it focuses on fresh connections. It also receives its own previous digests to build on rather than re-summarize.
+
+### Conversation Logging (Phase 3: AI as first-class nodes)
+
+Every brainstorm exchange is logged as **two separate `idea_log` rows**:
+
+1. **User message**: `category='chat'`, `source='web'`, `shareable` = user's toggle
+2. **AI response**: `category='chat'`, `source='clerk-brainstorm'`, `clerk_key='brainstorm'`, `parent_id` → user's row
+
+This replaces the Phase 2 model where AI responses were stored in an `ai_response` column on the same row. Both user and AI are now equal nodes in the thread tree.
+
+**Backward compatibility**: Old rows with `ai_response` still render inline in history. New AI child nodes render as threaded responses with a clerk badge.
 
 ### History Features
 
-- **Category filters**: All, Ideas, Decisions, Todos, Notes, Questions, Chat
+- **Category filters**: All, Ideas, Decisions, Todos, Notes, Questions, Chat, Digest
 - **Status filters**: All, Raw, Refining, Distilled, Actionable
 - **View modes**: Flat (chronological) and Threaded (tree view via `parent_id`)
 - **Single-thread focus**: `?thread=ID` shows one root + all descendants
 - **Shareable checkbox**: Per-thought toggle (owner or any logged-in user for unowned thoughts)
 - **Promote button**: Advance status one step forward
-- **AI response display**: Shows `ai_response` inline on chat entries
-- **User scoping**: Default shows your own; "Show all" to see everyone's
+- **Clerk badges**: AI-created nodes show a purple `clerk_key` badge (e.g., "brainstorm", "gatherer")
+- **Clerk node styling**: AI nodes have distinct purple left-border and background
+- **User scoping**: Default shows your own + AI child nodes; "Show all" to see everyone's
+
+### Groups Features
+
+- **Browse**: Discover open/observable groups + your own closed groups
+- **Create**: Name, description, tags, access level, optional parent group
+- **Detail view**: Members (with role badges), shareable ideas feed, sub-groups, action buttons
+- **Facilitator controls**: Activate group, run gatherer, crystallize, re-crystallize, archive, reopen, manage member roles
+- **Group-aware brainstorm**: Dropdown in brainstorm.php, `?group=ID` deep-link from groups page
+- **Recursive structure**: Parent/child groups via `parent_group_id`
 
 ### Database State
 
 ```sql
--- idea_log: main table (exists, in production)
--- Columns added in Phase 2:
---   shareable TINYINT(1) NOT NULL DEFAULT 0
-
--- ai_clerks: brainstorm clerk capabilities
---   capabilities = 'save_idea,read_back,tag_idea,summarize'
+-- Tables: idea_log, idea_links, idea_groups, idea_group_members
+-- Columns added in Phase 2: shareable TINYINT(1) NOT NULL DEFAULT 0
+-- Columns added in Phase 3: clerk_key VARCHAR(50) NULL
+-- ai_clerks: brainstorm + gatherer clerk rows registered
+-- system_documentation: clerk-gatherer-rules doc registered
 ```
 
 ---
 
-## 5. What's Designed (Phase 3)
+## 5. Architecture Details
 
-### 5a. AI as first-class entity in the graph
+Sections 5a–5g are **built and deployed** (Phase 3). Sections 5h–5j are **designed but not yet built**.
 
-**Current model (Phase 2)**: AI response stored as `ai_response` column on the user's row. AI is metadata, not a node.
+### 5a. AI as first-class entity in the graph ✅
 
-**Target model (Phase 3)**: Each AI response is its own `idea_log` row, with `parent_id` pointing to what it responds to. AI is a participant.
+Each AI response is its own `idea_log` row, with `parent_id` pointing to what it responds to. AI is a participant, not metadata.
 
 ```
-Phase 2:  Row #12 { content: "Fix roads", ai_response: "Good point..." }
+Old (Phase 2):  Row #12 { content: "Fix roads", ai_response: "Good point..." }
 
-Phase 3:  Row #12 { content: "Fix roads", source: "web" }
-          Row #13 { content: "Good point...", source: "clerk-brainstorm", parent_id: 12 }
+Current:        Row #12 { content: "Fix roads", source: "web" }
+                Row #13 { content: "Good point...", source: "clerk-brainstorm",
+                          parent_id: 12, clerk_key: "brainstorm" }
 ```
 
 This means:
 - Any node can be branched from (users can reply to what the AI said)
-- The `ai_response` column becomes deprecated
+- The `ai_response` column is deprecated (stays for backward compat, no longer written to)
 - `source` and `clerk_key` identify the actor and role
 - Trees naturally interleave user and AI nodes
+- History rendering shows clerk badges on AI nodes
 
-### 5b. `idea_links` table (many-to-many network)
+### 5b. `idea_links` table (many-to-many network) ✅
 
 Trees capture conversation. Links capture meaning. A thought connects to many others:
 
@@ -241,7 +278,7 @@ Links can be created by:
 - Users (manual "this connects to that")
 - Facilitators (curating during Refine stage)
 
-### 5c. Summarizing as graph operation
+### 5c. Summarizing as graph operation ✅
 
 A summary reads N nodes and produces 1 new node linked back to all sources:
 
@@ -258,7 +295,7 @@ Summaries can cascade:
 - Thread summary (discussion/debate on a topic)
 - Meta-summary (summary of summaries — Crystallize stage)
 
-### 5d. Groups as circuits
+### 5d. Groups as circuits ✅
 
 A group is a feedback/amplification circuit — 2+ users whose shareable thoughts flow through the AI-powered pipeline together.
 
@@ -300,15 +337,17 @@ Civic deliberation defaults toward **observable** — transparency matters.
 
 ```
 forming → active → crystallizing → crystallized → archived
+            ↑                          │              │
+            └──────── reopen ──────────┘──────────────┘
 ```
 
-- **Forming**: Members joining, raw thoughts scattering
-- **Active**: Gathering and refining
-- **Crystallizing**: Converging on proposals
-- **Crystallized**: Output produced (.md deliverable), group fulfilled its purpose
-- **Archived**: Read-only historical record
+- **Forming**: Members joining, initial setup. Facilitator clicks "Activate" to begin.
+- **Active**: Gathering and refining. Gatherer and crystallize available.
+- **Crystallizing**: Set automatically when crystallization starts. Returns to crystallized on completion.
+- **Crystallized**: Proposal produced. **Re-crystallization allowed** — each run improves the proposal using the previous draft as context. Facilitator can archive (locks result) or reopen (back to active).
+- **Archived**: Final state. Crystallization locked. Can be reopened by facilitator if needed.
 
-Re-openable: new information or members can reactivate a crystallized group. Any facilitator can reopen.
+Status transitions are validated server-side. Forward transitions always allowed; backward only via explicit reopen (→ active) or archive.
 
 #### How thoughts enter the group
 
@@ -348,13 +387,13 @@ AI roles are assigned per group, not global. A small brainstorm might only need 
 
 AI creates nodes in `idea_log` with `source` and `clerk_key` identifying the role. Its contributions appear in the group feed alongside user thoughts.
 
-New tables:
-- `idea_groups` — name, description, status, access level, creator
-- `idea_group_members` — who's in, what role
+Tables:
+- `idea_groups` — name, description, tags, status, access_level, parent_group_id, created_by
+- `idea_group_members` — group_id, user_id, role (member/facilitator/observer), joined_at
 
-### 5e. Crystallization output (.md documents)
+### 5e. Crystallization output (.md documents) ✅
 
-The pipeline's end product is a **deliverable**, not just a database row. When a group is ready, the AI produces a structured markdown document:
+The pipeline's end product is a **deliverable**, not just a database row. When a facilitator triggers crystallization, the AI produces a structured markdown document:
 
 ```markdown
 # Proposal: Main Street Infrastructure Plan
@@ -377,17 +416,103 @@ Three community members identified overlapping concerns...
 
 ## Sources
 - CT DOT bridge inspection database (.gov)
+
+## Metrics
+Contributors: 3 | Ideas: 12 | Connections: 8 | Digests: 2 | Members: 4
 ```
 
-**Storage**: Both DB and file.
-- **DB**: Saved as `category='digest'` in `idea_log`, linked to source thoughts via `idea_links` (`link_type='synthesizes'`)
-- **File**: Written to `talk/output/group-{id}-{slug}.md` for download/sharing
+A machine-readable METRICS block is also appended as an HTML comment for automated parsing:
 
-**On demand**: Group asks for it ("summarize this into a proposal"), the AI produces it, the group reviews. Not automatic.
+```html
+<!-- METRICS
+contributors: 3
+ideas: 12
+digests: 2
+links: 8
+members: 4
+sub_groups: 0
+crystallized_at: 2026-02-13 14:30:12
+group_id: 5
+group_name: Main Street Infrastructure Plan
+-->
+```
+
+#### Storage
+
+Both DB and file:
+- **DB**: Saved as `category='digest'`, `status='distilled'` in `idea_log` with `clerk_key='brainstorm'`, linked to every source idea via `idea_links` (`link_type='synthesizes'`)
+- **File**: Written to `talk/output/` with versioned + latest naming convention
+
+#### File naming convention
+
+```
+talk/output/
+  group-{id}-{slug}-v{version}-u{userId}-{YYYY-MM-DD-HHmmss}.md   (versioned)
+  group-{id}-{slug}-latest.md                                        (current)
+```
+
+| Segment | Meaning | Example |
+|---------|---------|---------|
+| `{id}` | Group ID from `idea_groups` | `5` |
+| `{slug}` | Lowercased, hyphenated group name | `putnam-housing` |
+| `v{version}` | Sequential version number (auto-computed from existing files) | `v3` |
+| `u{userId}` | User ID of the facilitator who triggered crystallization | `u42` |
+| `{timestamp}` | ISO-ish timestamp `YYYY-MM-DD-HHmmss` | `2026-02-13-143012` |
+
+Example file listing for a group crystallized 3 times:
+```
+group-5-putnam-housing-v1-u42-2026-02-10-091200.md
+group-5-putnam-housing-v2-u42-2026-02-12-143500.md
+group-5-putnam-housing-v3-u15-2026-02-13-161545.md
+group-5-putnam-housing-latest.md                      ← copy of v3
+```
+
+The `output/` directory is created at runtime, not tracked by git. On staging: `/home/sandge5/tpb2.sandgems.net/talk/output/`
+
+#### Re-runnable crystallization
+
+Crystallization is **re-runnable** until the group is archived:
+
+- Each run reads the previous crystallization and passes it to the AI as context ("Improve on this draft")
+- The AI incorporates new ideas, fixes gaps, and produces a better version
+- Each version is preserved with its timestamp; the `-latest.md` always points to the most recent
+- A facilitator can archive the group to lock the final crystallization, or reopen to continue iterating
+
+#### Metrics for state-level weighting
+
+Every crystallization computes and embeds metrics:
+
+| Metric | Purpose |
+|--------|---------|
+| `contributors` | Unique authors of source ideas — weights group voice proportionally |
+| `ideas` | Total shareable ideas considered |
+| `digests` | Gatherer-produced summaries feeding the crystallization |
+| `links` | Thematic connections (idea_links) among source ideas |
+| `members` | Active (non-observer) group members |
+| `sub_groups` | Child groups (for parent-level aggregation) |
+| `crystallized_at` | Timestamp of this crystallization run |
+| `group_id` / `group_name` | Identity for automated processing |
+
+These metrics serve two purposes:
+1. **Human readability**: Shown in the Metrics section of the proposal
+2. **Machine-readable**: Embedded as HTML comment for parent-level crystallization to parse and weight proportionally ("a proposal backed by 30 people carries more weight than one from 3")
+
+#### Child group aggregation
+
+When crystallizing a parent-level group (one with sub-groups):
+
+1. Fetch the most recent crystallized proposal from each child group
+2. Include child proposals in the AI's context under "## Child Group Proposals"
+3. Instruct the AI to weight each sub-group's input by contributor/idea counts
+4. The resulting parent proposal synthesizes across all child proposals
+
+This is the mechanism that enables town → state → regional aggregation.
+
+**On demand**: Facilitator triggers via button in groups.php. Not automatic.
 
 **Provenance**: The "Contributing Thoughts" section traces every claim back to the person who said it. Maria's $9,600 doesn't get lost in abstraction.
 
-### 5f. Recursive groups (groups of groups)
+### 5f. Recursive groups (groups of groups) ✅
 
 A group's crystallized .md output can be the **input** to a higher-level group. Same circuit, recursive:
 
@@ -412,9 +537,28 @@ Each level uses the exact same mechanism:
 
 The .md is the **portable unit** that flows between levels. It carries provenance — original contributors are cited all the way up.
 
-This supports:
+#### Implementation
+
 - `idea_groups.parent_group_id` — optional FK to self, for group hierarchy
-- A crystallized group's .md auto-enters the parent group as a shareable thought
+- Creating a child group requires the user to be a facilitator of the parent group
+- `groups.php` shows sub-groups in the group detail view
+- When crystallizing a parent group, `handleCrystallize()` automatically:
+  1. Queries child groups with status `crystallized` or `archived`
+  2. Fetches the most recent crystallization digest from each child
+  3. Includes child proposals in the AI context with weighting instructions
+  4. The AI integrates child proposals proportionally by contributor/idea counts (from the METRICS block)
+- A crystallized child group's digest is already shareable (`shareable=1`) and linked to the triggering user, so it naturally appears in the parent group's ideas feed through membership
+
+#### Creating the hierarchy
+
+```
+create_group API:
+  body: { name: "CT Housing", parent_group_id: 5 }
+  → validates user is facilitator of group #5
+  → creates child group with parent_group_id = 5
+```
+
+The groups.php create form includes a "Parent group" dropdown populated from the user's facilitator groups.
 
 The "thousandfold expansion" is literally this: same circuit, from kitchen table to 1,900 towns to 50 states.
 
@@ -431,7 +575,7 @@ The existing `ai_clerks` table supports multiple clerk personas. Phase 3 adds:
 
 Each creates nodes with its `clerk_key` stamped on the row.
 
-### 5h. Builder kits as group use case
+### 5h. Builder kits as group use case (future)
 
 TPB has two volunteer-driven builder kits — **state pages** (11 sections, benefits-heavy) and **town pages** (8 sections, local government focus). Both currently use a solo workflow: one volunteer downloads the kit, works with Claude on claude.ai, packages a ZIP, uploads it through the volunteer dashboard.
 
@@ -506,7 +650,7 @@ docs/
 
 Both kits will evolve to reference `/talk` groups as the collaboration layer, replacing the solo "download kit + use claude.ai" pattern with in-platform group brainstorming.
 
-### 5i. Thought form as gateway into /talk
+### 5i. Thought form as gateway into /talk (future)
 
 The existing thought submission form (`includes/thought-form.php`) on town and state pages is the **on-ramp** into `/talk`. It captures the moment someone cares enough to type — and turns it into an invitation to go deeper.
 
@@ -578,7 +722,7 @@ The `thoughts` table captures the scatter. The `idea_log` table powers the pipel
 
 The `is_volunteer_only` categories (Open Task, TPB Build, Task Update, Task Completed) are operational — they belong in the task system, not the civic pipeline. These may evolve separately or fold into `/talk` as task-linked groups (see 5h).
 
-### 5j. Future: Batch processing ideas
+### 5j. Batch processing ideas (future)
 
 Three batch job concepts that extend the `/talk` pipeline using the Anthropic Batch API (50% cost reduction for async jobs):
 
@@ -607,22 +751,121 @@ Currently manual (last run: January 2026, 107 threats). Batch API makes this run
 
 #### 3. Monthly town digest
 
-A synthesis job that pulls from multiple TPB data sources to create a local news update:
+A synthesis job that pulls from multiple TPB data sources to create a local news update — the "local newspaper" function for each town.
+
+##### Input sources
+
+| Source | Table / Location | What to pull | Status |
+|--------|-----------------|-------------|--------|
+| **Civic thoughts** | `thoughts` | Recent submissions filtered by town, anonymized/aggregated by category | Exists |
+| **Crystallization proposals** | `talk/output/group-*.md` + `idea_log` (category='digest') | Latest crystallized proposals from town-tagged groups, including METRICS block for contributor/idea counts | Exists |
+| **Group activity** | `idea_groups` + `idea_group_members` | New groups formed, membership growth, status transitions (forming→active→crystallized) | Exists |
+| **Volunteer tasks** | `tasks` | Tasks started (claimed/in_progress), WIP progress, and completed this month — by town/state scope | Exists |
+| **Gatherer digests** | `idea_log` (clerk_key='gatherer', category='digest') | AI-generated cluster summaries showing emerging themes across groups | Exists |
+| **Business listings** | `directory_listings` (map.php ?mode=directory) | New businesses, updated listings | Future |
+| **Community calendar** | `calendar.php` | Upcoming events, past event summaries | Future |
+| **.gov announcements** | External scrape | Town/state .gov news relevant to local concerns | Future |
+
+##### Crystallization files as digest input
+
+Crystallized proposals are rich inputs because they already contain:
+- **Structured findings** — the AI has already synthesized raw thoughts into key findings and proposed actions
+- **Attribution** — contributing thoughts traced to individuals (Maria's $9,600, Tom's bridge concern)
+- **Machine-readable metrics** — the `<!-- METRICS ... -->` HTML comment block provides contributor counts, idea counts, and timestamps for automated weighting
+- **Version history** — multiple crystallization runs show how proposals evolved over the month
+
+The digest job reads the latest `-latest.md` for each town-tagged group, extracts the METRICS block, and summarizes what proposals emerged or progressed.
+
+##### Task activity as digest input
+
+The `tasks` table tracks volunteer work through a clear lifecycle:
+
+| Task status | Digest label | What it tells the town |
+|-------------|-------------|----------------------|
+| `claimed` → `in_progress` | **Started** | "3 volunteers began working on Fort Mill's town page this month" |
+| `in_progress` | **In progress** | "CT state page build is 60% complete (6 of 10 sections)" |
+| `review` | **Under review** | "Putnam town page submitted for quality review" |
+| `completed` | **Completed** | "2 town pages launched: Fort Mill SC, Putnam CT" |
+
+Filter by `task_key` prefix (e.g., `build-town-putnam-ct`, `build-state-ct`) to scope tasks to the relevant town or state. Include `task_type` (build/test/deploy) to show the full pipeline progress.
+
+##### Output
 
 ```
-Inputs:
-  - Recent thoughts from thought form (anonymized/aggregated)
-  - Business listings from directory_listings (map.php ?mode=directory, future)
-  - /talk group activity and crystallized proposals
-  - Community calendar events (calendar.php, future)
-  - .gov announcements relevant to the town
+Structured markdown digest: "What happened in [Town] this month"
 
-Output:
-  - Structured markdown digest: "What happened in Putnam this month"
-  - Publishable to town page, email newsletter, or /talk
+Sections:
+  1. Community Pulse — aggregated thought categories + trending topics
+  2. Proposals & Deliberation — crystallized proposals, active groups, new groups
+  3. Volunteer Activity — tasks started, in progress, completed
+  4. Local Resources — new businesses, events (when available)
+  5. Looking Ahead — upcoming events, open tasks needing volunteers
+
+Publishable to: town page, email newsletter, or /talk as a digest node
 ```
 
-This is the "local newspaper" function — synthesizing what's happening in town from multiple civic data streams. The batch API makes it affordable to run monthly per town.
+The batch API makes it affordable to run monthly per town (~$0.01–0.05 per digest at 50% batch pricing).
+
+##### Towns as civic entities
+
+Towns are not just geographic containers — they're **civic entities** that accumulate a civic score based on citizen engagement. This score feeds into the monthly digest and can appear on town pages as a community health indicator.
+
+**Two complementary approaches:**
+
+| Approach | Source | What it measures |
+|----------|--------|-----------------|
+| **Sum of citizens** | `SUM(users.civic_points) WHERE current_town_id = ?` | Total civic capital — how much civic energy lives in this town |
+| **Engagement rate** | `points_log` actions in the last 30 days, grouped by town | Active civic pulse — what's happening *now* |
+
+The sum approach is simple and always available. The engagement approach captures momentum — a town where 20 people earned points this month is more alive than one where 200 earned points two years ago.
+
+**What counts toward a town's score:**
+
+| Category | Actions | Already tracked? |
+|----------|---------|-----------------|
+| **Participation** | Thoughts submitted, votes cast, brainstorm sessions | Yes (`points_log` via `point_actions`) |
+| **Verification** | Email verified, phone verified, identity vetted | Yes (`user_identity_status`) |
+| **Deliberation** | Groups joined, ideas shared, gatherer runs | Partially (group membership exists, point actions could be added) |
+| **Building** | Tasks claimed, tasks completed, pages built | Yes (`tasks` table status transitions) |
+| **Crystallization** | Proposals produced, re-crystallized, archived | Yes (`idea_groups.status` + output files) |
+
+**Implementation — no new tables needed:**
+
+The simplest version is a query, not a table:
+
+```sql
+-- Town civic score: sum of all citizen points
+SELECT t.town_id, t.town_name, s.abbreviation,
+       COUNT(DISTINCT u.user_id) AS citizens,
+       COALESCE(SUM(u.civic_points), 0) AS total_civic_points
+FROM towns t
+JOIN states s ON t.state_id = s.state_id
+LEFT JOIN users u ON u.current_town_id = t.town_id
+GROUP BY t.town_id
+
+-- Town monthly pulse: recent activity
+SELECT t.town_id, t.town_name,
+       COUNT(DISTINCT pl.user_id) AS active_citizens,
+       SUM(pl.points_earned) AS monthly_points,
+       COUNT(pl.id) AS total_actions
+FROM towns t
+JOIN users u ON u.current_town_id = t.town_id
+JOIN points_log pl ON pl.user_id = u.user_id
+WHERE pl.earned_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+GROUP BY t.town_id
+ORDER BY monthly_points DESC
+```
+
+If snapshotting becomes valuable (for trends, "up 15% this month"), a `town_metrics` table could cache monthly snapshots — but the live query works first.
+
+**Where town scores surface:**
+
+- **Monthly digest** — "Putnam earned 1,240 civic points this month from 18 active citizens"
+- **Town page** — community health badge or progress bar
+- **State page** — leaderboard of most active towns (friendly competition, not ranking)
+- **Crystallization weighting** — a town-level group's proposal carries weight proportional to its civic activity, not just member count
+
+**The flywheel**: Town scores create a feedback loop — citizens see their town's score, feel collective pride, engage more, score goes up. The monthly digest reports the score, which drives engagement, which generates content for the next digest.
 
 #### Implementation notes
 
@@ -635,7 +878,9 @@ This is the "local newspaper" function — synthesizing what's happening in town
 
 ## 6. Schema Evolution Path
 
-### Phase 2 → Phase 3 Migration
+### Phase 3 Migration (complete — applied 2026-02-13)
+
+SQL lives in `scripts/db/talk-phase3-schema.sql`. All DDL has been run on `sandge5_tpb2`.
 
 ```sql
 -- 1. Add clerk_key to idea_log
@@ -683,8 +928,15 @@ CREATE TABLE idea_group_members (
     UNIQUE KEY unique_membership (group_id, user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 5. Backfill: convert ai_response rows to separate AI nodes
--- (migration script — run once, then deprecate ai_response column)
+-- 5. Register clerks
+INSERT INTO ai_clerks (clerk_key, clerk_name, description, model, capabilities, restrictions, enabled)
+VALUES
+  ('brainstorm', ..., 'save_idea,read_back,tag_idea,summarize', ...),
+  ('gatherer', 'Gatherer Clerk', 'Cross-links shareable thoughts by theme...', 'claude-haiku-4-5-20251001', 'link,cluster,summarize', 'Never modify or delete existing ideas.', 1);
+
+-- 6. Register gatherer documentation
+INSERT INTO system_documentation (doc_key, doc_title, doc_content, tags, roles)
+VALUES ('clerk-gatherer-rules', 'Gatherer Clerk Rules', '...', 'gatherer,talk,clerk:gatherer', 'clerk:gatherer');
 ```
 
 ### Backward Compatibility
@@ -693,6 +945,12 @@ CREATE TABLE idea_group_members (
 - Existing chat rows with `ai_response` continue to display in history
 - History rendering checks both: if row has `ai_response`, show inline; if row has AI child nodes, show threaded
 
+### Future Schema Considerations
+
+- `ai_response` column could be dropped after backfill migration (convert old rows to separate AI nodes)
+- `idea_groups` may need a `town` or `jurisdiction` column if groups become location-scoped
+- `idea_links` may need a `weight` or `confidence` column as AI link quality improves
+
 ---
 
 ## 7. File Map
@@ -700,11 +958,16 @@ CREATE TABLE idea_group_members (
 ```
 talk/
   index.php        — Quick Capture (fire-and-forget)
-  brainstorm.php   — AI brainstorm chat
-  history.php      — View/filter/promote/thread thoughts
-  groups.php       — Create/list/manage groups (Phase 3)
-  api.php          — All API actions
-  output/          — Crystallized .md deliverables (Phase 3)
+  brainstorm.php   — AI brainstorm chat (group-aware, shareable toggle)
+  history.php      — View/filter/promote/thread thoughts (clerk badges, AI nodes)
+  groups.php       — Browse/create/manage groups, gatherer, crystallize
+  api.php          — All API actions (25 actions across Phase 1–3)
+  output/          — Crystallized .md deliverables (runtime, not in git)
+    group-{id}-{slug}-v{n}-u{uid}-{timestamp}.md   — versioned proposals
+    group-{id}-{slug}-latest.md                     — current version
+
+scripts/db/
+  talk-phase3-schema.sql     — Phase 3 DDL (clerk_key, idea_links, idea_groups, idea_group_members)
 
 docs/
   talk-architecture.md       — This document (system architecture)

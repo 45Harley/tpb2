@@ -1,0 +1,180 @@
+{
+  "_meta": {
+    "template_version": "1.0",
+    "created_by": null,
+    "created_date": null,
+    "last_updated": null,
+    "status": "draft",
+    "notes": ""
+  },
+
+  "hero": {
+    "town_name": null,
+    "state_name": null,
+    "state_abbrev": null,
+    "region_badge": null,
+    "tagline": null,
+    "description": null,
+    "civic_metrics": {
+      "_note": "Auto-populated from DB at runtime — do not fill in manually",
+      "members": "COUNT(users) WHERE current_town_id = ?",
+      "civic_points": "SUM(users.civic_points) WHERE current_town_id = ?",
+      "active_groups": "COUNT(idea_groups) created by town members with active status",
+      "tasks_active": "COUNT(tasks) matching town task_key prefix"
+    }
+  },
+
+  "overview": {
+    "summary": null,
+    "population": null,
+    "population_source": null,
+    "area_sq_miles": null,
+    "incorporated_year": null,
+    "named_for": null,
+    "nearest_metro": null,
+    "nearest_metro_miles": null,
+    "nearest_airport": null,
+    "nearest_airport_miles": null,
+    "bordering_towns": [],
+    "major_roads": [],
+    "geographic_features": [],
+    "official_website": null
+  },
+
+  "history": {
+    "founding_narrative": null,
+    "key_events": [
+      {
+        "year": null,
+        "event": null
+      }
+    ],
+    "notable_facts": [],
+    "wikipedia_url": null,
+    "historical_society_url": null
+  },
+
+  "government": {
+    "form": null,
+    "mayor": {
+      "name": null,
+      "since": null,
+      "term_expires": null,
+      "phone": null,
+      "email": null
+    },
+    "town_manager": {
+      "name": null,
+      "title": null,
+      "phone": null,
+      "email": null
+    },
+    "town_hall": {
+      "address": null,
+      "phone": null,
+      "hours": null
+    },
+    "council": {
+      "name": null,
+      "meeting_schedule": null,
+      "members": [
+        {
+          "name": null,
+          "seat": null,
+          "term_expires": null
+        }
+      ]
+    },
+    "boards": [
+      {
+        "name": null,
+        "meeting_schedule": null,
+        "vacancies": 0,
+        "contact_phone": null
+      }
+    ],
+    "departments": [
+      {
+        "name": null,
+        "contact_name": null,
+        "contact_phone": null
+      }
+    ],
+    "official_gov_url": null,
+    "ordinances_url": null
+  },
+
+  "budget": {
+    "total_budget": null,
+    "fiscal_year": null,
+    "tax_rate_mill": null,
+    "major_projects": [
+      {
+        "name": null,
+        "status": null,
+        "description": null
+      }
+    ],
+    "finance_url": null,
+    "tax_info_url": null
+  },
+
+  "schools": {
+    "district_name": null,
+    "total_students": null,
+    "district_website": null,
+    "superintendent": null,
+    "schools": [
+      {
+        "name": null,
+        "grades": null,
+        "enrollment": null,
+        "website": null
+      }
+    ],
+    "school_budget": {
+      "total": null,
+      "fiscal_year": null,
+      "change_pct": null
+    },
+    "higher_education": [
+      {
+        "name": null,
+        "type": null,
+        "website": null
+      }
+    ],
+    "ranking_notes": null
+  },
+
+  "living": {
+    "links": [
+      {
+        "name": null,
+        "url": null,
+        "description": null,
+        "category": null
+      }
+    ],
+    "weather_notes": null,
+    "notable_businesses": [],
+    "recreation": [],
+    "dining_shopping_districts": []
+  },
+
+  "districts": {
+    "us_congress": null,
+    "state_senate": null,
+    "state_house": null,
+    "county": null
+  },
+
+  "sources": [
+    {
+      "field": null,
+      "url": null,
+      "accessed_date": null,
+      "notes": null
+    }
+  ]
+}

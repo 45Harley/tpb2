@@ -24,7 +24,15 @@
     "cta_secondary": [
       {"text": "Share Your Thought", "link": "/thought.php"},
       {"text": "Read CT Thoughts", "link": "/read.php"}
-    ]
+    ],
+    "civic_metrics": {
+      "_note": "Auto-populated from DB at runtime — do not fill in manually",
+      "members": "COUNT(users) WHERE current_state_id = ?",
+      "civic_points": "SUM(users.civic_points) WHERE current_state_id = ?",
+      "towns_active": "COUNT(DISTINCT current_town_id) for state members",
+      "active_groups": "COUNT(idea_groups) created by state members with active status",
+      "tasks_active": "COUNT(tasks) matching state task_key prefix"
+    }
   },
 
   "overview": {
