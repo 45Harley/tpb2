@@ -1732,12 +1732,39 @@ function handleCrystallize($pdo, $input, $userId) {
     }
     $isRecrystallize = !empty($prevCrystallizations);
 
+    // Compute metrics for weighting at parent/state level
+    $uniqueAuthors = array_unique(array_filter(array_column($ideas, 'author')));
+    $linkCount = 0;
+    if ($ideaIds) {
+        $placeholders2 = implode(',', array_fill(0, count($ideaIds), '?'));
+        $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM idea_links WHERE idea_id_a IN ($placeholders2) OR idea_id_b IN ($placeholders2)");
+        $stmt->execute(array_merge($ideaIds, $ideaIds));
+        $linkCount = (int)$stmt->fetch()['cnt'];
+    }
+    $subGroupCount = 0;
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM idea_groups WHERE parent_group_id = ?");
+    $stmt->execute([$groupId]);
+    $subGroupCount = (int)$stmt->fetch()['cnt'];
+
+    $metrics = [
+        'contributors'  => count($uniqueAuthors),
+        'ideas'         => count($ideas),
+        'digests'       => count($digests),
+        'links'         => $linkCount,
+        'members'       => count($memberNames),
+        'sub_groups'    => $subGroupCount,
+        'crystallized_at' => date('Y-m-d H:i:s'),
+        'group_id'      => $groupId,
+        'group_name'    => $group['name']
+    ];
+
     // Build crystallization prompt
     $systemPrompt = buildClerkPrompt($pdo, $clerk, ['brainstorm', 'talk']);
     $systemPrompt .= "\n\n## Crystallization Task\n";
     $systemPrompt .= "You are producing a structured proposal for the group \"{$group['name']}\".\n";
     if ($group['description']) $systemPrompt .= "Group purpose: {$group['description']}\n";
     $systemPrompt .= "Contributing members: " . implode(', ', $memberNames) . "\n";
+    $systemPrompt .= "Metrics: {$metrics['contributors']} contributors, {$metrics['ideas']} ideas, {$metrics['links']} connections, {$metrics['digests']} digests\n";
 
     $systemPrompt .= "\n## All Shareable Ideas\n";
     foreach ($ideas as $idea) {
@@ -1753,6 +1780,35 @@ function handleCrystallize($pdo, $input, $userId) {
         }
     }
 
+    // Fetch crystallized child group proposals (for state-level aggregation)
+    $childCrystallizations = [];
+    if ($subGroupCount > 0) {
+        $stmt = $pdo->prepare("
+            SELECT g.id AS group_id, g.name AS group_name, g.tags,
+                   i.id AS idea_id, i.content, i.created_at
+            FROM idea_groups g
+            JOIN idea_log i ON i.clerk_key = 'brainstorm' AND i.category = 'digest' AND i.status = 'distilled'
+            WHERE g.parent_group_id = ? AND g.status IN ('crystallized', 'archived')
+              AND EXISTS (
+                  SELECT 1 FROM idea_links l
+                  JOIN idea_log src ON src.id = l.idea_id_a
+                  JOIN idea_group_members m ON m.user_id = src.user_id AND m.group_id = g.id
+                  WHERE l.idea_id_b = i.id AND l.link_type = 'synthesizes'
+              )
+            ORDER BY i.created_at DESC
+        ");
+        $stmt->execute([$groupId]);
+        $childRows = $stmt->fetchAll();
+        // Group by child group, take most recent crystallization per group
+        $seen = [];
+        foreach ($childRows as $row) {
+            if (!isset($seen[$row['group_id']])) {
+                $seen[$row['group_id']] = true;
+                $childCrystallizations[] = $row;
+            }
+        }
+    }
+
     if ($prevCrystallizations) {
         $systemPrompt .= "\n## Previous Crystallization Draft\n";
         $systemPrompt .= "This group has been crystallized before. Here is the most recent draft:\n\n";
@@ -1760,9 +1816,25 @@ function handleCrystallize($pdo, $input, $userId) {
         $systemPrompt .= "Improve on this draft — incorporate any new ideas, fix any gaps, and produce a better version.\n";
     }
 
+    if ($childCrystallizations) {
+        $systemPrompt .= "\n## Child Group Proposals\n";
+        $systemPrompt .= "This is a parent-level group. The following sub-groups have produced crystallized proposals.\n";
+        $systemPrompt .= "Weight each sub-group's input by its metrics (contributors, ideas) — a proposal backed by 30 people carries more weight than one from 3.\n\n";
+        foreach ($childCrystallizations as $cc) {
+            $systemPrompt .= "### {$cc['group_name']}\n";
+            $systemPrompt .= $cc['content'] . "\n\n";
+        }
+    }
+
     $userPrompt = $isRecrystallize
         ? "Re-crystallize this group. Build on the previous draft, incorporating any new ideas and improving the proposal."
         : "Produce a new structured proposal from scratch.";
+
+    if ($childCrystallizations) {
+        $userPrompt .= " This is a parent-level synthesis — integrate the child group proposals, weighting by their contributor/idea counts.";
+    }
+
+    $metricsLine = "Contributors: {$metrics['contributors']} | Ideas: {$metrics['ideas']} | Connections: {$metrics['links']} | Digests: {$metrics['digests']} | Members: {$metrics['members']}";
 
     $messages = [['role' => 'user', 'content' => <<<PROMPT
 {$userPrompt}
@@ -1786,7 +1858,11 @@ Use this markdown format:
 ## Sources
 (Any external references mentioned in the ideas)
 
+## Metrics
+{$metricsLine}
+
 Write it as a real civic proposal — clear, non-partisan, actionable. Attribute every claim to the person who said it.
+The Metrics section MUST be included exactly as shown — it is machine-readable for state-level aggregation.
 PROMPT]];
 
     $response = talkCallClaudeAPI($systemPrompt, $messages, $clerk['model'], false);
@@ -1824,6 +1900,14 @@ PROMPT]];
         $linkStmt->execute([(int)$idea['id'], $digestId]);
     }
 
+    // Append machine-readable metrics block to markdown
+    $metricsYaml = "\n\n---\n<!-- METRICS\n";
+    foreach ($metrics as $k => $v) {
+        $metricsYaml .= "$k: $v\n";
+    }
+    $metricsYaml .= "-->\n";
+    $markdownWithMetrics = $markdown . $metricsYaml;
+
     // Write .md file (timestamped + latest copy)
     $outputDir = __DIR__ . '/output';
     if (!is_dir($outputDir)) {
@@ -1833,8 +1917,8 @@ PROMPT]];
     $timestamp = date('Y-m-d-His');
     $timestampedFile = "group-{$groupId}-{$slug}-{$timestamp}.md";
     $latestFile = "group-{$groupId}-{$slug}-latest.md";
-    file_put_contents($outputDir . '/' . $timestampedFile, $markdown);
-    file_put_contents($outputDir . '/' . $latestFile, $markdown);
+    file_put_contents($outputDir . '/' . $timestampedFile, $markdownWithMetrics);
+    file_put_contents($outputDir . '/' . $latestFile, $markdownWithMetrics);
     $filePath = "output/{$latestFile}";
 
     // Update group status to crystallized
@@ -1853,6 +1937,7 @@ PROMPT]];
         'idea_id'   => $digestId,
         'file_path' => $filePath,
         'markdown'  => $markdown,
+        'metrics'   => $metrics,
         'usage'     => $response['usage'] ?? null
     ];
 }
