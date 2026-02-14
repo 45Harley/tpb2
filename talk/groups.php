@@ -176,6 +176,8 @@ $mode = $groupId ? 'detail' : 'list';
                 <a href="brainstorm.php">🧠 Brainstorm</a>
                 <a href="history.php">📚 History</a>
                 <a href="index.php">← New thought</a>
+                <a href="help.php">? Help</a>
+                <a href="brainstorm.php?help">🤖 Ask AI</a>
             </div>
         </header>
 

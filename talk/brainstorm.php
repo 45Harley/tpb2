@@ -261,6 +261,19 @@
         .chat-area::-webkit-scrollbar-track { background: transparent; }
         .chat-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
 
+        .anon-nudge {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            color: #ccc;
+            text-align: center;
+            flex-shrink: 0;
+            display: none;
+        }
+        .anon-nudge a { color: #d4af37; }
+
         @media (max-width: 480px) {
             .header { padding: 10px 12px; gap: 6px; }
             .header h1 { font-size: 1rem; }
@@ -288,13 +301,17 @@
             <a href="groups.php">Groups</a>
             <a href="index.php">Quick Capture</a>
             <a href="history.php">History</a>
+            <a href="help.php">?</a>
         </div>
     </div>
 
     <div class="chat-area" id="chatArea">
+        <div class="anon-nudge" id="anonNudge">
+            Try it out — capture ideas, brainstorm, browse groups. But close this tab and it's gone. <a href="/join.php">Create an account</a> or <a href="/login.php">log in</a> to keep your work.
+        </div>
         <div class="welcome" id="welcome">
-            <h2>Let's think together</h2>
-            <p>Share an idea, question, or problem.<br>I'll brainstorm with you and capture the good stuff.</p>
+            <h2 id="welcomeTitle">Let's think together</h2>
+            <p id="welcomeText">Share an idea, question, or problem.<br>I'll brainstorm with you and capture the good stuff.</p>
         </div>
     </div>
 
@@ -314,6 +331,14 @@
         var conversationHistory = [];
         var isWaiting = false;
         var currentGroupId = null;
+        var helpMode = new URLSearchParams(window.location.search).has('help');
+
+        // Help mode: change welcome message
+        if (helpMode) {
+            document.getElementById('welcomeTitle').textContent = 'How can I help?';
+            document.getElementById('welcomeText').innerHTML = 'Ask me anything about /talk — how to capture ideas,<br>brainstorm, use groups, or get your voice heard.';
+            document.getElementById('chatInput').placeholder = 'Ask about /talk...';
+        }
 
         // Group selector
         var groupSelect = document.getElementById('groupSelect');
@@ -472,6 +497,7 @@
                     shareable: shareToggle.checked ? 1 : 0
                 };
                 if (currentGroupId) reqBody.group_id = currentGroupId;
+                if (helpMode) reqBody.help_mode = 1;
 
                 var response = await fetch('api.php?action=brainstorm', {
                     method: 'POST',
@@ -521,6 +547,11 @@
             isWaiting = false;
             sendBtn.disabled = false;
             chatInput.focus();
+        }
+
+        // Show nudge for anonymous users (no tpb_civic_session cookie)
+        if (!document.cookie.split(';').some(function(c) { return c.trim().startsWith('tpb_civic_session='); })) {
+            document.getElementById('anonNudge').style.display = 'block';
         }
 
         // Event listeners

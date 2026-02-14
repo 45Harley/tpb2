@@ -231,6 +231,19 @@
             margin-top: 0.5rem;
         }
         
+        .anon-nudge {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            color: #ccc;
+            text-align: center;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .anon-nudge a { color: #d4af37; }
+
         @media (max-width: 480px) {
             .page-header {
                 flex-direction: column;
@@ -252,7 +265,13 @@
                 <a href="brainstorm.php">🧠 Brainstorm</a>
                 <a href="groups.php">👥 Groups</a>
                 <a href="history.php">📚 History</a>
+                <a href="help.php">? Help</a>
+                <a href="brainstorm.php?help">🤖 Ask AI</a>
             </div>
+        </div>
+
+        <div class="anon-nudge" id="anonNudge">
+            Try it out — capture ideas, brainstorm, browse groups. But close this tab and it's gone. <a href="/join.php">Create an account</a> or <a href="/login.php">log in</a> to keep your work.
         </div>
 
         <div class="capture-area">
@@ -415,6 +434,11 @@
             }
         }
         
+        // Show nudge for anonymous users (no tpb_civic_session cookie)
+        if (!document.cookie.split(';').some(c => c.trim().startsWith('tpb_civic_session='))) {
+            document.getElementById('anonNudge').style.display = 'block';
+        }
+
         // Allow Ctrl+Enter to submit
         textInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {

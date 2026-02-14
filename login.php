@@ -140,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     'expires' => $cookieExpiry,
                     'path' => '/',
                     'secure' => isset($_SERVER['HTTPS']),
-                    'httponly' => true,
+                    'httponly' => false,
                     'samesite' => 'Lax'
                 ]);
                 

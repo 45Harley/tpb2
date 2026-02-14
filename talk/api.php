@@ -509,6 +509,23 @@ function handleBrainstorm($pdo, $input, $userId) {
         }
     }
 
+    // Help mode: inject /talk knowledge so AI can answer questions about the system
+    $helpMode = (int)($input['help_mode'] ?? 0);
+    if ($helpMode) {
+        $systemPrompt .= "\n\n## Help Mode\n";
+        $systemPrompt .= "The user is asking about how /talk works. You are a helpful guide.\n";
+        $systemPrompt .= "Answer clearly and concisely. Here's what you know:\n\n";
+        $systemPrompt .= "**Quick Capture** (/talk/) — Fastest way to save a thought. Tap mic or type, pick a category (Idea, Decision, Todo, Note, Question), hit Save. 10 seconds.\n";
+        $systemPrompt .= "**Brainstorm** (/talk/brainstorm.php) — Chat with AI. It asks follow-ups, captures ideas automatically. Group dropdown lets you brainstorm in group context. Shareable toggle shares thoughts with your groups.\n";
+        $systemPrompt .= "**History** (/talk/history.php) — Review all your thoughts. Filter by category/status. Promote ideas through maturity stages: Raw → Refining → Distilled → Actionable. Share individual thoughts to groups.\n";
+        $systemPrompt .= "**Groups** (/talk/groups.php) — Create groups around topics. Members brainstorm + share ideas. Facilitator runs Gather (AI finds connections) then Crystallize (AI produces structured proposal). Roles: Facilitator, Member, Observer.\n";
+        $systemPrompt .= "**Accounts** — Free at /join.php. Without an account, thoughts are tied to your browser tab and disappear when you close it. With an account, everything is saved permanently.\n";
+        $systemPrompt .= "**Privacy** — Thoughts are private by default. Only shared when you explicitly toggle Shareable or share from History. Only your group members see shared thoughts.\n";
+        $systemPrompt .= "**Cost** — Free to users. Each AI session costs TPB about one cent.\n";
+        $systemPrompt .= "**Non-partisan** — Serves all citizens. AI describes, doesn't editorialize.\n\n";
+        $systemPrompt .= "If the user's question isn't about /talk, that's fine — help them with whatever they need, including brainstorming. But default to guide mode.\n";
+    }
+
     $systemPrompt .= "\n\n" . getBrainstormActionInstructions();
 
     $messages = [];
@@ -1908,16 +1925,26 @@ PROMPT]];
     $metricsYaml .= "-->\n";
     $markdownWithMetrics = $markdown . $metricsYaml;
 
-    // Write .md file (timestamped + latest copy)
+    // Write .md file (versioned + latest copy)
+    // Filename convention: group-{id}-{slug}-v{version}-u{userId}-{timestamp}.md
     $outputDir = __DIR__ . '/output';
     if (!is_dir($outputDir)) {
         mkdir($outputDir, 0755, true);
     }
     $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($group['name']));
+    $slug = trim($slug, '-');
+
+    // Compute version number by counting existing versioned files for this group
+    $existingVersions = glob($outputDir . "/group-{$groupId}-*-v*-u*.md");
+    $existingVersions = array_filter($existingVersions, function($f) {
+        return !str_ends_with(basename($f), '-latest.md');
+    });
+    $version = count($existingVersions) + 1;
+
     $timestamp = date('Y-m-d-His');
-    $timestampedFile = "group-{$groupId}-{$slug}-{$timestamp}.md";
+    $versionedFile = "group-{$groupId}-{$slug}-v{$version}-u{$userId}-{$timestamp}.md";
     $latestFile = "group-{$groupId}-{$slug}-latest.md";
-    file_put_contents($outputDir . '/' . $timestampedFile, $markdownWithMetrics);
+    file_put_contents($outputDir . '/' . $versionedFile, $markdownWithMetrics);
     file_put_contents($outputDir . '/' . $latestFile, $markdownWithMetrics);
     $filePath = "output/{$latestFile}";
 

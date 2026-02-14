@@ -343,6 +343,8 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                 <a href="groups.php">👥 Groups</a>
                 <a href="brainstorm.php">🧠 Brainstorm</a>
                 <a href="index.php">← New thought</a>
+                <a href="help.php">? Help</a>
+                <a href="brainstorm.php?help">🤖 Ask AI</a>
             </div>
         </header>
 
