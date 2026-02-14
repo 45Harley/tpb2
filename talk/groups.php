@@ -304,7 +304,8 @@ $mode = $groupId ? 'detail' : 'list';
         var tags = g.tags ? g.tags.split(',').map(function(t) {
             return '<span class="tag">' + t.trim() + '</span>';
         }).join('') : '';
-        var roleBadge = g.user_role ? '<span class="badge ' + g.user_role + '">' + g.user_role + '</span>' : '';
+        var roleLabels = { facilitator: '🎯 Group Facilitator', member: '💬 Group Member', observer: '👁 Group Observer' };
+        var roleBadge = g.user_role ? '<span class="badge ' + g.user_role + '">' + (roleLabels[g.user_role] || g.user_role) + '</span>' : '';
 
         return '<div class="group-card" onclick="location.href=\'?id=' + g.id + '\'">' +
             '<div class="name">' + escHtml(g.name) + ' ' + roleBadge + '</div>' +
@@ -418,13 +419,13 @@ $mode = $groupId ? 'detail' : 'list';
         members.forEach(function(m) {
             var isMe = m.user_id == currentUserId;
             html += '<div class="member-chip">' + escHtml(m.first_name || 'User') +
-                ' <span class="badge ' + m.role + '">' + m.role + '</span>';
+                ' <span class="badge ' + m.role + '">' + (roleLabels[m.role] || m.role) + '</span>';
             if (isFacilitator && !isMe) {
                 html += ' <select onchange="changeMemberRole(' + g.id + ',' + m.user_id + ',this.value)" style="background:rgba(255,255,255,0.1);color:#eee;border:1px solid rgba(255,255,255,0.15);border-radius:4px;padding:1px 4px;font-size:0.7rem;cursor:pointer;margin-left:4px;">' +
                     '<option value="" disabled selected>...</option>' +
-                    (m.role !== 'facilitator' ? '<option value="facilitator">→ facilitator</option>' : '') +
-                    (m.role !== 'member' ? '<option value="member">→ member</option>' : '') +
-                    (m.role !== 'observer' ? '<option value="observer">→ observer</option>' : '') +
+                    (m.role !== 'facilitator' ? '<option value="facilitator">→ Group Facilitator</option>' : '') +
+                    (m.role !== 'member' ? '<option value="member">→ Group Member</option>' : '') +
+                    (m.role !== 'observer' ? '<option value="observer">→ Group Observer</option>' : '') +
                     '<option value="__remove">✕ remove</option>' +
                 '</select>';
             }
