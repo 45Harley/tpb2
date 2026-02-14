@@ -480,7 +480,7 @@ function handleBrainstorm($pdo, $input, $userId) {
             FROM idea_log i
             JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
             LEFT JOIN users u ON i.user_id = u.user_id
-            WHERE i.shareable = 1 AND i.category != 'chat'
+            WHERE i.shareable = 1
             ORDER BY i.created_at DESC LIMIT 30
         ");
         $stmt->execute([$groupId]);
@@ -557,15 +557,16 @@ function handleBrainstorm($pdo, $input, $userId) {
     ]);
     $userRowId = (int)$pdo->lastInsertId();
 
-    // 2. AI response as child node
+    // 2. AI response as child node (inherits shareable from user message)
     $aiStmt = $pdo->prepare("
-        INSERT INTO idea_log (session_id, parent_id, content, category, status, source, clerk_key)
-        VALUES (:session_id, :parent_id, :content, 'chat', 'raw', 'clerk-brainstorm', 'brainstorm')
+        INSERT INTO idea_log (session_id, parent_id, content, category, status, source, shareable, clerk_key)
+        VALUES (:session_id, :parent_id, :content, 'chat', 'raw', 'clerk-brainstorm', :shareable, 'brainstorm')
     ");
     $aiStmt->execute([
         ':session_id' => $sessionId,
         ':parent_id'  => $userRowId,
-        ':content'    => $cleanMessage
+        ':content'    => $cleanMessage,
+        ':shareable'  => $shareable
     ]);
 
     return [
@@ -1084,7 +1085,7 @@ function handleGetGroup($pdo, $userId) {
         FROM idea_log i
         JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.shareable = 1 AND i.category != 'chat'
+        WHERE i.shareable = 1
         ORDER BY i.created_at DESC
         LIMIT 50
     ");
@@ -1387,7 +1388,7 @@ function handleGather($pdo, $input, $userId) {
         FROM idea_log i
         JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.shareable = 1 AND i.category != 'chat'
+        WHERE i.shareable = 1
         ORDER BY i.created_at ASC
     ");
     $stmt->execute([$groupId]);
@@ -1622,7 +1623,7 @@ function handleCrystallize($pdo, $input, $userId) {
         FROM idea_log i
         JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.shareable = 1 AND i.category != 'chat'
+        WHERE i.shareable = 1
         ORDER BY i.created_at ASC
     ");
     $stmt->execute([$groupId]);

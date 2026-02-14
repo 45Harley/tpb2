@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1a1a2e">
     <title>Brainstorm - Talk</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1f9e0;</text></svg>">
@@ -37,11 +35,13 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(0, 0, 0, 0.2);
             z-index: 10;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
-        .header h1 { font-size: 1.1rem; font-weight: 600; color: #eee; }
+        .header h1 { font-size: 1.1rem; font-weight: 600; color: #eee; white-space: nowrap; }
 
-        .header-links { display: flex; gap: 16px; }
+        .header-links { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
         .header-links a {
             color: #4fc3f7;
@@ -258,6 +258,12 @@
         .chat-area::-webkit-scrollbar { width: 8px; }
         .chat-area::-webkit-scrollbar-track { background: transparent; }
         .chat-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+
+        @media (max-width: 480px) {
+            .header { padding: 10px 12px; gap: 6px; }
+            .header h1 { font-size: 1rem; }
+            .header-links { gap: 8px; font-size: 0.75rem; }
+        }
 
         @supports (padding-top: env(safe-area-inset-top)) {
             .header { padding-top: calc(12px + env(safe-area-inset-top)); }

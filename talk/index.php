@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1a1a2e">
     <title>QT - Quick Thought</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
@@ -19,27 +17,51 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             padding: 20px;
             color: #eee;
             overflow-y: auto;
         }
-        
+
         .container {
             width: 100%;
-            max-width: 500px;
-            text-align: center;
+            max-width: 700px;
             margin: 0 auto;
         }
-        
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: #4fc3f7;
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
-        
+
+        .page-header h1 {
+            font-size: 1.3rem;
+            color: #4fc3f7;
+            margin: 0;
+        }
+
+        .header-links {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .header-links a {
+            color: #4fc3f7;
+            text-decoration: none;
+        }
+
+        .header-links a:hover { text-decoration: underline; }
+
+        .capture-area {
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
         .subtitle {
             font-size: 0.9rem;
             color: #aaa;
@@ -47,13 +69,13 @@
         }
         
         .mic-button {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             border: none;
             background: linear-gradient(145deg, #4fc3f7, #0288d1);
             color: white;
-            font-size: 3rem;
+            font-size: 2.5rem;
             cursor: pointer;
             margin: 1rem auto;
             display: flex;
@@ -209,22 +231,33 @@
             margin-top: 0.5rem;
         }
         
-        .history-link {
-            margin-top: 2rem;
-            font-size: 0.85rem;
-        }
-        
-        .history-link a {
-            color: #4fc3f7;
-            text-decoration: none;
+        @media (max-width: 480px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .header-links {
+                gap: 0.75rem;
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>💡 Quick Thought</h1>
+        <div class="page-header">
+            <h1>💡 Quick Thought</h1>
+            <div class="header-links">
+                <a href="brainstorm.php">🧠 Brainstorm</a>
+                <a href="groups.php">👥 Groups</a>
+                <a href="history.php">📚 History</a>
+            </div>
+        </div>
+
+        <div class="capture-area">
         <p class="subtitle">Tap mic to speak, or type below</p>
-        
+
         <button class="mic-button" id="micBtn" title="Tap to speak">🎤</button>
         <p class="no-speech" id="noSpeech" style="display:none;">Voice not supported - type instead</p>
         
@@ -246,12 +279,7 @@
         <button class="submit-btn" id="submitBtn">Save Thought</button>
         
         <div class="status" id="status"></div>
-        
-        <p class="history-link">
-            <a href="brainstorm.php">🧠 Brainstorm with AI</a>
-            &nbsp;·&nbsp;
-            <a href="history.php">View recent thoughts →</a>
-        </p>
+        </div>
     </div>
 
     <script>
