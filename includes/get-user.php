@@ -121,6 +121,31 @@ function getUserBasicBySession($pdo, $sessionId) {
 }
 
 /**
+ * Privacy-aware display name for a user.
+ * Respects show_first_name / show_last_name flags.
+ * Falls back to username if both are hidden.
+ *
+ * @param array $user Row from users table (or getUser() result)
+ * @return string Display-safe name
+ */
+function getDisplayName($user) {
+    if (!$user) return 'Anonymous';
+
+    $parts = [];
+    if (!empty($user['show_first_name']) && !empty($user['first_name'])) {
+        $parts[] = $user['first_name'];
+    }
+    if (!empty($user['show_last_name']) && !empty($user['last_name'])) {
+        $parts[] = $user['last_name'];
+    }
+
+    if ($parts) return implode(' ', $parts);
+
+    // Fallback: username (auto-generated handle)
+    return $user['username'] ?? 'Anonymous';
+}
+
+/**
  * Get nav variables for a user (or visitor)
  */
 function getNavVarsForUser($dbUser, $sessionPoints = 0) {

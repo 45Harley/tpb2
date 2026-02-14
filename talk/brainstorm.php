@@ -323,7 +323,7 @@ try {
 
     <div class="chat-area" id="chatArea">
 <?php if ($dbUser): ?>
-        <div class="user-status"><span class="dot"></span><?= htmlspecialchars($dbUser['username']) ?></div>
+        <div class="user-status"><span class="dot"></span><?= htmlspecialchars(getDisplayName($dbUser)) ?></div>
 <?php else: ?>
         <div class="anon-nudge">
             Try it out — capture ideas, brainstorm, browse groups. But close this tab and it's gone. <a href="/join.php">Create an account</a> or <a href="/login.php">log in</a> to keep your work.

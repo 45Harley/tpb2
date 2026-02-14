@@ -22,6 +22,8 @@
  *   update_member     — POST: Change member role or remove member (Phase 3)
  *   gather            — POST: Run gatherer clerk on group (Phase 3)
  *   crystallize       — POST: Produce crystallized proposal (Phase 3)
+ *   invite_to_group   — POST: Send invites to email addresses (Phase 5)
+ *   get_invites       — GET:  List invites for a group (Phase 5)
  *
  * User identified server-side via getUser() from cookies.
  * Session ID provided by client (JS crypto.randomUUID()).
@@ -50,6 +52,7 @@ $pdo = new PDO(
 
 // User identification
 require_once __DIR__ . '/../includes/get-user.php';
+require_once __DIR__ . '/../includes/smtp-mail.php';
 $dbUser = getUser($pdo);
 $userId = $dbUser ? (int)$dbUser['user_id'] : null;
 
@@ -139,6 +142,14 @@ try {
             break;
         case 'check_staleness':
             echo json_encode(handleCheckStaleness($pdo, $userId));
+            break;
+
+        // Phase 5: Group Invites
+        case 'invite_to_group':
+            echo json_encode(handleInviteToGroup($pdo, $input, $userId, $config));
+            break;
+        case 'get_invites':
+            echo json_encode(handleGetInvites($pdo, $userId));
             break;
 
         default:
@@ -571,7 +582,8 @@ function handleBrainstorm($pdo, $input, $userId) {
         }
 
         $stmt = $pdo->prepare("
-            SELECT i.id, i.content, i.category, i.tags, u.first_name AS author
+            SELECT i.id, i.content, i.category, i.tags,
+                   u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
             FROM idea_log i
             JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
             LEFT JOIN users u ON i.user_id = u.user_id
@@ -580,6 +592,8 @@ function handleBrainstorm($pdo, $input, $userId) {
         ");
         $stmt->execute([$groupId]);
         $groupIdeas = $stmt->fetchAll();
+        foreach ($groupIdeas as &$gi) { $gi['author'] = getDisplayName($gi); }
+        unset($gi);
 
         if ($groupIdeas) {
             $systemPrompt .= "\n## Shareable ideas from group members\n";
@@ -1179,7 +1193,9 @@ function handleGetGroup($pdo, $userId) {
 
     // Members
     $stmt = $pdo->prepare("
-        SELECT m.user_id, m.role, m.joined_at, u.first_name
+        SELECT m.user_id, m.role, m.joined_at,
+               u.first_name, u.last_name, u.username,
+               u.show_first_name, u.show_last_name
         FROM idea_group_members m
         JOIN users u ON u.user_id = m.user_id
         WHERE m.group_id = ?
@@ -1188,10 +1204,19 @@ function handleGetGroup($pdo, $userId) {
     $stmt->execute([$groupId]);
     $members = $stmt->fetchAll();
 
+    // Compute display names respecting privacy flags
+    foreach ($members as &$m) {
+        $m['display_name'] = getDisplayName($m);
+        // Strip raw name fields from response
+        unset($m['first_name'], $m['last_name'], $m['username'], $m['show_first_name'], $m['show_last_name']);
+    }
+    unset($m);
+
     // Recent shareable ideas from group members
     $stmt = $pdo->prepare("
         SELECT i.id, i.content, i.category, i.status, i.tags, i.source, i.clerk_key,
-               i.created_at, u.first_name AS user_first_name,
+               i.created_at, u.first_name, u.last_name, u.username AS user_username,
+               u.show_first_name, u.show_last_name,
                (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id AND c.deleted_at IS NULL) AS children_count,
                (SELECT COUNT(*) FROM idea_links l WHERE l.idea_id_a = i.id OR l.idea_id_b = i.id) AS link_count
         FROM idea_log i
@@ -1203,6 +1228,13 @@ function handleGetGroup($pdo, $userId) {
     ");
     $stmt->execute([$groupId]);
     $ideas = $stmt->fetchAll();
+
+    // Compute display names for idea authors
+    foreach ($ideas as &$idea) {
+        $idea['author_display'] = $idea['clerk_key'] ? 'AI' : getDisplayName($idea);
+        unset($idea['first_name'], $idea['last_name'], $idea['user_username'], $idea['show_first_name'], $idea['show_last_name']);
+    }
+    unset($idea);
 
     // Sub-groups
     $stmt = $pdo->prepare("
@@ -1572,7 +1604,8 @@ function handleGather($pdo, $input, $userId) {
     // Fetch shareable ideas from group members (exclude gatherer's own digests to prevent feedback loop)
     $stmt = $pdo->prepare("
         SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
-               u.first_name AS author, i.clerk_key
+               u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name,
+               i.clerk_key
         FROM idea_log i
         JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
@@ -1582,6 +1615,8 @@ function handleGather($pdo, $input, $userId) {
     ");
     $stmt->execute([$groupId]);
     $ideas = $stmt->fetchAll();
+    foreach ($ideas as &$gi) { $gi['author'] = getDisplayName($gi); }
+    unset($gi);
 
     if (count($ideas) < 2) {
         return ['success' => false, 'error' => 'Need at least 2 shareable ideas to gather'];
@@ -1865,7 +1900,7 @@ function handleCrystallize($pdo, $input, $userId) {
     // Fetch all shareable ideas from group members
     $stmt = $pdo->prepare("
         SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
-               u.first_name AS author
+               u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
         FROM idea_log i
         JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
@@ -1874,6 +1909,8 @@ function handleCrystallize($pdo, $input, $userId) {
     ");
     $stmt->execute([$groupId]);
     $ideas = $stmt->fetchAll();
+    foreach ($ideas as &$gi) { $gi['author'] = getDisplayName($gi); }
+    unset($gi);
 
     // Fetch existing digests (from gatherer)
     $stmt = $pdo->prepare("
@@ -1890,14 +1927,15 @@ function handleCrystallize($pdo, $input, $userId) {
     $stmt->execute([$groupId]);
     $digests = $stmt->fetchAll();
 
-    // Fetch members
+    // Fetch members (display names)
     $stmt = $pdo->prepare("
-        SELECT u.first_name FROM idea_group_members m
+        SELECT u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
+        FROM idea_group_members m
         JOIN users u ON u.user_id = m.user_id
         WHERE m.group_id = ? AND m.role != 'observer'
     ");
     $stmt->execute([$groupId]);
-    $memberNames = array_column($stmt->fetchAll(), 'first_name');
+    $memberNames = array_map('getDisplayName', $stmt->fetchAll());
 
     // Fetch previous crystallization digests (our own prior output for this group)
     $prevCrystallizations = [];
@@ -2137,5 +2175,213 @@ PROMPT]];
         'markdown'  => $markdown,
         'metrics'   => $metrics,
         'usage'     => $response['usage'] ?? null
+    ];
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 5: Group Invites
+// ═══════════════════════════════════════════════════════════════════
+
+function handleInviteToGroup($pdo, $input, $userId, $config) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $groupId = (int)($input['group_id'] ?? 0);
+    $emailsRaw = trim($input['emails'] ?? '');
+
+    if (!$groupId || !$emailsRaw) {
+        return ['success' => false, 'error' => 'group_id and emails are required'];
+    }
+
+    // Verify caller is facilitator
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $userId]);
+    $myRole = $stmt->fetch();
+    if (!$myRole || $myRole['role'] !== 'facilitator') {
+        return ['success' => false, 'error' => 'Only facilitators can send invites'];
+    }
+
+    // Check group exists and is not archived
+    $stmt = $pdo->prepare("SELECT id, name, status FROM idea_groups WHERE id = ?");
+    $stmt->execute([$groupId]);
+    $group = $stmt->fetch();
+    if (!$group) {
+        return ['success' => false, 'error' => 'Group not found'];
+    }
+    if ($group['status'] === 'archived') {
+        return ['success' => false, 'error' => 'Cannot invite to an archived group'];
+    }
+
+    // Get facilitator display name for the email
+    $stmt = $pdo->prepare("SELECT first_name, last_name, username, show_first_name, show_last_name FROM users WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    $facilitator = $stmt->fetch();
+    $facilitatorName = getDisplayName($facilitator);
+
+    // Parse emails (comma, newline, or semicolon separated)
+    $emails = preg_split('/[\s,;]+/', $emailsRaw, -1, PREG_SPLIT_NO_EMPTY);
+    $emails = array_unique(array_map('strtolower', array_map('trim', $emails)));
+
+    $results = [];
+    $invitedCount = 0;
+    $errorCount = 0;
+    $baseUrl = $config['base_url'];
+    $expiresAt = date('Y-m-d H:i:s', strtotime('+7 days'));
+
+    foreach ($emails as $email) {
+        // Validate email format
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $results[] = ['email' => $email, 'status' => 'invalid_email'];
+            $errorCount++;
+            continue;
+        }
+
+        // Look up user by email with verified status
+        $stmt = $pdo->prepare("
+            SELECT u.user_id, u.email
+            FROM users u
+            JOIN user_identity_status uis ON uis.user_id = u.user_id
+            WHERE LOWER(u.email) = ? AND uis.email_verified = 1
+        ");
+        $stmt->execute([$email]);
+        $invitee = $stmt->fetch();
+
+        if (!$invitee) {
+            // Check if user exists but isn't verified
+            $stmt = $pdo->prepare("SELECT user_id FROM users WHERE LOWER(email) = ?");
+            $stmt->execute([$email]);
+            if ($stmt->fetch()) {
+                $results[] = ['email' => $email, 'status' => 'not_verified'];
+            } else {
+                $results[] = ['email' => $email, 'status' => 'not_found'];
+            }
+            $errorCount++;
+            continue;
+        }
+
+        $inviteeId = (int)$invitee['user_id'];
+
+        // Check if already a member
+        $stmt = $pdo->prepare("SELECT id FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $stmt->execute([$groupId, $inviteeId]);
+        if ($stmt->fetch()) {
+            $results[] = ['email' => $email, 'status' => 'already_member'];
+            $errorCount++;
+            continue;
+        }
+
+        // Check for existing pending invite
+        $stmt = $pdo->prepare("
+            SELECT id FROM group_invites
+            WHERE group_id = ? AND user_id = ? AND status = 'pending' AND expires_at > NOW()
+        ");
+        $stmt->execute([$groupId, $inviteeId]);
+        if ($stmt->fetch()) {
+            $results[] = ['email' => $email, 'status' => 'already_invited'];
+            $errorCount++;
+            continue;
+        }
+
+        // Generate tokens
+        $acceptToken = bin2hex(random_bytes(32));
+        $declineToken = bin2hex(random_bytes(32));
+
+        // Insert invite
+        $stmt = $pdo->prepare("
+            INSERT INTO group_invites (group_id, user_id, invited_by, email, accept_token, decline_token, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([$groupId, $inviteeId, $userId, $email, $acceptToken, $declineToken, $expiresAt]);
+
+        // Build email
+        $acceptUrl = "{$baseUrl}/talk/groups.php?invite_action=accept&token={$acceptToken}";
+        $declineUrl = "{$baseUrl}/talk/groups.php?invite_action=decline&token={$declineToken}";
+        $groupName = htmlspecialchars($group['name']);
+        $facName = htmlspecialchars($facilitatorName);
+
+        $subject = "You're invited to join \"{$group['name']}\" on The People's Branch";
+
+        $htmlBody = "
+        <div style='font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+            <h2 style='color: #1a3a5c;'>You're Invited!</h2>
+            <p><strong>{$facName}</strong> has invited you to join the group <strong>\"{$groupName}\"</strong> on The People's Branch.</p>
+            <p>Would you like to join this group?</p>
+            <div style='text-align: center; margin: 30px 0;'>
+                <a href='{$acceptUrl}' style='background: #2e7d32; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-right: 15px;'>
+                    Yes, I'll Join
+                </a>
+                &nbsp;&nbsp;
+                <a href='{$declineUrl}' style='background: #757575; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;'>
+                    No Thanks
+                </a>
+            </div>
+            <p style='color: #666; font-size: 0.9em;'>This invitation expires in 7 days.</p>
+            <p style='color: #666; font-size: 0.9em;'>If you didn't expect this, you can safely ignore this email.</p>
+            <hr style='border: none; border-top: 1px solid #ddd; margin: 30px 0;'>
+            <p style='color: #888; font-size: 0.85em;'>The People's Branch — Your voice, aggregated</p>
+        </div>
+        ";
+
+        $mailSent = sendSmtpMail($config, $email, $subject, $htmlBody, null, true);
+
+        $results[] = ['email' => $email, 'status' => 'invited', 'mail_sent' => $mailSent];
+        $invitedCount++;
+    }
+
+    return [
+        'success' => true,
+        'results' => $results,
+        'invited_count' => $invitedCount,
+        'error_count' => $errorCount
+    ];
+}
+
+function handleGetInvites($pdo, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $groupId = (int)($_GET['group_id'] ?? 0);
+    if (!$groupId) {
+        return ['success' => false, 'error' => 'group_id is required'];
+    }
+
+    // Verify caller is member or facilitator (not observer)
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $userId]);
+    $myRole = $stmt->fetch();
+    if (!$myRole || $myRole['role'] === 'observer') {
+        return ['success' => false, 'error' => 'Members and facilitators only'];
+    }
+
+    // Batch-expire stale invites
+    $pdo->prepare("
+        UPDATE group_invites SET status = 'expired'
+        WHERE group_id = ? AND status = 'pending' AND expires_at < NOW()
+    ")->execute([$groupId]);
+
+    // Fetch invites with inviter display name
+    $stmt = $pdo->prepare("
+        SELECT gi.id, gi.email, gi.status, gi.created_at, gi.responded_at, gi.expires_at,
+               u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
+        FROM group_invites gi
+        JOIN users u ON u.user_id = gi.invited_by
+        WHERE gi.group_id = ?
+        ORDER BY gi.created_at DESC
+    ");
+    $stmt->execute([$groupId]);
+    $invites = $stmt->fetchAll();
+
+    foreach ($invites as &$inv) {
+        $inv['invited_by_name'] = getDisplayName($inv);
+        unset($inv['first_name'], $inv['last_name'], $inv['username'], $inv['show_first_name'], $inv['show_last_name']);
+    }
+    unset($inv);
+
+    return [
+        'success' => true,
+        'invites' => $invites
     ];
 }

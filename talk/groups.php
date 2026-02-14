@@ -21,7 +21,68 @@ try {
     $pdo = null;
 }
 
+// ── Phase 5: Handle invite accept/decline via token ──
+$inviteResult = null;
+if (isset($_GET['invite_action'], $_GET['token']) && $pdo) {
+    $inviteAction = $_GET['invite_action'];
+    $token = $_GET['token'];
+
+    if ($inviteAction === 'accept') {
+        $stmt = $pdo->prepare("
+            SELECT gi.*, ig.name AS group_name
+            FROM group_invites gi
+            JOIN idea_groups ig ON ig.id = gi.group_id
+            WHERE gi.accept_token = ?
+        ");
+    } elseif ($inviteAction === 'decline') {
+        $stmt = $pdo->prepare("
+            SELECT gi.*, ig.name AS group_name
+            FROM group_invites gi
+            JOIN idea_groups ig ON ig.id = gi.group_id
+            WHERE gi.decline_token = ?
+        ");
+    } else {
+        $stmt = null;
+    }
+
+    if ($stmt) {
+        $stmt->execute([$token]);
+        $invite = $stmt->fetch();
+
+        if (!$invite) {
+            $inviteResult = ['type' => 'error', 'message' => 'Invalid or expired invitation link.'];
+        } elseif ($invite['status'] !== 'pending') {
+            $inviteResult = ['type' => 'info', 'message' => "This invitation was already {$invite['status']}."];
+        } elseif (strtotime($invite['expires_at']) < time()) {
+            // Mark expired
+            $pdo->prepare("UPDATE group_invites SET status = 'expired' WHERE id = ?")->execute([$invite['id']]);
+            $inviteResult = ['type' => 'error', 'message' => 'This invitation has expired. Ask the facilitator to send a new one.'];
+        } elseif ($inviteAction === 'accept') {
+            // Check if already a member (may have joined independently)
+            $stmt2 = $pdo->prepare("SELECT id FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+            $stmt2->execute([$invite['group_id'], $invite['user_id']]);
+            if (!$stmt2->fetch()) {
+                $pdo->prepare("INSERT INTO idea_group_members (group_id, user_id, role) VALUES (?, ?, 'member')")
+                    ->execute([$invite['group_id'], $invite['user_id']]);
+            }
+            $pdo->prepare("UPDATE group_invites SET status = 'accepted', responded_at = NOW() WHERE id = ?")->execute([$invite['id']]);
+            $inviteResult = [
+                'type' => 'success',
+                'message' => "You've joined \"{$invite['group_name']}\"!",
+                'group_id' => $invite['group_id']
+            ];
+        } elseif ($inviteAction === 'decline') {
+            $pdo->prepare("UPDATE group_invites SET status = 'declined', responded_at = NOW() WHERE id = ?")->execute([$invite['id']]);
+            $inviteResult = ['type' => 'info', 'message' => "You've declined the invitation to \"{$invite['group_name']}\"."];
+        }
+    }
+}
+
 $groupId = (int)($_GET['id'] ?? 0);
+// If invite was accepted, show that group
+if ($inviteResult && ($inviteResult['type'] ?? '') === 'success' && isset($inviteResult['group_id'])) {
+    $groupId = (int)$inviteResult['group_id'];
+}
 $mode = $groupId ? 'detail' : 'list';
 ?>
 <!DOCTYPE html>
@@ -194,10 +255,19 @@ $mode = $groupId ? 'detail' : 'list';
             </div>
         </header>
 <?php if ($dbUser): ?>
-        <div class="user-status"><span class="dot"></span><?= htmlspecialchars($dbUser['username']) ?></div>
+        <div class="user-status"><span class="dot"></span><?= htmlspecialchars(getDisplayName($dbUser)) ?></div>
 <?php endif; ?>
 
         <div id="statusMsg"></div>
+
+<?php if ($inviteResult): ?>
+        <div style="padding: 12px 16px; border-radius: 8px; margin-bottom: 1rem; font-size: 0.95rem;
+            <?php if ($inviteResult['type'] === 'success'): ?>background: rgba(46,125,50,0.2); border: 1px solid #4caf50; color: #81c784;
+            <?php elseif ($inviteResult['type'] === 'error'): ?>background: rgba(198,40,40,0.2); border: 1px solid #e57373; color: #ef9a9a;
+            <?php else: ?>background: rgba(255,152,0,0.2); border: 1px solid #ffb74d; color: #ffcc80;<?php endif; ?>">
+            <?= htmlspecialchars($inviteResult['message']) ?>
+        </div>
+<?php endif; ?>
 
         <?php if ($mode === 'list'): ?>
             <!-- ════ LIST VIEW ════ -->
@@ -346,6 +416,7 @@ $mode = $groupId ? 'detail' : 'list';
 
     <?php else: ?>
     // ─── Detail Mode ───
+    var roleLabels = { facilitator: '🎯 Facilitator', member: '💬 Member', observer: '👁 Observer' };
 
     async function loadGroupDetail() {
         var data = await apiGet('get_group', { group_id: groupId });
@@ -418,7 +489,7 @@ $mode = $groupId ? 'detail' : 'list';
         html += '<div class="section" style="margin-top:1.5rem;"><h2>Members</h2><div class="members-list">';
         members.forEach(function(m) {
             var isMe = m.user_id == currentUserId;
-            html += '<div class="member-chip">' + escHtml(m.first_name || 'User') +
+            html += '<div class="member-chip">' + escHtml(m.display_name || 'User') +
                 ' <span class="badge ' + m.role + '">' + (roleLabels[m.role] || m.role) + '</span>';
             if (isFacilitator && !isMe) {
                 html += ' <select onchange="changeMemberRole(' + g.id + ',' + m.user_id + ',this.value)" style="background:rgba(255,255,255,0.1);color:#eee;border:1px solid rgba(255,255,255,0.15);border-radius:4px;padding:1px 4px;font-size:0.7rem;cursor:pointer;margin-left:4px;">' +
@@ -432,6 +503,25 @@ $mode = $groupId ? 'detail' : 'list';
             html += '</div>';
         });
         html += '</div></div>';
+
+        // Invite form (facilitator only)
+        if (isFacilitator) {
+            html += '<div class="section" style="margin-top:1.5rem;">' +
+                '<h2>Invite Members</h2>' +
+                '<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:14px;">' +
+                    '<textarea id="inviteEmails" rows="3" placeholder="Enter email addresses (one per line, or comma-separated)" ' +
+                        'style="width:100%;background:rgba(255,255,255,0.08);color:#eee;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px;font-size:0.9rem;resize:vertical;font-family:inherit;"></textarea>' +
+                    '<button class="btn btn-primary" onclick="sendInvites(' + g.id + ')" style="margin-top:8px;">📧 Send Invites</button>' +
+                    '<div id="inviteResults" style="margin-top:10px;"></div>' +
+                '</div>' +
+            '</div>';
+        }
+
+        // Invite list (members + facilitators, not observers)
+        if (userRole && userRole !== 'observer') {
+            html += '<div class="section" style="margin-top:1.5rem;"><h2>Invitations</h2>' +
+                '<div id="inviteList"><div class="empty">Loading...</div></div></div>';
+        }
 
         // Sub-groups
         if (subGroups.length > 0) {
@@ -452,7 +542,7 @@ $mode = $groupId ? 'detail' : 'list';
             ideas.forEach(function(idea) {
                 var clerkBadge = idea.clerk_key ? ' <span style="background:rgba(124,77,255,0.2);color:#b388ff;padding:1px 6px;border-radius:8px;font-size:0.65rem;font-weight:600;text-transform:uppercase;">' + escHtml(idea.clerk_key) + '</span>' : '';
                 html += '<div class="idea">' +
-                    '<div class="author">' + (idea.clerk_key ? 'AI' : escHtml(idea.user_first_name || 'Anonymous')) + clerkBadge + '</div>' +
+                    '<div class="author">' + escHtml(idea.author_display || 'Anonymous') + clerkBadge + '</div>' +
                     '<div class="content">' + escHtml(idea.content).substring(0, 300) + (idea.content.length > 300 ? '...' : '') + '</div>' +
                     '<div class="idea-meta">' +
                         '<span>' + idea.category + '</span>' +
@@ -467,6 +557,11 @@ $mode = $groupId ? 'detail' : 'list';
         html += '</div></div>';
 
         el.innerHTML = html;
+
+        // Load invites for members/facilitators
+        if (userRole && userRole !== 'observer') {
+            loadInvites(groupId);
+        }
 
         // Check staleness for facilitators
         if (isFacilitator && ['active', 'crystallizing', 'crystallized'].includes(g.status)) {
@@ -573,6 +668,85 @@ $mode = $groupId ? 'detail' : 'list';
         } else {
             showStatus(data.error, 'error');
         }
+    }
+
+    async function sendInvites(gId) {
+        var textarea = document.getElementById('inviteEmails');
+        var emails = textarea.value.trim();
+        if (!emails) { showStatus('Enter at least one email address', 'error'); return; }
+
+        var resultsEl = document.getElementById('inviteResults');
+        resultsEl.innerHTML = '<div style="color:#aaa;font-size:0.85rem;">Sending invites...</div>';
+
+        var data = await apiPost('invite_to_group', { group_id: gId, emails: emails });
+        if (!data.success) {
+            resultsEl.innerHTML = '<div style="color:#ef9a9a;">' + escHtml(data.error) + '</div>';
+            return;
+        }
+
+        var statusLabels = {
+            invited: { color: '#81c784', label: 'Invited' },
+            invalid_email: { color: '#ef9a9a', label: 'Invalid email' },
+            not_found: { color: '#ef9a9a', label: 'No account found' },
+            not_verified: { color: '#ffcc80', label: 'Email not verified' },
+            already_member: { color: '#ffcc80', label: 'Already a member' },
+            already_invited: { color: '#ffcc80', label: 'Already invited' }
+        };
+
+        var html = '';
+        data.results.forEach(function(r) {
+            var info = statusLabels[r.status] || { color: '#aaa', label: r.status };
+            html += '<div style="font-size:0.85rem;padding:3px 0;">' +
+                '<span style="color:' + info.color + ';">' + info.label + '</span> — ' +
+                escHtml(r.email) +
+                (r.status === 'invited' && r.mail_sent === false ? ' <span style="color:#ef9a9a;">(email failed)</span>' : '') +
+            '</div>';
+        });
+
+        html += '<div style="margin-top:6px;font-size:0.8rem;color:#aaa;">' +
+            data.invited_count + ' invited, ' + data.error_count + ' skipped</div>';
+
+        resultsEl.innerHTML = html;
+        if (data.invited_count > 0) {
+            textarea.value = '';
+            loadInvites(gId);
+        }
+    }
+
+    async function loadInvites(gId) {
+        var el = document.getElementById('inviteList');
+        if (!el) return;
+
+        var data = await apiGet('get_invites', { group_id: gId });
+        if (!data.success) {
+            el.innerHTML = '<div class="empty">' + escHtml(data.error) + '</div>';
+            return;
+        }
+
+        if (data.invites.length === 0) {
+            el.innerHTML = '<div class="empty">No invitations sent yet.</div>';
+            return;
+        }
+
+        var statusStyles = {
+            pending: 'background:rgba(255,152,0,0.2);color:#ffb74d;',
+            accepted: 'background:rgba(76,175,80,0.2);color:#81c784;',
+            declined: 'background:rgba(244,67,54,0.2);color:#ef9a9a;',
+            expired: 'background:rgba(158,158,158,0.2);color:#bbb;'
+        };
+
+        var html = '';
+        data.invites.forEach(function(inv) {
+            var style = statusStyles[inv.status] || 'color:#aaa;';
+            html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.85rem;flex-wrap:wrap;">' +
+                '<span style="color:#eee;min-width:180px;">' + escHtml(inv.email) + '</span>' +
+                '<span style="padding:2px 8px;border-radius:8px;font-size:0.75rem;font-weight:600;' + style + '">' + inv.status + '</span>' +
+                '<span style="color:#888;font-size:0.75rem;">by ' + escHtml(inv.invited_by_name) + '</span>' +
+                '<span style="color:#666;font-size:0.7rem;">' + inv.created_at.substring(0, 16) + '</span>' +
+            '</div>';
+        });
+
+        el.innerHTML = html;
     }
 
     loadGroupDetail();

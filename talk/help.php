@@ -238,7 +238,7 @@ try {
             </div>
         </div>
 <?php if ($dbUser): ?>
-        <div class="user-status"><span class="dot"></span><?= htmlspecialchars($dbUser['username']) ?></div>
+        <div class="user-status"><span class="dot"></span><?= htmlspecialchars(getDisplayName($dbUser)) ?></div>
 <?php endif; ?>
 
         <!-- ═══════ QUICK REFERENCE ═══════ -->

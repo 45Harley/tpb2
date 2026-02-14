@@ -69,7 +69,8 @@ try {
 
     $sql = "
         SELECT i.*,
-               u.first_name AS user_first_name,
+               u.first_name AS user_first_name, u.last_name AS user_last_name,
+               u.username AS user_username, u.show_first_name, u.show_last_name,
                (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id AND c.deleted_at IS NULL) AS children_count,
                (SELECT COUNT(*) FROM idea_links l WHERE l.idea_id_a = i.id AND l.link_type = 'synthesizes') AS synth_link_count
         FROM idea_log i
@@ -372,7 +373,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
             </div>
         </header>
 <?php if ($dbUser): ?>
-        <div class="user-status"><span class="dot"></span><?= htmlspecialchars($dbUser['username']) ?></div>
+        <div class="user-status"><span class="dot"></span><?= htmlspecialchars(getDisplayName($dbUser)) ?></div>
 <?php endif; ?>
 
         <!-- Category filters -->
@@ -441,7 +442,13 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                 function renderThread($nodes, $depth, $icons, $statusColors, $statusOrder, $currentUserId, $view) {
                     foreach ($nodes as $t):
                         $isOwner = $currentUserId && ((int)($t['user_id'] ?? 0) === $currentUserId || empty($t['user_id']));
-                        $displayName = $isOwner ? 'You' : ($t['user_first_name'] ?? 'Anonymous');
+                        $displayName = $isOwner ? 'You' : getDisplayName([
+                            'first_name' => $t['user_first_name'] ?? '',
+                            'last_name' => $t['user_last_name'] ?? '',
+                            'username' => $t['user_username'] ?? '',
+                            'show_first_name' => $t['show_first_name'] ?? 0,
+                            'show_last_name' => $t['show_last_name'] ?? 0,
+                        ]);
                         $statusColor = $statusColors[$t['status'] ?? 'raw'] ?? '#888';
                         $nextStatus = $statusOrder[$t['status'] ?? 'raw'] ?? null;
                         $childCount = (int)($t['children_count'] ?? 0);
@@ -516,7 +523,13 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
             <!-- Flat view (default) -->
             <?php foreach ($thoughts as $t):
                 $isOwner = $currentUserId && ((int)($t['user_id'] ?? 0) === $currentUserId || empty($t['user_id']));
-                $displayName = $isOwner ? 'You' : ($t['user_first_name'] ?? 'Anonymous');
+                $displayName = $isOwner ? 'You' : getDisplayName([
+                            'first_name' => $t['user_first_name'] ?? '',
+                            'last_name' => $t['user_last_name'] ?? '',
+                            'username' => $t['user_username'] ?? '',
+                            'show_first_name' => $t['show_first_name'] ?? 0,
+                            'show_last_name' => $t['show_last_name'] ?? 0,
+                        ]);
                 $statusColor = $statusColors[$t['status'] ?? 'raw'] ?? '#888';
                 $nextStatus = $statusOrder[$t['status'] ?? 'raw'] ?? null;
                 $childCount = (int)($t['children_count'] ?? 0);
