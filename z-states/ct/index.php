@@ -80,6 +80,29 @@ $secondaryNav = [
     ['label' => 'Brainstorm',  'anchor' => 'voice'],
 ];
 
+// Civic metrics for hero
+$stmtMetrics = $pdo->prepare("SELECT COUNT(*) as cnt, COALESCE(SUM(civic_points),0) as pts FROM users WHERE current_state_id = ?");
+$stmtMetrics->execute([$stateId]);
+$metricRow = $stmtMetrics->fetch();
+$memberCount = (int)$metricRow['cnt'];
+$civicPoints = (int)$metricRow['pts'];
+
+$stmtTownsActive = $pdo->prepare("SELECT COUNT(DISTINCT current_town_id) as cnt FROM users WHERE current_state_id = ? AND current_town_id IS NOT NULL");
+$stmtTownsActive->execute([$stateId]);
+$townsActive = (int)$stmtTownsActive->fetch()['cnt'];
+
+$stmtGroups = $pdo->prepare("
+    SELECT COUNT(*) as cnt FROM idea_groups g
+    WHERE g.created_by IN (SELECT user_id FROM users WHERE current_state_id = ?)
+    AND g.status IN ('active','crystallizing','crystallized')
+");
+$stmtGroups->execute([$stateId]);
+$activeGroups = (int)$stmtGroups->fetch()['cnt'];
+
+$stmtTasks = $pdo->prepare("SELECT COUNT(*) as cnt FROM tasks WHERE task_key LIKE ? AND status IN ('claimed','in_progress','review','completed')");
+$stmtTasks->execute(['%-' . $stateAbbr . '-%']);
+$activeTasks = (int)$stmtTasks->fetch()['cnt'];
+
 // =====================================================
 // PAGE STYLES
 // =====================================================
@@ -123,6 +146,33 @@ section h3 { color: #88c0d0; margin-top: 1.5em; }
 .hero .tagline { font-size: 1.3em; margin-bottom: 25px; color: #ccc; font-style: italic; }
 .hero-description { font-size: 1.1em; color: #aaa; max-width: 700px; margin: 0 auto 30px; }
 .hero-cta .btn { margin: 8px; }
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+.hero-stat {
+    background: rgba(212, 175, 55, 0.08);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 10px;
+    padding: 10px 20px;
+    text-align: center;
+    min-width: 80px;
+}
+.hero-stat .stat-value {
+    color: #d4af37;
+    font-size: 1.5em;
+    font-weight: bold;
+    line-height: 1.2;
+}
+.hero-stat .stat-label {
+    color: #888;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 
 /* Quick Facts */
 .quick-facts {
@@ -267,6 +317,36 @@ require __DIR__ . '/../../includes/nav.php';
             <a href="#towns" class="btn btn-secondary">Find Your Town</a>
             <a href="#voice" class="btn btn-secondary">Share Your Thought</a>
         </div>
+        <?php if ($memberCount > 0 || $civicPoints > 0): ?>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="stat-value"><?= number_format($memberCount) ?></div>
+                <div class="stat-label">Members</div>
+            </div>
+            <div class="hero-stat">
+                <div class="stat-value"><?= number_format($civicPoints) ?></div>
+                <div class="stat-label">Civic Points</div>
+            </div>
+            <?php if ($townsActive > 0): ?>
+            <div class="hero-stat">
+                <div class="stat-value"><?= $townsActive ?></div>
+                <div class="stat-label">Towns Active</div>
+            </div>
+            <?php endif; ?>
+            <?php if ($activeGroups > 0): ?>
+            <div class="hero-stat">
+                <div class="stat-value"><?= $activeGroups ?></div>
+                <div class="stat-label">Active Groups</div>
+            </div>
+            <?php endif; ?>
+            <?php if ($activeTasks > 0): ?>
+            <div class="hero-stat">
+                <div class="stat-value"><?= $activeTasks ?></div>
+                <div class="stat-label">Tasks</div>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 

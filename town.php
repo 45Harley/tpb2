@@ -136,16 +136,21 @@ if ($dbUser) {
 $pageName = $isTownPage ? $townData['town_name'] : $stateData['state_name'];
 $pageTitle = $pageName . ', ' . $stateData['abbreviation'] . ' — The People\'s Branch';
 
-// Count TPB members in this state/town
+// Civic metrics for this state/town
 $memberCount = 0;
+$civicPoints = 0;
 if ($isTownPage && $townData) {
-    $stmtMembers = $pdo->prepare("SELECT COUNT(*) as cnt FROM users WHERE current_town_id = ?");
-    $stmtMembers->execute([$townData['town_id']]);
-    $memberCount = (int)$stmtMembers->fetch()['cnt'];
+    $stmtMetrics = $pdo->prepare("SELECT COUNT(*) as cnt, COALESCE(SUM(civic_points),0) as pts FROM users WHERE current_town_id = ?");
+    $stmtMetrics->execute([$townData['town_id']]);
+    $metricRow = $stmtMetrics->fetch();
+    $memberCount = (int)$metricRow['cnt'];
+    $civicPoints = (int)$metricRow['pts'];
 } else {
-    $stmtMembers = $pdo->prepare("SELECT COUNT(*) as cnt FROM users WHERE current_state_id = ?");
-    $stmtMembers->execute([$stateData['state_id']]);
-    $memberCount = (int)$stmtMembers->fetch()['cnt'];
+    $stmtMetrics = $pdo->prepare("SELECT COUNT(*) as cnt, COALESCE(SUM(civic_points),0) as pts FROM users WHERE current_state_id = ?");
+    $stmtMetrics->execute([$stateData['state_id']]);
+    $metricRow = $stmtMetrics->fetch();
+    $memberCount = (int)$metricRow['cnt'];
+    $civicPoints = (int)$metricRow['pts'];
 }
 ?>
 <!DOCTYPE html>
@@ -276,8 +281,12 @@ footer a{color:#d4af37;text-decoration:none}
         <div class="data-item"><div class="dl">State House</div><div class="dv">District <?= htmlspecialchars($townData['state_house_district']) ?></div></div>
     <?php endif; ?>
     
-    <div class="data-item"><div class="dl">TPB Members</div><div class="dv"><?= $memberCount ?></div></div>
-    
+    <div class="data-item"><div class="dl">TPB Members</div><div class="dv"><?= number_format($memberCount) ?></div></div>
+
+    <?php if ($civicPoints > 0): ?>
+        <div class="data-item"><div class="dl">Civic Points</div><div class="dv"><?= number_format($civicPoints) ?></div></div>
+    <?php endif; ?>
+
     <?php if ($stateData['legislature_url']): ?>
         <div class="data-item"><div class="dl">Legislature</div><div class="dv"><a href="<?= htmlspecialchars($stateData['legislature_url']) ?>" target="_blank" style="color:#88c0d0;font-size:.85em">Visit →</a></div></div>
     <?php endif; ?>

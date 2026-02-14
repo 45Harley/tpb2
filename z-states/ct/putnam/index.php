@@ -99,6 +99,25 @@ $departments = array_filter($allBranches, fn($b) => $b['branch_type'] === 'Depar
 $totalVacancies = array_sum(array_column($allBranches, 'vacancies'));
 $boardsWithVacancies = array_filter($boards, fn($b) => $b['vacancies'] > 0);
 
+// Civic metrics for hero
+$stmtMetrics = $pdo->prepare("SELECT COUNT(*) as cnt, COALESCE(SUM(civic_points),0) as pts FROM users WHERE current_town_id = ?");
+$stmtMetrics->execute([$townId]);
+$metricRow = $stmtMetrics->fetch();
+$memberCount = (int)$metricRow['cnt'];
+$civicPoints = (int)$metricRow['pts'];
+
+$stmtGroups = $pdo->prepare("
+    SELECT COUNT(*) as cnt FROM idea_groups g
+    WHERE g.created_by IN (SELECT user_id FROM users WHERE current_town_id = ?)
+    AND g.status IN ('active','crystallizing','crystallized')
+");
+$stmtGroups->execute([$townId]);
+$activeGroups = (int)$stmtGroups->fetch()['cnt'];
+
+$stmtTasks = $pdo->prepare("SELECT COUNT(*) as cnt FROM tasks WHERE task_key LIKE ? AND status IN ('claimed','in_progress','review','completed')");
+$stmtTasks->execute(['%-' . $townSlug . '-%']);
+$activeTasks = (int)$stmtTasks->fetch()['cnt'];
+
 // =====================================================
 // PAGE STYLES
 // =====================================================
@@ -131,6 +150,33 @@ section h3 { color: #88c0d0; margin-top: 1.5em; }
     color: #d4af37;
     letter-spacing: 1px;
     margin-bottom: 15px;
+}
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+.hero-stat {
+    background: rgba(212, 175, 55, 0.08);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 10px;
+    padding: 10px 20px;
+    text-align: center;
+    min-width: 80px;
+}
+.hero-stat .stat-value {
+    color: #d4af37;
+    font-size: 1.5em;
+    font-weight: bold;
+    line-height: 1.2;
+}
+.hero-stat .stat-label {
+    color: #888;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* Overview */
@@ -337,6 +383,30 @@ require __DIR__ . '/../../../includes/nav.php';
     <div class="town-badge">THE QUIET CORNER • CONNECTICUT</div>
     <h1>Putnam: <span>A More Perfect Town</span></h1>
     <p class="tagline">Where the Quinebaug flows and neighbors know each other</p>
+    <?php if ($memberCount > 0 || $civicPoints > 0): ?>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <div class="stat-value"><?= number_format($memberCount) ?></div>
+            <div class="stat-label">Members</div>
+        </div>
+        <div class="hero-stat">
+            <div class="stat-value"><?= number_format($civicPoints) ?></div>
+            <div class="stat-label">Civic Points</div>
+        </div>
+        <?php if ($activeGroups > 0): ?>
+        <div class="hero-stat">
+            <div class="stat-value"><?= $activeGroups ?></div>
+            <div class="stat-label">Active Groups</div>
+        </div>
+        <?php endif; ?>
+        <?php if ($activeTasks > 0): ?>
+        <div class="hero-stat">
+            <div class="stat-value"><?= $activeTasks ?></div>
+            <div class="stat-label">Tasks</div>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
     <p style="margin-top: 1em;"><a href="/putnam-vision.html" style="color: #d4af37; font-size: 1.1em; text-decoration: none; border-bottom: 1px solid #d4af3766;">✨ Just Imagine — The Vision for Putnam</a></p>
 </section>
 
