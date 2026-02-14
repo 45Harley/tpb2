@@ -1381,14 +1381,15 @@ function handleGather($pdo, $input, $userId) {
     $stmt->execute([$groupId]);
     $group = $stmt->fetch();
 
-    // Fetch all shareable non-chat ideas from group members
+    // Fetch shareable ideas from group members (exclude gatherer's own digests to prevent feedback loop)
     $stmt = $pdo->prepare("
         SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
-               u.first_name AS author
+               u.first_name AS author, i.clerk_key
         FROM idea_log i
         JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
         WHERE i.shareable = 1
+          AND (i.clerk_key IS NULL OR i.clerk_key != 'gatherer')
         ORDER BY i.created_at ASC
     ");
     $stmt->execute([$groupId]);
@@ -1408,17 +1409,67 @@ function handleGather($pdo, $input, $userId) {
     $stmt->execute(array_merge($ideaIds, $ideaIds));
     $existingLinks = $stmt->fetchAll();
 
+    // Fetch previous gatherer digests for this group (via synthesizes links to group member ideas)
+    $stmt = $pdo->prepare("
+        SELECT DISTINCT d.id, d.content, d.tags, d.created_at
+        FROM idea_log d
+        WHERE d.clerk_key = 'gatherer' AND d.category = 'digest'
+          AND EXISTS (
+              SELECT 1 FROM idea_links l
+              WHERE l.idea_id_b = d.id AND l.link_type = 'synthesizes'
+                AND l.idea_id_a IN ($placeholders)
+          )
+        ORDER BY d.created_at ASC
+    ");
+    $stmt->execute($ideaIds);
+    $previousDigests = $stmt->fetchAll();
+
+    // Find which idea IDs were already gathered (linked as sources to existing digests)
+    $alreadyGatheredIds = [];
+    if ($previousDigests) {
+        $digestIds = array_column($previousDigests, 'id');
+        $dPlaceholders = implode(',', array_fill(0, count($digestIds), '?'));
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT idea_id_a FROM idea_links
+            WHERE idea_id_b IN ($dPlaceholders) AND link_type = 'synthesizes'
+        ");
+        $stmt->execute($digestIds);
+        $alreadyGatheredIds = array_column($stmt->fetchAll(), 'idea_id_a');
+    }
+    $alreadyGatheredSet = array_flip($alreadyGatheredIds);
+
     // Build system prompt
     $systemPrompt = buildClerkPrompt($pdo, $clerk, ['gatherer', 'talk']);
     $systemPrompt .= "\n\n## Group Context\n";
     $systemPrompt .= "Group: {$group['name']}\n";
     if ($group['description']) $systemPrompt .= "Purpose: {$group['description']}\n";
 
+    // Show previous digests so gatherer builds on its own work
+    if ($previousDigests) {
+        $systemPrompt .= "\n## Your Previous Digests\n";
+        $systemPrompt .= "You have gathered this group before. Here are your previous summaries:\n";
+        foreach ($previousDigests as $d) {
+            $systemPrompt .= "- Digest #{$d['id']}: {$d['content']}";
+            if ($d['tags']) $systemPrompt .= " [tags: {$d['tags']}]";
+            $systemPrompt .= "\n";
+        }
+        $systemPrompt .= "\nBuild on these — don't re-summarize the same clusters. Focus on NEW ideas and new connections.\n";
+    }
+
+    // Mark ideas as new vs already-gathered
+    $newCount = 0;
     $systemPrompt .= "\n## Shareable Ideas from Group Members\n";
     foreach ($ideas as $idea) {
-        $systemPrompt .= "- #{$idea['id']} [{$idea['category']}] ({$idea['author']}): {$idea['content']}";
+        $isNew = !isset($alreadyGatheredSet[$idea['id']]);
+        if ($isNew) $newCount++;
+        $marker = $isNew ? '🆕' : '';
+        $systemPrompt .= "- #{$idea['id']} {$marker} [{$idea['category']}] ({$idea['author']}): {$idea['content']}";
         if ($idea['tags']) $systemPrompt .= " [tags: {$idea['tags']}]";
         $systemPrompt .= "\n";
+    }
+
+    if ($previousDigests && $newCount === 0) {
+        return ['success' => false, 'error' => 'No new ideas since last gather'];
     }
 
     if ($existingLinks) {
@@ -1430,7 +1481,11 @@ function handleGather($pdo, $input, $userId) {
 
     $systemPrompt .= "\n\n" . getGathererActionInstructions();
 
-    $messages = [['role' => 'user', 'content' => 'Analyze these shareable ideas. Find thematic connections and create a summary of the key clusters.']];
+    $userPrompt = $previousDigests
+        ? "This is a follow-up gather. " . $newCount . " new ideas (marked 🆕) have been added since your last analysis. Focus on connections involving new ideas, and create new summaries only for clusters that include new material. You can also link new ideas to existing clusters if they fit."
+        : 'Analyze these shareable ideas. Find thematic connections and create a summary of the key clusters.';
+
+    $messages = [['role' => 'user', 'content' => $userPrompt]];
 
     $response = talkCallClaudeAPI($systemPrompt, $messages, $clerk['model'], false);
 
@@ -1601,8 +1656,11 @@ function handleCrystallize($pdo, $input, $userId) {
     if (!$group) {
         return ['success' => false, 'error' => 'Group not found'];
     }
-    if (!in_array($group['status'], ['active', 'crystallizing'])) {
-        return ['success' => false, 'error' => 'Group must be active or crystallizing. Current: ' . $group['status']];
+    if ($group['status'] === 'archived') {
+        return ['success' => false, 'error' => 'Group is archived. Reopen it first to re-crystallize.'];
+    }
+    if ($group['status'] === 'forming') {
+        return ['success' => false, 'error' => 'Group must be active before crystallizing.'];
     }
 
     // Update status to crystallizing
@@ -1653,6 +1711,27 @@ function handleCrystallize($pdo, $input, $userId) {
     $stmt->execute([$groupId]);
     $memberNames = array_column($stmt->fetchAll(), 'first_name');
 
+    // Fetch previous crystallization digests (our own prior output for this group)
+    $prevCrystallizations = [];
+    $ideaIds = array_column($ideas, 'id');
+    if ($ideaIds) {
+        $placeholders = implode(',', array_fill(0, count($ideaIds), '?'));
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT d.id, d.content, d.created_at
+            FROM idea_log d
+            WHERE d.clerk_key = 'brainstorm' AND d.category = 'digest' AND d.status = 'distilled'
+              AND EXISTS (
+                  SELECT 1 FROM idea_links l
+                  WHERE l.idea_id_b = d.id AND l.link_type = 'synthesizes'
+                    AND l.idea_id_a IN ($placeholders)
+              )
+            ORDER BY d.created_at DESC LIMIT 3
+        ");
+        $stmt->execute($ideaIds);
+        $prevCrystallizations = $stmt->fetchAll();
+    }
+    $isRecrystallize = !empty($prevCrystallizations);
+
     // Build crystallization prompt
     $systemPrompt = buildClerkPrompt($pdo, $clerk, ['brainstorm', 'talk']);
     $systemPrompt .= "\n\n## Crystallization Task\n";
@@ -1674,8 +1753,21 @@ function handleCrystallize($pdo, $input, $userId) {
         }
     }
 
+    if ($prevCrystallizations) {
+        $systemPrompt .= "\n## Previous Crystallization Draft\n";
+        $systemPrompt .= "This group has been crystallized before. Here is the most recent draft:\n\n";
+        $systemPrompt .= $prevCrystallizations[0]['content'] . "\n\n";
+        $systemPrompt .= "Improve on this draft — incorporate any new ideas, fix any gaps, and produce a better version.\n";
+    }
+
+    $userPrompt = $isRecrystallize
+        ? "Re-crystallize this group. Build on the previous draft, incorporating any new ideas and improving the proposal."
+        : "Produce a new structured proposal from scratch.";
+
     $messages = [['role' => 'user', 'content' => <<<PROMPT
-Produce a structured proposal in markdown format:
+{$userPrompt}
+
+Use this markdown format:
 
 # Proposal: {$group['name']}
 
@@ -1732,14 +1824,18 @@ PROMPT]];
         $linkStmt->execute([(int)$idea['id'], $digestId]);
     }
 
-    // Write .md file
+    // Write .md file (timestamped + latest copy)
     $outputDir = __DIR__ . '/output';
     if (!is_dir($outputDir)) {
         mkdir($outputDir, 0755, true);
     }
     $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($group['name']));
-    $filePath = "output/group-{$groupId}-{$slug}.md";
-    file_put_contents($outputDir . "/group-{$groupId}-{$slug}.md", $markdown);
+    $timestamp = date('Y-m-d-His');
+    $timestampedFile = "group-{$groupId}-{$slug}-{$timestamp}.md";
+    $latestFile = "group-{$groupId}-{$slug}-latest.md";
+    file_put_contents($outputDir . '/' . $timestampedFile, $markdown);
+    file_put_contents($outputDir . '/' . $latestFile, $markdown);
+    $filePath = "output/{$latestFile}";
 
     // Update group status to crystallized
     $pdo->prepare("UPDATE idea_groups SET status = 'crystallized' WHERE id = ?")->execute([$groupId]);

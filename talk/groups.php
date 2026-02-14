@@ -375,12 +375,20 @@ $mode = $groupId ? 'detail' : 'list';
         if (isMember && !isFacilitator) {
             html += '<button class="btn btn-danger" onclick="leaveGroup(' + g.id + ')">Leave</button>';
         }
-        if (isFacilitator && (g.status === 'active' || g.status === 'crystallizing')) {
+        if (isFacilitator && ['active', 'crystallizing', 'crystallized'].includes(g.status)) {
             html += '<button class="btn btn-secondary" onclick="runGatherer(' + g.id + ')">🔗 Run Gatherer</button>';
-            html += '<button class="btn btn-secondary" onclick="crystallize(' + g.id + ')">💎 Crystallize</button>';
+            var crystLabel = g.status === 'crystallized' ? '💎 Re-Crystallize' : '💎 Crystallize';
+            html += '<button class="btn btn-secondary" onclick="crystallize(' + g.id + ')">' + crystLabel + '</button>';
         }
         if (isFacilitator && g.status === 'forming') {
             html += '<button class="btn btn-secondary" onclick="updateStatus(' + g.id + ', \'active\')">Activate Group</button>';
+        }
+        if (isFacilitator && g.status === 'crystallized') {
+            html += '<button class="btn btn-danger" onclick="archiveGroup(' + g.id + ')">📦 Archive (Final)</button>';
+            html += '<button class="btn btn-secondary" onclick="updateStatus(' + g.id + ', \'active\')">🔓 Reopen</button>';
+        }
+        if (isFacilitator && g.status === 'archived') {
+            html += '<button class="btn btn-secondary" onclick="updateStatus(' + g.id + ', \'active\')">🔓 Reopen</button>';
         }
         html += '</div>';
 
@@ -498,9 +506,20 @@ $mode = $groupId ? 'detail' : 'list';
         }
     }
 
+    async function archiveGroup(id) {
+        if (!confirm('Archive this group? This locks the final crystallization as the definitive result. You can reopen later if needed.')) return;
+        var data = await apiPost('update_group', { group_id: id, status: 'archived' });
+        if (data.success) {
+            showStatus('Group archived.', 'success');
+            loadGroupDetail();
+        } else {
+            showStatus(data.error, 'error');
+        }
+    }
+
     async function crystallize(id) {
-        if (!confirm('Crystallize this group into a proposal? This will change the group status.')) return;
-        showStatus('Crystallizing...', 'success');
+        if (!confirm('Crystallize this group into a proposal? You can re-crystallize until the group is archived.')) return;
+        showStatus('Crystallizing... this may take a moment.', 'success');
         var data = await apiPost('crystallize', { group_id: id });
         if (data.success) {
             showStatus('Proposal created! Idea #' + data.idea_id + ' — ' + data.file_path, 'success');
