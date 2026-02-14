@@ -386,8 +386,19 @@ $mode = $groupId ? 'detail' : 'list';
         // Members
         html += '<div class="section" style="margin-top:1.5rem;"><h2>Members</h2><div class="members-list">';
         members.forEach(function(m) {
+            var isMe = m.user_id == currentUserId;
             html += '<div class="member-chip">' + escHtml(m.first_name || 'User') +
-                ' <span class="badge ' + m.role + '">' + m.role + '</span></div>';
+                ' <span class="badge ' + m.role + '">' + m.role + '</span>';
+            if (isFacilitator && !isMe) {
+                html += ' <select onchange="changeMemberRole(' + g.id + ',' + m.user_id + ',this.value)" style="background:rgba(255,255,255,0.1);color:#eee;border:1px solid rgba(255,255,255,0.15);border-radius:4px;padding:1px 4px;font-size:0.7rem;cursor:pointer;margin-left:4px;">' +
+                    '<option value="" disabled selected>...</option>' +
+                    (m.role !== 'facilitator' ? '<option value="facilitator">→ facilitator</option>' : '') +
+                    (m.role !== 'member' ? '<option value="member">→ member</option>' : '') +
+                    (m.role !== 'observer' ? '<option value="observer">→ observer</option>' : '') +
+                    '<option value="__remove">✕ remove</option>' +
+                '</select>';
+            }
+            html += '</div>';
         });
         html += '</div></div>';
 
@@ -467,6 +478,22 @@ $mode = $groupId ? 'detail' : 'list';
             loadGroupDetail();
         } else {
             showStatus(data.error, 'error');
+        }
+    }
+
+    async function changeMemberRole(gId, uId, value) {
+        if (value === '__remove') {
+            if (!confirm('Remove this member from the group?')) { loadGroupDetail(); return; }
+            var data = await apiPost('update_member', { group_id: gId, user_id: uId, remove: true });
+        } else {
+            var data = await apiPost('update_member', { group_id: gId, user_id: uId, role: value });
+        }
+        if (data.success) {
+            showStatus(data.action === 'removed' ? 'Member removed' : 'Role changed to ' + data.role, 'success');
+            loadGroupDetail();
+        } else {
+            showStatus(data.error, 'error');
+            loadGroupDetail();
         }
     }
 

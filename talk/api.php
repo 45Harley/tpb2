@@ -19,6 +19,7 @@
  *   join_group        — POST: Join a group (Phase 3)
  *   leave_group       — POST: Leave a group (Phase 3)
  *   update_group      — POST: Update group settings (Phase 3)
+ *   update_member     — POST: Change member role or remove member (Phase 3)
  *   gather            — POST: Run gatherer clerk on group (Phase 3)
  *   crystallize       — POST: Produce crystallized proposal (Phase 3)
  *
@@ -118,6 +119,9 @@ try {
             break;
         case 'update_group':
             echo json_encode(handleUpdateGroup($pdo, $input, $userId));
+            break;
+        case 'update_member':
+            echo json_encode(handleUpdateMember($pdo, $input, $userId));
             break;
 
         // Phase 3: Gatherer + Crystallization
@@ -1286,6 +1290,58 @@ function handleUpdateGroup($pdo, $input, $userId) {
         'success' => true,
         'group'   => $stmt->fetch()
     ];
+}
+
+function handleUpdateMember($pdo, $input, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $groupId  = (int)($input['group_id'] ?? 0);
+    $targetId = (int)($input['user_id'] ?? 0);
+    $newRole  = $input['role'] ?? null;
+    $remove   = (bool)($input['remove'] ?? false);
+
+    if (!$groupId || !$targetId) {
+        return ['success' => false, 'error' => 'group_id and user_id are required'];
+    }
+
+    // Facilitator check
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $userId]);
+    $myRole = $stmt->fetch();
+    if (!$myRole || $myRole['role'] !== 'facilitator') {
+        return ['success' => false, 'error' => 'Only facilitators can manage members'];
+    }
+
+    // Can't modify yourself through this endpoint
+    if ($targetId === $userId) {
+        return ['success' => false, 'error' => 'Use leave_group to manage your own membership'];
+    }
+
+    // Check target exists in group
+    $stmt = $pdo->prepare("SELECT id, role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $targetId]);
+    $target = $stmt->fetch();
+    if (!$target) {
+        return ['success' => false, 'error' => 'User is not in this group'];
+    }
+
+    if ($remove) {
+        $pdo->prepare("DELETE FROM idea_group_members WHERE group_id = ? AND user_id = ?")->execute([$groupId, $targetId]);
+        return ['success' => true, 'action' => 'removed', 'user_id' => $targetId];
+    }
+
+    if ($newRole) {
+        $validRoles = ['member', 'facilitator', 'observer'];
+        if (!in_array($newRole, $validRoles)) {
+            return ['success' => false, 'error' => 'Invalid role. Valid: ' . implode(', ', $validRoles)];
+        }
+        $pdo->prepare("UPDATE idea_group_members SET role = ? WHERE group_id = ? AND user_id = ?")->execute([$newRole, $groupId, $targetId]);
+        return ['success' => true, 'action' => 'role_changed', 'user_id' => $targetId, 'role' => $newRole];
+    }
+
+    return ['success' => false, 'error' => 'Provide role or remove=true'];
 }
 
 
