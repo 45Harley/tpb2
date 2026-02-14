@@ -255,6 +255,8 @@
         .chat-input:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; }
         .chat-input::placeholder { color: #999; }
 
+        select option { background: #1a1a2e; color: #eee; }
+
         .chat-area::-webkit-scrollbar { width: 8px; }
         .chat-area::-webkit-scrollbar-track { background: transparent; }
         .chat-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
@@ -277,7 +279,7 @@
         <h1 id="headerTitle">&#x1f9e0; Brainstorm</h1>
         <div class="header-links">
             <select id="groupSelect" title="Brainstorm in a group context" style="background: rgba(255,255,255,0.1); color: #eee; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer;">
-                <option value="">Personal</option>
+                <option value="" style="background:#1a1a2e;color:#eee;">Personal</option>
             </select>
             <label class="share-toggle" title="Mark thoughts as shareable for collective brainstorming">
                 <input type="checkbox" id="shareToggle">

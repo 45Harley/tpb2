@@ -118,6 +118,7 @@ $mode = $groupId ? 'detail' : 'list';
             border-radius: 8px; background: rgba(255,255,255,0.06); color: #eee;
             font-family: inherit; font-size: 0.9rem;
         }
+        .form-group select option, select option { background: #1a1a2e; color: #eee; }
         .form-group textarea { min-height: 80px; resize: vertical; }
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
             outline: none; border-color: #4fc3f7;
