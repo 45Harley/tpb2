@@ -56,6 +56,9 @@ $mode = $groupId ? 'detail' : 'list';
         .header-links a { color: #4fc3f7; text-decoration: none; }
         .header-links a:hover { text-decoration: underline; }
 
+        .user-status { font-size: 0.8rem; color: #81c784; text-align: right; margin-bottom: 0.75rem; }
+        .user-status .dot { display: inline-block; width: 8px; height: 8px; background: #4caf50; border-radius: 50%; margin-right: 4px; }
+
         .section { margin-bottom: 2rem; }
 
         .group-card {
@@ -180,6 +183,9 @@ $mode = $groupId ? 'detail' : 'list';
                 <a href="brainstorm.php?help">🤖 Ask AI</a>
             </div>
         </header>
+<?php if ($dbUser): ?>
+        <div class="user-status"><span class="dot"></span><?= htmlspecialchars($dbUser['username']) ?></div>
+<?php endif; ?>
 
         <div id="statusMsg"></div>
 

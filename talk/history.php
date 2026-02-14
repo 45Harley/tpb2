@@ -173,6 +173,9 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
         .header-links a { color: #4fc3f7; text-decoration: none; }
         .header-links a:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; border-radius: 2px; }
 
+        .user-status { font-size: 0.8rem; color: #81c784; text-align: right; margin-bottom: 0.75rem; }
+        .user-status .dot { display: inline-block; width: 8px; height: 8px; background: #4caf50; border-radius: 50%; margin-right: 4px; }
+
         .filters, .status-filters {
             display: flex; gap: 8px; margin-bottom: 0.75rem; flex-wrap: wrap;
         }
@@ -347,6 +350,9 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                 <a href="brainstorm.php?help">🤖 Ask AI</a>
             </div>
         </header>
+<?php if ($dbUser): ?>
+        <div class="user-status"><span class="dot"></span><?= htmlspecialchars($dbUser['username']) ?></div>
+<?php endif; ?>
 
         <!-- Category filters -->
         <div class="filters">

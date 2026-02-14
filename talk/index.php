@@ -1,3 +1,11 @@
+<?php
+$config = require __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/get-user.php';
+try {
+    $pdo = new PDO("mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}", $config['username'], $config['password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $dbUser = getUser($pdo);
+} catch (PDOException $e) { $dbUser = false; }
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -240,9 +248,16 @@
             color: #ccc;
             text-align: center;
             margin-bottom: 1rem;
-            display: none;
         }
         .anon-nudge a { color: #d4af37; }
+
+        .user-status {
+            font-size: 0.8rem;
+            color: #81c784;
+            margin-bottom: 1rem;
+            text-align: right;
+        }
+        .user-status .dot { display: inline-block; width: 8px; height: 8px; background: #4caf50; border-radius: 50%; margin-right: 4px; }
 
         @media (max-width: 480px) {
             .page-header {
@@ -270,9 +285,13 @@
             </div>
         </div>
 
-        <div class="anon-nudge" id="anonNudge">
+<?php if ($dbUser): ?>
+        <div class="user-status"><span class="dot"></span><?= htmlspecialchars($dbUser['username']) ?></div>
+<?php else: ?>
+        <div class="anon-nudge">
             Try it out — capture ideas, brainstorm, browse groups. But close this tab and it's gone. <a href="/join.php">Create an account</a> or <a href="/login.php">log in</a> to keep your work.
         </div>
+<?php endif; ?>
 
         <div class="capture-area">
         <p class="subtitle">Tap mic to speak, or type below</p>
@@ -434,10 +453,6 @@
             }
         }
         
-        // Show nudge for anonymous users (no tpb_civic_session cookie)
-        if (!document.cookie.split(';').some(c => c.trim().startsWith('tpb_civic_session='))) {
-            document.getElementById('anonNudge').style.display = 'block';
-        }
 
         // Allow Ctrl+Enter to submit
         textInput.addEventListener('keydown', (e) => {

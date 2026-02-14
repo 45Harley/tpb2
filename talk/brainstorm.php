@@ -1,3 +1,11 @@
+<?php
+$config = require __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/get-user.php';
+try {
+    $pdo = new PDO("mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}", $config['username'], $config['password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $dbUser = getUser($pdo);
+} catch (PDOException $e) { $dbUser = false; }
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -270,9 +278,17 @@
             color: #ccc;
             text-align: center;
             flex-shrink: 0;
-            display: none;
         }
         .anon-nudge a { color: #d4af37; }
+
+        .user-status {
+            font-size: 0.8rem;
+            color: #81c784;
+            text-align: right;
+            flex-shrink: 0;
+            padding: 4px 8px 0;
+        }
+        .user-status .dot { display: inline-block; width: 8px; height: 8px; background: #4caf50; border-radius: 50%; margin-right: 4px; }
 
         @media (max-width: 480px) {
             .header { padding: 10px 12px; gap: 6px; }
@@ -306,9 +322,13 @@
     </div>
 
     <div class="chat-area" id="chatArea">
-        <div class="anon-nudge" id="anonNudge">
+<?php if ($dbUser): ?>
+        <div class="user-status"><span class="dot"></span><?= htmlspecialchars($dbUser['username']) ?></div>
+<?php else: ?>
+        <div class="anon-nudge">
             Try it out — capture ideas, brainstorm, browse groups. But close this tab and it's gone. <a href="/join.php">Create an account</a> or <a href="/login.php">log in</a> to keep your work.
         </div>
+<?php endif; ?>
         <div class="welcome" id="welcome">
             <h2 id="welcomeTitle">Let's think together</h2>
             <p id="welcomeText">Share an idea, question, or problem.<br>I'll brainstorm with you and capture the good stuff.</p>
@@ -549,10 +569,6 @@
             chatInput.focus();
         }
 
-        // Show nudge for anonymous users (no tpb_civic_session cookie)
-        if (!document.cookie.split(';').some(function(c) { return c.trim().startsWith('tpb_civic_session='); })) {
-            document.getElementById('anonNudge').style.display = 'block';
-        }
 
         // Event listeners
         sendBtn.addEventListener('click', sendMessage);
