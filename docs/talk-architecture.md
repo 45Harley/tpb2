@@ -1,8 +1,8 @@
 # /talk Architecture
 
-**Living document — last updated 2026-02-13 (Phase 3 complete, digest sources expanded)**
+**Living document — last updated 2026-02-14 (Phase 4 complete: edit/delete, staleness, group roles)**
 
-This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built (Phase 1–3), what's designed for the future, and the conceptual model that drives both.
+This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built (Phase 1–4), what's designed for the future, and the conceptual model that drives both.
 
 ---
 
@@ -95,8 +95,12 @@ idea_log
   source          VARCHAR(50)             -- 'web','voice','clerk-brainstorm','clerk-moderator', etc.
   shareable       TINYINT(1) DEFAULT 0    -- gate for group visibility
   clerk_key       VARCHAR(50) NULL        -- which AI role created this (NULL for human)
+  edit_count      INT NOT NULL DEFAULT 0  -- incremented on each edit
+  deleted_at      TIMESTAMP NULL          -- NULL = active, timestamp = soft-deleted
   created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   updated_at      TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+  INDEX idx_deleted_at (deleted_at)       -- efficient active-idea filtering
 ```
 
 **Key principle**: Both user and AI nodes live in the same table. The `source` and `clerk_key` fields distinguish who created the row and in what role.
@@ -137,7 +141,7 @@ Summarizing is the operation that makes both structures work together: the AI re
 
 ---
 
-## 4. What's Built (Phase 1–3)
+## 4. What's Built (Phase 1–4)
 
 ### Pages
 
@@ -145,8 +149,11 @@ Summarizing is the operation that makes both structures work together: the AI re
 |------|-----|---------|-------|
 | Quick Capture | `/talk/index.php` | Fire-and-forget thought entry (voice or text) | 1 |
 | Brainstorm | `/talk/brainstorm.php` | AI-assisted chat, group-aware context | 1+3 |
-| History | `/talk/history.php` | View, filter, promote, thread thoughts (AI nodes + clerk badges) | 1+3 |
-| Groups | `/talk/groups.php` | Create/browse/manage deliberation groups, run gatherer, crystallize | 3 |
+| History | `/talk/history.php` | View, filter, promote, edit, delete, thread thoughts (AI nodes + clerk badges) | 1+3+4 |
+| Groups | `/talk/groups.php` | Create/browse/manage deliberation groups, run gatherer, crystallize, staleness detection | 3+4 |
+| Help / FAQ | `/talk/help.php` | FAQ page with Ask AI mode, anonymous nudge banner | 3 |
+
+All five pages include a **server-rendered login indicator** (green dot + username) via PHP `getUser($pdo)` — replacing earlier client-side cookie sniffing.
 
 ### API: `/talk/api.php`
 
@@ -169,6 +176,11 @@ Summarizing is the operation that makes both structures work together: the AI re
 | `update_member` | POST | Change member role or remove member (facilitator only) | 3 |
 | `gather` | POST | Run gatherer clerk on group — incremental link + digest creation | 3 |
 | `crystallize` | POST | Produce crystallized .md proposal from group (re-runnable) | 3 |
+| `edit` | POST | Edit own idea content (owner-only, not AI, not deleted); increments `edit_count` | 4 |
+| `delete` | POST | Soft-delete own idea (or hard-delete if ungathered with no children) | 4 |
+| `check_staleness` | GET | Check if gather/crystallize digests are stale due to edited/deleted source ideas | 4 |
+
+**Deleted-idea filtering (Phase 4):** All read queries (`history`, `brainstorm` context, `get_group`, `gather`, `crystallize`, `READ_BACK`) add `AND deleted_at IS NULL`. Write actions (`promote`, `toggle_shareable`, `link`) reject deleted ideas.
 
 ### AI Clerk Actions
 
@@ -216,6 +228,9 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 - **Clerk badges**: AI-created nodes show a purple `clerk_key` badge (e.g., "brainstorm", "gatherer")
 - **Clerk node styling**: AI nodes have distinct purple left-border and background
 - **User scoping**: Default shows your own + AI child nodes; "Show all" to see everyone's
+- **Edit button** (✎): Owner-only, not on AI nodes. Inline textarea with save/cancel (Phase 4)
+- **Delete button** (×): Owner-only, not on AI nodes. Soft-delete by default; hard-delete only if ungathered with no children (Phase 4)
+- **(edited) indicator**: Shows when `edit_count > 0`, with tooltip showing count + last edit time (Phase 4)
 
 ### Groups Features
 
@@ -225,6 +240,8 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 - **Facilitator controls**: Activate group, run gatherer, crystallize, re-crystallize, archive, reopen, manage member roles
 - **Group-aware brainstorm**: Dropdown in brainstorm.php, `?group=ID` deep-link from groups page
 - **Recursive structure**: Parent/child groups via `parent_group_id`
+- **Staleness banner** (Phase 4): Orange warning when source ideas have been edited or deleted since the last gather/crystallize. Shows count of changed ideas + digest date. Facilitator-only, prompts re-run.
+- **Role display labels** (Phase 4): Member badges and role dropdowns use "Group Facilitator/Member/Observer" naming with emojis (🎯/💬/👁)
 
 ### Database State
 
@@ -232,8 +249,11 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 -- Tables: idea_log, idea_links, idea_groups, idea_group_members
 -- Columns added in Phase 2: shareable TINYINT(1) NOT NULL DEFAULT 0
 -- Columns added in Phase 3: clerk_key VARCHAR(50) NULL
+-- Columns added in Phase 4: edit_count INT NOT NULL DEFAULT 0, deleted_at TIMESTAMP NULL
+-- Index added in Phase 4: idx_deleted_at on idea_log(deleted_at)
 -- ai_clerks: brainstorm + gatherer clerk rows registered
 -- system_documentation: clerk-gatherer-rules doc registered
+-- user_roles: Group Facilitator (37), Group Member (38), Group Observer (39) registered
 ```
 
 ---
@@ -315,13 +335,15 @@ Each group has:
 
 #### Membership & roles
 
-| Role | Can do |
-|------|--------|
-| **Facilitator** | Create, manage membership, moderate, call crystallization |
-| **Member** | Contribute thoughts, participate in refinement |
-| **Observer** | Read only |
+| Role | Display label | Can do |
+|------|---------------|--------|
+| **facilitator** | 🎯 Group Facilitator | Create, manage membership, moderate, run gatherer, call crystallization |
+| **member** | 💬 Group Member | Contribute thoughts, participate in refinement |
+| **observer** | 👁 Group Observer | Read only (future: may become a learning lab task) |
 
-Multiple facilitators allowed. Creator is first facilitator.
+Multiple facilitators allowed. Creator is first facilitator. Auto-promotion safety net: if the last facilitator leaves, the longest-tenured member is auto-promoted.
+
+**Dual registration**: Roles exist as both an ENUM on `idea_group_members.role` (per-group scope) and as rows in the `user_roles` table (IDs 37–39) for site-wide AI context. The `user_roles` entries ensure AI clerks have full awareness of group role capabilities when generating responses.
 
 #### Access levels
 
@@ -945,6 +967,38 @@ VALUES ('clerk-gatherer-rules', 'Gatherer Clerk Rules', '...', 'gatherer,talk,cl
 - Existing chat rows with `ai_response` continue to display in history
 - History rendering checks both: if row has `ai_response`, show inline; if row has AI child nodes, show threaded
 
+### Phase 4 Migration (complete — applied 2026-02-14)
+
+SQL lives in `scripts/db/talk-phase4-edit-delete.sql` and `scripts/db/talk-phase4-group-roles.sql`.
+
+```sql
+-- Edit/delete support on idea_log
+ALTER TABLE idea_log ADD COLUMN edit_count INT NOT NULL DEFAULT 0;
+ALTER TABLE idea_log ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL;
+ALTER TABLE idea_log ADD INDEX idx_deleted_at (deleted_at);
+
+-- Group roles registered in user_roles for AI context
+INSERT INTO user_roles (id, role_name, ...) VALUES
+  (37, 'Group Facilitator', ...),
+  (38, 'Group Member', ...),
+  (39, 'Group Observer', ...);
+```
+
+#### Soft-delete pattern
+
+- `deleted_at = NULL` → active idea (default)
+- `deleted_at = timestamp` → soft-deleted (hidden from all queries, preserved for gather/crystallize integrity)
+- **Hard delete** only allowed when idea has zero `synthesizes` links in `idea_links` and zero children — permanently removes the row and any associated links
+- All read queries filter `AND deleted_at IS NULL`
+
+#### Staleness detection
+
+After edit or delete, downstream gather/crystallize digests may be stale:
+1. `check_staleness` API finds digest nodes linked via `idea_links` (type `synthesizes`) to the group's ideas
+2. For each digest, checks if any source idea has `deleted_at > digest.created_at` OR (`edit_count > 0` AND `updated_at > digest.created_at`)
+3. Staleness **cascades**: if a source idea is edited after gather, both the gather digest AND any crystallize built on it are stale
+4. Groups page shows an orange warning banner prompting the facilitator to re-run
+
 ### Future Schema Considerations
 
 - `ai_response` column could be dropped after backfill migration (convert old rows to separate AI nodes)
@@ -957,20 +1011,26 @@ VALUES ('clerk-gatherer-rules', 'Gatherer Clerk Rules', '...', 'gatherer,talk,cl
 
 ```
 talk/
-  index.php        — Quick Capture (fire-and-forget)
-  brainstorm.php   — AI brainstorm chat (group-aware, shareable toggle)
-  history.php      — View/filter/promote/thread thoughts (clerk badges, AI nodes)
-  groups.php       — Browse/create/manage groups, gatherer, crystallize
-  api.php          — All API actions (25 actions across Phase 1–3)
+  index.php        — Quick Capture (fire-and-forget, login indicator)
+  brainstorm.php   — AI brainstorm chat (group-aware, shareable toggle, login indicator)
+  history.php      — View/filter/promote/edit/delete/thread thoughts (clerk badges, AI nodes, login indicator)
+  groups.php       — Browse/create/manage groups, gatherer, crystallize, staleness banner, login indicator
+  help.php         — FAQ page, Ask AI mode, anonymous nudge, login indicator
+  api.php          — All API actions (28 actions across Phase 1–4)
   output/          — Crystallized .md deliverables (runtime, not in git)
     group-{id}-{slug}-v{n}-u{uid}-{timestamp}.md   — versioned proposals
     group-{id}-{slug}-latest.md                     — current version
 
 scripts/db/
-  talk-phase3-schema.sql     — Phase 3 DDL (clerk_key, idea_links, idea_groups, idea_group_members)
+  talk-phase3-schema.sql          — Phase 3 DDL (clerk_key, idea_links, idea_groups, idea_group_members)
+  talk-phase3-clerks.sql          — Phase 3 gatherer clerk + documentation registration
+  talk-phase2-brainstorm-clerk.sql — Phase 2 brainstorm clerk registration
+  talk-phase4-edit-delete.sql     — Phase 4 DDL (edit_count, deleted_at, idx_deleted_at)
+  talk-phase4-group-roles.sql     — Phase 4 group roles in user_roles table
 
 docs/
   talk-architecture.md       — This document (system architecture)
+  talk-walkthrough.md        — Visual step-by-step guide for users
   talk-app-plan.md           — Original Phase 1 technical spec (1800 lines)
   talk-brainstorm-use-case.md — Real session demonstrating 1:1 AI brainstorm
   talk-phase3-seeds.md       — Pre-brainstorm notes for Phase 3 vision

@@ -15,12 +15,16 @@ You have a thought ──→ Quick Capture (dump it fast)
                               │
 Want to go deeper? ───→ Brainstorm (chat with AI)
                               │
-Review what you said ──→ History (filter, promote, share)
+Review what you said ──→ History (filter, promote, edit, share)
                               │
 Work with others ──────→ Groups (deliberate, crystallize)
                               │
                         Proposal.md (the deliverable)
+
+Need help? ────────────→ Help / FAQ (guides + Ask AI)
 ```
+
+**Login indicator**: All pages show a green dot + your username when logged in, or a nudge to create an account when anonymous.
 
 ---
 
@@ -64,8 +68,7 @@ This is the fastest on-ramp. Got a thought? Speak it or type it. Done in 10 seco
 
 1. **Tap the mic** or just start typing in the text box
 2. **Pick a category** — "Idea" is selected by default. Use "Question" if it's a question, "Todo" if it's an action item, etc.
-3. **Hit "Save Thought"** — your thought is saved. A green confirmation appears briefly.
-4. That's it. Your thought is now in your history.
+ 
 
 ### Tips
 - **Voice works great** for capturing thoughts on the go — just tap the mic, speak naturally, and it fills in the text
@@ -226,6 +229,7 @@ Each thought card shows:
 | **[brainstorm] badge** | Purple badge = AI-generated, shows which clerk role created it |
 | **Status pill** | RAW → REFINING → DISTILLED → ACTIONABLE (the idea's maturity) |
 | **Timestamp** | When it was created |
+| **(edited)** | Shows if idea was modified after creation, with tooltip showing edit count + last edit time |
 | **"builds on #42"** | This thought is a reply to thought #42 (click to jump) |
 | **"2 builds →"** | 2 other thoughts reply to this one (click to see the thread) |
 
@@ -239,7 +243,11 @@ Each thought card shows:
 | **View a thread** | Click "2 builds →" on a card | Shows just that root idea and all its replies |
 | **Share a thought** | Check the "□ Share" checkbox | Makes this thought visible to your groups |
 | **Promote status** | Click "⬆ ref" button | Advances the idea: raw → refining → distilled → actionable |
+| **Edit a thought** | Click ✎ (pencil) on your own card | Inline textarea appears — edit, then Save or Cancel. Edit count tracked. |
+| **Delete a thought** | Click × on your own card | Soft-deletes by default (hidden but preserved). If ungathered, offers permanent delete. |
 | **Show all** | Click "Show all" link in header | See everyone's shared thoughts, not just yours |
+
+**Note**: Edit and delete buttons only appear on your own human-authored thoughts — not on AI-generated nodes.
 
 ### Threaded view
 
@@ -363,6 +371,7 @@ If you're a facilitator, you have special powers:
 | **💎 Re-Crystallize** | Runs crystallization again, improving on the previous draft | After new ideas are added or to refine the proposal |
 | **📦 Archive** | Locks the final crystallization as the definitive result | When the proposal is final |
 | **🔓 Reopen** | Returns an archived/crystallized group back to active | If more work is needed |
+| **⚠️ Stale banner** | Warning appears automatically when source ideas changed since last gather/crystallize | Re-run gatherer or re-crystallize to update |
 
 ### The deliberation flow
 
@@ -392,13 +401,24 @@ Here's the typical lifecycle of a group:
 
 ### Group roles
 
-| Role | Can do |
-|------|--------|
-| **Facilitator** | Everything — manage members, run gatherer, crystallize, archive/reopen |
-| **Member** | Brainstorm, share ideas, participate in discussion |
-| **Observer** | Read only — can see shared ideas but can't contribute |
+| Role | Display | Can do |
+|------|---------|--------|
+| **Facilitator** | 🎯 Group Facilitator | Everything — manage members, run gatherer, crystallize, archive/reopen |
+| **Member** | 💬 Group Member | Brainstorm, share ideas, participate in discussion |
+| **Observer** | 👁 Group Observer | Read only — can see shared ideas but can't contribute |
 
-Facilitators can change anyone's role using the dropdown on their member chip.
+Facilitators can change anyone's role using the dropdown on their member chip. The group creator is the first facilitator. Multiple facilitators are allowed.
+
+### Staleness warnings
+
+If someone edits or deletes an idea after a gatherer or crystallization has run, the outputs become **stale** — they no longer reflect the current state of the group's ideas. Facilitators see an orange warning banner:
+
+```
+⚠️ Some outputs are stale — 2 source idea(s) changed since Feb 14.
+    Re-run gatherer or re-crystallize to update.
+```
+
+This cascades: if a source idea is edited, both the gather digest AND any crystallization built on it are flagged stale.
 
 ### Recursive groups (groups of groups)
 
@@ -451,12 +471,14 @@ Every page links to every other page:
 | Dump a quick thought | Quick Capture (`/talk/`) |
 | Think deeper with AI | Brainstorm (`/talk/brainstorm.php`) |
 | Review my past thoughts | History (`/talk/history.php`) |
+| Edit or delete a thought | History → ✎ (edit) or × (delete) on your card |
 | Collaborate with others | Groups (`/talk/groups.php`) |
 | Find ideas by topic | History → filter by category or use tags |
 | See what my group is thinking | Groups → click group → shareable ideas |
 | Turn ideas into a proposal | Groups → Run Gatherer → Crystallize |
 | Mark something important | History → Promote (raw → refining → distilled → actionable) |
 | Let my group see my thought | History → check "Share" on the thought |
+| Get help or learn more | Help / FAQ (`/talk/help.php`) |
 
 ---
 

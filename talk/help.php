@@ -324,6 +324,8 @@ Work with others &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Groups (deliberate, cr
             <ul>
                 <li><strong>Share</strong> a thought to make it visible to your groups</li>
                 <li><strong>Promote</strong> to advance an idea through the maturity stages</li>
+                <li><strong>Edit</strong> (&#x270E;) your own thoughts inline — edit count is tracked for transparency</li>
+                <li><strong>Delete</strong> (&times;) your own thoughts — soft-deleted by default so gathered outputs stay intact</li>
                 <li><strong>Threaded view</strong> shows conversation trees with replies indented</li>
             </ul>
         </div>
@@ -343,8 +345,54 @@ Work with others &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Groups (deliberate, cr
                 <li><strong>Iterate</strong> — add more ideas, re-gather, re-crystallize</li>
                 <li><strong>Archive</strong> — lock the final proposal</li>
             </ol>
-            <p><strong>Roles:</strong> Facilitator (manages everything), Member (brainstorms + shares), Observer (read-only).</p>
+            <p><strong>Roles:</strong> &#x1f3af; Group Facilitator (manages everything), &#x1f4ac; Group Member (brainstorms + shares), &#x1f441; Group Observer (read-only).</p>
         </div>
+
+        <!-- ═══════ FACILITATOR GUIDE ═══════ -->
+
+        <h2>Facilitator Guide</h2>
+
+        <p>When you create a group, you become its <strong>&#x1f3af; Group Facilitator</strong>. This is the most important role in /talk — you guide the group from scattered ideas to a concrete proposal.</p>
+
+        <h3>Creating a group</h3>
+        <p>A good group starts with a clear purpose. Write a description that tells members what you're trying to figure out — "Affordable housing options for Putnam" is better than "Housing stuff." Add tags so people can discover your group.</p>
+        <ul>
+            <li><strong>Observable</strong> (default) — transparent, anyone can watch, only members contribute. Best for civic deliberation.</li>
+            <li><strong>Open</strong> — anyone can jump in. Good for broad community input.</li>
+            <li><strong>Closed</strong> — invitation only. Good for focused working groups.</li>
+        </ul>
+
+        <h3>Managing roles</h3>
+        <ul>
+            <li><strong>&#x1f3af; Group Facilitator</strong> — Full control: manage members, run AI tools, archive. You can promote members to co-facilitator.</li>
+            <li><strong>&#x1f4ac; Group Member</strong> — The default role. Brainstorms, shares ideas, participates in discussion.</li>
+            <li><strong>&#x1f441; Group Observer</strong> — Read-only. Great for people who want to follow along without contributing. Observers join automatically when the group is Observable.</li>
+        </ul>
+        <p>Multiple facilitators are allowed and encouraged for larger groups. If the last facilitator leaves, the longest-tenured member is auto-promoted so the group never loses its leader.</p>
+
+        <h3>When to run the Gatherer</h3>
+        <p>The gatherer AI scans all shared ideas, finds thematic connections, and creates summary digests. Run it when:</p>
+        <ul>
+            <li>Several members have shared ideas (at least 5-10 shareable thoughts)</li>
+            <li>New ideas have been added since the last run</li>
+            <li>You want to see what themes are emerging before crystallizing</li>
+        </ul>
+        <p>The gatherer is <strong>incremental</strong> — it won't re-process ideas it already covered. Safe to run as often as you want.</p>
+
+        <h3>When to Crystallize</h3>
+        <p>Crystallization turns everything — ideas, gatherer digests, conversation threads — into a structured proposal document. Run it when:</p>
+        <ul>
+            <li>The group has enough material for a real proposal (usually after at least one gatherer run)</li>
+            <li>Discussion feels like it's converging on something concrete</li>
+            <li>You want to share a deliverable with people outside the group</li>
+        </ul>
+        <p>Crystallization is <strong>re-runnable</strong> — each run improves on the last. Add more ideas, re-gather, re-crystallize. The cycle continues until you're satisfied, then archive to lock it.</p>
+
+        <h3>Staleness warnings</h3>
+        <p>If a member edits or deletes an idea <em>after</em> a gather or crystallize has run, you'll see an orange warning banner:</p>
+        <div class="flow-diagram" style="color: #e88a1a; font-size: 0.8rem;">&#x26a0;&#xfe0f; Some outputs are stale — 2 source idea(s) changed since Feb 14.
+Re-run gatherer or re-crystallize to update.</div>
+        <p>This is normal — ideas evolve! Just re-run the relevant tool and the output will incorporate the changes.</p>
 
         <!-- ═══════ FAQ ═══════ -->
 
@@ -412,6 +460,22 @@ Work with others &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Groups (deliberate, cr
             <summary>What is "crystallization"?</summary>
             <div class="answer">
                 <p>Crystallization is when the AI reads all of a group's shared ideas, gatherer digests, and conversation threads, then produces a structured proposal document — with key findings, proposed actions, and attribution back to the people who contributed. Think of it as turning a messy whiteboard into a polished brief.</p>
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary>Can I edit or delete my ideas?</summary>
+            <div class="answer">
+                <p>Yes — on the History page, your own thoughts show an edit (&#x270E;) and delete (&times;) button. AI-generated responses can't be edited or deleted.</p>
+                <p><strong>Editing</strong> is transparent: an "(edited)" tag appears on modified thoughts so others know the content changed. The edit count is tracked.</p>
+                <p><strong>Deleting</strong> is usually a soft delete — the idea is hidden but preserved behind the scenes. This protects the integrity of any gather or crystallize outputs that referenced it. If the idea was never gathered, you'll be offered a permanent delete option.</p>
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary>What happens if I edit an idea after a gather ran?</summary>
+            <div class="answer">
+                <p>The gather output becomes "stale" — it was based on the old version of your idea. The group facilitator will see a warning banner and can re-run the gatherer to incorporate your changes. Same applies to crystallized proposals.</p>
             </div>
         </details>
 
