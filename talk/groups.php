@@ -274,21 +274,6 @@ $mode = $groupId ? 'detail' : 'list';
         }
         .member-chip .member-actions button:hover { color: #eee; background: rgba(255,255,255,0.1); }
         .member-chip .member-actions button.danger:hover { color: #ef5350; }
-        .add-member-form {
-            display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center;
-        }
-        .add-member-form input {
-            flex: 1; min-width: 180px; padding: 8px 12px;
-            background: rgba(255,255,255,0.08); color: #eee;
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
-            font-size: 0.85rem; font-family: inherit;
-        }
-        .add-member-form input:focus { outline: none; border-color: #4fc3f7; }
-        .add-member-form select {
-            padding: 8px; background: rgba(255,255,255,0.08); color: #eee;
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; font-size: 0.85rem;
-        }
-        .add-member-form select option { background: #1a1a2e; color: #eee; }
 
         .actions { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; }
 
@@ -564,14 +549,6 @@ $mode = $groupId ? 'detail' : 'list';
         });
         html += '</div>';
 
-        // Add member form (facilitator only)
-        if (isFacilitator) {
-            html += '<div class="add-member-form">' +
-                '<input type="text" id="addMemberInput" placeholder="Username or email">' +
-                '<select id="addMemberRole"><option value="member">Member</option><option value="observer">Observer</option><option value="facilitator">Facilitator</option></select>' +
-                '<button class="btn btn-secondary" onclick="addMember(' + g.id + ')">+ Add</button>' +
-            '</div>';
-        }
 
         html += '</div>';
 
@@ -700,21 +677,6 @@ $mode = $groupId ? 'detail' : 'list';
         }
     }
 
-    async function addMember(gId) {
-        var input = document.getElementById('addMemberInput');
-        var roleSelect = document.getElementById('addMemberRole');
-        var lookup = input.value.trim();
-        if (!lookup) { showStatus('Enter a username or email', 'error'); return; }
-
-        var data = await apiPost('add_member', { group_id: gId, username: lookup, role: roleSelect.value });
-        if (data.success) {
-            showStatus((data.display_name || 'User') + ' ' + data.action + ' as ' + data.role, 'success');
-            input.value = '';
-            loadGroupDetail();
-        } else {
-            showStatus(data.error, 'error');
-        }
-    }
 
     async function archiveGroup(id) {
         if (!confirm('Archive this group? This locks the final crystallization as the definitive result. You can reopen later if needed.')) return;
