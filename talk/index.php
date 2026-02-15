@@ -250,10 +250,10 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         .card-actions button {
             background: none;
             border: none;
-            color: #666;
+            color: #aab;
             cursor: pointer;
-            font-size: 0.8rem;
-            padding: 2px 4px;
+            font-size: 0.9rem;
+            padding: 2px 6px;
             border-radius: 4px;
             transition: all 0.15s;
         }
