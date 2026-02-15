@@ -126,7 +126,8 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         .ai-btn.active {
             background: rgba(124,77,255,0.25);
             color: #b388ff;
-            border: 1px solid rgba(124,77,255,0.4);
+            border: 2px solid #b388ff;
+            box-shadow: 0 0 8px rgba(179,136,255,0.4);
         }
 
         .send-btn {
