@@ -952,31 +952,63 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         }
     }
 
-    // ── Voice input ──
+    // ── Voice input (toggle on/off, appends to textarea) ──
     var recognition = null;
+    var micOn = false;
+    var micBaseText = '';
     var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
-        recognition.continuous = false;
+        recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
 
-        recognition.onstart = function() { micBtn.classList.add('listening'); micBtn.textContent = '\u23FA'; };
-        recognition.onend = function() { micBtn.classList.remove('listening'); micBtn.textContent = '\uD83C\uDFA4'; };
-        recognition.onresult = function(e) {
-            var transcript = '';
-            for (var i = e.resultIndex; i < e.results.length; i++) {
-                transcript += e.results[i][0].transcript;
+        recognition.onstart = function() {
+            micOn = true;
+            micBtn.classList.add('listening');
+            micBtn.textContent = '\u23FA';
+            // Snapshot current text so we append after it
+            micBaseText = ideaInput.value;
+        };
+        recognition.onend = function() {
+            micBtn.classList.remove('listening');
+            micBtn.textContent = '\uD83C\uDFA4';
+            if (micOn) {
+                // Browser killed it (timeout, etc.) — restart to keep toggle on
+                try { recognition.start(); } catch(e) { micOn = false; }
             }
-            ideaInput.value = transcript;
+        };
+        recognition.onresult = function(e) {
+            var final = '', interim = '';
+            for (var i = 0; i < e.results.length; i++) {
+                if (e.results[i].isFinal) {
+                    final += e.results[i][0].transcript;
+                } else {
+                    interim += e.results[i][0].transcript;
+                }
+            }
+            // Append finalized + interim after the base text
+            var sep = micBaseText && !micBaseText.endsWith(' ') ? ' ' : '';
+            ideaInput.value = micBaseText + sep + final + interim;
             ideaInput.style.height = 'auto';
             ideaInput.style.height = Math.min(ideaInput.scrollHeight, 120) + 'px';
         };
-        recognition.onerror = function() { micBtn.classList.remove('listening'); micBtn.textContent = '\uD83C\uDFA4'; };
+        recognition.onerror = function(e) {
+            if (e.error === 'no-speech') return; // ignore silence, keep listening
+            micOn = false;
+            micBtn.classList.remove('listening');
+            micBtn.textContent = '\uD83C\uDFA4';
+        };
 
         micBtn.addEventListener('click', function() {
-            if (micBtn.classList.contains('listening')) { recognition.stop(); }
-            else { recognition.start(); }
+            if (micOn) {
+                micOn = false;
+                recognition.stop();
+                // Commit: update base text to include everything captured so far
+                micBaseText = ideaInput.value;
+            } else {
+                recognition.start();
+            }
         });
     } else {
         micBtn.style.display = 'none';
