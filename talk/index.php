@@ -23,15 +23,13 @@ $userJson = $dbUser ? json_encode(['user_id' => $dbUser['user_id'], 'display_nam
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background-attachment: fixed;
             min-height: 100vh;
             color: #eee;
-            display: flex;
-            flex-direction: column;
         }
 
         /* ── Header ── */
         .page-header {
-            flex-shrink: 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -48,7 +46,6 @@ $userJson = $dbUser ? json_encode(['user_id' => $dbUser['user_id'], 'display_nam
 
         /* ── Input Area ── */
         .input-area {
-            flex-shrink: 0;
             padding: 12px 16px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
         }
@@ -154,9 +151,10 @@ $userJson = $dbUser ? json_encode(['user_id' => $dbUser['user_id'], 'display_nam
 
         /* ── Stream ── */
         .stream {
-            flex: 1;
-            overflow-y: auto;
             padding: 12px 16px;
+            max-width: 700px;
+            margin: 0 auto;
+            width: 100%;
         }
 
         .stream-empty {
@@ -167,7 +165,8 @@ $userJson = $dbUser ? json_encode(['user_id' => $dbUser['user_id'], 'display_nam
         }
 
         .idea-card {
-            background: rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.12);
             border-radius: 10px;
             padding: 12px 14px;
             margin-bottom: 10px;
@@ -187,17 +186,20 @@ $userJson = $dbUser ? json_encode(['user_id' => $dbUser['user_id'], 'display_nam
 
         /* AI response cards */
         .idea-card.ai-response {
-            background: rgba(124,77,255,0.08);
+            background: rgba(124,77,255,0.12);
+            border-color: rgba(124,77,255,0.25);
             border-left: 3px solid #7c4dff;
         }
 
         /* Digest/crystallization cards */
         .idea-card.digest-card {
-            background: rgba(255,215,0,0.06);
+            background: rgba(255,215,0,0.10);
+            border-color: rgba(255,215,0,0.20);
             border-left: 4px solid #ffd700;
         }
         .idea-card.crystal-card {
-            background: rgba(156,39,176,0.06);
+            background: rgba(156,39,176,0.10);
+            border-color: rgba(156,39,176,0.20);
             border-left: 4px solid #ce93d8;
         }
 
@@ -330,13 +332,14 @@ $userJson = $dbUser ? json_encode(['user_id' => $dbUser['user_id'], 'display_nam
 
         /* ── Footer Bar ── */
         .footer-bar {
-            flex-shrink: 0;
             display: none;
             justify-content: center;
             gap: 12px;
             padding: 10px 16px;
             border-top: 1px solid rgba(255,255,255,0.08);
             background: rgba(26,26,46,0.95);
+            position: sticky;
+            bottom: 0;
         }
         .footer-bar.visible { display: flex; }
         .footer-bar button {
