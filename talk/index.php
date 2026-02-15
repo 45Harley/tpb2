@@ -293,6 +293,14 @@ try {
         </div>
 <?php endif; ?>
 
+<?php if ($dbUser): ?>
+        <div style="max-width:500px;margin:0 auto 0.5rem;text-align:center;">
+            <select id="groupSelect" title="Save to group" style="background:rgba(255,255,255,0.1);color:#eee;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 8px;font-size:0.8rem;cursor:pointer;">
+                <option value="" style="background:#1a1a2e;color:#eee;">Personal (no group)</option>
+            </select>
+        </div>
+<?php endif; ?>
+
         <div class="capture-area">
         <p class="subtitle">Tap mic to speak, or type below</p>
 
@@ -331,6 +339,27 @@ try {
         let selectedCategory = 'idea';
         let recognition = null;
         let lastInputSource = 'web';
+
+        // Group selector — load user's groups
+        var groupSelect = document.getElementById('groupSelect');
+        if (groupSelect) {
+            (async function() {
+                try {
+                    var resp = await fetch('api.php?action=list_groups&mine=1');
+                    var data = await resp.json();
+                    if (data.success && data.groups) {
+                        data.groups.forEach(function(g) {
+                            if (g.status === 'archived') return;
+                            var opt = document.createElement('option');
+                            opt.value = g.id;
+                            opt.textContent = g.name;
+                            opt.style.cssText = 'background:#1a1a2e;color:#eee;';
+                            groupSelect.appendChild(opt);
+                        });
+                    }
+                } catch(e) {}
+            })();
+        }
 
         // Session ID — one per tab, persists across saves in same tab
         let sessionId = sessionStorage.getItem('tpb_session');
@@ -422,7 +451,8 @@ try {
                         source: lastInputSource,
                         session_id: sessionId,
                         parent_id: null,
-                        tags: null
+                        tags: null,
+                        group_id: groupSelect && groupSelect.value ? parseInt(groupSelect.value) : null
                     })
                 });
                 const data = await response.json();

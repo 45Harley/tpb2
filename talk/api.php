@@ -192,6 +192,21 @@ function handleSave($pdo, $input, $userId) {
     $shareable = (int)($input['shareable'] ?? 0);
     $clerkKey  = $input['clerk_key'] ?? null;
 
+    // Validate group_id if provided
+    $groupId = isset($input['group_id']) && $input['group_id'] !== '' ? (int)$input['group_id'] : null;
+    if ($groupId) {
+        if (!$userId) {
+            return ['success' => false, 'error' => 'Login required to save to a group'];
+        }
+        $gStmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $gStmt->execute([$groupId, $userId]);
+        $membership = $gStmt->fetch();
+        if (!$membership || $membership['role'] === 'observer') {
+            return ['success' => false, 'error' => 'You must be a group member to submit ideas to this group'];
+        }
+        $shareable = 1; // group ideas are inherently shareable
+    }
+
     // Validate parent_id exists if provided
     if ($parentId !== null) {
         $parentId = (int)$parentId;
@@ -203,8 +218,8 @@ function handleSave($pdo, $input, $userId) {
     }
 
     $stmt = $pdo->prepare("
-        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, tags, source, shareable, clerk_key)
-        VALUES (:user_id, :session_id, :parent_id, :content, :category, 'raw', :tags, :source, :shareable, :clerk_key)
+        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, tags, source, shareable, clerk_key, group_id)
+        VALUES (:user_id, :session_id, :parent_id, :content, :category, 'raw', :tags, :source, :shareable, :clerk_key, :group_id)
     ");
 
     $stmt->execute([
@@ -216,7 +231,8 @@ function handleSave($pdo, $input, $userId) {
         ':tags'       => $tags,
         ':source'     => $source,
         ':shareable'  => $shareable,
-        ':clerk_key'  => $clerkKey
+        ':clerk_key'  => $clerkKey,
+        ':group_id'   => $groupId
     ]);
 
     $id = (int)$pdo->lastInsertId();
@@ -419,7 +435,7 @@ function handleToggleShareable($pdo, $input, $userId) {
         return ['success' => false, 'error' => 'idea_id is required'];
     }
 
-    $stmt = $pdo->prepare("SELECT id, user_id, deleted_at FROM idea_log WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, user_id, deleted_at, group_id FROM idea_log WHERE id = ?");
     $stmt->execute([$ideaId]);
     $idea = $stmt->fetch();
 
@@ -436,6 +452,11 @@ function handleToggleShareable($pdo, $input, $userId) {
 
     if ($idea['user_id'] && (int)$idea['user_id'] !== $userId) {
         return ['success' => false, 'error' => 'You can only change your own ideas'];
+    }
+
+    // Group ideas are always shared — prevent un-sharing
+    if (!empty($idea['group_id']) && !$shareable) {
+        return ['success' => false, 'error' => 'Group ideas are always shared. Move to personal first.'];
     }
 
     $stmt = $pdo->prepare("UPDATE idea_log SET shareable = ? WHERE id = ?");
@@ -585,9 +606,8 @@ function handleBrainstorm($pdo, $input, $userId) {
             SELECT i.id, i.content, i.category, i.tags,
                    u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
             FROM idea_log i
-            JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
             LEFT JOIN users u ON i.user_id = u.user_id
-            WHERE i.shareable = 1 AND i.deleted_at IS NULL
+            WHERE i.group_id = ? AND i.deleted_at IS NULL
             ORDER BY i.created_at DESC LIMIT 30
         ");
         $stmt->execute([$groupId]);
@@ -661,7 +681,7 @@ function handleBrainstorm($pdo, $input, $userId) {
     $actionResults = [];
     foreach ($actions as $action) {
         if (clerkCan($clerk, strtolower($action['type']))) {
-            $result = processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable);
+            $result = processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable, $groupId);
             if ($result) $actionResults[] = $result;
         }
     }
@@ -672,27 +692,29 @@ function handleBrainstorm($pdo, $input, $userId) {
     // Log the exchange as two separate nodes (Phase 3: AI as first-class entity)
     // 1. User message
     $userStmt = $pdo->prepare("
-        INSERT INTO idea_log (user_id, session_id, content, category, status, source, shareable)
-        VALUES (:user_id, :session_id, :content, 'chat', 'raw', 'web', :shareable)
+        INSERT INTO idea_log (user_id, session_id, content, category, status, source, shareable, group_id)
+        VALUES (:user_id, :session_id, :content, 'chat', 'raw', 'web', :shareable, :group_id)
     ");
     $userStmt->execute([
         ':user_id'    => $userId,
         ':session_id' => $sessionId,
         ':content'    => $message,
-        ':shareable'  => $shareable
+        ':shareable'  => $shareable,
+        ':group_id'   => $groupId
     ]);
     $userRowId = (int)$pdo->lastInsertId();
 
-    // 2. AI response as child node (inherits shareable from user message)
+    // 2. AI response as child node (inherits shareable + group from user message)
     $aiStmt = $pdo->prepare("
-        INSERT INTO idea_log (session_id, parent_id, content, category, status, source, shareable, clerk_key)
-        VALUES (:session_id, :parent_id, :content, 'chat', 'raw', 'clerk-brainstorm', :shareable, 'brainstorm')
+        INSERT INTO idea_log (session_id, parent_id, content, category, status, source, shareable, clerk_key, group_id)
+        VALUES (:session_id, :parent_id, :content, 'chat', 'raw', 'clerk-brainstorm', :shareable, 'brainstorm', :group_id)
     ");
     $aiStmt->execute([
         ':session_id' => $sessionId,
         ':parent_id'  => $userRowId,
         ':content'    => $cleanMessage,
-        ':shareable'  => $shareable
+        ':shareable'  => $shareable,
+        ':group_id'   => $groupId
     ]);
 
     return [
@@ -773,7 +795,7 @@ function cleanBrainstormActionTags($message) {
 
 // -- Process Brainstorm Actions ----------------------------------------
 
-function processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable = 0) {
+function processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable = 0, $groupId = null) {
     switch ($action['type']) {
         case 'SAVE_IDEA':
             $content  = trim($action['params']['content'] ?? '');
@@ -789,9 +811,10 @@ function processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable 
                 $category = 'idea';
             }
 
+            $actionShareable = $groupId ? 1 : $shareable;
             $stmt = $pdo->prepare("
-                INSERT INTO idea_log (user_id, session_id, content, category, status, tags, source, shareable, clerk_key)
-                VALUES (:user_id, :session_id, :content, :category, 'raw', :tags, 'clerk-brainstorm', :shareable, 'brainstorm')
+                INSERT INTO idea_log (user_id, session_id, content, category, status, tags, source, shareable, clerk_key, group_id)
+                VALUES (:user_id, :session_id, :content, :category, 'raw', :tags, 'clerk-brainstorm', :shareable, 'brainstorm', :group_id)
             ");
             $stmt->execute([
                 ':user_id'    => $userId,
@@ -799,7 +822,8 @@ function processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable 
                 ':content'    => $content,
                 ':category'   => $category,
                 ':tags'       => $tags,
-                ':shareable'  => $shareable
+                ':shareable'  => $actionShareable,
+                ':group_id'   => $groupId
             ]);
 
             $id = (int)$pdo->lastInsertId();
@@ -1212,7 +1236,7 @@ function handleGetGroup($pdo, $userId) {
     }
     unset($m);
 
-    // Recent shareable ideas from group members
+    // Recent group ideas (scoped by group_id)
     $stmt = $pdo->prepare("
         SELECT i.id, i.content, i.category, i.status, i.tags, i.source, i.clerk_key,
                i.created_at, u.first_name, u.last_name, u.username AS user_username,
@@ -1220,9 +1244,8 @@ function handleGetGroup($pdo, $userId) {
                (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id AND c.deleted_at IS NULL) AS children_count,
                (SELECT COUNT(*) FROM idea_links l WHERE l.idea_id_a = i.id OR l.idea_id_b = i.id) AS link_count
         FROM idea_log i
-        JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.shareable = 1 AND i.deleted_at IS NULL
+        WHERE i.group_id = ? AND i.deleted_at IS NULL
         ORDER BY i.created_at DESC
         LIMIT 50
     ");
@@ -1498,27 +1521,16 @@ function handleCheckStaleness($pdo, $userId) {
     $groupId = (int)($_GET['group_id'] ?? 0);
     if (!$groupId) return ['success' => false, 'error' => 'group_id is required'];
 
-    // Get group member user IDs
-    $stmt = $pdo->prepare("SELECT user_id FROM idea_group_members WHERE group_id = ?");
-    $stmt->execute([$groupId]);
-    $memberIds = array_column($stmt->fetchAll(), 'user_id');
-
-    if (empty($memberIds)) {
-        return ['success' => true, 'stale' => false, 'digests' => []];
-    }
-
-    $placeholders = implode(',', array_fill(0, count($memberIds), '?'));
-
     // Find all digest nodes linked via synthesizes to this group's ideas
     $stmt = $pdo->prepare("
         SELECT DISTINCT d.id AS digest_id, d.clerk_key, d.status, d.created_at AS digest_created_at
         FROM idea_log d
         JOIN idea_links l ON l.idea_id_b = d.id AND l.link_type = 'synthesizes'
-        JOIN idea_log src ON src.id = l.idea_id_a AND src.user_id IN ($placeholders)
+        JOIN idea_log src ON src.id = l.idea_id_a AND src.group_id = ?
         WHERE d.category = 'digest'
         ORDER BY d.created_at DESC
     ");
-    $stmt->execute($memberIds);
+    $stmt->execute([$groupId]);
     $digests = $stmt->fetchAll();
 
     if (empty($digests)) {
@@ -1601,15 +1613,14 @@ function handleGather($pdo, $input, $userId) {
     $stmt->execute([$groupId]);
     $group = $stmt->fetch();
 
-    // Fetch shareable ideas from group members (exclude gatherer's own digests to prevent feedback loop)
+    // Fetch group ideas (exclude gatherer's own digests to prevent feedback loop)
     $stmt = $pdo->prepare("
         SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
                u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name,
                i.clerk_key
         FROM idea_log i
-        JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.shareable = 1 AND i.deleted_at IS NULL
+        WHERE i.group_id = ? AND i.deleted_at IS NULL
           AND (i.clerk_key IS NULL OR i.clerk_key != 'gatherer')
         ORDER BY i.created_at ASC
     ");
@@ -1811,13 +1822,14 @@ function processGathererAction($pdo, $action, $userId, $groupId) {
 
             // Insert digest node
             $stmt = $pdo->prepare("
-                INSERT INTO idea_log (user_id, content, category, status, tags, source, shareable, clerk_key)
-                VALUES (:user_id, :content, 'digest', 'raw', :tags, 'clerk-gatherer', 1, 'gatherer')
+                INSERT INTO idea_log (user_id, content, category, status, tags, source, shareable, clerk_key, group_id)
+                VALUES (:user_id, :content, 'digest', 'raw', :tags, 'clerk-gatherer', 1, 'gatherer', :group_id)
             ");
             $stmt->execute([
-                ':user_id' => $userId,
-                ':content' => $content,
-                ':tags'    => $tags
+                ':user_id'  => $userId,
+                ':content'  => $content,
+                ':tags'     => $tags,
+                ':group_id' => $groupId
             ]);
             $digestId = (int)$pdo->lastInsertId();
 
@@ -1897,14 +1909,13 @@ function handleCrystallize($pdo, $input, $userId) {
         return ['success' => false, 'error' => 'Brainstorm clerk not available'];
     }
 
-    // Fetch all shareable ideas from group members
+    // Fetch all group ideas
     $stmt = $pdo->prepare("
         SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
                u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
         FROM idea_log i
-        JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?
         LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.shareable = 1 AND i.deleted_at IS NULL
+        WHERE i.group_id = ? AND i.deleted_at IS NULL
         ORDER BY i.created_at ASC
     ");
     $stmt->execute([$groupId]);
@@ -1912,15 +1923,15 @@ function handleCrystallize($pdo, $input, $userId) {
     foreach ($ideas as &$gi) { $gi['author'] = getDisplayName($gi); }
     unset($gi);
 
-    // Fetch existing digests (from gatherer)
+    // Fetch existing digests (from gatherer) for this group
     $stmt = $pdo->prepare("
         SELECT i.id, i.content, i.tags FROM idea_log i
         WHERE i.clerk_key = 'gatherer' AND i.category = 'digest'
         AND EXISTS (
             SELECT 1 FROM idea_links l
             JOIN idea_log src ON src.id = l.idea_id_a
-            JOIN idea_group_members m ON m.user_id = src.user_id AND m.group_id = ?
             WHERE l.idea_id_b = i.id AND l.link_type = 'synthesizes'
+              AND src.group_id = ?
         )
         ORDER BY i.created_at DESC LIMIT 10
     ");
@@ -2018,8 +2029,8 @@ function handleCrystallize($pdo, $input, $userId) {
               AND EXISTS (
                   SELECT 1 FROM idea_links l
                   JOIN idea_log src ON src.id = l.idea_id_a
-                  JOIN idea_group_members m ON m.user_id = src.user_id AND m.group_id = g.id
                   WHERE l.idea_id_b = i.id AND l.link_type = 'synthesizes'
+                    AND src.group_id = g.id
               )
             ORDER BY i.created_at DESC
         ");
@@ -2106,13 +2117,14 @@ PROMPT]];
 
     // Save digest to idea_log
     $stmt = $pdo->prepare("
-        INSERT INTO idea_log (user_id, content, category, status, tags, source, shareable, clerk_key)
-        VALUES (:user_id, :content, 'digest', 'distilled', :tags, 'clerk-brainstorm', 1, 'brainstorm')
+        INSERT INTO idea_log (user_id, content, category, status, tags, source, shareable, clerk_key, group_id)
+        VALUES (:user_id, :content, 'digest', 'distilled', :tags, 'clerk-brainstorm', 1, 'brainstorm', :group_id)
     ");
     $stmt->execute([
-        ':user_id' => $userId,
-        ':content' => $markdown,
-        ':tags'    => $group['tags']
+        ':user_id'  => $userId,
+        ':content'  => $markdown,
+        ':tags'     => $group['tags'],
+        ':group_id' => $groupId
     ]);
     $digestId = (int)$pdo->lastInsertId();
 

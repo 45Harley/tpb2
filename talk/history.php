@@ -68,12 +68,13 @@ try {
     $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
     $sql = "
-        SELECT i.*,
+        SELECT i.*, g.name AS group_name,
                u.first_name AS user_first_name, u.last_name AS user_last_name,
                u.username AS user_username, u.show_first_name, u.show_last_name,
                (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id AND c.deleted_at IS NULL) AS children_count,
                (SELECT COUNT(*) FROM idea_links l WHERE l.idea_id_a = i.id AND l.link_type = 'synthesizes') AS synth_link_count
         FROM idea_log i
+        LEFT JOIN idea_groups g ON g.id = i.group_id
         LEFT JOIN users u ON i.user_id = u.user_id
         {$whereClause}
         ORDER BY i.created_at " . ($view === 'thread' || $threadId ? 'ASC' : 'DESC') . "
@@ -468,6 +469,11 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                                 <span class="status-badge" style="background: <?= $statusColor ?>20; color: <?= $statusColor ?>;">
                                     <?= htmlspecialchars($t['status'] ?? 'raw') ?>
                                 </span>
+                                <?php if (!empty($t['group_name'])): ?>
+                                <span class="status-badge" style="background:rgba(79,195,247,0.15);color:#4fc3f7;font-size:0.6rem;">
+                                    <?= htmlspecialchars($t['group_name']) ?>
+                                </span>
+                                <?php endif; ?>
                             </div>
                             <span>
                                 <?= date('M j, g:ia', strtotime($t['created_at'])) ?>
@@ -549,6 +555,11 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
                             <span class="status-badge" style="background: <?= $statusColor ?>20; color: <?= $statusColor ?>;">
                                 <?= htmlspecialchars($t['status'] ?? 'raw') ?>
                             </span>
+                            <?php if (!empty($t['group_name'])): ?>
+                            <span class="status-badge" style="background:rgba(79,195,247,0.15);color:#4fc3f7;font-size:0.6rem;">
+                                <?= htmlspecialchars($t['group_name']) ?>
+                            </span>
+                            <?php endif; ?>
                         </div>
                         <span>
                             <?= date('M j, g:ia', strtotime($t['created_at'])) ?>

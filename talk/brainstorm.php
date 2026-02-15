@@ -390,6 +390,14 @@ try {
         groupSelect.addEventListener('change', function() {
             currentGroupId = this.value ? parseInt(this.value) : null;
             updateHeaderForGroup();
+            // Group ideas are always shareable — auto-lock toggle
+            var shareToggle = document.getElementById('shareToggle');
+            if (currentGroupId) {
+                shareToggle.checked = true;
+                shareToggle.disabled = true;
+            } else {
+                shareToggle.disabled = false;
+            }
         });
 
         function updateHeaderForGroup() {

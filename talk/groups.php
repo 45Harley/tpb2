@@ -537,7 +537,7 @@ $mode = $groupId ? 'detail' : 'list';
         }
 
         // Ideas feed
-        html += '<div class="section"><h2>Shareable Ideas (' + ideas.length + ')</h2><div class="idea-feed">';
+        html += '<div class="section"><h2>Group Ideas (' + ideas.length + ')</h2><div class="idea-feed">';
         if (ideas.length > 0) {
             ideas.forEach(function(idea) {
                 var clerkBadge = idea.clerk_key ? ' <span style="background:rgba(124,77,255,0.2);color:#b388ff;padding:1px 6px;border-radius:8px;font-size:0.65rem;font-weight:600;text-transform:uppercase;">' + escHtml(idea.clerk_key) + '</span>' : '';
@@ -552,7 +552,7 @@ $mode = $groupId ? 'detail' : 'list';
                 '</div>';
             });
         } else {
-            html += '<div class="empty">No shareable ideas yet. Members need to mark ideas as shareable.</div>';
+            html += '<div class="empty">No ideas yet. Members can submit ideas from Quick Capture or Brainstorm.</div>';
         }
         html += '</div></div>';
 
