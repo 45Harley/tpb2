@@ -1,6 +1,6 @@
 # /talk Architecture
 
-**Living document — last updated 2026-02-14 (Phase 5 complete: display names, group invites)**
+**Living document — last updated 2026-02-14 (Phase 6 complete: group-scoped ideas, personal gather/crystallize)**
 
 This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built (Phase 1–5), what's designed for the future, and the conceptual model that drives both.
 
@@ -89,6 +89,7 @@ Every thought, response, summary, and moderation note is a row.
 idea_log
   id              INT AUTO_INCREMENT PRIMARY KEY
   user_id         INT NULL                -- NULL for anonymous, FK to users
+  group_id        INT NULL                -- FK to idea_groups. NULL = personal, non-NULL = belongs to that group
   session_id      VARCHAR(36) NULL        -- browser session UUID
   parent_id       INT NULL                -- reply chain (tree structure), FK to self
   content         TEXT                    -- what was said
@@ -178,8 +179,8 @@ All five pages include a **server-rendered login indicator** (green dot + userna
 | `leave_group` | POST | Leave a group (auto-promotes facilitator if last one) | 3 |
 | `update_group` | POST | Update group settings/status (facilitator only) | 3 |
 | `update_member` | POST | Change member role or remove member (facilitator only) | 3 |
-| `gather` | POST | Run gatherer clerk on group — incremental link + digest creation | 3 |
-| `crystallize` | POST | Produce crystallized .md proposal from group (re-runnable) | 3 |
+| `gather` | POST | Run gatherer on group or personal ideas (group_id=0) — incremental link + digest creation | 3 |
+| `crystallize` | POST | Produce crystallized .md proposal from group or personal ideas (group_id=0, re-runnable) | 3 |
 | `edit` | POST | Edit own idea content (owner-only, not AI, not deleted); increments `edit_count` | 4 |
 | `delete` | POST | Soft-delete own idea (or hard-delete if ungathered with no children) | 4 |
 | `check_staleness` | GET | Check if gather/crystallize digests are stale due to edited/deleted source ideas | 4 |
@@ -262,6 +263,9 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 -- Table added in Phase 5: group_invites (id, group_id, user_id, invited_by, email,
 --   accept_token, decline_token, status, created_at, responded_at, expires_at)
 --   Indexes: unique accept_token, unique decline_token, idx_group_status, idx_user_status
+-- Columns added in Phase 6: group_id INT NULL on idea_log
+--   FK to idea_groups ON DELETE SET NULL
+--   Index: idx_idea_log_group_id
 -- ai_clerks: brainstorm + gatherer clerk rows registered
 -- system_documentation: clerk-gatherer-rules doc registered
 -- user_roles: Group Facilitator (37), Group Member (38), Group Observer (39) registered
@@ -401,10 +405,11 @@ Status transitions are validated server-side. Forward transitions always allowed
 
 #### How thoughts enter the group
 
-The shareable gate is the valve:
-- Your thoughts marked `shareable = 1` become visible to groups you belong to
-- Existing shareable thoughts auto-surface when you join — you don't re-enter everything
-- AI can suggest: "You have 3 thoughts about taxes that relate to this group — share them?"
+Each idea belongs to **exactly one group** (or no group for personal ideas). When saving a thought via Quick Capture or Brainstorm, logged-in users choose which group to assign it to from a dropdown. Ideas saved to a group are automatically shareable.
+
+- `group_id = NULL` → personal idea (only visible to the author)
+- `group_id = N` → belongs to group N (visible to group members)
+- Ideas don't leak across groups — the old JOIN-through-membership pattern was replaced with a direct `WHERE group_id = ?`
 
 #### Group-aware AI context
 
@@ -417,8 +422,7 @@ WHERE session_id = ? AND category != 'chat'
 
 Group context injection (Phase 3):
 ```sql
-WHERE user_id IN (SELECT user_id FROM idea_group_members WHERE group_id = ?)
-  AND shareable = 1 AND category != 'chat'
+WHERE group_id = ? AND deleted_at IS NULL
 ```
 
 This enables the circuit: you say "I'm worried about property taxes" and the AI says "Tom shared something similar — he found a senior relief program. Here's how your thought builds on his."
@@ -624,6 +628,40 @@ The existing `ai_clerks` table supports multiple clerk personas. Phase 3 adds:
 | `resolver` | Resolver | reframe, find_common_ground, propose_compromise | Blocked threads | Future |
 
 Each creates nodes with its `clerk_key` stamped on the row.
+
+### 5g-bis. Group-scoped ideas + personal gather/crystallize (Phase 6) ✅
+
+#### The problem
+
+Before Phase 6, ideas entered groups through a JOIN pattern: `JOIN idea_group_members m ON m.user_id = i.user_id AND m.group_id = ?`. This meant if a user was in groups A and B and marked an idea "shareable", it appeared in both groups — the "cross-group leak."
+
+#### The fix: `group_id` on `idea_log`
+
+Each idea now has a direct `group_id` foreign key:
+- `group_id = NULL` → personal (no group)
+- `group_id = N` → belongs to group N
+- `ON DELETE SET NULL` → if a group is deleted, its ideas become personal
+- Group ideas are automatically `shareable = 1`
+- All 4 major SELECT queries (brainstorm context, get_group feed, gatherer, crystallizer) replaced the JOIN pattern with `WHERE i.group_id = ?`
+
+#### Frontend: group selector
+
+- **Quick Capture** (`index.php`): Dropdown lets logged-in users choose "Personal (no group)" or any of their groups
+- **Brainstorm** (`brainstorm.php`): Same dropdown; selecting a group auto-locks the shareable toggle to ON
+- **History** (`history.php`): Group badge appears on each idea card showing which group it belongs to
+
+#### Personal gather/crystallize
+
+The `gather` and `crystallize` API actions now accept `group_id = 0` meaning "personal ideas":
+- Queries use `WHERE i.group_id IS NULL AND i.user_id = ?` instead of `WHERE i.group_id = ?`
+- Skips facilitator role checks (you own your own ideas)
+- Skips group status updates (no group to update)
+- Chat-category nodes excluded from personal gathering (`AND i.category != 'chat'`)
+- Digest INSERTs use `group_id = NULL` for personal digests
+- Output files named `personal-u{userId}-{slug}-v{n}-u{uid}-{timestamp}.md` instead of `group-{id}-...`
+- History page shows "Personal: Gather | Crystallize" buttons for logged-in users viewing their own ideas
+
+`check_staleness` also supports `group_id = 0` for personal staleness detection.
 
 ### 5h. Builder kits as group use case (future)
 
@@ -1048,6 +1086,8 @@ talk/
   output/          — Crystallized .md deliverables (runtime, not in git)
     group-{id}-{slug}-v{n}-u{uid}-{timestamp}.md   — versioned proposals
     group-{id}-{slug}-latest.md                     — current version
+    personal-u{uid}-{slug}-v{n}-u{uid}-{timestamp}.md   — personal versioned proposals
+    personal-u{uid}-{slug}-latest.md                     — current personal version
 
 scripts/db/
   talk-phase3-schema.sql          — Phase 3 DDL (clerk_key, idea_links, idea_groups, idea_group_members)

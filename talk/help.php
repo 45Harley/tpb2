@@ -291,6 +291,7 @@ Work with others &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Groups (deliberate, cr
                 <li><strong>Voice works great</strong> — tap the mic, speak naturally, it fills in the text</li>
                 <li><strong>Ctrl+Enter</strong> (Cmd+Enter on Mac) saves without clicking the button</li>
                 <li>Thoughts are <strong>private by default</strong> — nobody sees them until you choose to share</li>
+                <li><strong>Group selector</strong> — logged-in users can choose which group an idea belongs to, or "Personal (no group)" for private ideas</li>
             </ul>
         </div>
 
@@ -327,6 +328,7 @@ Work with others &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Groups (deliberate, cr
                 <li><strong>Edit</strong> (&#x270E;) your own thoughts inline — edit count is tracked for transparency</li>
                 <li><strong>Delete</strong> (&times;) your own thoughts — soft-deleted by default so gathered outputs stay intact</li>
                 <li><strong>Threaded view</strong> shows conversation trees with replies indented</li>
+                <li><strong>Personal Gather &amp; Crystallize</strong> — run the AI gatherer and crystallizer on your own personal ideas, right from the History page</li>
             </ul>
         </div>
 
@@ -463,6 +465,7 @@ Re-run gatherer or re-crystallize to update.</div>
             <div class="answer">
                 <p>A group is 2+ people around a topic. Anyone with an account can create one. Members brainstorm individually or together, mark their ideas as shareable, and the facilitator runs AI tools to synthesize everything into a proposal.</p>
                 <p>Groups have three access levels: <strong>Open</strong> (anyone can join), <strong>Observable</strong> (anyone can see, only members contribute), and <strong>Closed</strong> (invitation only). Facilitators invite members by entering email addresses &mdash; each person gets an accept/decline email.</p>
+                <p>Each idea belongs to exactly one group (or no group for personal ideas). When you save a thought, you choose which group it goes to — ideas don't leak across groups.</p>
             </div>
         </details>
 
@@ -492,7 +495,7 @@ Re-run gatherer or re-crystallize to update.</div>
         <details class="faq-item">
             <summary>Can I use /talk as a personal idea tracker?</summary>
             <div class="answer">
-                <p>Yes. Quick Capture works as a personal thought journal. Brainstorm works as a 1-on-1 thinking partner. History gives you a filterable archive. You never have to join a group if you don't want to — but the real power is in collective deliberation.</p>
+                <p>Yes. Quick Capture works as a personal thought journal. Brainstorm works as a 1-on-1 thinking partner. History gives you a filterable archive with <strong>personal Gather and Crystallize</strong> buttons — run the AI on just your own ideas to find connections and produce a personal proposal. You never have to join a group if you don't want to — but the real power is in collective deliberation.</p>
             </div>
         </details>
 

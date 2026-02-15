@@ -40,6 +40,7 @@ This is the fastest on-ramp. Got a thought? Speak it or type it. Done in 10 seco
 │                            👥 Groups             │
 │                            📚 History            │
 ├─────────────────────────────────────────────────┤
+│     [Personal (no group) ▾]  ← group selector   │
 │                                                 │
 │        Tap mic to speak, or type below          │
 │                                                 │
@@ -68,11 +69,13 @@ This is the fastest on-ramp. Got a thought? Speak it or type it. Done in 10 seco
 
 1. **Tap the mic** or just start typing in the text box
 2. **Pick a category** — "Idea" is selected by default. Use "Question" if it's a question, "Todo" if it's an action item, etc.
- 
+3. **Choose a group** (optional) — logged-in users see a dropdown to assign the idea to a group, or leave it as "Personal (no group)"
+
 
 ### Tips
 - **Voice works great** for capturing thoughts on the go — just tap the mic, speak naturally, and it fills in the text
 - Thoughts are **private by default** — nobody sees them until you mark them shareable
+- **Group selector** — choose which group your idea belongs to. Ideas saved to a group are automatically shareable. Ideas stay personal by default.
 - **Ctrl+Enter** (or Cmd+Enter on Mac) submits without clicking the button
 - The "Reaction" category is grayed out here — it activates when you're replying to someone else's thought
 - **Log in to keep your thoughts.** Anonymous thoughts are tied to your browser tab — close it and you can't find them again. Logged-in thoughts are tied to your account and persist forever.
@@ -218,6 +221,17 @@ Everything you've said (and what the AI captured) lives here. Filter it, promote
 └─────────────────────────────────────────────────┘
 ```
 
+### Personal tools
+
+Logged-in users see **Gather** and **Crystallize** buttons at the top of the History page:
+
+```
+Personal: [📊 Gather] [💎 Crystallize]
+```
+
+- **Gather** — runs the AI gatherer on just your personal ideas (not group ideas), finding thematic connections
+- **Crystallize** — produces a structured personal proposal from your ideas and gatherer digests
+
 ### Reading the cards
 
 Each thought card shows:
@@ -227,6 +241,7 @@ Each thought card shows:
 | **Colored left border** | Category: cyan=Idea, green=Decision, orange=Todo, purple=Note, pink=Question, gray=Chat |
 | **Category + Author** | "💡 You" or "💬 AI" — who said it and what kind |
 | **[brainstorm] badge** | Purple badge = AI-generated, shows which clerk role created it |
+| **Group badge** | Blue pill showing which group the idea belongs to (absent for personal ideas) |
 | **Status pill** | RAW → REFINING → DISTILLED → ACTIONABLE (the idea's maturity) |
 | **Timestamp** | When it was created |
 | **(edited)** | Shows if idea was modified after creation, with tooltip showing edit count + last edit time |
@@ -343,7 +358,7 @@ Click any group card to see its detail page:
 │        (facilitator can change roles ↑)         │
 │                                                 │
 ├─────────────────────────────────────────────────┤
-│  Shareable Ideas (8)                            │
+│  Group Ideas (8)                            │
 │  ┌───────────────────────────────────────────┐  │
 │  │ Maria: Childcare costs are crushing       │  │
 │  │ families earning $45-55k...               │  │
@@ -499,6 +514,7 @@ Every page links to every other page:
 | Find ideas by topic | History → filter by category or use tags |
 | See what my group is thinking | Groups → click group → shareable ideas |
 | Turn ideas into a proposal | Groups → Run Gatherer → Crystallize |
+| Run AI on my personal ideas | History → Personal: Gather / Crystallize buttons |
 | Mark something important | History → Promote (raw → refining → distilled → actionable) |
 | Let my group see my thought | History → check "Share" on the thought |
 | Get help or learn more | Help / FAQ (`/talk/help.php`) |
