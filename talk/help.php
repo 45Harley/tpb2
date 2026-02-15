@@ -338,7 +338,7 @@ Work with others &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Groups (deliberate, cr
             <p><strong>The deliberation flow:</strong></p>
             <ol>
                 <li><strong>Create</strong> a group with a clear purpose</li>
-                <li><strong>Invite</strong> members — share the link</li>
+                <li><strong>Invite</strong> members by email (facilitator enters addresses, system sends accept/decline links)</li>
                 <li><strong>Brainstorm</strong> — everyone shares ideas (mark them shareable)</li>
                 <li><strong>Gather</strong> — facilitator runs the AI gatherer to find connections</li>
                 <li><strong>Crystallize</strong> — AI produces a structured proposal document</li>
@@ -369,6 +369,16 @@ Work with others &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Groups (deliberate, cr
             <li><strong>&#x1f441; Group Observer</strong> — Read-only. Great for people who want to follow along without contributing. Observers join automatically when the group is Observable.</li>
         </ul>
         <p>Multiple facilitators are allowed and encouraged for larger groups. If the last facilitator leaves, the longest-tenured member is auto-promoted so the group never loses its leader.</p>
+
+        <h3>Inviting members</h3>
+        <p>Facilitators can invite people by email. On the group detail page, you'll see an <strong>Invite Members</strong> form where you enter email addresses (one per line or comma-separated). The system:</p>
+        <ul>
+            <li>Validates each email against existing accounts with verified email</li>
+            <li>Sends each person an email with <strong>"Yes, I'll Join"</strong> and <strong>"No Thanks"</strong> buttons</li>
+            <li>Reports results per email: invited, already a member, no account found, email not verified</li>
+        </ul>
+        <p>Invitees don't need to be logged in to respond &mdash; the link itself authenticates them. Invitations expire after 7 days. You can re-invite someone who declined.</p>
+        <p>All members and facilitators can see the <strong>Invitations</strong> list with status badges (pending, accepted, declined, expired). Observers cannot see invitations.</p>
 
         <h3>When to run the Gatherer</h3>
         <p>The gatherer AI scans all shared ideas, finds thematic connections, and creates summary digests. Run it when:</p>
@@ -452,7 +462,7 @@ Re-run gatherer or re-crystallize to update.</div>
             <summary>How do groups work?</summary>
             <div class="answer">
                 <p>A group is 2+ people around a topic. Anyone with an account can create one. Members brainstorm individually or together, mark their ideas as shareable, and the facilitator runs AI tools to synthesize everything into a proposal.</p>
-                <p>Groups have three access levels: <strong>Open</strong> (anyone can join), <strong>Observable</strong> (anyone can see, only members contribute), and <strong>Closed</strong> (invitation only).</p>
+                <p>Groups have three access levels: <strong>Open</strong> (anyone can join), <strong>Observable</strong> (anyone can see, only members contribute), and <strong>Closed</strong> (invitation only). Facilitators invite members by entering email addresses &mdash; each person gets an accept/decline email.</p>
             </div>
         </details>
 

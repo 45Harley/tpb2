@@ -1,8 +1,8 @@
 # /talk Architecture
 
-**Living document — last updated 2026-02-14 (Phase 4 complete: edit/delete, staleness, group roles)**
+**Living document — last updated 2026-02-14 (Phase 5 complete: display names, group invites)**
 
-This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built (Phase 1–4), what's designed for the future, and the conceptual model that drives both.
+This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built (Phase 1–5), what's designed for the future, and the conceptual model that drives both.
 
 ---
 
@@ -69,6 +69,10 @@ idea_groups
 
 idea_group_members
   group_id, user_id, role ('member', 'facilitator', 'observer'), joined_at
+
+group_invites (Phase 5)
+  id, group_id, user_id, invited_by, email, accept_token, decline_token,
+  status ('pending','accepted','declined','expired'), created_at, responded_at, expires_at
 ```
 
 A thought enters a group's circuit when marked `shareable` and the author is a member. Groups can overlap — a thought in the "roads" circuit can also surface in the "taxes" circuit through thematic links.
@@ -179,6 +183,8 @@ All five pages include a **server-rendered login indicator** (green dot + userna
 | `edit` | POST | Edit own idea content (owner-only, not AI, not deleted); increments `edit_count` | 4 |
 | `delete` | POST | Soft-delete own idea (or hard-delete if ungathered with no children) | 4 |
 | `check_staleness` | GET | Check if gather/crystallize digests are stale due to edited/deleted source ideas | 4 |
+| `invite_to_group` | POST | Facilitator sends email invites — validates emails, generates tokens, sends accept/decline emails | 5 |
+| `get_invites` | GET | List invites for a group (members + facilitators only, batch-expires stale) | 5 |
 
 **Deleted-idea filtering (Phase 4):** All read queries (`history`, `brainstorm` context, `get_group`, `gather`, `crystallize`, `READ_BACK`) add `AND deleted_at IS NULL`. Write actions (`promote`, `toggle_shareable`, `link`) reject deleted ideas.
 
@@ -242,15 +248,20 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 - **Recursive structure**: Parent/child groups via `parent_group_id`
 - **Staleness banner** (Phase 4): Orange warning when source ideas have been edited or deleted since the last gather/crystallize. Shows count of changed ideas + digest date. Facilitator-only, prompts re-run.
 - **Role display labels** (Phase 4): Member badges and role dropdowns use "Group Facilitator/Member/Observer" naming with emojis (🎯/💬/👁)
+- **Display names** (Phase 4.5): `getDisplayName()` respects `show_first_name`/`show_last_name` privacy flags across all pages, API responses, and AI clerk prompts
+- **Email invites** (Phase 5): Facilitators enter email addresses → system validates against verified users → generates dual accept/decline tokens → sends HTML email with CTA buttons → tracks responses. Token-based response requires no login. 7-day expiry. Invite list visible to members/facilitators, hidden from observers
 
 ### Database State
 
 ```sql
--- Tables: idea_log, idea_links, idea_groups, idea_group_members
+-- Tables: idea_log, idea_links, idea_groups, idea_group_members, group_invites
 -- Columns added in Phase 2: shareable TINYINT(1) NOT NULL DEFAULT 0
 -- Columns added in Phase 3: clerk_key VARCHAR(50) NULL
 -- Columns added in Phase 4: edit_count INT NOT NULL DEFAULT 0, deleted_at TIMESTAMP NULL
 -- Index added in Phase 4: idx_deleted_at on idea_log(deleted_at)
+-- Table added in Phase 5: group_invites (id, group_id, user_id, invited_by, email,
+--   accept_token, decline_token, status, created_at, responded_at, expires_at)
+--   Indexes: unique accept_token, unique decline_token, idx_group_status, idx_user_status
 -- ai_clerks: brainstorm + gatherer clerk rows registered
 -- system_documentation: clerk-gatherer-rules doc registered
 -- user_roles: Group Facilitator (37), Group Member (38), Group Observer (39) registered
@@ -260,7 +271,7 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 
 ## 5. Architecture Details
 
-Sections 5a–5g are **built and deployed** (Phase 3). Sections 5h–5j are **designed but not yet built**.
+Sections 5a–5g are **built and deployed** (Phase 3–5). Sections 5h–5j are **designed but not yet built**.
 
 ### 5a. AI as first-class entity in the graph ✅
 
@@ -337,7 +348,7 @@ Each group has:
 
 | Role | Display label | Can do |
 |------|---------------|--------|
-| **facilitator** | 🎯 Group Facilitator | Create, manage membership, moderate, run gatherer, call crystallization |
+| **facilitator** | 🎯 Group Facilitator | Create, manage membership, send invites, moderate, run gatherer, call crystallization |
 | **member** | 💬 Group Member | Contribute thoughts, participate in refinement |
 | **observer** | 👁 Group Observer | Read only (future: may become a learning lab task) |
 
@@ -354,6 +365,23 @@ Multiple facilitators allowed. Creator is first facilitator. Auto-promotion safe
 | **Observable** | Anyone | Members only |
 
 Civic deliberation defaults toward **observable** — transparency matters.
+
+#### Email invites (Phase 5)
+
+Facilitators invite members by entering email addresses in the group detail UI. The flow:
+
+1. **Validate**: Each email checked for format → user lookup → `email_verified=1` in `user_identity_status`
+2. **Dedup**: Skip if already a member or has a pending invite (re-invite after decline creates new row)
+3. **Token**: `bin2hex(random_bytes(32))` × 2 for accept/decline (matches magic link pattern)
+4. **Email**: HTML email via `sendSmtpMail()` with green "Yes, I'll Join" and gray "No Thanks" CTA buttons
+5. **Response**: Token-based GET to `groups.php?invite_action=accept&token=xxx` — no login required
+6. **Accept**: Inserts into `idea_group_members` as `member`, marks invite `accepted`
+7. **Decline**: Marks invite `declined`, no membership created
+8. **Expiry**: 7-day window; batch-expired on read via `get_invites`
+
+Per-email result statuses: `invited`, `invalid_email`, `not_found`, `not_verified`, `already_member`, `already_invited`.
+
+Invite list visible to members + facilitators (not observers). Shows email, status badge, inviter name, timestamp.
 
 #### Lifecycle
 

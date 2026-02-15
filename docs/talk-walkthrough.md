@@ -359,12 +359,35 @@ Click any group card to see its detail page:
 └─────────────────────────────────────────────────┘
 ```
 
+### Inviting members
+
+Facilitators can invite people by email directly from the group detail page:
+
+1. Scroll to the **"Invite Members"** section (facilitator-only)
+2. Enter email addresses — one per line or comma-separated
+3. Click **"Send Invites"**
+4. Results appear inline with color-coded status for each email:
+   - **Green** (Invited) — email sent with accept/decline buttons
+   - **Red** (Invalid email / No account found) — can't invite
+   - **Orange** (Already a member / Already invited / Email not verified) — skipped
+
+Each invitee receives an email with two buttons: **"Yes, I'll Join"** (green) and **"No Thanks"** (gray). Clicking either link works without logging in — the token authenticates the response.
+
+The **Invitations** list (visible to members and facilitators, not observers) shows all invites with status badges:
+- **Pending** (orange) — waiting for response
+- **Accepted** (green) — joined the group
+- **Declined** (red) — chose not to join
+- **Expired** (gray) — 7-day window passed with no response
+
+Facilitators can re-invite someone who declined (creates a new invitation).
+
 ### The facilitator toolkit
 
 If you're a facilitator, you have special powers:
 
 | Button | What it does | When to use it |
 |--------|-------------|----------------|
+| **Send Invites** | Enter email addresses, system validates and sends accept/decline emails | To add members to closed groups (or any group) |
 | **Activate Group** | Changes status from "forming" to "active" | After members have joined and you're ready to start |
 | **🔗 Run Gatherer** | AI scans all shared ideas, finds connections, creates digest summaries | After members have shared several ideas — run it periodically |
 | **💎 Crystallize** | AI produces a structured proposal (.md document) from all the group's ideas, links, and digests | When the group has enough material for a proposal |
@@ -380,7 +403,7 @@ Here's the typical lifecycle of a group:
 ```
 1. CREATE          Facilitator creates the group, sets purpose
        ↓
-2. INVITE          Share the link — members join
+2. INVITE          Facilitator sends email invites → accept/decline
        ↓
 3. BRAINSTORM      Members brainstorm (individually or together)
        ↓              Each marks their good ideas "shareable"
@@ -403,9 +426,9 @@ Here's the typical lifecycle of a group:
 
 | Role | Display | Can do |
 |------|---------|--------|
-| **Facilitator** | 🎯 Group Facilitator | Everything — manage members, run gatherer, crystallize, archive/reopen |
-| **Member** | 💬 Group Member | Brainstorm, share ideas, participate in discussion |
-| **Observer** | 👁 Group Observer | Read only — can see shared ideas but can't contribute |
+| **Facilitator** | 🎯 Group Facilitator | Everything — manage members, send invites, run gatherer, crystallize, archive/reopen |
+| **Member** | 💬 Group Member | Brainstorm, share ideas, participate in discussion, view invitations |
+| **Observer** | 👁 Group Observer | Read only — can see shared ideas but can't contribute or see invitations |
 
 Facilitators can change anyone's role using the dropdown on their member chip. The group creator is the first facilitator. Multiple facilitators are allowed.
 
