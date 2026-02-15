@@ -19,7 +19,8 @@
  *   join_group        — POST: Join a group (Phase 3)
  *   leave_group       — POST: Leave a group (Phase 3)
  *   update_group      — POST: Update group settings (Phase 3)
- *   update_member     — POST: Change member role or remove member (Phase 3)
+ *   update_member     — POST: Change member role/status or remove member (Phase 3)
+ *   add_member        — POST: Facilitator adds member by username/email (Phase 3)
  *   gather            — POST: Run gatherer clerk on group (Phase 3)
  *   crystallize       — POST: Produce crystallized proposal (Phase 3)
  *   invite_to_group   — POST: Send invites to email addresses (Phase 5)
@@ -132,6 +133,9 @@ try {
         case 'update_member':
             echo json_encode(handleUpdateMember($pdo, $input, $userId));
             break;
+        case 'add_member':
+            echo json_encode(handleAddMember($pdo, $input, $userId));
+            break;
 
         // Phase 3: Gatherer + Crystallization
         case 'gather':
@@ -198,7 +202,7 @@ function handleSave($pdo, $input, $userId) {
         if (!$userId) {
             return ['success' => false, 'error' => 'Login required to save to a group'];
         }
-        $gStmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $gStmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
         $gStmt->execute([$groupId, $userId]);
         $membership = $gStmt->fetch();
         if (!$membership || $membership['role'] === 'observer') {
@@ -333,7 +337,7 @@ function handleHistory($pdo, $userId) {
     if ($groupId !== null) {
         // Verify membership for closed groups
         if ($userId) {
-            $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+            $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
             $stmt->execute([$groupId, $userId]);
             $membership = $stmt->fetch();
             $userRole = $membership ? $membership['role'] : null;
@@ -698,7 +702,7 @@ function handleBrainstorm($pdo, $input, $userId) {
         if (!$userId) {
             return ['success' => false, 'error' => 'Login required for group brainstorming'];
         }
-        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
         $stmt->execute([$groupId, $userId]);
         $membership = $stmt->fetch();
         if (!$membership) {
@@ -1247,7 +1251,7 @@ function handleCreateGroup($pdo, $input, $userId) {
     if ($parentId) {
         $stmt = $pdo->prepare("
             SELECT g.id FROM idea_groups g
-            JOIN idea_group_members m ON m.group_id = g.id AND m.user_id = ? AND m.role = 'facilitator'
+            JOIN idea_group_members m ON m.group_id = g.id AND m.user_id = ? AND m.role = 'facilitator' AND m.status = 'active'
             WHERE g.id = ?
         ");
         $stmt->execute([$userId, $parentId]);
@@ -1296,7 +1300,7 @@ function handleListGroups($pdo, $userId) {
         // Groups the user belongs to
         $stmt = $pdo->prepare("
             SELECT g.*, m.role AS user_role,
-                   (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id) AS member_count
+                   (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id AND status = 'active') AS member_count
             FROM idea_groups g
             JOIN idea_group_members m ON m.group_id = g.id AND m.user_id = ?
             ORDER BY g.created_at DESC
@@ -1308,7 +1312,7 @@ function handleListGroups($pdo, $userId) {
             $stmt = $pdo->prepare("
                 SELECT g.*,
                        m.role AS user_role,
-                       (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id) AS member_count
+                       (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id AND status = 'active') AS member_count
                 FROM idea_groups g
                 LEFT JOIN idea_group_members m ON m.group_id = g.id AND m.user_id = ?
                 WHERE g.access_level IN ('open', 'observable') OR m.user_id IS NOT NULL
@@ -1318,7 +1322,7 @@ function handleListGroups($pdo, $userId) {
         } else {
             $stmt = $pdo->query("
                 SELECT g.*, NULL AS user_role,
-                       (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id) AS member_count
+                       (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id AND status = 'active') AS member_count
                 FROM idea_groups g
                 WHERE g.access_level IN ('open', 'observable')
                 ORDER BY g.created_at DESC
@@ -1350,7 +1354,7 @@ function handleGetGroup($pdo, $userId) {
     // Check access for closed groups
     $userRole = null;
     if ($userId) {
-        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
         $stmt->execute([$groupId, $userId]);
         $membership = $stmt->fetch();
         $userRole = $membership ? $membership['role'] : null;
@@ -1362,7 +1366,7 @@ function handleGetGroup($pdo, $userId) {
 
     // Members
     $stmt = $pdo->prepare("
-        SELECT m.user_id, m.role, m.joined_at,
+        SELECT m.user_id, m.role, m.joined_at, m.status,
                u.first_name, u.last_name, u.username,
                u.show_first_name, u.show_last_name
         FROM idea_group_members m
@@ -1407,7 +1411,7 @@ function handleGetGroup($pdo, $userId) {
     // Sub-groups
     $stmt = $pdo->prepare("
         SELECT id, name, status, tags,
-               (SELECT COUNT(*) FROM idea_group_members WHERE group_id = idea_groups.id) AS member_count
+               (SELECT COUNT(*) FROM idea_group_members WHERE group_id = idea_groups.id AND status = 'active') AS member_count
         FROM idea_groups
         WHERE parent_group_id = ?
         ORDER BY created_at ASC
@@ -1458,7 +1462,7 @@ function handleJoinGroup($pdo, $input, $userId) {
     }
 
     // Check if already a member
-    $stmt = $pdo->prepare("SELECT id FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt = $pdo->prepare("SELECT id FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
     $stmt->execute([$groupId, $userId]);
     if ($stmt->fetch()) {
         return ['success' => false, 'error' => 'You are already in this group'];
@@ -1485,7 +1489,7 @@ function handleLeaveGroup($pdo, $input, $userId) {
     }
 
     // Check membership
-    $stmt = $pdo->prepare("SELECT id, role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt = $pdo->prepare("SELECT id, role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
     $stmt->execute([$groupId, $userId]);
     $membership = $stmt->fetch();
 
@@ -1495,7 +1499,7 @@ function handleLeaveGroup($pdo, $input, $userId) {
 
     // If leaving facilitator is the last one, promote oldest member
     if ($membership['role'] === 'facilitator') {
-        $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM idea_group_members WHERE group_id = ? AND role = 'facilitator'");
+        $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM idea_group_members WHERE group_id = ? AND role = 'facilitator' AND status = 'active'");
         $stmt->execute([$groupId]);
         $facCount = (int)$stmt->fetch()['cnt'];
 
@@ -1503,7 +1507,7 @@ function handleLeaveGroup($pdo, $input, $userId) {
             // Promote oldest non-facilitator member
             $stmt = $pdo->prepare("
                 SELECT id FROM idea_group_members
-                WHERE group_id = ? AND user_id != ? AND role != 'facilitator'
+                WHERE group_id = ? AND user_id != ? AND role != 'facilitator' AND status = 'active'
                 ORDER BY joined_at ASC LIMIT 1
             ");
             $stmt->execute([$groupId, $userId]);
@@ -1530,7 +1534,7 @@ function handleUpdateGroup($pdo, $input, $userId) {
     }
 
     // Facilitator check
-    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
     $stmt->execute([$groupId, $userId]);
     $membership = $stmt->fetch();
 
@@ -1610,17 +1614,18 @@ function handleUpdateMember($pdo, $input, $userId) {
         return ['success' => false, 'error' => 'Login required'];
     }
 
-    $groupId  = (int)($input['group_id'] ?? 0);
-    $targetId = (int)($input['user_id'] ?? 0);
-    $newRole  = $input['role'] ?? null;
-    $remove   = (bool)($input['remove'] ?? false);
+    $groupId   = (int)($input['group_id'] ?? 0);
+    $targetId  = (int)($input['user_id'] ?? 0);
+    $newRole   = $input['role'] ?? null;
+    $newStatus = $input['status'] ?? null;
+    $remove    = (bool)($input['remove'] ?? false);
 
     if (!$groupId || !$targetId) {
         return ['success' => false, 'error' => 'group_id and user_id are required'];
     }
 
     // Facilitator check
-    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
     $stmt->execute([$groupId, $userId]);
     $myRole = $stmt->fetch();
     if (!$myRole || $myRole['role'] !== 'facilitator') {
@@ -1632,8 +1637,8 @@ function handleUpdateMember($pdo, $input, $userId) {
         return ['success' => false, 'error' => 'Use leave_group to manage your own membership'];
     }
 
-    // Check target exists in group
-    $stmt = $pdo->prepare("SELECT id, role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    // Check target exists in group (including inactive)
+    $stmt = $pdo->prepare("SELECT id, role, status FROM idea_group_members WHERE group_id = ? AND user_id = ?");
     $stmt->execute([$groupId, $targetId]);
     $target = $stmt->fetch();
     if (!$target) {
@@ -1645,6 +1650,14 @@ function handleUpdateMember($pdo, $input, $userId) {
         return ['success' => true, 'action' => 'removed', 'user_id' => $targetId];
     }
 
+    if ($newStatus) {
+        if (!in_array($newStatus, ['active', 'inactive'])) {
+            return ['success' => false, 'error' => 'Invalid status. Valid: active, inactive'];
+        }
+        $pdo->prepare("UPDATE idea_group_members SET status = ? WHERE group_id = ? AND user_id = ?")->execute([$newStatus, $groupId, $targetId]);
+        return ['success' => true, 'action' => 'status_changed', 'user_id' => $targetId, 'status' => $newStatus];
+    }
+
     if ($newRole) {
         $validRoles = ['member', 'facilitator', 'observer'];
         if (!in_array($newRole, $validRoles)) {
@@ -1654,7 +1667,69 @@ function handleUpdateMember($pdo, $input, $userId) {
         return ['success' => true, 'action' => 'role_changed', 'user_id' => $targetId, 'role' => $newRole];
     }
 
-    return ['success' => false, 'error' => 'Provide role or remove=true'];
+    return ['success' => false, 'error' => 'Provide role, status, or remove=true'];
+}
+
+
+// ── Add Member (facilitator adds by username or email) ────────────
+
+function handleAddMember($pdo, $input, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Login required'];
+    }
+
+    $groupId  = (int)($input['group_id'] ?? 0);
+    $lookup   = trim($input['username'] ?? $input['email'] ?? '');
+    $role     = $input['role'] ?? 'member';
+
+    if (!$groupId || !$lookup) {
+        return ['success' => false, 'error' => 'group_id and username or email required'];
+    }
+
+    $validRoles = ['member', 'facilitator', 'observer'];
+    if (!in_array($role, $validRoles)) {
+        return ['success' => false, 'error' => 'Invalid role'];
+    }
+
+    // Facilitator check
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
+    $stmt->execute([$groupId, $userId]);
+    $myRole = $stmt->fetch();
+    if (!$myRole || $myRole['role'] !== 'facilitator') {
+        return ['success' => false, 'error' => 'Only facilitators can add members'];
+    }
+
+    // Find the target user by username or email
+    $stmt = $pdo->prepare("SELECT user_id, username, first_name, last_name, show_first_name, show_last_name FROM users WHERE username = ? OR email = ? LIMIT 1");
+    $stmt->execute([$lookup, $lookup]);
+    $targetUser = $stmt->fetch();
+    if (!$targetUser) {
+        return ['success' => false, 'error' => 'User not found: ' . $lookup];
+    }
+
+    $targetId = (int)$targetUser['user_id'];
+
+    // Check if already a member
+    $stmt = $pdo->prepare("SELECT id, status FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $targetId]);
+    $existing = $stmt->fetch();
+
+    if ($existing) {
+        if ($existing['status'] === 'active') {
+            return ['success' => false, 'error' => 'Already an active member'];
+        }
+        // Reactivate inactive member
+        $pdo->prepare("UPDATE idea_group_members SET status = 'active', role = ? WHERE group_id = ? AND user_id = ?")
+            ->execute([$role, $groupId, $targetId]);
+        return ['success' => true, 'action' => 'reactivated', 'user_id' => $targetId, 'role' => $role,
+                'display_name' => getDisplayName($targetUser)];
+    }
+
+    // Insert new member
+    $pdo->prepare("INSERT INTO idea_group_members (group_id, user_id, role, status) VALUES (?, ?, ?, 'active')")
+        ->execute([$groupId, $targetId, $role]);
+    return ['success' => true, 'action' => 'added', 'user_id' => $targetId, 'role' => $role,
+            'display_name' => getDisplayName($targetUser)];
 }
 
 
@@ -1755,7 +1830,7 @@ function handleGather($pdo, $input, $userId) {
         $group = ['name' => 'Personal Ideas', 'description' => 'Your personal idea collection', 'tags' => null];
     } else {
         // Group gathering — facilitator check
-        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
         $stmt->execute([$groupId, $userId]);
         $membership = $stmt->fetch();
         if (!$membership || $membership['role'] !== 'facilitator') {
@@ -2055,7 +2130,7 @@ function handleCrystallize($pdo, $input, $userId) {
         $group = ['name' => 'Personal Ideas', 'description' => 'Your personal idea collection', 'tags' => null, 'status' => 'active'];
     } else {
         // Facilitator check
-        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
         $stmt->execute([$groupId, $userId]);
         $membership = $stmt->fetch();
         if (!$membership || $membership['role'] !== 'facilitator') {
@@ -2429,7 +2504,7 @@ function handleInviteToGroup($pdo, $input, $userId, $config) {
     }
 
     // Verify caller is facilitator
-    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
     $stmt->execute([$groupId, $userId]);
     $myRole = $stmt->fetch();
     if (!$myRole || $myRole['role'] !== 'facilitator') {
@@ -2497,7 +2572,7 @@ function handleInviteToGroup($pdo, $input, $userId, $config) {
         $inviteeId = (int)$invitee['user_id'];
 
         // Check if already a member
-        $stmt = $pdo->prepare("SELECT id FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $stmt = $pdo->prepare("SELECT id FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
         $stmt->execute([$groupId, $inviteeId]);
         if ($stmt->fetch()) {
             $results[] = ['email' => $email, 'status' => 'already_member'];
@@ -2590,7 +2665,7 @@ function handleGetInvites($pdo, $userId) {
     }
 
     // Verify caller is member or facilitator (not observer)
-    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
     $stmt->execute([$groupId, $userId]);
     $myRole = $stmt->fetch();
     if (!$myRole || $myRole['role'] === 'observer') {

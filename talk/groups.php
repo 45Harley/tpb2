@@ -217,10 +217,33 @@ $mode = $groupId ? 'detail' : 'list';
 
         .members-list { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
         .member-chip {
-            display: flex; align-items: center; gap: 4px;
-            padding: 4px 10px; border-radius: 12px;
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 12px;
             background: rgba(255,255,255,0.08); font-size: 0.8rem;
         }
+        .member-chip.inactive { opacity: 0.5; }
+        .member-chip .member-actions { display: flex; gap: 2px; margin-left: 4px; }
+        .member-chip .member-actions button {
+            background: none; border: none; color: #aab; cursor: pointer;
+            font-size: 0.8rem; padding: 1px 4px; border-radius: 4px; transition: all 0.15s;
+        }
+        .member-chip .member-actions button:hover { color: #eee; background: rgba(255,255,255,0.1); }
+        .member-chip .member-actions button.danger:hover { color: #ef5350; }
+        .add-member-form {
+            display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center;
+        }
+        .add-member-form input {
+            flex: 1; min-width: 180px; padding: 8px 12px;
+            background: rgba(255,255,255,0.08); color: #eee;
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+            font-size: 0.85rem; font-family: inherit;
+        }
+        .add-member-form input:focus { outline: none; border-color: #4fc3f7; }
+        .add-member-form select {
+            padding: 8px; background: rgba(255,255,255,0.08); color: #eee;
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; font-size: 0.85rem;
+        }
+        .add-member-form select option { background: #1a1a2e; color: #eee; }
 
         .actions { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; }
 
@@ -471,20 +494,41 @@ $mode = $groupId ? 'detail' : 'list';
         html += '<div class="section" style="margin-top:1.5rem;"><h2>Members</h2><div class="members-list">';
         members.forEach(function(m) {
             var isMe = m.user_id == currentUserId;
-            html += '<div class="member-chip">' + escHtml(m.display_name || 'User') +
-                ' <span class="badge ' + m.role + '">' + (roleLabels[m.role] || m.role) + '</span>';
+            var isInactive = m.status === 'inactive';
+            html += '<div class="member-chip' + (isInactive ? ' inactive' : '') + '">' +
+                escHtml(m.display_name || 'User') +
+                ' <span class="badge ' + m.role + '">' + (roleLabels[m.role] || m.role) + '</span>' +
+                (isInactive ? ' <span style="color:#ef9a9a;font-size:0.7rem;">inactive</span>' : '');
             if (isFacilitator && !isMe) {
-                html += ' <select onchange="changeMemberRole(' + g.id + ',' + m.user_id + ',this.value)" style="background:rgba(255,255,255,0.1);color:#eee;border:1px solid rgba(255,255,255,0.15);border-radius:4px;padding:1px 4px;font-size:0.7rem;cursor:pointer;margin-left:4px;">' +
-                    '<option value="" disabled selected>...</option>' +
-                    (m.role !== 'facilitator' ? '<option value="facilitator">→ Group Facilitator</option>' : '') +
-                    (m.role !== 'member' ? '<option value="member">→ Group Member</option>' : '') +
-                    (m.role !== 'observer' ? '<option value="observer">→ Group Observer</option>' : '') +
-                    '<option value="__remove">✕ remove</option>' +
-                '</select>';
+                html += '<span class="member-actions">';
+                // Role buttons
+                if (m.role !== 'facilitator') html += '<button onclick="changeMemberRole(' + g.id + ',' + m.user_id + ',\'facilitator\')" title="Promote to Facilitator">&#x2B06;</button>';
+                if (m.role === 'facilitator') html += '<button onclick="changeMemberRole(' + g.id + ',' + m.user_id + ',\'member\')" title="Set as Member">&#x2B07;</button>';
+                if (m.role !== 'observer') html += '<button onclick="changeMemberRole(' + g.id + ',' + m.user_id + ',\'observer\')" title="Set as Observer">&#x1F441;</button>';
+                // Status toggle
+                if (isInactive) {
+                    html += '<button onclick="changeMemberStatus(' + g.id + ',' + m.user_id + ',\'active\')" title="Reactivate" style="color:#81c784;">&#x2714;</button>';
+                } else {
+                    html += '<button class="danger" onclick="changeMemberStatus(' + g.id + ',' + m.user_id + ',\'inactive\')" title="Deactivate">&#x23F8;</button>';
+                }
+                // Remove
+                html += '<button class="danger" onclick="removeMember(' + g.id + ',' + m.user_id + ')" title="Remove from group">&#x2715;</button>';
+                html += '</span>';
             }
             html += '</div>';
         });
-        html += '</div></div>';
+        html += '</div>';
+
+        // Add member form (facilitator only)
+        if (isFacilitator) {
+            html += '<div class="add-member-form">' +
+                '<input type="text" id="addMemberInput" placeholder="Username or email">' +
+                '<select id="addMemberRole"><option value="member">Member</option><option value="observer">Observer</option><option value="facilitator">Facilitator</option></select>' +
+                '<button class="btn btn-secondary" onclick="addMember(' + g.id + ')">+ Add</button>' +
+            '</div>';
+        }
+
+        html += '</div>';
 
         // Invite form (facilitator only)
         if (isFacilitator) {
@@ -580,19 +624,50 @@ $mode = $groupId ? 'detail' : 'list';
         }
     }
 
-    async function changeMemberRole(gId, uId, value) {
-        if (value === '__remove') {
-            if (!confirm('Remove this member from the group?')) { loadGroupDetail(); return; }
-            var data = await apiPost('update_member', { group_id: gId, user_id: uId, remove: true });
-        } else {
-            var data = await apiPost('update_member', { group_id: gId, user_id: uId, role: value });
-        }
+    async function changeMemberRole(gId, uId, role) {
+        var data = await apiPost('update_member', { group_id: gId, user_id: uId, role: role });
         if (data.success) {
-            showStatus(data.action === 'removed' ? 'Member removed' : 'Role changed to ' + data.role, 'success');
+            showStatus('Role changed to ' + data.role, 'success');
             loadGroupDetail();
         } else {
             showStatus(data.error, 'error');
+        }
+    }
+
+    async function changeMemberStatus(gId, uId, status) {
+        var data = await apiPost('update_member', { group_id: gId, user_id: uId, status: status });
+        if (data.success) {
+            showStatus(status === 'active' ? 'Member reactivated' : 'Member deactivated', 'success');
             loadGroupDetail();
+        } else {
+            showStatus(data.error, 'error');
+        }
+    }
+
+    async function removeMember(gId, uId) {
+        if (!confirm('Remove this member from the group permanently?')) return;
+        var data = await apiPost('update_member', { group_id: gId, user_id: uId, remove: true });
+        if (data.success) {
+            showStatus('Member removed', 'success');
+            loadGroupDetail();
+        } else {
+            showStatus(data.error, 'error');
+        }
+    }
+
+    async function addMember(gId) {
+        var input = document.getElementById('addMemberInput');
+        var roleSelect = document.getElementById('addMemberRole');
+        var lookup = input.value.trim();
+        if (!lookup) { showStatus('Enter a username or email', 'error'); return; }
+
+        var data = await apiPost('add_member', { group_id: gId, username: lookup, role: roleSelect.value });
+        if (data.success) {
+            showStatus((data.display_name || 'User') + ' ' + data.action + ' as ' + data.role, 'success');
+            input.value = '';
+            loadGroupDetail();
+        } else {
+            showStatus(data.error, 'error');
         }
     }
 
