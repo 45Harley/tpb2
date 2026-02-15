@@ -2204,7 +2204,7 @@ function handleInviteToGroup($pdo, $input, $userId, $config) {
     }
 
     // Check group exists and is not archived
-    $stmt = $pdo->prepare("SELECT id, name, status FROM idea_groups WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, name, description, status FROM idea_groups WHERE id = ?");
     $stmt->execute([$groupId]);
     $group = $stmt->fetch();
     if (!$group) {
@@ -2299,14 +2299,20 @@ function handleInviteToGroup($pdo, $input, $userId, $config) {
         $acceptUrl = "{$baseUrl}/talk/groups.php?invite_action=accept&token={$acceptToken}";
         $declineUrl = "{$baseUrl}/talk/groups.php?invite_action=decline&token={$declineToken}";
         $groupName = htmlspecialchars($group['name']);
+        $groupDesc = htmlspecialchars($group['description'] ?? '');
         $facName = htmlspecialchars($facilitatorName);
 
         $subject = "You're invited to join \"{$group['name']}\" on The People's Branch";
+
+        $descBlock = $groupDesc
+            ? "<p style='color: #444; background: #f5f5f5; padding: 12px 16px; border-left: 3px solid #1a3a5c; border-radius: 4px; font-size: 0.95em; margin: 16px 0;'>{$groupDesc}</p>"
+            : "";
 
         $htmlBody = "
         <div style='font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
             <h2 style='color: #1a3a5c;'>You're Invited!</h2>
             <p><strong>{$facName}</strong> has invited you to join the group <strong>\"{$groupName}\"</strong> on The People's Branch.</p>
+            {$descBlock}
             <p>Would you like to join this group?</p>
             <div style='text-align: center; margin: 30px 0;'>
                 <a href='{$acceptUrl}' style='background: #2e7d32; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-right: 15px;'>
@@ -2317,10 +2323,12 @@ function handleInviteToGroup($pdo, $input, $userId, $config) {
                     No Thanks
                 </a>
             </div>
+            <p style='color: #444; font-size: 0.9em;'>To be part of this group you'll need to <a href='{$baseUrl}/join.php' style='color: #1a3a5c;'>create an account</a> or <a href='{$baseUrl}/login.php' style='color: #1a3a5c;'>log in</a> if you haven't already.</p>
             <p style='color: #666; font-size: 0.9em;'>This invitation expires in 7 days.</p>
             <p style='color: #666; font-size: 0.9em;'>If you didn't expect this, you can safely ignore this email.</p>
             <hr style='border: none; border-top: 1px solid #ddd; margin: 30px 0;'>
-            <p style='color: #888; font-size: 0.85em;'>The People's Branch — Your voice, aggregated</p>
+            <p style='color: #888; font-size: 0.85em;'><a href='{$baseUrl}/talk/help.php' style='color: #1a3a5c;'>Learn more about TPB Groups</a></p>
+            <p style='color: #888; font-size: 0.85em;'>The People's Branch &mdash; Your voice, aggregated</p>
         </div>
         ";
 
