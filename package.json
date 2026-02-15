@@ -9,6 +9,8 @@
     "test:ethics": "playwright test tests/ethics.spec.js",
     "test:security": "playwright test tests/security.spec.js",
     "test:staging": "cross-env SITE_URL=https://tpb2.sandgems.net playwright test tests/security.spec.js",
+    "test:talk": "playwright test tests/talk-harness.spec.js",
+    "test:talk-staging": "cross-env SITE_URL=https://tpb2.sandgems.net playwright test tests/talk-harness.spec.js",
     "test:ui": "playwright test --ui"
   },
   "keywords": [
