@@ -58,17 +58,62 @@ if (isset($_GET['invite_action'], $_GET['token']) && $pdo) {
             $pdo->prepare("UPDATE group_invites SET status = 'expired' WHERE id = ?")->execute([$invite['id']]);
             $inviteResult = ['type' => 'error', 'message' => 'This invitation has expired. Ask the facilitator to send a new one.'];
         } elseif ($inviteAction === 'accept') {
-            // Check if already a member (may have joined independently)
+            $acceptUserId = $invite['user_id'];
+
+            // New user: auto-create account from invite email
+            if (!$acceptUserId) {
+                $invEmail = strtolower($invite['email']);
+                // Check if an account was created since the invite was sent
+                $stmt2 = $pdo->prepare("SELECT user_id FROM users WHERE LOWER(email) = ?");
+                $stmt2->execute([$invEmail]);
+                $existing = $stmt2->fetch();
+                if ($existing) {
+                    $acceptUserId = (int)$existing['user_id'];
+                } else {
+                    // Auto-create account
+                    $emailPrefix = explode('@', $invEmail)[0];
+                    $autoUsername = preg_replace('/[^a-z0-9]/', '', $emailPrefix) . '_' . substr(md5($invEmail . time()), 0, 4);
+                    $pdo->prepare("INSERT INTO users (username, email, civic_points) VALUES (?, ?, 0)")
+                        ->execute([$autoUsername, $invEmail]);
+                    $acceptUserId = (int)$pdo->lastInsertId();
+
+                    // Mark email as verified (clicking invite link proves ownership)
+                    $pdo->prepare("INSERT INTO user_identity_status (user_id, email_verified) VALUES (?, 1)")
+                        ->execute([$acceptUserId]);
+
+                    // Create device session and log in
+                    $deviceSession = 'civic_' . bin2hex(random_bytes(8)) . '_' . time();
+                    $pdo->prepare("INSERT INTO user_devices (user_id, device_session, device_type, ip_address, is_active) VALUES (?, ?, 'web', ?, 1)")
+                        ->execute([$acceptUserId, $deviceSession, $_SERVER['REMOTE_ADDR'] ?? '']);
+                    setcookie('tpb_user_id', $acceptUserId, time() + 31536000, '/');
+                    setcookie('tpb_civic_session', $deviceSession, time() + 31536000, '/');
+                    setcookie('tpb_email_verified', '1', time() + 31536000, '/');
+
+                    // Update the invite record with the new user_id
+                    $pdo->prepare("UPDATE group_invites SET user_id = ? WHERE id = ?")->execute([$acceptUserId, $invite['id']]);
+
+                    // Refresh dbUser for the rest of the page
+                    $dbUser = getUser($pdo);
+                    $currentUserId = $acceptUserId;
+                }
+            }
+
+            // Add to group if not already a member
             $stmt2 = $pdo->prepare("SELECT id FROM idea_group_members WHERE group_id = ? AND user_id = ?");
-            $stmt2->execute([$invite['group_id'], $invite['user_id']]);
+            $stmt2->execute([$invite['group_id'], $acceptUserId]);
             if (!$stmt2->fetch()) {
-                $pdo->prepare("INSERT INTO idea_group_members (group_id, user_id, role) VALUES (?, ?, 'member')")
-                    ->execute([$invite['group_id'], $invite['user_id']]);
+                $pdo->prepare("INSERT INTO idea_group_members (group_id, user_id, role, status) VALUES (?, ?, 'member', 'active')")
+                    ->execute([$invite['group_id'], $acceptUserId]);
             }
             $pdo->prepare("UPDATE group_invites SET status = 'accepted', responded_at = NOW() WHERE id = ?")->execute([$invite['id']]);
+
+            $welcomeMsg = !$invite['user_id']
+                ? "Welcome to The People's Branch! Your account has been created and you've joined \"{$invite['group_name']}\"."
+                : "You've joined \"{$invite['group_name']}\"!";
+
             $inviteResult = [
                 'type' => 'success',
-                'message' => "You've joined \"{$invite['group_name']}\"!",
+                'message' => $welcomeMsg,
                 'group_id' => $invite['group_id']
             ];
         } elseif ($inviteAction === 'decline') {
@@ -699,7 +744,6 @@ $mode = $groupId ? 'detail' : 'list';
         var statusLabels = {
             invited: { color: '#81c784', label: 'Invited' },
             invalid_email: { color: '#ef9a9a', label: 'Invalid email' },
-            not_found: { color: '#ef9a9a', label: 'No account found' },
             not_verified: { color: '#ffcc80', label: 'Email not verified' },
             already_member: { color: '#ffcc80', label: 'Already a member' },
             already_invited: { color: '#ffcc80', label: 'Already invited' }
@@ -708,10 +752,12 @@ $mode = $groupId ? 'detail' : 'list';
         var html = '';
         data.results.forEach(function(r) {
             var info = statusLabels[r.status] || { color: '#aaa', label: r.status };
+            var extra = '';
+            if (r.status === 'invited' && r.mail_sent === false) extra = ' <span style="color:#ef9a9a;">(email failed)</span>';
+            if (r.status === 'invited' && r.new_user) extra += ' <span style="color:#4fc3f7;font-size:0.8rem;">(new — account created on accept)</span>';
             html += '<div style="font-size:0.85rem;padding:3px 0;">' +
                 '<span style="color:' + info.color + ';">' + info.label + '</span> — ' +
-                escHtml(r.email) +
-                (r.status === 'invited' && r.mail_sent === false ? ' <span style="color:#ef9a9a;">(email failed)</span>' : '') +
+                escHtml(r.email) + extra +
             '</div>';
         });
 

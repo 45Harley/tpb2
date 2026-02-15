@@ -2556,36 +2556,48 @@ function handleInviteToGroup($pdo, $input, $userId, $config) {
         $stmt->execute([$email]);
         $invitee = $stmt->fetch();
 
+        $inviteeId = null;
+        $isNewUser = false;
+
         if (!$invitee) {
             // Check if user exists but isn't verified
             $stmt = $pdo->prepare("SELECT user_id FROM users WHERE LOWER(email) = ?");
             $stmt->execute([$email]);
-            if ($stmt->fetch()) {
+            $unverified = $stmt->fetch();
+            if ($unverified) {
                 $results[] = ['email' => $email, 'status' => 'not_verified'];
-            } else {
-                $results[] = ['email' => $email, 'status' => 'not_found'];
+                $errorCount++;
+                continue;
             }
-            $errorCount++;
-            continue;
+            // No account — invite anyway (will auto-create on accept)
+            $isNewUser = true;
+        } else {
+            $inviteeId = (int)$invitee['user_id'];
+
+            // Check if already a member
+            $stmt = $pdo->prepare("SELECT id FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
+            $stmt->execute([$groupId, $inviteeId]);
+            if ($stmt->fetch()) {
+                $results[] = ['email' => $email, 'status' => 'already_member'];
+                $errorCount++;
+                continue;
+            }
         }
 
-        $inviteeId = (int)$invitee['user_id'];
-
-        // Check if already a member
-        $stmt = $pdo->prepare("SELECT id FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
-        $stmt->execute([$groupId, $inviteeId]);
-        if ($stmt->fetch()) {
-            $results[] = ['email' => $email, 'status' => 'already_member'];
-            $errorCount++;
-            continue;
+        // Check for existing pending invite (by user_id or email)
+        if ($inviteeId) {
+            $stmt = $pdo->prepare("
+                SELECT id FROM group_invites
+                WHERE group_id = ? AND user_id = ? AND status = 'pending' AND expires_at > NOW()
+            ");
+            $stmt->execute([$groupId, $inviteeId]);
+        } else {
+            $stmt = $pdo->prepare("
+                SELECT id FROM group_invites
+                WHERE group_id = ? AND LOWER(email) = ? AND status = 'pending' AND expires_at > NOW()
+            ");
+            $stmt->execute([$groupId, $email]);
         }
-
-        // Check for existing pending invite
-        $stmt = $pdo->prepare("
-            SELECT id FROM group_invites
-            WHERE group_id = ? AND user_id = ? AND status = 'pending' AND expires_at > NOW()
-        ");
-        $stmt->execute([$groupId, $inviteeId]);
         if ($stmt->fetch()) {
             $results[] = ['email' => $email, 'status' => 'already_invited'];
             $errorCount++;
@@ -2631,7 +2643,10 @@ function handleInviteToGroup($pdo, $input, $userId, $config) {
                     No Thanks
                 </a>
             </div>
-            <p style='color: #444; font-size: 0.9em;'>To be part of this group you'll need to <a href='{$baseUrl}/join.php' style='color: #1a3a5c;'>create an account</a> or <a href='{$baseUrl}/login.php' style='color: #1a3a5c;'>log in</a> if you haven't already.</p>
+            " . ($isNewUser
+                ? "<p style='color: #2e7d32; font-size: 0.9em;'><strong>New to TPB?</strong> Clicking \"Yes, I'll Join\" will automatically create your free account — no extra steps needed.</p>"
+                : "<p style='color: #444; font-size: 0.9em;'>You can also <a href='{$baseUrl}/login.php' style='color: #1a3a5c;'>log in</a> to manage your groups.</p>"
+            ) . "
             <p style='color: #666; font-size: 0.9em;'>This invitation expires in 7 days.</p>
             <p style='color: #666; font-size: 0.9em;'>If you didn't expect this, you can safely ignore this email.</p>
             <hr style='border: none; border-top: 1px solid #ddd; margin: 30px 0;'>
@@ -2642,7 +2657,7 @@ function handleInviteToGroup($pdo, $input, $userId, $config) {
 
         $mailSent = sendSmtpMail($config, $email, $subject, $htmlBody, null, true);
 
-        $results[] = ['email' => $email, 'status' => 'invited', 'mail_sent' => $mailSent];
+        $results[] = ['email' => $email, 'status' => 'invited', 'mail_sent' => $mailSent, 'new_user' => $isNewUser];
         $invitedCount++;
     }
 
