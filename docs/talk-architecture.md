@@ -1,8 +1,8 @@
 # /talk Architecture
 
-**Living document — last updated 2026-02-14 (Phase 6 complete: group-scoped ideas, personal gather/crystallize)**
+**Living document — last updated 2026-02-15 (Phase 7 complete: unified one-page Talk)**
 
-This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built (Phase 1–5), what's designed for the future, and the conceptual model that drives both.
+This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built (Phase 1–7), what's designed for the future, and the conceptual model that drives both.
 
 ---
 
@@ -146,19 +146,21 @@ Summarizing is the operation that makes both structures work together: the AI re
 
 ---
 
-## 4. What's Built (Phase 1–4)
+## 4. What's Built (Phase 1–7)
 
 ### Pages
 
 | Page | URL | Purpose | Phase |
 |------|-----|---------|-------|
-| Quick Capture | `/talk/index.php` | Fire-and-forget thought entry (voice or text) | 1 |
-| Brainstorm | `/talk/brainstorm.php` | AI-assisted chat, group-aware context | 1+3 |
-| History | `/talk/history.php` | View, filter, promote, edit, delete, thread thoughts (AI nodes + clerk badges) | 1+3+4 |
-| Groups | `/talk/groups.php` | Create/browse/manage deliberation groups, run gatherer, crystallize, staleness detection | 3+4 |
-| Help / FAQ | `/talk/help.php` | FAQ page with Ask AI mode, anonymous nudge banner | 3 |
+| **Talk** (unified) | `/talk/index.php` | One-page: input, AI classify, AI respond toggle, live stream, edit/delete/promote, gather/crystallize footer | 7 |
+| Groups | `/talk/groups.php` | Create/browse/manage groups, invite members, manage roles | 3+4+7 |
+| Help / FAQ | `/talk/help.php` | FAQ page, card type guide, facilitator guide, Ask AI | 3+7 |
+| Brainstorm (legacy) | `/talk/brainstorm.php` | Dedicated AI chat, group-aware context (transition banner to Talk) | 1+3 |
+| History (legacy) | `/talk/history.php` | Filter/thread/promote ideas (transition banner to Talk) | 1+3+4 |
 
-All five pages include a **server-rendered login indicator** (green dot + username) via PHP `getUser($pdo)` — replacing earlier client-side cookie sniffing.
+All pages include a **server-rendered login indicator** (green dot + username) via PHP `getUser($pdo)`.
+
+**Phase 7 page changes:** `index.php` rewritten as unified page. `groups.php` slimmed — ideas feed, brainstorm link, gather/crystallize buttons removed (replaced with "Open in Talk" links). `brainstorm.php` and `history.php` gain transition banners pointing to Talk. `help.php` rewritten for unified model.
 
 ### API: `/talk/api.php`
 
@@ -663,6 +665,92 @@ The `gather` and `crystallize` API actions now accept `group_id = 0` meaning "pe
 
 `check_staleness` also supports `group_id = 0` for personal staleness detection.
 
+### 5g-ter. Unified one-page Talk (Phase 7) ✅
+
+#### The problem
+
+The multi-page architecture (Quick Capture, Brainstorm, History, Groups) spread idea capture, AI interaction, and review across 4 pages. Users had to navigate between pages, re-select groups, and context-switch constantly. Group #2 feedback (ideas #20-#25) confirmed the friction: "live stream on one page," "sticky group selection," "confusing duplicate naming," "submit button off-screen," "poor card contrast."
+
+The core insight: pages are context focal-points for humans, not for AI. Different pages induce friction. The AI doesn't care which page it's on — it just needs the prompt content.
+
+#### The fix: collapse into one page
+
+`talk/index.php` rewritten as a single unified page. Input, AI classification, AI brainstorming, live stream, edit/delete/promote, and gather/crystallize — all on one page.
+
+#### Backend changes (`talk/api.php`)
+
+**handleHistory() enhanced:**
+- `group_id` param — scopes to group (with membership verification) or personal (`i.group_id IS NULL`)
+- `since` param (ISO datetime) — for polling new ideas (returns ASC order)
+- `before` param (ISO datetime) — for "load more" pagination
+- Author display fields: `u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name`
+- `user_role` in response envelope — requester's role in the current group
+- Excludes `category = 'chat'` by default
+
+**handleSave() enhanced:**
+- `auto_classify` flag — when true, calls Haiku after INSERT to classify category + tags
+  - System prompt: "Respond with ONLY a JSON object: {category, tags, jurisdiction}"
+  - Uses `talkCallClaudeAPI()` with `claude-haiku-4-5-20251001`
+  - Parses JSON, UPDATEs idea_log. On failure, keeps defaults silently.
+- Enriched response — returns full `idea` object (id, content, category, tags, status, source, group_id, created_at, author_display) so frontend can render the card immediately
+
+#### Frontend architecture (`talk/index.php`)
+
+**State:**
+- `currentContext` — '' (personal) or group_id. From `localStorage('tpb_talk_context')`
+- `aiRespond` — boolean. From `localStorage('tpb_talk_ai_respond')`
+- `sessionId` — from `sessionStorage('tpb_session')`
+- `loadedIdeas[]` — rendered idea objects
+- `pollTimer` — setInterval handle (group mode only)
+- `userRole` — role in current group (null for personal)
+
+**Core functions:**
+1. `loadGroups()` — fetch user's groups, populate dropdown, restore sticky context
+2. `switchContext(groupId)` — save to localStorage, clear stream, load ideas, start/stop polling
+3. `loadIdeas(before?)` — fetch history with group_id + limit, render cards
+4. `submitIdea()` — POST save with auto_classify:true. Prepend card. If aiRespond on, POST brainstorm, append AI card.
+5. `renderIdeaCard(idea)` — DOM element with category color border, author, tags, timestamp, edit/delete/promote
+6. `pollForNew()` — group mode only, 8s interval, fetch since=newest, prepend with fade-in
+7. `runGather()` / `runCrystallize()` — POST to gather/crystallize, loading overlay, result appended
+8. Voice input — Web Speech API (SpeechRecognition)
+9. Inline edit/delete/promote — reused from history.php patterns
+
+**Card contrast** (per idea #25):
+- User ideas: `rgba(255,255,255,0.06)` background, category-colored 3px left border
+- AI responses: `rgba(124,77,255,0.08)` purple tint, solid purple border
+- Digests: `rgba(255,215,0,0.06)` gold tint, 4px gold border
+- Crystallizations: `rgba(156,39,176,0.06)` purple tint, 4px purple border
+- Category colors: idea=#4fc3f7, decision=#4caf50, todo=#ff9800, note=#9c27b0, question=#e91e63
+
+**Context selector:**
+- Dropdown: "Personal" (value=''), then each user group
+- Sticky via localStorage. URL `?group=<id>` overrides localStorage.
+- Validates restored group still exists
+
+**Facilitator footer:**
+- Visible only when: group mode AND userRole === 'facilitator'
+- Gather button + Crystallize button with loading states
+
+**Polling:**
+- Group mode only, 8-second interval
+- Pauses when `document.hidden` (visibilitychange event)
+- Stops when switching to personal mode
+
+#### groups.php changes
+
+- Removed ideas feed section — replaced with "View ideas in Talk →" link
+- Removed "Brainstorm in this group" button — replaced with "Open in Talk →"
+- Removed Gather/Crystallize buttons — facilitators use the Talk footer now
+- Kept: create, discover, join/leave, members, roles, invites, sub-groups, status management
+
+#### Legacy page banners
+
+`brainstorm.php` and `history.php` gain transition banners at the top: "New: Try the unified Talk page" with link to `index.php`. Pages remain fully functional.
+
+#### help.php rewrite
+
+Updated to reflect unified model: two quick-ref links (Talk, Groups), flow diagram showing AI classify → stream → gather → crystallize, card type guide with color swatches, new FAQ items (AI auto-classify, AI respond toggle, old pages still work).
+
 ### 5h. Builder kits as group use case (future)
 
 TPB has two volunteer-driven builder kits — **state pages** (11 sections, benefits-heavy) and **town pages** (8 sections, local government focus). Both currently use a solo workflow: one volunteer downloads the kit, works with Claude on claude.ai, packages a ZIP, uploads it through the volunteer dashboard.
@@ -1077,12 +1165,12 @@ After edit or delete, downstream gather/crystallize digests may be stale:
 
 ```
 talk/
-  index.php        — Quick Capture (fire-and-forget, login indicator)
-  brainstorm.php   — AI brainstorm chat (group-aware, shareable toggle, login indicator)
-  history.php      — View/filter/promote/edit/delete/thread thoughts (clerk badges, AI nodes, login indicator)
-  groups.php       — Browse/create/manage groups, gatherer, crystallize, staleness banner, login indicator
-  help.php         — FAQ page, Ask AI mode, anonymous nudge, login indicator
-  api.php          — All API actions (28 actions across Phase 1–4)
+  index.php        — Unified Talk page: input, AI classify, AI respond, live stream, edit/delete/promote, gather/crystallize footer
+  groups.php       — Browse/create/manage groups, invite members, manage roles (ideas/brainstorm/gather moved to Talk)
+  help.php         — FAQ, card type guide, facilitator guide, Ask AI
+  api.php          — All API actions (28+ actions across Phase 1–7, including auto_classify + enhanced history)
+  brainstorm.php   — [legacy] Dedicated AI chat (transition banner to Talk)
+  history.php      — [legacy] Filter/thread/promote ideas (transition banner to Talk)
   output/          — Crystallized .md deliverables (runtime, not in git)
     group-{id}-{slug}-v{n}-u{uid}-{timestamp}.md   — versioned proposals
     group-{id}-{slug}-latest.md                     — current version

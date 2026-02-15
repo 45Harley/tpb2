@@ -214,6 +214,27 @@ try {
 
         .status-arrow { color: #555; }
 
+        .card-demo {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 0.75rem 0;
+        }
+        .card-swatch {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+        .card-swatch .swatch-bar {
+            width: 4px;
+            height: 20px;
+            border-radius: 2px;
+        }
+
         @media (max-width: 480px) {
             .page-header {
                 flex-direction: column;
@@ -230,11 +251,9 @@ try {
         <div class="page-header">
             <h1>Help &amp; FAQ</h1>
             <div class="header-links">
-                <a href="index.php">Quick Capture</a>
-                <a href="brainstorm.php">Brainstorm</a>
+                <a href="index.php">Talk</a>
                 <a href="groups.php">Groups</a>
-                <a href="history.php">History</a>
-                <a href="brainstorm.php?help">🤖 Ask AI</a>
+                <a href="brainstorm.php?help">Ask AI</a>
             </div>
         </div>
 <?php if ($dbUser): ?>
@@ -245,24 +264,14 @@ try {
 
         <div class="quick-ref">
             <a href="index.php">
-                <span class="qr-icon">&#x1f4a1;</span>
-                <span class="qr-label">Quick Capture</span>
-                <span class="qr-desc">Dump a thought fast</span>
-            </a>
-            <a href="brainstorm.php">
-                <span class="qr-icon">&#x1f9e0;</span>
-                <span class="qr-label">Brainstorm</span>
-                <span class="qr-desc">Think deeper with AI</span>
-            </a>
-            <a href="history.php">
-                <span class="qr-icon">&#x1f4da;</span>
-                <span class="qr-label">History</span>
-                <span class="qr-desc">Review past thoughts</span>
+                <span class="qr-icon">&#x1f4ac;</span>
+                <span class="qr-label">Talk</span>
+                <span class="qr-desc">Ideas, AI, and stream</span>
             </a>
             <a href="groups.php">
                 <span class="qr-icon">&#x1f465;</span>
                 <span class="qr-label">Groups</span>
-                <span class="qr-desc">Collaborate on proposals</span>
+                <span class="qr-desc">Create &amp; manage groups</span>
             </a>
         </div>
 
@@ -270,49 +279,57 @@ try {
 
         <h2>How /talk Works</h2>
 
-        <p>/talk turns your scattered thoughts into concrete proposals. Here's the flow:</p>
+        <p>/talk turns your scattered thoughts into concrete proposals. Everything happens on one page:</p>
 
-<div class="flow-diagram">You have a thought &#x2500;&#x2500;&#x2192; Quick Capture (dump it fast)
-                            &#x2502;
-Want to go deeper?  &#x2500;&#x2500;&#x2192; Brainstorm (chat with AI)
-                            &#x2502;
-Review what you said &#x2500;&#x2192; History (filter, promote, share)
-                            &#x2502;
-Work with others &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Groups (deliberate, crystallize)
-                            &#x2502;
-                       Proposal (the deliverable)</div>
+<div class="flow-diagram">Type or speak a thought &#x2500;&#x2500;&#x2192; AI classifies it (category + tags)
+                              &#x2502;
+Toggle AI respond on?  &#x2500;&#x2500;&#x2192; AI brainstorms back
+                              &#x2502;
+Stream builds live &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Your ideas + group members' ideas
+                              &#x2502;
+Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connections)
+                              &#x2502;
+                         Crystallize (structured proposal)</div>
 
-        <!-- Quick Capture -->
+        <!-- Talk Page -->
         <div class="page-card">
-            <h3>&#x1f4a1; Quick Capture</h3>
+            <h3>&#x1f4ac; Talk &mdash; The Main Page</h3>
             <span class="page-link">/talk/</span>
-            <p>The fastest on-ramp. Tap the mic or type. Pick a category (Idea, Decision, Todo, Note, Question). Hit Save. Done in 10 seconds.</p>
+            <p>Input, AI, and history on one page. Type an idea, the AI silently classifies it (category and tags), and it appears in your stream. Toggle AI respond on to get a conversational brainstorm reply below each idea.</p>
             <ul>
-                <li><strong>Voice works great</strong> — tap the mic, speak naturally, it fills in the text</li>
-                <li><strong>Ctrl+Enter</strong> (Cmd+Enter on Mac) saves without clicking the button</li>
-                <li>Thoughts are <strong>private by default</strong> — nobody sees them until you choose to share</li>
-                <li><strong>Group selector</strong> — logged-in users can choose which group an idea belongs to, or "Personal (no group)" for private ideas</li>
+                <li><strong>Context selector</strong> &mdash; switch between Personal and any of your groups. Sticky between sessions.</li>
+                <li><strong>AI auto-classify</strong> &mdash; no buttons to pick a category. AI assigns idea/decision/todo/note/question + tags automatically.</li>
+                <li><strong>AI respond toggle</strong> &mdash; the robot icon next to the input. When on, AI brainstorms back after each idea.</li>
+                <li><strong>Voice input</strong> &mdash; tap the mic, speak naturally, it fills in the text.</li>
+                <li><strong>Live stream</strong> &mdash; in group mode, new ideas from other members appear automatically (polls every 8 seconds).</li>
+                <li><strong>Inline edit/delete</strong> &mdash; pencil to edit, &times; to delete your own ideas. Promote to advance maturity.</li>
+                <li><strong>Ctrl+Enter</strong> (Cmd+Enter on Mac) submits without clicking Send.</li>
             </ul>
         </div>
 
-        <!-- Brainstorm -->
+        <!-- Card types -->
         <div class="page-card">
-            <h3>&#x1f9e0; Brainstorm</h3>
-            <span class="page-link">/talk/brainstorm.php</span>
-            <p>Chat with AI to go deeper. You talk, it responds, asks follow-up questions, and <strong>automatically captures the good ideas</strong> from your conversation.</p>
+            <h3>Card Types in the Stream</h3>
+            <p>Each card has a colored left border showing what it is:</p>
+            <div class="card-demo">
+                <span class="card-swatch"><span class="swatch-bar" style="background:#4fc3f7;"></span> Idea</span>
+                <span class="card-swatch"><span class="swatch-bar" style="background:#4caf50;"></span> Decision</span>
+                <span class="card-swatch"><span class="swatch-bar" style="background:#ff9800;"></span> Todo</span>
+                <span class="card-swatch"><span class="swatch-bar" style="background:#9c27b0;"></span> Note</span>
+                <span class="card-swatch"><span class="swatch-bar" style="background:#e91e63;"></span> Question</span>
+            </div>
+            <p>Special card styles:</p>
             <ul>
-                <li>Green messages like "&#x1f4a1; Idea #42 captured" mean the AI saved a clean version of your idea</li>
-                <li><strong>Group dropdown</strong> — switch to a group context and the AI sees everyone's shared ideas</li>
-                <li><strong>Shareable toggle</strong> — when ON, your thoughts are visible to your groups</li>
+                <li><strong>AI responses</strong> &mdash; purple tint + purple border. Appear when AI respond is toggled on.</li>
+                <li><strong>Digests</strong> &mdash; gold tint + bold gold border. Created by the gatherer.</li>
+                <li><strong>Crystallizations</strong> &mdash; purple tint + bold border. Structured proposals.</li>
             </ul>
         </div>
 
-        <!-- History -->
+        <!-- Idea maturity -->
         <div class="page-card">
-            <h3>&#x1f4da; History</h3>
-            <span class="page-link">/talk/history.php</span>
-            <p>Everything you've said lives here. Filter by category or status. Switch between flat and threaded views. Promote ideas as they mature.</p>
-            <p><strong>Idea maturity:</strong></p>
+            <h3>Idea Maturity</h3>
+            <p>Ideas progress through stages as they develop:</p>
             <div class="status-flow">
                 <span class="status-pill">Raw</span>
                 <span class="status-arrow">&#x2192;</span>
@@ -322,89 +339,68 @@ Work with others &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Groups (deliberate, cr
                 <span class="status-arrow">&#x2192;</span>
                 <span class="status-pill">Actionable</span>
             </div>
-            <ul>
-                <li><strong>Share</strong> a thought to make it visible to your groups</li>
-                <li><strong>Promote</strong> to advance an idea through the maturity stages</li>
-                <li><strong>Edit</strong> (&#x270E;) your own thoughts inline — edit count is tracked for transparency</li>
-                <li><strong>Delete</strong> (&times;) your own thoughts — soft-deleted by default so gathered outputs stay intact</li>
-                <li><strong>Threaded view</strong> shows conversation trees with replies indented</li>
-                <li><strong>Personal Gather &amp; Crystallize</strong> — run the AI gatherer and crystallizer on your own personal ideas, right from the History page</li>
-            </ul>
+            <p>Use the promote button (&#x2b06;) on any idea card to advance it one step.</p>
         </div>
 
         <!-- Groups -->
         <div class="page-card">
             <h3>&#x1f465; Groups</h3>
             <span class="page-link">/talk/groups.php</span>
-            <p>Groups are where individual thoughts become collective proposals. Create a group, invite people, brainstorm together, and let the AI synthesize everything into a structured proposal.</p>
+            <p>Groups are where individual thoughts become collective proposals. Create, discover, and manage groups on the Groups page. Once you're in a group, select it in the Talk page's context dropdown to contribute ideas and see the live stream.</p>
             <p><strong>The deliberation flow:</strong></p>
             <ol>
-                <li><strong>Create</strong> a group with a clear purpose</li>
-                <li><strong>Invite</strong> members by email (facilitator enters addresses, system sends accept/decline links)</li>
-                <li><strong>Brainstorm</strong> — everyone shares ideas (mark them shareable)</li>
-                <li><strong>Gather</strong> — facilitator runs the AI gatherer to find connections</li>
-                <li><strong>Crystallize</strong> — AI produces a structured proposal document</li>
-                <li><strong>Iterate</strong> — add more ideas, re-gather, re-crystallize</li>
-                <li><strong>Archive</strong> — lock the final proposal</li>
+                <li><strong>Create</strong> a group with a clear purpose (on Groups page)</li>
+                <li><strong>Invite</strong> members by email</li>
+                <li><strong>Brainstorm</strong> &mdash; everyone contributes ideas via the Talk page</li>
+                <li><strong>Gather</strong> &mdash; facilitator runs the AI gatherer (from Talk footer)</li>
+                <li><strong>Crystallize</strong> &mdash; AI produces a structured proposal (from Talk footer)</li>
+                <li><strong>Iterate</strong> &mdash; add more ideas, re-gather, re-crystallize</li>
+                <li><strong>Archive</strong> &mdash; lock the final proposal</li>
             </ol>
-            <p><strong>Roles:</strong> &#x1f3af; Group Facilitator (manages everything), &#x1f4ac; Group Member (brainstorms + shares), &#x1f441; Group Observer (read-only).</p>
+            <p><strong>Roles:</strong> &#x1f3af; Group Facilitator (manages everything), &#x1f4ac; Group Member (contributes ideas), &#x1f441; Group Observer (read-only).</p>
         </div>
 
         <!-- ═══════ FACILITATOR GUIDE ═══════ -->
 
         <h2>Facilitator Guide</h2>
 
-        <p>When you create a group, you become its <strong>&#x1f3af; Group Facilitator</strong>. This is the most important role in /talk — you guide the group from scattered ideas to a concrete proposal.</p>
+        <p>When you create a group, you become its <strong>&#x1f3af; Group Facilitator</strong>. You guide the group from scattered ideas to a concrete proposal.</p>
 
         <h3>Creating a group</h3>
-        <p>A good group starts with a clear purpose. Write a description that tells members what you're trying to figure out — "Affordable housing options for Putnam" is better than "Housing stuff." Add tags so people can discover your group.</p>
+        <p>Go to <a href="groups.php">Groups</a> and click "Create Group." Write a description that tells members what you're trying to figure out &mdash; "Affordable housing options for Putnam" is better than "Housing stuff." Add tags so people can discover your group.</p>
         <ul>
-            <li><strong>Observable</strong> (default) — transparent, anyone can watch, only members contribute. Best for civic deliberation.</li>
-            <li><strong>Open</strong> — anyone can jump in. Good for broad community input.</li>
-            <li><strong>Closed</strong> — invitation only. Good for focused working groups.</li>
+            <li><strong>Observable</strong> (default) &mdash; transparent, anyone can watch, only members contribute. Best for civic deliberation.</li>
+            <li><strong>Open</strong> &mdash; anyone can jump in. Good for broad community input.</li>
+            <li><strong>Closed</strong> &mdash; invitation only. Good for focused working groups.</li>
         </ul>
 
         <h3>Managing roles</h3>
         <ul>
-            <li><strong>&#x1f3af; Group Facilitator</strong> — Full control: manage members, run AI tools, archive. You can promote members to co-facilitator.</li>
-            <li><strong>&#x1f4ac; Group Member</strong> — The default role. Brainstorms, shares ideas, participates in discussion.</li>
-            <li><strong>&#x1f441; Group Observer</strong> — Read-only. Great for people who want to follow along without contributing. Observers join automatically when the group is Observable.</li>
+            <li><strong>&#x1f3af; Group Facilitator</strong> &mdash; Full control: manage members, run AI tools, archive. You can promote members to co-facilitator.</li>
+            <li><strong>&#x1f4ac; Group Member</strong> &mdash; The default role. Contributes ideas, participates in discussion.</li>
+            <li><strong>&#x1f441; Group Observer</strong> &mdash; Read-only. Great for people who want to follow along without contributing.</li>
         </ul>
-        <p>Multiple facilitators are allowed and encouraged for larger groups. If the last facilitator leaves, the longest-tenured member is auto-promoted so the group never loses its leader.</p>
+        <p>Multiple facilitators are allowed and encouraged for larger groups. If the last facilitator leaves, the longest-tenured member is auto-promoted.</p>
 
         <h3>Inviting members</h3>
-        <p>Facilitators can invite people by email. On the group detail page, you'll see an <strong>Invite Members</strong> form where you enter email addresses (one per line or comma-separated). The system:</p>
+        <p>On the group detail page (Groups &rarr; click a group), enter email addresses (one per line or comma-separated) in the Invite Members form. The system:</p>
         <ul>
             <li>Validates each email against existing accounts with verified email</li>
             <li>Sends each person an email with <strong>"Yes, I'll Join"</strong> and <strong>"No Thanks"</strong> buttons</li>
             <li>Reports results per email: invited, already a member, no account found, email not verified</li>
         </ul>
-        <p>Invitees don't need to be logged in to respond &mdash; the link itself authenticates them. Invitations expire after 7 days. You can re-invite someone who declined.</p>
-        <p>All members and facilitators can see the <strong>Invitations</strong> list with status badges (pending, accepted, declined, expired). Observers cannot see invitations.</p>
+        <p>Invitees don't need to be logged in to respond &mdash; the link itself authenticates them. Invitations expire after 7 days.</p>
 
-        <h3>When to run the Gatherer</h3>
-        <p>The gatherer AI scans all shared ideas, finds thematic connections, and creates summary digests. Run it when:</p>
+        <h3>Gather &amp; Crystallize</h3>
+        <p>In group mode on the Talk page, facilitators see a footer bar with <strong>Gather</strong> and <strong>Crystallize</strong> buttons.</p>
         <ul>
-            <li>Several members have shared ideas (at least 5-10 shareable thoughts)</li>
-            <li>New ideas have been added since the last run</li>
-            <li>You want to see what themes are emerging before crystallizing</li>
+            <li><strong>Gather</strong> &mdash; AI scans all group ideas, finds thematic connections, creates summary digests. Safe to run often (incremental).</li>
+            <li><strong>Crystallize</strong> &mdash; AI produces a structured proposal document from all the group's ideas and digests. Re-runnable &mdash; each run improves on the last.</li>
         </ul>
-        <p>The gatherer is <strong>incremental</strong> — it won't re-process ideas it already covered. Safe to run as often as you want.</p>
-
-        <h3>When to Crystallize</h3>
-        <p>Crystallization turns everything — ideas, gatherer digests, conversation threads — into a structured proposal document. Run it when:</p>
-        <ul>
-            <li>The group has enough material for a real proposal (usually after at least one gatherer run)</li>
-            <li>Discussion feels like it's converging on something concrete</li>
-            <li>You want to share a deliverable with people outside the group</li>
-        </ul>
-        <p>Crystallization is <strong>re-runnable</strong> — each run improves on the last. Add more ideas, re-gather, re-crystallize. The cycle continues until you're satisfied, then archive to lock it.</p>
+        <p>The cycle: add ideas &rarr; gather &rarr; crystallize &rarr; repeat until satisfied &rarr; archive to lock.</p>
 
         <h3>Staleness warnings</h3>
-        <p>If a member edits or deletes an idea <em>after</em> a gather or crystallize has run, you'll see an orange warning banner:</p>
-        <div class="flow-diagram" style="color: #e88a1a; font-size: 0.8rem;">&#x26a0;&#xfe0f; Some outputs are stale — 2 source idea(s) changed since Feb 14.
-Re-run gatherer or re-crystallize to update.</div>
-        <p>This is normal — ideas evolve! Just re-run the relevant tool and the output will incorporate the changes.</p>
+        <p>If a member edits or deletes an idea <em>after</em> a gather or crystallize has run, you'll see an orange warning. Re-run the relevant tool to incorporate the changes.</p>
 
         <!-- ═══════ FAQ ═══════ -->
 
@@ -413,103 +409,100 @@ Re-run gatherer or re-crystallize to update.</div>
         <details class="faq-item">
             <summary>Do I need an account to use /talk?</summary>
             <div class="answer">
-                <p>No — you can try Quick Capture and Brainstorm without an account. But your thoughts are tied to your browser tab. Close the tab and they're gone forever. <a href="/join.php">Create an account</a> to keep your work.</p>
+                <p>No &mdash; you can try Talk without an account. But your thoughts are tied to your browser tab. Close the tab and they're gone forever. <a href="/join.php">Create an account</a> to keep your work.</p>
             </div>
         </details>
 
         <details class="faq-item">
             <summary>What happens to my thoughts if I'm not logged in?</summary>
             <div class="answer">
-                <p>They're stored with a temporary session ID that lives in your browser tab. If you close the tab, switch browsers, or clear your data, the link is broken. The thoughts still exist in the database but nobody — including you — can find them again.</p>
+                <p>They're stored with a temporary session ID that lives in your browser tab. If you close the tab, switch browsers, or clear your data, the link is broken. The thoughts still exist in the database but nobody &mdash; including you &mdash; can find them again.</p>
             </div>
         </details>
 
         <details class="faq-item">
             <summary>Can other people see my thoughts?</summary>
             <div class="answer">
-                <p>Not by default. Thoughts are <strong>private</strong> unless you explicitly share them. In Brainstorm, use the "Shareable" toggle. In History, check the "Share" box on individual thoughts. Only your group members can see shared thoughts.</p>
+                <p>In <strong>Personal mode</strong>, your thoughts are private &mdash; only you can see them. In <strong>Group mode</strong>, ideas you submit are visible to all group members. Switch modes using the context selector at the top of the Talk page.</p>
             </div>
         </details>
 
         <details class="faq-item">
-            <summary>Does the AI brainstorm cost money?</summary>
+            <summary>What does the AI do automatically?</summary>
             <div class="answer">
-                <p>Not to you — brainstorm sessions are free. Each session costs TPB roughly one cent in AI processing. That's why we ask you to <a href="/join.php">create an account</a> — so the value isn't wasted on throwaway sessions.</p>
-            </div>
-        </details>
-
-        <details class="faq-item">
-            <summary>What does the AI do with my ideas?</summary>
-            <div class="answer">
-                <p>The AI is a tool, not a decision-maker. It helps organize your thoughts:</p>
+                <p>When you submit an idea, the AI silently classifies it:</p>
                 <ul>
-                    <li><strong>Saves</strong> clean versions of good ideas from your conversation</li>
-                    <li><strong>Tags</strong> them with relevant topics</li>
-                    <li><strong>Finds connections</strong> between group members' ideas (gatherer)</li>
-                    <li><strong>Synthesizes</strong> proposals from all the group's input (crystallizer)</li>
+                    <li><strong>Category</strong> &mdash; idea, decision, todo, note, or question</li>
+                    <li><strong>Tags</strong> &mdash; 2-5 relevant keywords</li>
                 </ul>
-                <p>It never publishes anything without a human (the facilitator) pressing the button.</p>
+                <p>You don't need to pick a category or enter tags &mdash; the AI handles it. If the AI respond toggle is off, that's all it does. Your idea is filed and you move on.</p>
             </div>
         </details>
 
         <details class="faq-item">
-            <summary>What's the difference between Quick Capture and Brainstorm?</summary>
+            <summary>What does the AI respond toggle do?</summary>
             <div class="answer">
-                <p><strong>Quick Capture</strong> = one thought, save it, move on. No AI involved. Like jotting a sticky note.</p>
-                <p><strong>Brainstorm</strong> = a conversation. The AI asks follow-ups, challenges assumptions, adds data, and captures ideas automatically. Like thinking out loud with a smart partner.</p>
+                <p>The robot icon next to the input box. When toggled <strong>on</strong> (highlighted), the AI will brainstorm back after each idea you submit &mdash; asking follow-up questions, adding data, challenging assumptions. When <strong>off</strong>, the AI just classifies silently.</p>
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary>Does the AI cost money?</summary>
+            <div class="answer">
+                <p>Not to you. Each AI interaction costs TPB roughly one cent. That's why we ask you to <a href="/join.php">create an account</a> &mdash; so the value isn't wasted on throwaway sessions.</p>
             </div>
         </details>
 
         <details class="faq-item">
             <summary>How do groups work?</summary>
             <div class="answer">
-                <p>A group is 2+ people around a topic. Anyone with an account can create one. Members brainstorm individually or together, mark their ideas as shareable, and the facilitator runs AI tools to synthesize everything into a proposal.</p>
-                <p>Groups have three access levels: <strong>Open</strong> (anyone can join), <strong>Observable</strong> (anyone can see, only members contribute), and <strong>Closed</strong> (invitation only). Facilitators invite members by entering email addresses &mdash; each person gets an accept/decline email.</p>
-                <p>Each idea belongs to exactly one group (or no group for personal ideas). When you save a thought, you choose which group it goes to — ideas don't leak across groups.</p>
+                <p>A group is 2+ people around a topic. Anyone with an account can create one on the <a href="groups.php">Groups page</a>. Once created, members select the group from the Talk page's context dropdown to contribute ideas.</p>
+                <p>Groups have three access levels: <strong>Open</strong> (anyone can join), <strong>Observable</strong> (anyone can see, only members contribute), and <strong>Closed</strong> (invitation only).</p>
+                <p>Each idea belongs to exactly one group (or no group for personal ideas). Ideas don't leak across groups.</p>
             </div>
         </details>
 
         <details class="faq-item">
             <summary>What is "crystallization"?</summary>
             <div class="answer">
-                <p>Crystallization is when the AI reads all of a group's shared ideas, gatherer digests, and conversation threads, then produces a structured proposal document — with key findings, proposed actions, and attribution back to the people who contributed. Think of it as turning a messy whiteboard into a polished brief.</p>
+                <p>Crystallization is when the AI reads all of a group's ideas, gatherer digests, and conversations, then produces a structured proposal document &mdash; with key findings, proposed actions, and attribution back to the people who contributed. Think of it as turning a messy whiteboard into a polished brief.</p>
             </div>
         </details>
 
         <details class="faq-item">
             <summary>Can I edit or delete my ideas?</summary>
             <div class="answer">
-                <p>Yes — on the History page, your own thoughts show an edit (&#x270E;) and delete (&times;) button. AI-generated responses can't be edited or deleted.</p>
-                <p><strong>Editing</strong> is transparent: an "(edited)" tag appears on modified thoughts so others know the content changed. The edit count is tracked.</p>
-                <p><strong>Deleting</strong> is usually a soft delete — the idea is hidden but preserved behind the scenes. This protects the integrity of any gather or crystallize outputs that referenced it. If the idea was never gathered, you'll be offered a permanent delete option.</p>
-            </div>
-        </details>
-
-        <details class="faq-item">
-            <summary>What happens if I edit an idea after a gather ran?</summary>
-            <div class="answer">
-                <p>The gather output becomes "stale" — it was based on the old version of your idea. The group facilitator will see a warning banner and can re-run the gatherer to incorporate your changes. Same applies to crystallized proposals.</p>
+                <p>Yes &mdash; in the stream, your own ideas show an edit (&#x270E;) and delete (&times;) button. AI-generated responses can't be edited or deleted.</p>
+                <p><strong>Editing</strong> is transparent: an "(edited)" tag appears on modified thoughts. The edit count is tracked.</p>
+                <p><strong>Deleting</strong> is usually a soft delete &mdash; the idea is hidden but preserved so gathered outputs stay intact.</p>
             </div>
         </details>
 
         <details class="faq-item">
             <summary>Can I use /talk as a personal idea tracker?</summary>
             <div class="answer">
-                <p>Yes. Quick Capture works as a personal thought journal. Brainstorm works as a 1-on-1 thinking partner. History gives you a filterable archive with <strong>personal Gather and Crystallize</strong> buttons — run the AI on just your own ideas to find connections and produce a personal proposal. You never have to join a group if you don't want to — but the real power is in collective deliberation.</p>
+                <p>Yes. Stay in Personal mode and Talk works as a thought journal with AI classification. Toggle AI respond on to brainstorm 1-on-1. You never have to join a group &mdash; but the real power is in collective deliberation.</p>
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary>What about the old Brainstorm and History pages?</summary>
+            <div class="answer">
+                <p>They still work. The Talk page combines their functionality into one place. If you prefer the dedicated pages, you can still use <a href="brainstorm.php">Brainstorm</a> for AI chat and <a href="history.php">History</a> for filtering and threaded views.</p>
             </div>
         </details>
 
         <details class="faq-item">
             <summary>Is this partisan? Does it favor any political side?</summary>
             <div class="answer">
-                <p>No. /talk is non-partisan by design. The AI describes but doesn't editorialize. It serves all citizens — left, right, center, or none of the above. The goal is to help people think clearly and work together, not to push any agenda.</p>
+                <p>No. /talk is non-partisan by design. The AI describes but doesn't editorialize. It serves all citizens &mdash; left, right, center, or none of the above.</p>
             </div>
         </details>
 
         <details class="faq-item">
             <summary>How do I create an account?</summary>
             <div class="answer">
-                <p>Go to <a href="/join.php">/join.php</a>. Enter your email — that's the only required field. We'll send a verification link. Click it, and you're in. Name, phone, and age are optional but help us serve you better.</p>
+                <p>Go to <a href="/join.php">/join.php</a>. Enter your email &mdash; that's the only required field. We'll send a verification link. Click it, and you're in.</p>
             </div>
         </details>
 
