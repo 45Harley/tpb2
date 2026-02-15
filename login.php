@@ -135,8 +135,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $stmt->execute([$user['user_id'], $newSessionId, substr($userAgent, 0, 100), $deviceType, $ipAddress]);
                 }
                 
-                // Set cookie
+                // Set cookies (both session + user_id, consistent with magic link)
                 setcookie('tpb_civic_session', $newSessionId, [
+                    'expires' => $cookieExpiry,
+                    'path' => '/',
+                    'secure' => isset($_SERVER['HTTPS']),
+                    'httponly' => false,
+                    'samesite' => 'Lax'
+                ]);
+                setcookie('tpb_user_id', $user['user_id'], [
                     'expires' => $cookieExpiry,
                     'path' => '/',
                     'secure' => isset($_SERVER['HTTPS']),

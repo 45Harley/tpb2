@@ -3,11 +3,11 @@
  * TPB Shared User Lookup
  * ======================
  * THE standard for finding the current user. Every page uses this.
- * 
+ *
  * Priority:
- *   1. tpb_user_id cookie (direct, fastest)
- *   2. tpb_civic_session cookie → user_devices lookup (fallback)
- * 
+ *   1. tpb_civic_session cookie → user_devices lookup (DB-validated, checks is_active)
+ *   2. tpb_user_id cookie (direct fallback)
+ *
  * Usage:
  *   require_once __DIR__ . '/../includes/get-user.php';
  *   $dbUser = getUser($pdo);         // finds user from cookies
@@ -17,25 +17,25 @@
 /**
  * THE ONE FUNCTION — finds the current user from available cookies.
  * Call this. Don't roll your own.
- * 
+ *
  * @param PDO $pdo Database connection
  * @return array|false User data or false if not found
  */
 function getUser($pdo) {
-    // Method 1: tpb_user_id cookie (direct lookup — fastest, most reliable)
-    $cookieUserId = isset($_COOKIE['tpb_user_id']) ? (int)$_COOKIE['tpb_user_id'] : 0;
-    if ($cookieUserId) {
-        $user = getUserByUserId($pdo, $cookieUserId);
-        if ($user) return $user;
-    }
-    
-    // Method 2: tpb_civic_session cookie → user_devices table
+    // Method 1: tpb_civic_session cookie → user_devices table (DB-validated, authoritative)
     $sessionId = isset($_COOKIE['tpb_civic_session']) ? $_COOKIE['tpb_civic_session'] : null;
     if ($sessionId) {
         $user = getUserBySession($pdo, $sessionId);
         if ($user) return $user;
     }
-    
+
+    // Method 2: tpb_user_id cookie (direct lookup — fallback)
+    $cookieUserId = isset($_COOKIE['tpb_user_id']) ? (int)$_COOKIE['tpb_user_id'] : 0;
+    if ($cookieUserId) {
+        $user = getUserByUserId($pdo, $cookieUserId);
+        if ($user) return $user;
+    }
+
     return false;
 }
 
