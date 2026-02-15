@@ -211,6 +211,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             font-size: 0.8rem;
         }
         .card-author { color: #4fc3f7; font-weight: 600; }
+        .card-id { color: #888; font-weight: 400; margin-right: 6px; font-size: 0.8rem; }
         .card-time { color: #666; }
 
         .card-content {
@@ -614,7 +615,8 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         var timeStr = formatTime(idea.created_at);
 
         // Header
-        var header = '<div class="card-header"><span class="card-author">' + escHtml(authorName) + clerkBadge + editedTag + '</span><span class="card-time">' + timeStr + '</span></div>';
+        var idBadge = idea.id ? '<span class="card-id">#' + idea.id + '</span>' : '';
+        var header = '<div class="card-header"><span class="card-author">' + idBadge + escHtml(authorName) + clerkBadge + editedTag + '</span><span class="card-time">' + timeStr + '</span></div>';
 
         // Content
         var content = '<div class="card-content" id="content-' + idea.id + '">' + escHtml(idea.content) + '</div>';
