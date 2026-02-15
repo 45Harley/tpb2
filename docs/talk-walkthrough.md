@@ -120,7 +120,7 @@ Ideas appear in reverse-chronological order. Each card shows:
 | Action | How | What happens |
 |--------|-----|-------------|
 | **Edit** | Click ✎ on your card | Inline textarea appears — edit, then Save or Cancel |
-| **Delete** | Click × on your card | Soft-delete (hidden but preserved for gathered outputs) |
+| **Delete** | Click × on your card (or on AI responses you triggered) | Soft-delete (hidden but preserved for gathered outputs) |
 | **Promote** | Click ⬆ | Advance: raw → refining → distilled → actionable |
 
 ### Group mode
@@ -208,9 +208,9 @@ Click any group card to see members, status, and management controls.
 
 The detail view shows:
 - Group info (name, description, status, access level)
-- Members list with role badges
+- Members list with role badges and management controls (facilitator only: promote/demote, set observer, deactivate/reactivate, remove)
 - **"Open in Talk"** link — takes you to the Talk page with this group selected
-- Invite members form (facilitator only)
+- Invite members form (facilitator only) — works for existing users and unknown emails
 - Invitation list with status badges
 
 ### Inviting members
@@ -221,10 +221,12 @@ Facilitators can invite people by email from the group detail page:
 2. Click **"Send Invites"**
 3. Results appear inline:
    - **Green** (Invited) — email sent with accept/decline buttons
-   - **Red** (Invalid / No account) — can't invite
    - **Orange** (Already member / Already invited) — skipped
+   - **Blue** "new — account created on accept" — invitee doesn't have a TPB account yet
 
 Each invitee receives an email with **"Yes, I'll Join"** and **"No Thanks"** buttons. Clicking either works without logging in. Invitations expire after 7 days.
+
+**Anonymous invites:** You can invite anyone by email, even if they don't have a TPB account. When a new person clicks "Yes, I'll Join," the system automatically creates a verified account for them and logs them in — zero friction.
 
 ### Group roles
 
@@ -234,7 +236,7 @@ Each invitee receives an email with **"Yes, I'll Join"** and **"No Thanks"** but
 | **Member** | 💬 Group Member | Contribute ideas, view invitations |
 | **Observer** | 👁 Group Observer | Read only |
 
-Facilitators can change anyone's role. Multiple facilitators allowed. If the last facilitator leaves, the longest-tenured member is auto-promoted.
+Facilitators see management buttons on each member chip: promote/demote role, set as observer, deactivate/reactivate, or remove. Deactivated members remain listed (dimmed) but can't access the group until reactivated. Multiple facilitators allowed. If the last facilitator leaves, the longest-tenured member is auto-promoted.
 
 ---
 

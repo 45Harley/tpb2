@@ -68,10 +68,10 @@ idea_groups
   id, name, description, created_by, created_at
 
 idea_group_members
-  group_id, user_id, role ('member', 'facilitator', 'observer'), joined_at
+  group_id, user_id, role ('member', 'facilitator', 'observer'), status ('active', 'inactive'), joined_at
 
 group_invites (Phase 5)
-  id, group_id, user_id, invited_by, email, accept_token, decline_token,
+  id, group_id, user_id (NULL for unknown emails), invited_by, email, accept_token, decline_token,
   status ('pending','accepted','declined','expired'), created_at, responded_at, expires_at
 ```
 
@@ -180,7 +180,8 @@ All pages include a **server-rendered login indicator** (green dot + username) v
 | `join_group` | POST | Join a group (open → member, observable → observer) | 3 |
 | `leave_group` | POST | Leave a group (auto-promotes facilitator if last one) | 3 |
 | `update_group` | POST | Update group settings/status (facilitator only) | 3 |
-| `update_member` | POST | Change member role or remove member (facilitator only) | 3 |
+| `update_member` | POST | Change member role, status (active/inactive), or remove member (facilitator only) | 3+7 |
+| `add_member` | POST | Facilitator adds existing user to group by username/email (reactivates if inactive) | 7 |
 | `gather` | POST | Run gatherer on group or personal ideas (group_id=0) — incremental link + digest creation | 3 |
 | `crystallize` | POST | Produce crystallized .md proposal from group or personal ideas (group_id=0, re-runnable) | 3 |
 | `edit` | POST | Edit own idea content (owner-only, not AI, not deleted); increments `edit_count` | 4 |
@@ -252,7 +253,8 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 - **Staleness banner** (Phase 4): Orange warning when source ideas have been edited or deleted since the last gather/crystallize. Shows count of changed ideas + digest date. Facilitator-only, prompts re-run.
 - **Role display labels** (Phase 4): Member badges and role dropdowns use "Group Facilitator/Member/Observer" naming with emojis (🎯/💬/👁)
 - **Display names** (Phase 4.5): `getDisplayName()` respects `show_first_name`/`show_last_name` privacy flags across all pages, API responses, and AI clerk prompts
-- **Email invites** (Phase 5): Facilitators enter email addresses → system validates against verified users → generates dual accept/decline tokens → sends HTML email with CTA buttons → tracks responses. Token-based response requires no login. 7-day expiry. Invite list visible to members/facilitators, hidden from observers
+- **Email invites** (Phase 5+7): Facilitators enter email addresses → system validates → generates dual accept/decline tokens → sends HTML email with CTA buttons → tracks responses. Token-based response requires no login. 7-day expiry. Invite list visible to members/facilitators, hidden from observers. **Anonymous invites**: unknown emails get invites with `user_id = NULL`; accepting auto-creates a verified TPB account with device session and login cookies.
+- **Member status management** (Phase 7): Facilitators can deactivate/reactivate members. All access-check queries gate on `status = 'active'`. Inactive members remain listed (dimmed) but blocked from group access. Facilitators can also remove members entirely.
 
 ### Database State
 
@@ -265,7 +267,9 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 -- Table added in Phase 5: group_invites (id, group_id, user_id, invited_by, email,
 --   accept_token, decline_token, status, created_at, responded_at, expires_at)
 --   Indexes: unique accept_token, unique decline_token, idx_group_status, idx_user_status
+--   Modified in Phase 7: user_id made nullable (INT NULL) for anonymous invites
 -- Columns added in Phase 6: group_id INT NULL on idea_log
+-- Columns added in Phase 7: status VARCHAR(10) DEFAULT 'active' on idea_group_members
 --   FK to idea_groups ON DELETE SET NULL
 --   Index: idx_idea_log_group_id
 -- ai_clerks: brainstorm + gatherer clerk rows registered
@@ -360,6 +364,8 @@ Each group has:
 
 Multiple facilitators allowed. Creator is first facilitator. Auto-promotion safety net: if the last facilitator leaves, the longest-tenured member is auto-promoted.
 
+**Member status**: `idea_group_members.status` is either `active` or `inactive`. All access-check queries gate on `status = 'active'`. Inactive members remain listed (dimmed in UI) but can't access the group until reactivated by a facilitator. Facilitators can also remove members entirely (DELETE).
+
 **Dual registration**: Roles exist as both an ENUM on `idea_group_members.role` (per-group scope) and as rows in the `user_roles` table (IDs 37–39) for site-wide AI context. The `user_roles` entries ensure AI clerks have full awareness of group role capabilities when generating responses.
 
 #### Access levels
@@ -372,22 +378,25 @@ Multiple facilitators allowed. Creator is first facilitator. Auto-promotion safe
 
 Civic deliberation defaults toward **observable** — transparency matters.
 
-#### Email invites (Phase 5)
+#### Email invites (Phase 5 + anonymous invite enhancement)
 
 Facilitators invite members by entering email addresses in the group detail UI. The flow:
 
-1. **Validate**: Each email checked for format → user lookup → `email_verified=1` in `user_identity_status`
+1. **Validate**: Each email checked for format → user lookup
 2. **Dedup**: Skip if already a member or has a pending invite (re-invite after decline creates new row)
 3. **Token**: `bin2hex(random_bytes(32))` × 2 for accept/decline (matches magic link pattern)
-4. **Email**: HTML email via `sendSmtpMail()` with green "Yes, I'll Join" and gray "No Thanks" CTA buttons
+4. **Email**: HTML email via `sendSmtpMail()` with green "Yes, I'll Join" and gray "No Thanks" CTA buttons. Email includes group description, account links, and help link.
 5. **Response**: Token-based GET to `groups.php?invite_action=accept&token=xxx` — no login required
-6. **Accept**: Inserts into `idea_group_members` as `member`, marks invite `accepted`
-7. **Decline**: Marks invite `declined`, no membership created
-8. **Expiry**: 7-day window; batch-expired on read via `get_invites`
+6. **Accept (existing user)**: Inserts into `idea_group_members` as `member`, marks invite `accepted`
+7. **Accept (new user)**: Auto-creates a TPB account (username from email prefix + hash suffix), marks email verified, creates device session, sets login cookies, then adds to group. Zero-friction onboarding.
+8. **Decline**: Marks invite `declined`, no membership created
+9. **Expiry**: 7-day window; batch-expired on read via `get_invites`
 
-Per-email result statuses: `invited`, `invalid_email`, `not_found`, `not_verified`, `already_member`, `already_invited`.
+**Anonymous invites**: `group_invites.user_id` is nullable. When an email doesn't match any TPB user, the invite is created with `user_id = NULL`. The email template is customized for new users ("You've been invited to join The People's Branch..."). On accept, the account creation flow fires before group membership is added.
 
-Invite list visible to members + facilitators (not observers). Shows email, status badge, inviter name, timestamp.
+Per-email result statuses: `invited`, `invalid_email`, `already_member`, `already_invited`. The `new_user` flag on `invited` results indicates the invitee doesn't have a TPB account yet.
+
+Invite list visible to members + facilitators (not observers). Shows email, status badge, inviter name, timestamp, clipboard copy icon.
 
 #### Lifecycle
 
@@ -741,6 +750,9 @@ The core insight: pages are context focal-points for humans, not for AI. Differe
 - Removed ideas feed section — replaced with "View ideas in Talk →" link
 - Removed "Brainstorm in this group" button — replaced with "Open in Talk →"
 - Removed Gather/Crystallize buttons — facilitators use the Talk footer now
+- Added member management: facilitator sees role change buttons (promote/demote/observer), status toggle (deactivate/reactivate), and remove on each member chip
+- Anonymous invite support: unknown emails get invites with auto-account creation on accept
+- Invite accept handler creates account, verifies email, creates device session, sets login cookies
 - Kept: create, discover, join/leave, members, roles, invites, sub-groups, status management
 
 #### Legacy page banners
@@ -1098,6 +1110,7 @@ CREATE TABLE idea_group_members (
     group_id INT NOT NULL,
     user_id INT NOT NULL,
     role ENUM('member','facilitator','observer') DEFAULT 'member',
+    status VARCHAR(10) NOT NULL DEFAULT 'active',  -- active or inactive
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (group_id) REFERENCES idea_groups(id),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
@@ -1183,6 +1196,8 @@ scripts/db/
   talk-phase2-brainstorm-clerk.sql — Phase 2 brainstorm clerk registration
   talk-phase4-edit-delete.sql     — Phase 4 DDL (edit_count, deleted_at, idx_deleted_at)
   talk-phase4-group-roles.sql     — Phase 4 group roles in user_roles table
+  add-member-status.php           — Phase 7: ADD status column to idea_group_members
+  invite-nullable-userid.php      — Phase 7: make group_invites.user_id nullable for anonymous invites
 
 docs/
   talk-architecture.md       — This document (system architecture)

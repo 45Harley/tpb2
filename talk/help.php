@@ -253,7 +253,7 @@ try {
             <div class="header-links">
                 <a href="index.php">Talk</a>
                 <a href="groups.php">Groups</a>
-                <a href="brainstorm.php?help">Ask AI</a>
+                <a href="brainstorm.php">Brainstorm</a>
             </div>
         </div>
 <?php if ($dbUser): ?>
@@ -374,20 +374,22 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
             <li><strong>Closed</strong> &mdash; invitation only. Good for focused working groups.</li>
         </ul>
 
-        <h3>Managing roles</h3>
+        <h3>Managing members</h3>
         <ul>
             <li><strong>&#x1f3af; Group Facilitator</strong> &mdash; Full control: manage members, run AI tools, archive. You can promote members to co-facilitator.</li>
             <li><strong>&#x1f4ac; Group Member</strong> &mdash; The default role. Contributes ideas, participates in discussion.</li>
             <li><strong>&#x1f441; Group Observer</strong> &mdash; Read-only. Great for people who want to follow along without contributing.</li>
         </ul>
+        <p>Facilitators can change any member's role, deactivate/reactivate members, or remove them from the group. Deactivated members stay listed but can't access the group until reactivated.</p>
         <p>Multiple facilitators are allowed and encouraged for larger groups. If the last facilitator leaves, the longest-tenured member is auto-promoted.</p>
 
         <h3>Inviting members</h3>
         <p>On the group detail page (Groups &rarr; click a group), enter email addresses (one per line or comma-separated) in the Invite Members form. The system:</p>
         <ul>
-            <li>Validates each email against existing accounts with verified email</li>
             <li>Sends each person an email with <strong>"Yes, I'll Join"</strong> and <strong>"No Thanks"</strong> buttons</li>
-            <li>Reports results per email: invited, already a member, no account found, email not verified</li>
+            <li>Works for existing TPB users <em>and</em> people who don't have an account yet</li>
+            <li>New users who click "Yes, I'll Join" get an account created automatically &mdash; verified and logged in instantly</li>
+            <li>Reports results per email: invited, already a member, already invited</li>
         </ul>
         <p>Invitees don't need to be logged in to respond &mdash; the link itself authenticates them. Invitations expire after 7 days.</p>
 
@@ -472,7 +474,7 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
         <details class="faq-item">
             <summary>Can I edit or delete my ideas?</summary>
             <div class="answer">
-                <p>Yes &mdash; in the stream, your own ideas show an edit (&#x270E;) and delete (&times;) button. AI-generated responses can't be edited or deleted.</p>
+                <p>Yes &mdash; in the stream, your own ideas show an edit (&#x270E;) and delete (&times;) button. You can also delete AI responses that were triggered by your ideas.</p>
                 <p><strong>Editing</strong> is transparent: an "(edited)" tag appears on modified thoughts. The edit count is tracked.</p>
                 <p><strong>Deleting</strong> is usually a soft delete &mdash; the idea is hidden but preserved so gathered outputs stay intact.</p>
             </div>
@@ -508,7 +510,7 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
 
         <div style="text-align: center; margin: 2rem 0 1rem;">
             <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.75rem;">Still have questions?</p>
-            <a href="brainstorm.php?help" style="display: inline-block; padding: 12px 28px; background: linear-gradient(145deg, #4fc3f7, #0288d1); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s;">Ask AI</a>
+            <a href="index.php" style="display: inline-block; padding: 12px 28px; background: linear-gradient(145deg, #4fc3f7, #0288d1); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s;">Open Talk</a>
         </div>
 
         <p style="color: #555; font-size: 0.8rem; margin-top: 2rem; text-align: center;">
