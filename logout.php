@@ -22,6 +22,7 @@ if ($sessionId) {
 }
 
 // Clear ALL TPB cookies
+require_once __DIR__ . '/includes/set-cookie.php';
 $tpbCookies = [
     'tpb_civic_session',
     'tpb_user_id',
@@ -31,13 +32,7 @@ $tpbCookies = [
     'tpb_email_verified'
 ];
 foreach ($tpbCookies as $name) {
-    setcookie($name, '', [
-        'expires' => time() - 3600,
-        'path' => '/',
-        'secure' => isset($_SERVER['HTTPS']),
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
+    tpbClearCookie($name);
 }
 
 // Output HTML with JS to clear localStorage, then redirect

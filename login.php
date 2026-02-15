@@ -26,6 +26,7 @@ try {
 
 $siteConfig = require __DIR__ . '/config.php';
 require_once __DIR__ . '/includes/smtp-mail.php';
+require_once __DIR__ . '/includes/set-cookie.php';
 
 $error = '';
 $success = '';
@@ -97,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 
                 // Create or update device session
                 $newSessionId = 'civic_' . bin2hex(random_bytes(8)) . '_' . time();
-                $cookieExpiry = $rememberMe ? time() + 31536000 : time() + (30 * 24 * 60 * 60);
+                $cookieMaxAge = $rememberMe ? TPB_COOKIE_1_YEAR : TPB_COOKIE_30_DAYS;
                 
                 // Get device info
                 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
@@ -135,21 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $stmt->execute([$user['user_id'], $newSessionId, substr($userAgent, 0, 100), $deviceType, $ipAddress]);
                 }
                 
-                // Set cookies (both session + user_id, consistent with magic link)
-                setcookie('tpb_civic_session', $newSessionId, [
-                    'expires' => $cookieExpiry,
-                    'path' => '/',
-                    'secure' => isset($_SERVER['HTTPS']),
-                    'httponly' => false,
-                    'samesite' => 'Lax'
-                ]);
-                setcookie('tpb_user_id', $user['user_id'], [
-                    'expires' => $cookieExpiry,
-                    'path' => '/',
-                    'secure' => isset($_SERVER['HTTPS']),
-                    'httponly' => false,
-                    'samesite' => 'Lax'
-                ]);
+                // Set auth cookies
+                tpbSetLoginCookies($user['user_id'], $newSessionId, $cookieMaxAge, false);
                 
                 // Update last login
                 $stmt = $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE user_id = ?");
