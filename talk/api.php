@@ -292,6 +292,7 @@ function handleSave($pdo, $input, $userId) {
         'message'    => ucfirst($category) . ' #' . $id . ' saved (raw)',
         'idea'       => [
             'id'             => $id,
+            'user_id'        => $userId,
             'content'        => $content,
             'category'       => $category,
             'tags'           => $tags,
@@ -405,9 +406,16 @@ function handleHistory($pdo, $userId) {
     $stmt->execute($params);
     $ideas = $stmt->fetchAll();
 
-    // Compute display names
+    // Compute display names + fix legacy AI rows missing user_id
     foreach ($ideas as &$idea) {
         $idea['author_display'] = $idea['clerk_key'] ? 'AI' : getDisplayName($idea);
+        // Legacy AI responses have NULL user_id — inherit from parent
+        if ($idea['clerk_key'] && !$idea['user_id'] && $idea['parent_id']) {
+            $pStmt = $pdo->prepare("SELECT user_id FROM idea_log WHERE id = ?");
+            $pStmt->execute([$idea['parent_id']]);
+            $parent = $pStmt->fetch();
+            if ($parent) $idea['user_id'] = $parent['user_id'];
+        }
         unset($idea['first_name'], $idea['last_name'], $idea['user_username'], $idea['show_first_name'], $idea['show_last_name']);
     }
     unset($idea);
@@ -622,14 +630,25 @@ function handleDelete($pdo, $input, $userId) {
     if (!$ideaId) return ['success' => false, 'error' => 'idea_id is required'];
     if (!$userId) return ['success' => false, 'error' => 'Login required'];
 
-    $stmt = $pdo->prepare("SELECT id, user_id, deleted_at, clerk_key FROM idea_log WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, user_id, parent_id, deleted_at, clerk_key FROM idea_log WHERE id = ?");
     $stmt->execute([$ideaId]);
     $idea = $stmt->fetch();
 
     if (!$idea) return ['success' => false, 'error' => 'Idea not found'];
     if ($idea['deleted_at']) return ['success' => false, 'error' => 'Already deleted'];
-    if ($idea['clerk_key']) return ['success' => false, 'error' => 'Cannot delete AI-generated content'];
-    if ($idea['user_id'] && (int)$idea['user_id'] !== $userId) {
+    if ($idea['clerk_key']) {
+        // AI content: allow owner to delete (check user_id, or parent's user_id for legacy rows)
+        $isOwner = $idea['user_id'] && (int)$idea['user_id'] === $userId;
+        if (!$isOwner && $idea['parent_id']) {
+            $pStmt = $pdo->prepare("SELECT user_id FROM idea_log WHERE id = ?");
+            $pStmt->execute([$idea['parent_id']]);
+            $parent = $pStmt->fetch();
+            $isOwner = $parent && $parent['user_id'] && (int)$parent['user_id'] === $userId;
+        }
+        if (!$isOwner) {
+            return ['success' => false, 'error' => 'Cannot delete AI-generated content'];
+        }
+    } elseif ($idea['user_id'] && (int)$idea['user_id'] !== $userId) {
         return ['success' => false, 'error' => 'You can only delete your own ideas'];
     }
 
@@ -818,23 +837,37 @@ function handleBrainstorm($pdo, $input, $userId) {
 
     // 2. AI response as child node (inherits shareable + group from user message)
     $aiStmt = $pdo->prepare("
-        INSERT INTO idea_log (session_id, parent_id, content, category, status, source, shareable, clerk_key, group_id)
-        VALUES (:session_id, :parent_id, :content, 'chat', 'raw', 'clerk-brainstorm', :shareable, 'brainstorm', :group_id)
+        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, source, shareable, clerk_key, group_id)
+        VALUES (:user_id, :session_id, :parent_id, :content, 'chat', 'raw', 'clerk-brainstorm', :shareable, 'brainstorm', :group_id)
     ");
     $aiStmt->execute([
+        ':user_id'    => $userId,
         ':session_id' => $sessionId,
         ':parent_id'  => $userRowId,
         ':content'    => $cleanMessage,
         ':shareable'  => $shareable,
         ':group_id'   => $groupId
     ]);
+    $aiRowId = (int)$pdo->lastInsertId();
 
     return [
         'success'  => true,
         'response' => $cleanMessage,
         'actions'  => $actionResults,
         'clerk'    => $clerk['clerk_name'],
-        'usage'    => $response['usage'] ?? null
+        'usage'    => $response['usage'] ?? null,
+        'ai_idea'  => [
+            'id'             => $aiRowId,
+            'user_id'        => $userId,
+            'content'        => $cleanMessage,
+            'category'       => 'chat',
+            'status'         => 'raw',
+            'clerk_key'      => 'brainstorm',
+            'group_id'       => $groupId,
+            'created_at'     => date('Y-m-d H:i:s'),
+            'author_display' => 'AI',
+            'edit_count'     => 0
+        ]
     ];
 }
 

@@ -7,7 +7,7 @@ try {
 } catch (PDOException $e) { $dbUser = false; }
 
 $currentUserId = $dbUser ? (int)$dbUser['user_id'] : 0;
-$userJson = $dbUser ? json_encode(['user_id' => $dbUser['user_id'], 'display_name' => getDisplayName($dbUser)]) : 'null';
+$userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'display_name' => getDisplayName($dbUser)]) : 'null';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -559,19 +559,14 @@ $userJson = $dbUser ? json_encode(['user_id' => $dbUser['user_id'], 'display_nam
             var el = document.getElementById(thinkingId);
             if (el) {
                 if (data.success) {
-                    el.querySelector('.card-content').textContent = data.response;
-                    el.querySelector('.card-content').style.color = '';
-                    el.querySelector('.card-content').style.fontStyle = '';
-
-                    // Show action results
-                    if (data.actions && data.actions.length) {
-                        var actionsHtml = '';
-                        data.actions.forEach(function(a) {
-                            if (a.success) {
-                                actionsHtml += '<div style="font-size:0.75rem;color:#81c784;margin-top:4px;">' + escHtml(a.message || a.action + ' done') + '</div>';
-                            }
-                        });
-                        if (actionsHtml) el.querySelector('.card-content').insertAdjacentHTML('afterend', actionsHtml);
+                    // Replace thinking card with proper rendered card
+                    if (data.ai_idea) {
+                        var realCard = renderIdeaCard(data.ai_idea);
+                        el.parentNode.replaceChild(realCard, el);
+                    } else {
+                        el.querySelector('.card-content').textContent = data.response;
+                        el.querySelector('.card-content').style.color = '';
+                        el.querySelector('.card-content').style.fontStyle = '';
                     }
                 } else {
                     el.querySelector('.card-content').textContent = data.error || 'AI unavailable';
@@ -641,6 +636,7 @@ $userJson = $dbUser ? json_encode(['user_id' => $dbUser['user_id'], 'display_nam
 
         var actionsHtml = '';
         if (isOwn && !idea.clerk_key) {
+            // Own human ideas: edit, delete, promote
             actionsHtml += '<button onclick="startEdit(' + idea.id + ')" title="Edit">&#x270E;</button>';
             actionsHtml += '<button class="delete-btn" onclick="deleteIdea(' + idea.id + ')" title="Delete">&#x2715;</button>';
             if (idea.status === 'raw') {
@@ -648,6 +644,9 @@ $userJson = $dbUser ? json_encode(['user_id' => $dbUser['user_id'], 'display_nam
             } else if (idea.status === 'refining') {
                 actionsHtml += '<button onclick="promote(' + idea.id + ',\'distilled\')" title="Promote">&#x2B06;</button>';
             }
+        } else if (isOwn && idea.clerk_key) {
+            // AI responses to your ideas: delete only
+            actionsHtml += '<button class="delete-btn" onclick="deleteIdea(' + idea.id + ')" title="Delete">&#x2715;</button>';
         }
 
         var footer = '<div class="card-footer"><div class="card-tags">' + tagsHtml + '</div><div class="card-actions">' + actionsHtml + '</div></div>';
