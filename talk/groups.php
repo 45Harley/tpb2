@@ -123,7 +123,8 @@ $mode = $groupId ? 'detail' : 'list';
         .section { margin-bottom: 2rem; }
 
         .group-card {
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.12);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
@@ -131,7 +132,7 @@ $mode = $groupId ? 'detail' : 'list';
             cursor: pointer;
             transition: background 0.2s;
         }
-        .group-card:hover { background: rgba(255,255,255,0.12); }
+        .group-card:hover { background: rgba(255,255,255,0.14); }
 
         .group-card .name { font-size: 1rem; font-weight: 600; color: #eee; margin-bottom: 4px; }
         .group-card .desc { font-size: 0.85rem; color: #aaa; margin-bottom: 8px; }
@@ -221,16 +222,6 @@ $mode = $groupId ? 'detail' : 'list';
             background: rgba(255,255,255,0.08); font-size: 0.8rem;
         }
 
-        .idea-feed .idea {
-            background: rgba(255,255,255,0.06);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 8px;
-        }
-        .idea .author { color: #4fc3f7; font-weight: 600; font-size: 0.85rem; }
-        .idea .content { margin-top: 4px; font-size: 0.9rem; line-height: 1.5; }
-        .idea .idea-meta { margin-top: 6px; font-size: 0.75rem; color: #999; display: flex; gap: 10px; }
-
         .actions { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; }
 
         .status-msg { padding: 10px; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; }
@@ -247,11 +238,8 @@ $mode = $groupId ? 'detail' : 'list';
         <header>
             <h1>👥 Groups</h1>
             <div class="header-links">
-                <a href="brainstorm.php">🧠 Brainstorm</a>
-                <a href="history.php">📚 History</a>
-                <a href="index.php">← New thought</a>
+                <a href="index.php">💬 Talk</a>
                 <a href="help.php">? Help</a>
-                <a href="brainstorm.php?help">🤖 Ask AI</a>
             </div>
         </header>
 <?php if ($dbUser): ?>
@@ -429,7 +417,6 @@ $mode = $groupId ? 'detail' : 'list';
 
         var g = data.group;
         var members = data.members || [];
-        var ideas = data.ideas || [];
         var subGroups = data.sub_groups || [];
         var userRole = data.user_role;
         var isFacilitator = userRole === 'facilitator';
@@ -531,11 +518,6 @@ $mode = $groupId ? 'detail' : 'list';
             html += '</div></div>';
         }
 
-        // Ideas — link to Talk page
-        html += '<div class="section"><h2>Group Ideas (' + ideas.length + ')</h2>' +
-            '<a href="index.php?group=' + g.id + '" class="btn btn-secondary" style="margin-top:4px;">View ideas in Talk &rarr;</a>' +
-        '</div>';
-
         el.innerHTML = html;
 
         // Load invites for members/facilitators
@@ -598,19 +580,6 @@ $mode = $groupId ? 'detail' : 'list';
         }
     }
 
-    async function runGatherer(id) {
-        showStatus('Running gatherer...', 'success');
-        var data = await apiPost('gather', { group_id: id });
-        if (data.success) {
-            var linkCount = data.actions.filter(function(a) { return a.action === 'LINK' && a.success; }).length;
-            var summaryCount = data.actions.filter(function(a) { return a.action === 'SUMMARIZE' && a.success; }).length;
-            showStatus('Gatherer found ' + linkCount + ' connections and created ' + summaryCount + ' digest(s)', 'success');
-            loadGroupDetail();
-        } else {
-            showStatus(data.error, 'error');
-        }
-    }
-
     async function changeMemberRole(gId, uId, value) {
         if (value === '__remove') {
             if (!confirm('Remove this member from the group?')) { loadGroupDetail(); return; }
@@ -632,18 +601,6 @@ $mode = $groupId ? 'detail' : 'list';
         var data = await apiPost('update_group', { group_id: id, status: 'archived' });
         if (data.success) {
             showStatus('Group archived.', 'success');
-            loadGroupDetail();
-        } else {
-            showStatus(data.error, 'error');
-        }
-    }
-
-    async function crystallize(id) {
-        if (!confirm('Crystallize this group into a proposal? You can re-crystallize until the group is archived.')) return;
-        showStatus('Crystallizing... this may take a moment.', 'success');
-        var data = await apiPost('crystallize', { group_id: id });
-        if (data.success) {
-            showStatus('Proposal created! Idea #' + data.idea_id + ' — ' + data.file_path, 'success');
             loadGroupDetail();
         } else {
             showStatus(data.error, 'error');
