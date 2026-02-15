@@ -739,7 +739,9 @@ $mode = $groupId ? 'detail' : 'list';
         data.invites.forEach(function(inv) {
             var style = statusStyles[inv.status] || 'color:#aaa;';
             html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.85rem;flex-wrap:wrap;">' +
-                '<span style="color:#eee;min-width:180px;">' + escHtml(inv.email) + '</span>' +
+                '<span style="color:#eee;min-width:180px;">' + escHtml(inv.email) +
+                    ' <span onclick="copyToClip(\'' + escHtml(inv.email).replace(/'/g, "\\'") + '\')" style="cursor:pointer;opacity:0.5;font-size:0.75rem;" title="Copy email">📋</span>' +
+                '</span>' +
                 '<span style="padding:2px 8px;border-radius:8px;font-size:0.75rem;font-weight:600;' + style + '">' + inv.status + '</span>' +
                 '<span style="color:#888;font-size:0.75rem;">by ' + escHtml(inv.invited_by_name) + '</span>' +
                 '<span style="color:#666;font-size:0.7rem;">' + inv.created_at.substring(0, 16) + '</span>' +
@@ -751,6 +753,12 @@ $mode = $groupId ? 'detail' : 'list';
 
     loadGroupDetail();
     <?php endif; ?>
+
+    function copyToClip(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            showStatus('Copied: ' + text, 'success');
+        });
+    }
 
     function escHtml(str) {
         if (!str) return '';
