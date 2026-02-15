@@ -1519,18 +1519,33 @@ function handleUpdateMember($pdo, $input, $userId) {
 
 function handleCheckStaleness($pdo, $userId) {
     $groupId = (int)($_GET['group_id'] ?? 0);
-    if (!$groupId) return ['success' => false, 'error' => 'group_id is required'];
+    $isPersonal = ($groupId === 0);
 
-    // Find all digest nodes linked via synthesizes to this group's ideas
-    $stmt = $pdo->prepare("
-        SELECT DISTINCT d.id AS digest_id, d.clerk_key, d.status, d.created_at AS digest_created_at
-        FROM idea_log d
-        JOIN idea_links l ON l.idea_id_b = d.id AND l.link_type = 'synthesizes'
-        JOIN idea_log src ON src.id = l.idea_id_a AND src.group_id = ?
-        WHERE d.category = 'digest'
-        ORDER BY d.created_at DESC
-    ");
-    $stmt->execute([$groupId]);
+    if (!$isPersonal && !$groupId) return ['success' => false, 'error' => 'group_id is required'];
+    if ($isPersonal && !$userId) return ['success' => false, 'error' => 'Login required'];
+
+    // Find all digest nodes linked via synthesizes to this group's/user's ideas
+    if ($isPersonal) {
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT d.id AS digest_id, d.clerk_key, d.status, d.created_at AS digest_created_at
+            FROM idea_log d
+            JOIN idea_links l ON l.idea_id_b = d.id AND l.link_type = 'synthesizes'
+            JOIN idea_log src ON src.id = l.idea_id_a AND src.group_id IS NULL AND src.user_id = ?
+            WHERE d.category = 'digest'
+            ORDER BY d.created_at DESC
+        ");
+        $stmt->execute([$userId]);
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT d.id AS digest_id, d.clerk_key, d.status, d.created_at AS digest_created_at
+            FROM idea_log d
+            JOIN idea_links l ON l.idea_id_b = d.id AND l.link_type = 'synthesizes'
+            JOIN idea_log src ON src.id = l.idea_id_a AND src.group_id = ?
+            WHERE d.category = 'digest'
+            ORDER BY d.created_at DESC
+        ");
+        $stmt->execute([$groupId]);
+    }
     $digests = $stmt->fetchAll();
 
     if (empty($digests)) {
@@ -1588,16 +1603,24 @@ function handleGather($pdo, $input, $userId) {
     }
 
     $groupId = (int)($input['group_id'] ?? 0);
-    if (!$groupId) {
-        return ['success' => false, 'error' => 'group_id is required'];
-    }
+    $isPersonal = ($groupId === 0); // 0 = personal ideas (null group)
 
-    // Facilitator check
-    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
-    $stmt->execute([$groupId, $userId]);
-    $membership = $stmt->fetch();
-    if (!$membership || $membership['role'] !== 'facilitator') {
-        return ['success' => false, 'error' => 'Only facilitators can run the gatherer'];
+    if ($isPersonal) {
+        // Personal gathering — user's own ideas
+        $group = ['name' => 'Personal Ideas', 'description' => 'Your personal idea collection', 'tags' => null];
+    } else {
+        // Group gathering — facilitator check
+        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $stmt->execute([$groupId, $userId]);
+        $membership = $stmt->fetch();
+        if (!$membership || $membership['role'] !== 'facilitator') {
+            return ['success' => false, 'error' => 'Only facilitators can run the gatherer'];
+        }
+
+        // Fetch group info
+        $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
+        $stmt->execute([$groupId]);
+        $group = $stmt->fetch();
     }
 
     require_once __DIR__ . '/../config-claude.php';
@@ -1608,23 +1631,33 @@ function handleGather($pdo, $input, $userId) {
         return ['success' => false, 'error' => 'Gatherer clerk not available'];
     }
 
-    // Fetch group info
-    $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
-    $stmt->execute([$groupId]);
-    $group = $stmt->fetch();
-
-    // Fetch group ideas (exclude gatherer's own digests to prevent feedback loop)
-    $stmt = $pdo->prepare("
-        SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
-               u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name,
-               i.clerk_key
-        FROM idea_log i
-        LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.group_id = ? AND i.deleted_at IS NULL
-          AND (i.clerk_key IS NULL OR i.clerk_key != 'gatherer')
-        ORDER BY i.created_at ASC
-    ");
-    $stmt->execute([$groupId]);
+    // Fetch ideas (exclude gatherer's own digests to prevent feedback loop)
+    if ($isPersonal) {
+        $stmt = $pdo->prepare("
+            SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
+                   u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name,
+                   i.clerk_key
+            FROM idea_log i
+            LEFT JOIN users u ON i.user_id = u.user_id
+            WHERE i.group_id IS NULL AND i.user_id = ? AND i.deleted_at IS NULL
+              AND i.category != 'chat'
+              AND (i.clerk_key IS NULL OR i.clerk_key != 'gatherer')
+            ORDER BY i.created_at ASC
+        ");
+        $stmt->execute([$userId]);
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
+                   u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name,
+                   i.clerk_key
+            FROM idea_log i
+            LEFT JOIN users u ON i.user_id = u.user_id
+            WHERE i.group_id = ? AND i.deleted_at IS NULL
+              AND (i.clerk_key IS NULL OR i.clerk_key != 'gatherer')
+            ORDER BY i.created_at ASC
+        ");
+        $stmt->execute([$groupId]);
+    }
     $ideas = $stmt->fetchAll();
     foreach ($ideas as &$gi) { $gi['author'] = getDisplayName($gi); }
     unset($gi);
@@ -1829,7 +1862,7 @@ function processGathererAction($pdo, $action, $userId, $groupId) {
                 ':user_id'  => $userId,
                 ':content'  => $content,
                 ':tags'     => $tags,
-                ':group_id' => $groupId
+                ':group_id' => $groupId ?: null  // 0 → NULL for personal
             ]);
             $digestId = (int)$pdo->lastInsertId();
 
@@ -1871,35 +1904,37 @@ function handleCrystallize($pdo, $input, $userId) {
     }
 
     $groupId = (int)($input['group_id'] ?? 0);
-    if (!$groupId) {
-        return ['success' => false, 'error' => 'group_id is required'];
-    }
+    $isPersonal = ($groupId === 0);
 
-    // Facilitator check
-    $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
-    $stmt->execute([$groupId, $userId]);
-    $membership = $stmt->fetch();
-    if (!$membership || $membership['role'] !== 'facilitator') {
-        return ['success' => false, 'error' => 'Only facilitators can crystallize'];
-    }
+    if ($isPersonal) {
+        $group = ['name' => 'Personal Ideas', 'description' => 'Your personal idea collection', 'tags' => null, 'status' => 'active'];
+    } else {
+        // Facilitator check
+        $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+        $stmt->execute([$groupId, $userId]);
+        $membership = $stmt->fetch();
+        if (!$membership || $membership['role'] !== 'facilitator') {
+            return ['success' => false, 'error' => 'Only facilitators can crystallize'];
+        }
 
-    // Fetch group
-    $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
-    $stmt->execute([$groupId]);
-    $group = $stmt->fetch();
+        // Fetch group
+        $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
+        $stmt->execute([$groupId]);
+        $group = $stmt->fetch();
 
-    if (!$group) {
-        return ['success' => false, 'error' => 'Group not found'];
-    }
-    if ($group['status'] === 'archived') {
-        return ['success' => false, 'error' => 'Group is archived. Reopen it first to re-crystallize.'];
-    }
-    if ($group['status'] === 'forming') {
-        return ['success' => false, 'error' => 'Group must be active before crystallizing.'];
-    }
+        if (!$group) {
+            return ['success' => false, 'error' => 'Group not found'];
+        }
+        if ($group['status'] === 'archived') {
+            return ['success' => false, 'error' => 'Group is archived. Reopen it first to re-crystallize.'];
+        }
+        if ($group['status'] === 'forming') {
+            return ['success' => false, 'error' => 'Group must be active before crystallizing.'];
+        }
 
-    // Update status to crystallizing
-    $pdo->prepare("UPDATE idea_groups SET status = 'crystallizing' WHERE id = ?")->execute([$groupId]);
+        // Update status to crystallizing
+        $pdo->prepare("UPDATE idea_groups SET status = 'crystallizing' WHERE id = ?")->execute([$groupId]);
+    }
 
     require_once __DIR__ . '/../config-claude.php';
     require_once __DIR__ . '/../includes/ai-context.php';
@@ -1909,44 +1944,79 @@ function handleCrystallize($pdo, $input, $userId) {
         return ['success' => false, 'error' => 'Brainstorm clerk not available'];
     }
 
-    // Fetch all group ideas
-    $stmt = $pdo->prepare("
-        SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
-               u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
-        FROM idea_log i
-        LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE i.group_id = ? AND i.deleted_at IS NULL
-        ORDER BY i.created_at ASC
-    ");
-    $stmt->execute([$groupId]);
+    // Fetch ideas
+    if ($isPersonal) {
+        $stmt = $pdo->prepare("
+            SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
+                   u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
+            FROM idea_log i
+            LEFT JOIN users u ON i.user_id = u.user_id
+            WHERE i.group_id IS NULL AND i.user_id = ? AND i.deleted_at IS NULL
+              AND i.category != 'chat'
+            ORDER BY i.created_at ASC
+        ");
+        $stmt->execute([$userId]);
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT i.id, i.content, i.category, i.status, i.tags, i.created_at,
+                   u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
+            FROM idea_log i
+            LEFT JOIN users u ON i.user_id = u.user_id
+            WHERE i.group_id = ? AND i.deleted_at IS NULL
+            ORDER BY i.created_at ASC
+        ");
+        $stmt->execute([$groupId]);
+    }
     $ideas = $stmt->fetchAll();
     foreach ($ideas as &$gi) { $gi['author'] = getDisplayName($gi); }
     unset($gi);
 
     // Fetch existing digests (from gatherer) for this group
-    $stmt = $pdo->prepare("
-        SELECT i.id, i.content, i.tags FROM idea_log i
-        WHERE i.clerk_key = 'gatherer' AND i.category = 'digest'
-        AND EXISTS (
-            SELECT 1 FROM idea_links l
-            JOIN idea_log src ON src.id = l.idea_id_a
-            WHERE l.idea_id_b = i.id AND l.link_type = 'synthesizes'
-              AND src.group_id = ?
-        )
-        ORDER BY i.created_at DESC LIMIT 10
-    ");
-    $stmt->execute([$groupId]);
+    if ($isPersonal) {
+        $stmt = $pdo->prepare("
+            SELECT i.id, i.content, i.tags FROM idea_log i
+            WHERE i.clerk_key = 'gatherer' AND i.category = 'digest'
+            AND EXISTS (
+                SELECT 1 FROM idea_links l
+                JOIN idea_log src ON src.id = l.idea_id_a
+                WHERE l.idea_id_b = i.id AND l.link_type = 'synthesizes'
+                  AND src.group_id IS NULL AND src.user_id = ?
+            )
+            ORDER BY i.created_at DESC LIMIT 10
+        ");
+        $stmt->execute([$userId]);
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT i.id, i.content, i.tags FROM idea_log i
+            WHERE i.clerk_key = 'gatherer' AND i.category = 'digest'
+            AND EXISTS (
+                SELECT 1 FROM idea_links l
+                JOIN idea_log src ON src.id = l.idea_id_a
+                WHERE l.idea_id_b = i.id AND l.link_type = 'synthesizes'
+                  AND src.group_id = ?
+            )
+            ORDER BY i.created_at DESC LIMIT 10
+        ");
+        $stmt->execute([$groupId]);
+    }
     $digests = $stmt->fetchAll();
 
     // Fetch members (display names)
-    $stmt = $pdo->prepare("
-        SELECT u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
-        FROM idea_group_members m
-        JOIN users u ON u.user_id = m.user_id
-        WHERE m.group_id = ? AND m.role != 'observer'
-    ");
-    $stmt->execute([$groupId]);
-    $memberNames = array_map('getDisplayName', $stmt->fetchAll());
+    if ($isPersonal) {
+        // Personal mode — just the user
+        $stmt = $pdo->prepare("SELECT first_name, last_name, username, show_first_name, show_last_name FROM users WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        $memberNames = array_map('getDisplayName', $stmt->fetchAll());
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name
+            FROM idea_group_members m
+            JOIN users u ON u.user_id = m.user_id
+            WHERE m.group_id = ? AND m.role != 'observer'
+        ");
+        $stmt->execute([$groupId]);
+        $memberNames = array_map('getDisplayName', $stmt->fetchAll());
+    }
 
     // Fetch previous crystallization digests (our own prior output for this group)
     $prevCrystallizations = [];
@@ -1979,9 +2049,11 @@ function handleCrystallize($pdo, $input, $userId) {
         $linkCount = (int)$stmt->fetch()['cnt'];
     }
     $subGroupCount = 0;
-    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM idea_groups WHERE parent_group_id = ?");
-    $stmt->execute([$groupId]);
-    $subGroupCount = (int)$stmt->fetch()['cnt'];
+    if (!$isPersonal) {
+        $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM idea_groups WHERE parent_group_id = ?");
+        $stmt->execute([$groupId]);
+        $subGroupCount = (int)$stmt->fetch()['cnt'];
+    }
 
     $metrics = [
         'contributors'  => count($uniqueAuthors),
@@ -1991,7 +2063,7 @@ function handleCrystallize($pdo, $input, $userId) {
         'members'       => count($memberNames),
         'sub_groups'    => $subGroupCount,
         'crystallized_at' => date('Y-m-d H:i:s'),
-        'group_id'      => $groupId,
+        'group_id'      => $groupId ?: null,
         'group_name'    => $group['name']
     ];
 
@@ -2106,7 +2178,9 @@ PROMPT]];
 
     if (isset($response['error'])) {
         // Revert status
-        $pdo->prepare("UPDATE idea_groups SET status = 'active' WHERE id = ?")->execute([$groupId]);
+        if (!$isPersonal) {
+            $pdo->prepare("UPDATE idea_groups SET status = 'active' WHERE id = ?")->execute([$groupId]);
+        }
         return ['success' => false, 'error' => $response['error']];
     }
 
@@ -2124,7 +2198,7 @@ PROMPT]];
         ':user_id'  => $userId,
         ':content'  => $markdown,
         ':tags'     => $group['tags'],
-        ':group_id' => $groupId
+        ':group_id' => $groupId ?: null
     ]);
     $digestId = (int)$pdo->lastInsertId();
 
@@ -2147,35 +2221,37 @@ PROMPT]];
     $markdownWithMetrics = $markdown . $metricsYaml;
 
     // Write .md file (versioned + latest copy)
-    // Filename convention: group-{id}-{slug}-v{version}-u{userId}-{timestamp}.md
     $outputDir = __DIR__ . '/output';
     if (!is_dir($outputDir)) {
         mkdir($outputDir, 0755, true);
     }
     $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($group['name']));
     $slug = trim($slug, '-');
+    $filePrefix = $isPersonal ? "personal-u{$userId}" : "group-{$groupId}";
 
-    // Compute version number by counting existing versioned files for this group
-    $existingVersions = glob($outputDir . "/group-{$groupId}-*-v*-u*.md");
+    // Compute version number by counting existing versioned files
+    $existingVersions = glob($outputDir . "/{$filePrefix}-*-v*-u*.md");
     $existingVersions = array_filter($existingVersions, function($f) {
         return !str_ends_with(basename($f), '-latest.md');
     });
     $version = count($existingVersions) + 1;
 
     $timestamp = date('Y-m-d-His');
-    $versionedFile = "group-{$groupId}-{$slug}-v{$version}-u{$userId}-{$timestamp}.md";
-    $latestFile = "group-{$groupId}-{$slug}-latest.md";
+    $versionedFile = "{$filePrefix}-{$slug}-v{$version}-u{$userId}-{$timestamp}.md";
+    $latestFile = "{$filePrefix}-{$slug}-latest.md";
     file_put_contents($outputDir . '/' . $versionedFile, $markdownWithMetrics);
     file_put_contents($outputDir . '/' . $latestFile, $markdownWithMetrics);
     $filePath = "output/{$latestFile}";
 
-    // Update group status to crystallized
-    $pdo->prepare("UPDATE idea_groups SET status = 'crystallized' WHERE id = ?")->execute([$groupId]);
+    if (!$isPersonal) {
+        // Update group status to crystallized
+        $pdo->prepare("UPDATE idea_groups SET status = 'crystallized' WHERE id = ?")->execute([$groupId]);
 
-    // If parent group exists, insert digest as shareable idea in parent context
-    if ($group['parent_group_id']) {
-        // The digest is already shareable and linked to the user who triggered it
-        // It will appear in parent group's feed through membership
+        // If parent group exists, insert digest as shareable idea in parent context
+        if ($group['parent_group_id'] ?? null) {
+            // The digest is already shareable and linked to the user who triggered it
+            // It will appear in parent group's feed through membership
+        }
     }
 
     logClerkInteraction($pdo, $clerk['clerk_id']);

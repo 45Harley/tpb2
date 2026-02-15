@@ -427,6 +427,15 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
         </div>
         <?php endif; ?>
 
+        <?php if ($currentUserId && !$showAll && !$session && !$threadId): ?>
+        <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:0.8rem;color:#999;">Personal:</span>
+            <button class="promote-btn" id="gatherPersonalBtn" onclick="gatherPersonal()" style="padding:4px 12px;">📊 Gather</button>
+            <button class="promote-btn" id="crystallizePersonalBtn" onclick="crystallizePersonal()" style="padding:4px 12px;">💎 Crystallize</button>
+            <span id="personalToolStatus" style="font-size:0.75rem;color:#81c784;display:none;"></span>
+        </div>
+        <?php endif; ?>
+
         <?php if ($error): ?>
             <div class="error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
@@ -736,6 +745,74 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
         var div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    async function gatherPersonal() {
+        var btn = document.getElementById('gatherPersonalBtn');
+        var status = document.getElementById('personalToolStatus');
+        btn.disabled = true;
+        btn.textContent = 'Gathering...';
+        status.style.display = 'inline';
+        status.textContent = 'Running gatherer on your personal ideas...';
+        status.style.color = '#4fc3f7';
+
+        try {
+            var response = await fetch('api.php?action=gather', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ group_id: 0 })
+            });
+            var data = await response.json();
+            if (data.success) {
+                status.textContent = 'Gathered! ' + (data.actions ? data.actions.length + ' actions' : '');
+                status.style.color = '#81c784';
+                setTimeout(function() { location.reload(); }, 1500);
+            } else {
+                status.textContent = data.error;
+                status.style.color = '#e57373';
+                btn.disabled = false;
+                btn.textContent = '📊 Gather';
+            }
+        } catch (err) {
+            status.textContent = 'Network error';
+            status.style.color = '#e57373';
+            btn.disabled = false;
+            btn.textContent = '📊 Gather';
+        }
+    }
+
+    async function crystallizePersonal() {
+        var btn = document.getElementById('crystallizePersonalBtn');
+        var status = document.getElementById('personalToolStatus');
+        btn.disabled = true;
+        btn.textContent = 'Crystallizing...';
+        status.style.display = 'inline';
+        status.textContent = 'Running crystallizer on your personal ideas...';
+        status.style.color = '#4fc3f7';
+
+        try {
+            var response = await fetch('api.php?action=crystallize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ group_id: 0 })
+            });
+            var data = await response.json();
+            if (data.success) {
+                status.textContent = 'Crystallized!';
+                status.style.color = '#81c784';
+                setTimeout(function() { location.reload(); }, 1500);
+            } else {
+                status.textContent = data.error;
+                status.style.color = '#e57373';
+                btn.disabled = false;
+                btn.textContent = '💎 Crystallize';
+            }
+        } catch (err) {
+            status.textContent = 'Network error';
+            status.style.color = '#e57373';
+            btn.disabled = false;
+            btn.textContent = '💎 Crystallize';
+        }
     }
     </script>
 </body>
