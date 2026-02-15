@@ -85,9 +85,16 @@ if (isset($_GET['invite_action'], $_GET['token']) && $pdo) {
                     $deviceSession = 'civic_' . bin2hex(random_bytes(8)) . '_' . time();
                     $pdo->prepare("INSERT INTO user_devices (user_id, device_session, device_type, ip_address, is_active) VALUES (?, ?, 'web', ?, 1)")
                         ->execute([$acceptUserId, $deviceSession, $_SERVER['REMOTE_ADDR'] ?? '']);
-                    setcookie('tpb_user_id', $acceptUserId, time() + 31536000, '/');
-                    setcookie('tpb_civic_session', $deviceSession, time() + 31536000, '/');
-                    setcookie('tpb_email_verified', '1', time() + 31536000, '/');
+                    $cookieOpts = [
+                        'expires' => time() + 31536000,
+                        'path' => '/',
+                        'secure' => isset($_SERVER['HTTPS']),
+                        'httponly' => false,
+                        'samesite' => 'Lax'
+                    ];
+                    setcookie('tpb_user_id', $acceptUserId, $cookieOpts);
+                    setcookie('tpb_civic_session', $deviceSession, $cookieOpts);
+                    setcookie('tpb_email_verified', '1', $cookieOpts);
 
                     // Update the invite record with the new user_id
                     $pdo->prepare("UPDATE group_invites SET user_id = ? WHERE id = ?")->execute([$acceptUserId, $invite['id']]);

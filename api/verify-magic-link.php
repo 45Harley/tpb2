@@ -156,10 +156,17 @@ try {
         LevelManager::checkAndAdvance($pdo, $user['user_id']);
     }
 
-    // Set cookies for this device
-    setcookie('tpb_civic_session', $deviceSession, time() + 31536000, '/');
-    setcookie('tpb_email_verified', '1', time() + 31536000, '/');
-    setcookie('tpb_user_id', $user['user_id'], time() + 31536000, '/');
+    // Set cookies for this device (1 year, consistent across all login paths)
+    $cookieOpts = [
+        'expires' => time() + 31536000,
+        'path' => '/',
+        'secure' => isset($_SERVER['HTTPS']),
+        'httponly' => false,
+        'samesite' => 'Lax'
+    ];
+    setcookie('tpb_civic_session', $deviceSession, $cookieOpts);
+    setcookie('tpb_user_id', $user['user_id'], $cookieOpts);
+    setcookie('tpb_email_verified', '1', $cookieOpts);
 
     // Redirect after verification
     $redirectStatus = $alreadyVerified ? 'device_added' : 'success';

@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 
                 // Create or update device session
                 $newSessionId = 'civic_' . bin2hex(random_bytes(8)) . '_' . time();
-                $cookieExpiry = $rememberMe ? time() + (30 * 24 * 60 * 60) : 0;
+                $cookieExpiry = $rememberMe ? time() + 31536000 : time() + (30 * 24 * 60 * 60);
                 
                 // Get device info
                 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
