@@ -491,6 +491,9 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
     });
 
     async function submitIdea() {
+        // Stop mic if listening
+        if (micOn && recognition) { micOn = false; recognition.stop(); }
+
         var content = ideaInput.value.trim();
         if (!content || isSubmitting) return;
 
