@@ -358,6 +358,9 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
 </head>
 <body>
     <div class="container">
+        <div style="background:rgba(79,195,247,0.1);border:1px solid rgba(79,195,247,0.2);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:0.85rem;text-align:center;color:#ccc;">
+            New: <a href="index.php" style="color:#4fc3f7;">Try the unified Talk page</a> &mdash; ideas, AI, and groups in one place.
+        </div>
         <header>
             <h1>📚 Thought History</h1>
             <div class="header-links">

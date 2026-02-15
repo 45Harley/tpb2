@@ -457,18 +457,13 @@ $mode = $groupId ? 'detail' : 'list';
         // Actions
         html += '<div class="actions">';
         if (isMember) {
-            html += '<a href="brainstorm.php?group=' + g.id + '" class="btn btn-primary">🧠 Brainstorm in this group</a>';
+            html += '<a href="index.php?group=' + g.id + '" class="btn btn-primary">Open in Talk</a>';
         }
         if (!isMember && g.access_level !== 'closed') {
             html += '<button class="btn btn-primary" onclick="joinGroup(' + g.id + ')">Join Group</button>';
         }
         if (isMember && !isFacilitator) {
             html += '<button class="btn btn-danger" onclick="leaveGroup(' + g.id + ')">Leave</button>';
-        }
-        if (isFacilitator && ['active', 'crystallizing', 'crystallized'].includes(g.status)) {
-            html += '<button class="btn btn-secondary" onclick="runGatherer(' + g.id + ')">🔗 Run Gatherer</button>';
-            var crystLabel = g.status === 'crystallized' ? '💎 Re-Crystallize' : '💎 Crystallize';
-            html += '<button class="btn btn-secondary" onclick="crystallize(' + g.id + ')">' + crystLabel + '</button>';
         }
         if (isFacilitator && g.status === 'forming') {
             html += '<button class="btn btn-secondary" onclick="updateStatus(' + g.id + ', \'active\')">Activate Group</button>';
@@ -536,25 +531,10 @@ $mode = $groupId ? 'detail' : 'list';
             html += '</div></div>';
         }
 
-        // Ideas feed
-        html += '<div class="section"><h2>Group Ideas (' + ideas.length + ')</h2><div class="idea-feed">';
-        if (ideas.length > 0) {
-            ideas.forEach(function(idea) {
-                var clerkBadge = idea.clerk_key ? ' <span style="background:rgba(124,77,255,0.2);color:#b388ff;padding:1px 6px;border-radius:8px;font-size:0.65rem;font-weight:600;text-transform:uppercase;">' + escHtml(idea.clerk_key) + '</span>' : '';
-                html += '<div class="idea">' +
-                    '<div class="author">' + escHtml(idea.author_display || 'Anonymous') + clerkBadge + '</div>' +
-                    '<div class="content">' + escHtml(idea.content).substring(0, 300) + (idea.content.length > 300 ? '...' : '') + '</div>' +
-                    '<div class="idea-meta">' +
-                        '<span>' + idea.category + '</span>' +
-                        '<span>' + idea.status + '</span>' +
-                        (idea.link_count > 0 ? '<span>🔗 ' + idea.link_count + ' links</span>' : '') +
-                    '</div>' +
-                '</div>';
-            });
-        } else {
-            html += '<div class="empty">No ideas yet. Members can submit ideas from Quick Capture or Brainstorm.</div>';
-        }
-        html += '</div></div>';
+        // Ideas — link to Talk page
+        html += '<div class="section"><h2>Group Ideas (' + ideas.length + ')</h2>' +
+            '<a href="index.php?group=' + g.id + '" class="btn btn-secondary" style="margin-top:4px;">View ideas in Talk &rarr;</a>' +
+        '</div>';
 
         el.innerHTML = html;
 

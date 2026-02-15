@@ -237,12 +237,74 @@ function handleSave($pdo, $input, $userId) {
 
     $id = (int)$pdo->lastInsertId();
 
+    // Auto-classify via AI if requested
+    $autoClassify = (bool)($input['auto_classify'] ?? false);
+    if ($autoClassify && $content !== '') {
+        try {
+            require_once __DIR__ . '/../config-claude.php';
+            $classifyPrompt = "You are a classifier for citizen ideas. Given this text, respond with ONLY a JSON object on a single line, nothing else:\n{\"category\": \"idea|decision|todo|note|question\", \"tags\": \"2-5 comma-separated keywords\"}";
+            $classifyMessages = [['role' => 'user', 'content' => $content]];
+            $classifyResponse = talkCallClaudeAPI($classifyPrompt, $classifyMessages, 'claude-haiku-4-5-20251001', false);
+
+            if (!isset($classifyResponse['error'])) {
+                $aiText = '';
+                foreach (($classifyResponse['content'] ?? []) as $block) {
+                    if ($block['type'] === 'text') $aiText .= $block['text'];
+                }
+                // Extract JSON from response (handle markdown code blocks)
+                $aiText = trim($aiText);
+                if (preg_match('/\{[^}]+\}/', $aiText, $jsonMatch)) {
+                    $classified = json_decode($jsonMatch[0], true);
+                    if ($classified) {
+                        $newCategory = $classified['category'] ?? null;
+                        $newTags = $classified['tags'] ?? null;
+                        $validCategories2 = ['idea', 'decision', 'todo', 'note', 'question'];
+                        if ($newCategory && in_array($newCategory, $validCategories2)) {
+                            $category = $newCategory;
+                        }
+                        if ($newTags) {
+                            $tags = $newTags;
+                        }
+                        $pdo->prepare("UPDATE idea_log SET category = ?, tags = ? WHERE id = ?")
+                            ->execute([$category, $tags, $id]);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Classification failed — idea is saved with defaults, continue
+        }
+    }
+
+    // Build enriched response for stream rendering
+    $authorDisplay = 'You';
+    if ($userId) {
+        $uStmt = $pdo->prepare("SELECT first_name, last_name, username, show_first_name, show_last_name FROM users WHERE user_id = ?");
+        $uStmt->execute([$userId]);
+        $uRow = $uStmt->fetch();
+        if ($uRow) $authorDisplay = getDisplayName($uRow);
+    }
+
     return [
         'success'    => true,
         'id'         => $id,
         'session_id' => $sessionId,
         'status'     => 'raw',
-        'message'    => ucfirst($category) . ' #' . $id . ' saved (raw)'
+        'message'    => ucfirst($category) . ' #' . $id . ' saved (raw)',
+        'idea'       => [
+            'id'             => $id,
+            'content'        => $content,
+            'category'       => $category,
+            'tags'           => $tags,
+            'status'         => 'raw',
+            'source'         => $source,
+            'group_id'       => $groupId,
+            'shareable'      => $shareable,
+            'clerk_key'      => $clerkKey,
+            'created_at'     => date('Y-m-d H:i:s'),
+            'author_display' => $authorDisplay,
+            'children_count' => 0,
+            'edit_count'     => 0
+        ]
     ];
 }
 
@@ -255,21 +317,48 @@ function handleHistory($pdo, $userId) {
     $status    = $_GET['status']     ?? null;
     $limit     = min((int)($_GET['limit'] ?? 50), 200);
     $includeAi = (bool)($_GET['include_ai'] ?? false);
+    $groupId   = isset($_GET['group_id']) && $_GET['group_id'] !== '' ? (int)$_GET['group_id'] : null;
+    $since     = $_GET['since']  ?? null;
+    $before    = $_GET['before'] ?? null;
+    $excludeChat = !isset($_GET['include_chat']);
 
     if ($limit < 1) $limit = 50;
 
     $where = ['i.deleted_at IS NULL'];
     $params = [];
+    $userRole = null;
 
-    // User-scoped by default if logged in
-    if ($userId && !$sessionId) {
+    // Group-scoped or personal-scoped
+    if ($groupId !== null) {
+        // Verify membership for closed groups
+        if ($userId) {
+            $stmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ?");
+            $stmt->execute([$groupId, $userId]);
+            $membership = $stmt->fetch();
+            $userRole = $membership ? $membership['role'] : null;
+        }
+        // Check group access
+        $stmt = $pdo->prepare("SELECT access_level FROM idea_groups WHERE id = ?");
+        $stmt->execute([$groupId]);
+        $group = $stmt->fetch();
+        if ($group && $group['access_level'] === 'closed' && !$userRole) {
+            return ['success' => false, 'error' => 'This group is closed'];
+        }
+
+        $where[] = 'i.group_id = :group_id';
+        $params[':group_id'] = $groupId;
+    } elseif ($userId && !$sessionId) {
+        // Personal mode: user's own ideas with no group
         $where[] = 'i.user_id = :user_id';
+        $where[] = 'i.group_id IS NULL';
         $params[':user_id'] = $userId;
-    }
-
-    if ($sessionId) {
+    } elseif ($sessionId) {
         $where[] = 'i.session_id = :session_id';
         $params[':session_id'] = $sessionId;
+    }
+
+    if ($excludeChat) {
+        $where[] = "i.category != 'chat'";
     }
 
     if ($category) {
@@ -282,21 +371,33 @@ function handleHistory($pdo, $userId) {
         $params[':status'] = $status;
     }
 
+    if ($since) {
+        $where[] = 'i.created_at > :since';
+        $params[':since'] = $since;
+    }
+
+    if ($before) {
+        $where[] = 'i.created_at < :before';
+        $params[':before'] = $before;
+    }
+
     $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+    $orderDir = $since ? 'ASC' : 'DESC';
 
     $aiColumn = $includeAi ? ', i.ai_response' : '';
 
     $sql = "
         SELECT i.id, i.user_id, i.session_id, i.parent_id,
                i.content{$aiColumn}, i.category, i.status, i.tags, i.source,
-               i.shareable, i.clerk_key,
+               i.shareable, i.clerk_key, i.group_id, i.edit_count,
                i.created_at, i.updated_at,
-               u.first_name AS user_first_name,
+               u.first_name, u.last_name, u.username AS user_username,
+               u.show_first_name, u.show_last_name,
                (SELECT COUNT(*) FROM idea_log c WHERE c.parent_id = i.id AND c.deleted_at IS NULL) AS children_count
         FROM idea_log i
         LEFT JOIN users u ON i.user_id = u.user_id
         {$whereClause}
-        ORDER BY i.created_at DESC
+        ORDER BY i.created_at {$orderDir}
         LIMIT {$limit}
     ";
 
@@ -304,10 +405,21 @@ function handleHistory($pdo, $userId) {
     $stmt->execute($params);
     $ideas = $stmt->fetchAll();
 
-    return [
+    // Compute display names
+    foreach ($ideas as &$idea) {
+        $idea['author_display'] = $idea['clerk_key'] ? 'AI' : getDisplayName($idea);
+        unset($idea['first_name'], $idea['last_name'], $idea['user_username'], $idea['show_first_name'], $idea['show_last_name']);
+    }
+    unset($idea);
+
+    $result = [
         'success' => true,
         'ideas'   => $ideas
     ];
+    if ($groupId !== null) {
+        $result['user_role'] = $userRole;
+    }
+    return $result;
 }
 
 
