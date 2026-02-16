@@ -212,7 +212,8 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             font-size: 0.8rem;
         }
         .card-author { color: #80d8ff; font-weight: 600; }
-        .card-id { color: #aaa; font-weight: 400; margin-right: 6px; font-size: 0.8rem; }
+        .card-id { color: #aaa; font-weight: 400; margin-right: 6px; font-size: 0.8rem; cursor: pointer; }
+        .card-id:hover { color: #eee; text-decoration: underline; }
         .card-time { color: #999; }
 
         .card-content {
@@ -696,7 +697,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         var timeStr = formatTime(idea.created_at);
 
         // Header
-        var idBadge = idea.id ? '<span class="card-id">#' + idea.id + '</span>' : '';
+        var idBadge = idea.id ? '<span class="card-id" onclick="replyTo(' + idea.id + ')" title="Reply to #' + idea.id + '">#' + idea.id + '</span>' : '';
         var header = '<div class="card-header"><span class="card-author">' + idBadge + escHtml(authorName) + clerkBadge + editedTag + '</span><span class="card-time">' + timeStr + '</span></div>';
 
         // Content
@@ -1149,6 +1150,25 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         });
     } else {
         micBtn.style.display = 'none';
+    }
+
+    // ── Reply to idea ──
+    function replyTo(ideaId) {
+        var prefix = 're: #' + ideaId + ' - ';
+        // Don't double-prepend if already replying to this idea
+        if (ideaInput.value.indexOf(prefix) === 0) {
+            ideaInput.focus();
+            return;
+        }
+        ideaInput.value = prefix;
+        ideaInput.focus();
+        // Place cursor at end
+        ideaInput.setSelectionRange(prefix.length, prefix.length);
+        // Auto-resize
+        ideaInput.style.height = 'auto';
+        ideaInput.style.height = Math.min(ideaInput.scrollHeight, 120) + 'px';
+        // Scroll input into view on mobile
+        ideaInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     // ── Helpers ──
