@@ -65,9 +65,9 @@ function parseBrowserName($ua) {
     if (strpos($ua, 'Chrome/') !== false) return 'Chrome';
     if (strpos($ua, 'Firefox/') !== false) return 'Firefox';
     if (strpos($ua, 'Safari/') !== false) return 'Safari';
-    if (strpos($ua, 'Windows PC') !== false) return 'Desktop';
-    if (strpos($ua, 'iPhone') !== false) return 'iOS';
-    return 'Other';
+    if (strpos($ua, 'iPhone') !== false) return 'Safari (iOS)';
+    if (strpos($ua, 'Android') !== false) return 'Android';
+    return '-';
 }
 
 // --- Handle logout FIRST (before any auth) ---
