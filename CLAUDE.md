@@ -165,6 +165,8 @@ $dbUser = getUser($pdo);
 2. `tpb_user_id` cookie → `users` table (direct lookup fallback)
 3. Returns full user array or `false`
 
+All lookups filter `deleted_at IS NULL` — soft-deleted users cannot log in.
+
 ### Identity levels (from `identity_levels` table)
 | Level | Name | Meaning |
 |-------|------|---------|
@@ -175,15 +177,24 @@ $dbUser = getUser($pdo);
 
 Access via `$dbUser['identity_level_id']`.
 
+### Soft delete
+Users are **never** hard-deleted. `admin.php` sets `users.deleted_at` timestamp instead.
+- Devices deactivated (`user_devices.is_active = 0`)
+- Thoughts hidden (`user_thoughts.status = 'draft'`)
+- `getUser($pdo)` returns `false` for deleted users (filtered in all 3 lookup functions)
+- Restore via admin dashboard clears `deleted_at` (devices/thoughts need manual re-enable)
+- Dashboard stats and queries exclude `deleted_at IS NOT NULL`
+
 ### NEVER do any of these
 1. **NEVER** read `$_COOKIE['tpb_user_id']` directly for auth — use `getUser($pdo)`
 2. **NEVER** query `users.session_id` — legacy column; `getUser()` uses `user_devices`
 3. **NEVER** write inline user lookup queries — `getUser()` handles all auth paths
 4. **NEVER** hardcode database credentials — always `$config = require __DIR__ . '/../config.php';`
+5. **NEVER** hard-delete users — use soft delete (`deleted_at`) via admin dashboard
 
 ### Exceptions (files that legitimately skip getUser)
 - **Token-based**: `verify-magic-link.php`, `verify-parent-consent.php`, `verify-phone-link.php` (auth by URL token, not cookie)
 - **Public read-only**: `api/get-thoughts.php` (no auth needed)
-- **Admin**: `admin.php` (separate session auth — TODO: migrate to proper admin role system)
+- **Admin**: `admin.php` (hybrid auth: role-based via `user_role_membership` + password fallback from config)
 - **Test**: `tests/talk-harness.php` (uses `tpb_user_id` cookie fallback deliberately)
 - **Separate apps**: `0t/*.php` (People Power), `tpb-claude/api/claude-chat.php` (AI subsystem)
