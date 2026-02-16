@@ -58,6 +58,18 @@ function logAdminAction($pdo, $adminUserId, $actionType, $targetType, $targetId,
     }
 }
 
+function parseBrowserName($ua) {
+    if (!$ua) return '-';
+    if (strpos($ua, 'Edg/') !== false) return 'Edge';
+    if (strpos($ua, 'OPR/') !== false || strpos($ua, 'Opera') !== false) return 'Opera';
+    if (strpos($ua, 'Chrome/') !== false) return 'Chrome';
+    if (strpos($ua, 'Firefox/') !== false) return 'Firefox';
+    if (strpos($ua, 'Safari/') !== false) return 'Safari';
+    if (strpos($ua, 'Windows PC') !== false) return 'Desktop';
+    if (strpos($ua, 'iPhone') !== false) return 'iOS';
+    return 'Other';
+}
+
 // --- Handle logout FIRST (before any auth) ---
 if (isset($_GET['logout'])) {
     unset($_SESSION['tpb_admin']);
@@ -433,6 +445,7 @@ $users = $pdo->query("
            (SELECT COUNT(*) FROM user_thoughts WHERE user_id = u.user_id AND status = 'published') as thought_count,
            (SELECT COUNT(*) FROM user_thought_votes WHERE user_id = u.user_id) as vote_count,
            (SELECT COUNT(*) FROM user_devices WHERE user_id = u.user_id AND is_active = 1) as active_devices,
+           (SELECT device_name FROM user_devices WHERE user_id = u.user_id AND is_active = 1 ORDER BY last_active_at DESC LIMIT 1) as last_ua,
            (SELECT GROUP_CONCAT(ur.role_name SEPARATOR ', ')
             FROM user_role_membership urm
             JOIN user_roles ur ON urm.role_id = ur.role_id
@@ -1147,6 +1160,7 @@ $adminActions = $pdo->query("
                         <th>Thoughts</th>
                         <th>Votes</th>
                         <th>Devices</th>
+                        <th>Browser</th>
                         <th>Joined</th>
                         <th>Actions</th>
                     </tr>
@@ -1183,6 +1197,7 @@ $adminActions = $pdo->query("
                             <td><?= $user['thought_count'] ?></td>
                             <td><?= $user['vote_count'] ?></td>
                             <td><?= $user['active_devices'] ?></td>
+                            <td><?= parseBrowserName($user['last_ua'] ?? '') ?></td>
                             <td><?= date('M j', strtotime($user['created_at'])) ?></td>
                             <td>
                                 <?php if ($user['deleted_at']): ?>
