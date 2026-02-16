@@ -344,6 +344,47 @@ $stats['pending_volunteers'] = (int)$pdo->query("SELECT COUNT(*) FROM volunteer_
 $stats['approved_volunteers'] = (int)$pdo->query("SELECT COUNT(*) FROM volunteer_applications WHERE status = 'accepted'")->fetchColumn();
 $stats['open_tasks'] = (int)$pdo->query("SELECT COUNT(*) FROM tasks WHERE status = 'open'")->fetchColumn();
 
+// Bot stats
+$botStats = [];
+try {
+    $botStats['attempts_24h'] = (int)$pdo->query("SELECT COUNT(*) FROM bot_attempts WHERE created_at > NOW() - INTERVAL 24 HOUR")->fetchColumn();
+    $botStats['attempts_7d'] = (int)$pdo->query("SELECT COUNT(*) FROM bot_attempts WHERE created_at > NOW() - INTERVAL 7 DAY")->fetchColumn();
+    $botStats['unique_ips_24h'] = (int)$pdo->query("SELECT COUNT(DISTINCT ip_address) FROM bot_attempts WHERE created_at > NOW() - INTERVAL 24 HOUR")->fetchColumn();
+    $topFormStmt = $pdo->query("SELECT form_name, COUNT(*) as cnt FROM bot_attempts WHERE created_at > NOW() - INTERVAL 7 DAY GROUP BY form_name ORDER BY cnt DESC LIMIT 1");
+    $topForm = $topFormStmt->fetch();
+    $botStats['top_form'] = $topForm ? $topForm['form_name'] . ' (' . $topForm['cnt'] . ')' : 'none';
+} catch (PDOException $e) {
+    $botStats = ['attempts_24h' => 0, 'attempts_7d' => 0, 'unique_ips_24h' => 0, 'top_form' => 'n/a'];
+}
+
+// Bot attempts (recent 100)
+$botAttempts = [];
+try {
+    $botAttempts = $pdo->query("
+        SELECT ip_address, form_name, honeypot_filled, too_fast, missing_referrer,
+               user_agent, created_at
+        FROM bot_attempts
+        ORDER BY created_at DESC
+        LIMIT 100
+    ")->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {}
+
+// Top offender IPs (3+ attempts in 7 days)
+$botOffenders = [];
+try {
+    $botOffenders = $pdo->query("
+        SELECT ip_address, COUNT(*) as attempt_count,
+               MAX(created_at) as last_seen,
+               GROUP_CONCAT(DISTINCT form_name) as forms_targeted
+        FROM bot_attempts
+        WHERE created_at > NOW() - INTERVAL 7 DAY
+        GROUP BY ip_address
+        HAVING attempt_count >= 3
+        ORDER BY attempt_count DESC
+        LIMIT 50
+    ")->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {}
+
 // --- Tab data ---
 $tab = $_GET['tab'] ?? 'dashboard';
 
@@ -773,6 +814,7 @@ $adminActions = $pdo->query("
         <a href="?tab=thoughts" class="<?= $tab === 'thoughts' ? 'active' : '' ?>">Thoughts</a>
         <a href="?tab=users" class="<?= $tab === 'users' ? 'active' : '' ?>">Users</a>
         <a href="?tab=activity" class="<?= $tab === 'activity' ? 'active' : '' ?>">Activity</a>
+        <a href="?tab=bot" class="<?= $tab === 'bot' ? 'active' : '' ?>">Bot <?= $botStats['attempts_24h'] > 0 ? '<span style="background:#ef5350;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.8em;margin-left:5px;">'.$botStats['attempts_24h'].'</span>' : '' ?></a>
     </div>
 
     <div class="container">
@@ -1186,6 +1228,90 @@ $adminActions = $pdo->query("
                     <?php endforeach; ?>
                 </tbody>
             </table></div>
+
+        <?php elseif ($tab === 'bot'): ?>
+            <!-- BOT TAB -->
+            <h2 class="section-title">Bot Detection</h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="number"><?= $botStats['attempts_24h'] ?></div>
+                    <div class="label">Attempts (24h)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number"><?= $botStats['attempts_7d'] ?></div>
+                    <div class="label">Attempts (7d)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number"><?= $botStats['unique_ips_24h'] ?></div>
+                    <div class="label">Unique IPs (24h)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" style="font-size:1.2em;"><?= htmlspecialchars($botStats['top_form']) ?></div>
+                    <div class="label">Top Form (7d)</div>
+                </div>
+            </div>
+
+            <?php if ($botOffenders): ?>
+            <h2 class="section-title">Top Offenders (7d)</h2>
+            <div class="table-wrap"><table>
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Attempts</th>
+                        <th>Last Seen</th>
+                        <th>Forms Targeted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($botOffenders as $offender): ?>
+                        <tr>
+                            <td><code><?= htmlspecialchars($offender['ip_address']) ?></code></td>
+                            <td style="color: <?= $offender['attempt_count'] >= 10 ? '#ef5350' : '#ff9800' ?>; font-weight: bold;"><?= $offender['attempt_count'] ?></td>
+                            <td><?= date('M j, g:i a', strtotime($offender['last_seen'])) ?></td>
+                            <td><?= htmlspecialchars($offender['forms_targeted']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table></div>
+            <?php endif; ?>
+
+            <h2 class="section-title">Recent Attempts</h2>
+            <?php if (empty($botAttempts)): ?>
+                <p style="color: #888;">No bot attempts recorded.</p>
+            <?php else: ?>
+            <div class="table-wrap"><table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>IP</th>
+                        <th>Form</th>
+                        <th>Triggers</th>
+                        <th>User Agent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($botAttempts as $attempt):
+                        $triggers = [];
+                        if ($attempt['honeypot_filled']) $triggers[] = 'honeypot';
+                        if ($attempt['too_fast']) $triggers[] = 'too_fast';
+                        if ($attempt['missing_referrer']) $triggers[] = 'no_referrer';
+                    ?>
+                        <tr>
+                            <td><?= date('M j, g:i a', strtotime($attempt['created_at'])) ?></td>
+                            <td><code><?= htmlspecialchars($attempt['ip_address']) ?></code></td>
+                            <td><?= htmlspecialchars($attempt['form_name']) ?></td>
+                            <td>
+                                <?php foreach ($triggers as $t): ?>
+                                    <span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.75em;margin:1px;background:<?= $t === 'honeypot' ? 'rgba(239,83,80,0.2);color:#ef5350' : ($t === 'too_fast' ? 'rgba(255,152,0,0.2);color:#ff9800' : 'rgba(158,158,158,0.2);color:#999') ?>;"><?= $t ?></span>
+                                <?php endforeach; ?>
+                            </td>
+                            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<?= htmlspecialchars($attempt['user_agent']) ?>"><?= htmlspecialchars(substr($attempt['user_agent'], 0, 60)) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table></div>
+            <?php endif; ?>
 
         <?php elseif ($tab === 'help'): ?>
             <!-- HELP TAB -->

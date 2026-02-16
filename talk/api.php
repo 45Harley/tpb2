@@ -148,6 +148,10 @@ try {
             echo json_encode(handleCheckStaleness($pdo, $userId));
             break;
 
+        case 'vote':
+            echo json_encode(handleVote($pdo, $input, $userId));
+            break;
+
         // Phase 5: Group Invites
         case 'invite_to_group':
             echo json_encode(handleInviteToGroup($pdo, $input, $userId, $config));
@@ -169,6 +173,14 @@ try {
 // ── Save ───────────────────────────────────────────────────────────
 
 function handleSave($pdo, $input, $userId) {
+    // Bot detection
+    require_once __DIR__ . '/../api/bot-detect.php';
+    $formLoadTime = isset($input['_form_load_time']) ? (int)$input['_form_load_time'] : null;
+    $botCheck = checkForBot($pdo, 'talk_save', $input, $formLoadTime);
+    if ($botCheck['is_bot']) {
+        return ['success' => true, 'id' => 0, 'message' => 'Saved'];
+    }
+
     // Support both JSON body and GET params (backward compat)
     $content   = trim($input['content']   ?? $_GET['content']   ?? '');
     $category  = $input['category']  ?? $_GET['category']  ?? 'idea';
@@ -308,7 +320,9 @@ function handleSave($pdo, $input, $userId) {
             'created_at'     => date('Y-m-d H:i:s'),
             'author_display' => $authorDisplay,
             'children_count' => 0,
-            'edit_count'     => 0
+            'edit_count'     => 0,
+            'agree_count'    => 0,
+            'disagree_count' => 0
         ]
     ];
 }
@@ -395,6 +409,7 @@ function handleHistory($pdo, $userId) {
         SELECT i.id, i.user_id, i.session_id, i.parent_id,
                i.content{$aiColumn}, i.category, i.status, i.tags, i.source,
                i.shareable, i.clerk_key, i.group_id, i.edit_count,
+               i.agree_count, i.disagree_count,
                i.created_at, i.updated_at,
                u.first_name, u.last_name, u.username AS user_username,
                u.show_first_name, u.show_last_name,
@@ -419,6 +434,14 @@ function handleHistory($pdo, $userId) {
             $pStmt->execute([$idea['parent_id']]);
             $parent = $pStmt->fetch();
             if ($parent) $idea['user_id'] = $parent['user_id'];
+        }
+        // Lookup user's vote on this idea
+        $idea['user_vote'] = null;
+        if ($userId && !$idea['clerk_key'] && $idea['category'] !== 'digest') {
+            $vStmt = $pdo->prepare("SELECT vote_type FROM idea_votes WHERE idea_id = ? AND user_id = ?");
+            $vStmt->execute([$idea['id'], $userId]);
+            $uv = $vStmt->fetch();
+            if ($uv) $idea['user_vote'] = $uv['vote_type'];
         }
         unset($idea['first_name'], $idea['last_name'], $idea['user_username'], $idea['show_first_name'], $idea['show_last_name']);
     }
@@ -1133,6 +1156,84 @@ function talkCallClaudeAPI($systemPrompt, $messages, $model = null, $enableWebSe
     }
 
     return json_decode($response, true);
+}
+
+
+// ── Vote ──────────────────────────────────────────────────────────
+
+function handleVote($pdo, $input, $userId) {
+    if (!$userId) {
+        return ['success' => false, 'error' => 'Log in to vote'];
+    }
+
+    $ideaId = (int)($input['idea_id'] ?? 0);
+    $voteType = $input['vote_type'] ?? '';
+
+    if (!$ideaId) {
+        return ['success' => false, 'error' => 'idea_id is required'];
+    }
+    if (!in_array($voteType, ['agree', 'disagree'])) {
+        return ['success' => false, 'error' => 'vote_type must be "agree" or "disagree"'];
+    }
+
+    // Verify idea exists and is votable (not AI-generated, not digest/crystal)
+    $stmt = $pdo->prepare("SELECT id, clerk_key, category FROM idea_log WHERE id = ? AND deleted_at IS NULL");
+    $stmt->execute([$ideaId]);
+    $idea = $stmt->fetch();
+    if (!$idea) {
+        return ['success' => false, 'error' => 'Idea not found'];
+    }
+    if ($idea['clerk_key']) {
+        return ['success' => false, 'error' => 'Cannot vote on AI-generated content'];
+    }
+    if ($idea['category'] === 'digest') {
+        return ['success' => false, 'error' => 'Cannot vote on digests'];
+    }
+
+    // Check existing vote
+    $stmt = $pdo->prepare("SELECT vote_id, vote_type FROM idea_votes WHERE idea_id = ? AND user_id = ?");
+    $stmt->execute([$ideaId, $userId]);
+    $existing = $stmt->fetch();
+
+    $userVote = null;
+
+    if ($existing) {
+        if ($existing['vote_type'] === $voteType) {
+            // Same vote — toggle off
+            $pdo->prepare("DELETE FROM idea_votes WHERE vote_id = ?")->execute([$existing['vote_id']]);
+            $col = $voteType === 'agree' ? 'agree_count' : 'disagree_count';
+            $pdo->prepare("UPDATE idea_log SET {$col} = GREATEST({$col} - 1, 0) WHERE id = ?")->execute([$ideaId]);
+            $userVote = null;
+        } else {
+            // Different vote — switch
+            $pdo->prepare("UPDATE idea_votes SET vote_type = ?, voted_at = NOW() WHERE vote_id = ?")->execute([$voteType, $existing['vote_id']]);
+            if ($voteType === 'agree') {
+                $pdo->prepare("UPDATE idea_log SET agree_count = agree_count + 1, disagree_count = GREATEST(disagree_count - 1, 0) WHERE id = ?")->execute([$ideaId]);
+            } else {
+                $pdo->prepare("UPDATE idea_log SET disagree_count = disagree_count + 1, agree_count = GREATEST(agree_count - 1, 0) WHERE id = ?")->execute([$ideaId]);
+            }
+            $userVote = $voteType;
+        }
+    } else {
+        // New vote
+        $pdo->prepare("INSERT INTO idea_votes (idea_id, user_id, vote_type) VALUES (?, ?, ?)")->execute([$ideaId, $userId, $voteType]);
+        $col = $voteType === 'agree' ? 'agree_count' : 'disagree_count';
+        $pdo->prepare("UPDATE idea_log SET {$col} = {$col} + 1 WHERE id = ?")->execute([$ideaId]);
+        $userVote = $voteType;
+    }
+
+    // Return updated counts
+    $stmt = $pdo->prepare("SELECT agree_count, disagree_count FROM idea_log WHERE id = ?");
+    $stmt->execute([$ideaId]);
+    $counts = $stmt->fetch();
+
+    return [
+        'success' => true,
+        'idea_id' => $ideaId,
+        'user_vote' => $userVote,
+        'agree_count' => (int)$counts['agree_count'],
+        'disagree_count' => (int)$counts['disagree_count']
+    ];
 }
 
 

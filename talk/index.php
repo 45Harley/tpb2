@@ -332,6 +332,24 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         }
         .load-more button:hover { background: rgba(255,255,255,0.12); color: #eee; }
 
+        .vote-btn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #888;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .vote-btn:hover { border-color: rgba(255,255,255,0.25); color: #ccc; }
+        .vote-btn.active-agree { border-color: #4caf50; color: #4caf50; background: rgba(76,175,80,0.1); }
+        .vote-btn.active-disagree { border-color: #ef5350; color: #ef5350; background: rgba(239,83,80,0.1); }
+        .vote-btn .count { font-size: 0.75rem; }
+
         /* ── Footer Bar ── */
         .footer-bar {
             display: none;
@@ -400,6 +418,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
 <?php endif; ?>
 
     <div class="input-area">
+        <div style="position:absolute;left:-9999px;"><input type="text" id="talkHoneypot" tabindex="-1" autocomplete="off"></div>
 <?php if (!$dbUser): ?>
         <div class="anon-nudge">
             Ideas are tied to this browser tab. <a href="/join.php">Create an account</a> or <a href="/login.php">log in</a> to keep your work.
@@ -438,6 +457,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
     var aiRespond = localStorage.getItem('tpb_talk_ai_respond') === '1';
     var sessionId = sessionStorage.getItem('tpb_session');
     if (!sessionId) { sessionId = crypto.randomUUID(); sessionStorage.setItem('tpb_session', sessionId); }
+    var formLoadTime = Math.floor(Date.now() / 1000);
     var loadedIdeas = [];
     var pollTimer = null;
     var userRole = null;
@@ -512,7 +532,9 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
                     source: 'web',
                     session_id: sessionId,
                     group_id: groupId,
-                    auto_classify: true
+                    auto_classify: true,
+                    website_url: document.getElementById('talkHoneypot').value,
+                    _form_load_time: formLoadTime
                 })
             });
             var data = await resp.json();
@@ -640,6 +662,14 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             tagsHtml += '<span class="status-badge ' + idea.status + '">' + idea.status + '</span>';
         }
 
+        var voteHtml = '';
+        if (!idea.clerk_key && idea.category !== 'digest') {
+            var agreeActive = idea.user_vote === 'agree' ? ' active-agree' : '';
+            var disagreeActive = idea.user_vote === 'disagree' ? ' active-disagree' : '';
+            voteHtml = '<button class="vote-btn' + agreeActive + '" onclick="voteIdea(' + idea.id + ',\'agree\')" title="Agree">\ud83d\udc4d <span class="count" id="agree-' + idea.id + '">' + (idea.agree_count || 0) + '</span></button>' +
+                       '<button class="vote-btn' + disagreeActive + '" onclick="voteIdea(' + idea.id + ',\'disagree\')" title="Disagree">\ud83d\udc4e <span class="count" id="disagree-' + idea.id + '">' + (idea.disagree_count || 0) + '</span></button>';
+        }
+
         var actionsHtml = '';
         if (isOwn && !idea.clerk_key) {
             // Own human ideas: edit, delete, promote
@@ -655,7 +685,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             actionsHtml += '<button class="delete-btn" onclick="deleteIdea(' + idea.id + ')" title="Delete">&#x2715;</button>';
         }
 
-        var footer = '<div class="card-footer"><div class="card-tags">' + tagsHtml + '</div><div class="card-actions">' + actionsHtml + '</div></div>';
+        var footer = '<div class="card-footer"><div class="card-tags">' + tagsHtml + '</div><div class="card-actions">' + voteHtml + actionsHtml + '</div></div>';
 
         card.innerHTML = header + content + footer;
         return card;
@@ -945,6 +975,41 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
 
         btn.disabled = false;
         btn.textContent = 'Crystallize';
+    }
+
+    // ── Vote ──
+    async function voteIdea(ideaId, voteType) {
+        if (!currentUser) {
+            showToast('Log in to vote', 'error');
+            return;
+        }
+        try {
+            var resp = await fetch('api.php?action=vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idea_id: ideaId, vote_type: voteType })
+            });
+            var data = await resp.json();
+            if (data.success) {
+                // Update the idea in loadedIdeas
+                var idea = loadedIdeas.find(function(i) { return i.id === ideaId; });
+                if (idea) {
+                    idea.agree_count = data.agree_count;
+                    idea.disagree_count = data.disagree_count;
+                    idea.user_vote = data.user_vote;
+                    // Re-render card in place
+                    var oldCard = document.getElementById('idea-' + ideaId);
+                    if (oldCard) {
+                        var newCard = renderIdeaCard(idea);
+                        oldCard.replaceWith(newCard);
+                    }
+                }
+            } else {
+                showToast(data.error || 'Vote failed', 'error');
+            }
+        } catch (err) {
+            showToast('Network error', 'error');
+        }
     }
 
     // ── Footer visibility ──
