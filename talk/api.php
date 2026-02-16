@@ -1577,6 +1577,9 @@ function handleCreateGroup($pdo, $input, $userId) {
     $tags        = trim($input['tags'] ?? '') ?: null;
     $accessLevel = $input['access_level'] ?? 'observable';
     $parentId    = isset($input['parent_group_id']) ? (int)$input['parent_group_id'] : null;
+    $scope       = $input['scope'] ?? null;
+    $stateId     = isset($input['state_id']) ? (int)$input['state_id'] : null;
+    $townId      = isset($input['town_id']) ? (int)$input['town_id'] : null;
 
     if ($name === '') {
         return ['success' => false, 'error' => 'Group name is required'];
@@ -1588,6 +1591,34 @@ function handleCreateGroup($pdo, $input, $userId) {
     $validAccess = ['open', 'closed', 'observable'];
     if (!in_array($accessLevel, $validAccess)) {
         $accessLevel = 'observable';
+    }
+
+    // Validate scope
+    $validScopes = ['town', 'state', 'federal'];
+    if ($scope && !in_array($scope, $validScopes)) {
+        return ['success' => false, 'error' => 'scope must be town, state, or federal'];
+    }
+
+    // Validate geo-scope consistency
+    if ($scope === 'town' && !$townId) {
+        return ['success' => false, 'error' => 'town_id is required for town-scoped groups'];
+    }
+    if ($scope === 'state' && !$stateId) {
+        return ['success' => false, 'error' => 'state_id is required for state-scoped groups'];
+    }
+    if ($scope === 'town' && !$stateId) {
+        // Look up state from town
+        $stmt = $pdo->prepare("SELECT state_id FROM towns WHERE town_id = ?");
+        $stmt->execute([$townId]);
+        $townRow = $stmt->fetch();
+        if (!$townRow) {
+            return ['success' => false, 'error' => 'town_id not found'];
+        }
+        $stateId = (int)$townRow['state_id'];
+    }
+    if (!$scope) {
+        $stateId = null;
+        $townId = null;
     }
 
     // Validate parent group if provided
@@ -1605,16 +1636,19 @@ function handleCreateGroup($pdo, $input, $userId) {
 
     // Create the group
     $stmt = $pdo->prepare("
-        INSERT INTO idea_groups (parent_group_id, name, description, tags, access_level, created_by)
-        VALUES (:parent, :name, :desc, :tags, :access, :user)
+        INSERT INTO idea_groups (parent_group_id, scope, state_id, town_id, name, description, tags, access_level, created_by)
+        VALUES (:parent, :scope, :state_id, :town_id, :name, :desc, :tags, :access, :user)
     ");
     $stmt->execute([
-        ':parent' => $parentId,
-        ':name'   => $name,
-        ':desc'   => $description,
-        ':tags'   => $tags,
-        ':access' => $accessLevel,
-        ':user'   => $userId
+        ':parent'   => $parentId,
+        ':scope'    => $scope,
+        ':state_id' => $stateId,
+        ':town_id'  => $townId,
+        ':name'     => $name,
+        ':desc'     => $description,
+        ':tags'     => $tags,
+        ':access'   => $accessLevel,
+        ':user'     => $userId
     ]);
     $groupId = (int)$pdo->lastInsertId();
 
@@ -1628,48 +1662,84 @@ function handleCreateGroup($pdo, $input, $userId) {
         'success'  => true,
         'group_id' => $groupId,
         'name'     => $name,
+        'scope'    => $scope,
+        'state_id' => $stateId,
+        'town_id'  => $townId,
         'role'     => 'facilitator'
     ];
 }
 
 function handleListGroups($pdo, $userId) {
-    $mine = (bool)($_GET['mine'] ?? false);
+    $mine    = (bool)($_GET['mine'] ?? false);
+    $scope   = $_GET['scope'] ?? null;
+    $stateId = isset($_GET['state_id']) ? (int)$_GET['state_id'] : null;
+    $townId  = isset($_GET['town_id']) ? (int)$_GET['town_id'] : null;
 
     if ($mine && !$userId) {
         return ['success' => false, 'error' => 'Login required for my groups'];
     }
 
+    // Build geo-filter clause
+    $geoWhere = '';
+    $geoParams = [];
+    if ($scope) {
+        $geoWhere .= ' AND g.scope = ?';
+        $geoParams[] = $scope;
+    }
+    if ($stateId) {
+        $geoWhere .= ' AND g.state_id = ?';
+        $geoParams[] = $stateId;
+    }
+    if ($townId) {
+        $geoWhere .= ' AND g.town_id = ?';
+        $geoParams[] = $townId;
+    }
+
+    // Resolve location names for display
+    $locationSelect = ",
+        s.state_name, s.abbreviation AS state_abbrev,
+        tw.town_name";
+    $locationJoin = "
+        LEFT JOIN states s ON g.state_id = s.state_id
+        LEFT JOIN towns tw ON g.town_id = tw.town_id";
+
     if ($mine) {
-        // Groups the user belongs to
         $stmt = $pdo->prepare("
             SELECT g.*, m.role AS user_role,
                    (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id AND status = 'active') AS member_count
+                   {$locationSelect}
             FROM idea_groups g
             JOIN idea_group_members m ON m.group_id = g.id AND m.user_id = ?
+            {$locationJoin}
+            WHERE 1=1 {$geoWhere}
             ORDER BY g.created_at DESC
         ");
-        $stmt->execute([$userId]);
+        $stmt->execute(array_merge([$userId], $geoParams));
     } else {
-        // All discoverable groups: open + observable + user's closed groups
         if ($userId) {
             $stmt = $pdo->prepare("
                 SELECT g.*,
                        m.role AS user_role,
                        (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id AND status = 'active') AS member_count
+                       {$locationSelect}
                 FROM idea_groups g
                 LEFT JOIN idea_group_members m ON m.group_id = g.id AND m.user_id = ?
-                WHERE g.access_level IN ('open', 'observable') OR m.user_id IS NOT NULL
+                {$locationJoin}
+                WHERE (g.access_level IN ('open', 'observable') OR m.user_id IS NOT NULL) {$geoWhere}
                 ORDER BY g.created_at DESC
             ");
-            $stmt->execute([$userId]);
+            $stmt->execute(array_merge([$userId], $geoParams));
         } else {
-            $stmt = $pdo->query("
+            $stmt = $pdo->prepare("
                 SELECT g.*, NULL AS user_role,
                        (SELECT COUNT(*) FROM idea_group_members WHERE group_id = g.id AND status = 'active') AS member_count
+                       {$locationSelect}
                 FROM idea_groups g
-                WHERE g.access_level IN ('open', 'observable')
+                {$locationJoin}
+                WHERE g.access_level IN ('open', 'observable') {$geoWhere}
                 ORDER BY g.created_at DESC
             ");
+            $stmt->execute($geoParams);
         }
     }
 
@@ -1685,8 +1755,14 @@ function handleGetGroup($pdo, $userId) {
         return ['success' => false, 'error' => 'group_id is required'];
     }
 
-    // Fetch group
-    $stmt = $pdo->prepare("SELECT * FROM idea_groups WHERE id = ?");
+    // Fetch group with location names
+    $stmt = $pdo->prepare("
+        SELECT g.*, s.state_name, s.abbreviation AS state_abbrev, tw.town_name
+        FROM idea_groups g
+        LEFT JOIN states s ON g.state_id = s.state_id
+        LEFT JOIN towns tw ON g.town_id = tw.town_id
+        WHERE g.id = ?
+    ");
     $stmt->execute([$groupId]);
     $group = $stmt->fetch();
 
