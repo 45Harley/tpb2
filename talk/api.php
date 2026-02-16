@@ -855,10 +855,50 @@ function handleBrainstorm($pdo, $input, $userId) {
     }
     $messages[] = ['role' => 'user', 'content' => $message];
 
-    $response = talkCallClaudeAPI($systemPrompt, $messages, $clerk['model'], false);
+    // Memory tool: enabled for logged-in users
+    $tools = null;
+    $betaHeader = null;
+    if ($userId) {
+        $tools = [['type' => 'memory_20250818', 'name' => 'memory']];
+        $betaHeader = 'context-management-2025-06-27';
+    }
+
+    $response = talkCallClaudeAPI($systemPrompt, $messages, $clerk['model'], false, $tools, $betaHeader);
 
     if (isset($response['error'])) {
         return ['success' => false, 'error' => $response['error']];
+    }
+
+    // Agentic loop: process memory tool calls until Claude gives final text
+    $maxLoops = 6;
+    $loopCount = 0;
+    while (($response['stop_reason'] ?? '') === 'tool_use' && $loopCount < $maxLoops) {
+        $loopCount++;
+        // Append assistant response to messages
+        $messages[] = ['role' => 'assistant', 'content' => $response['content']];
+
+        // Process each tool_use block
+        $toolResults = [];
+        foreach ($response['content'] as $block) {
+            if ($block['type'] === 'tool_use' && $block['name'] === 'memory') {
+                $result = handleMemoryTool($pdo, $userId, $block['input']);
+                $toolResults[] = [
+                    'type'        => 'tool_result',
+                    'tool_use_id' => $block['id'],
+                    'content'     => $result
+                ];
+            }
+        }
+
+        if (empty($toolResults)) break;
+
+        // Send tool results back
+        $messages[] = ['role' => 'user', 'content' => $toolResults];
+        $response = talkCallClaudeAPI($systemPrompt, $messages, $clerk['model'], false, $tools, $betaHeader);
+
+        if (isset($response['error'])) {
+            return ['success' => false, 'error' => $response['error']];
+        }
     }
 
     $claudeMessage = '';
@@ -1150,7 +1190,7 @@ function processBrainstormAction($pdo, $action, $userId, $sessionId, $shareable 
  * Call Anthropic Claude API -- simplified version for talk/brainstorm.
  * No web search by default (brainstorm clerk does not need it).
  */
-function talkCallClaudeAPI($systemPrompt, $messages, $model = null, $enableWebSearch = false) {
+function talkCallClaudeAPI($systemPrompt, $messages, $model = null, $enableWebSearch = false, $tools = null, $betaHeader = null) {
     if (!$model) $model = CLAUDE_MODEL;
 
     $data = [
@@ -1160,12 +1200,26 @@ function talkCallClaudeAPI($systemPrompt, $messages, $model = null, $enableWebSe
         'messages'   => $messages
     ];
 
+    if ($tools) {
+        $data['tools'] = $tools;
+    }
+
     if ($enableWebSearch) {
-        $data['tools'] = [[
+        $data['tools'] = $data['tools'] ?? [];
+        $data['tools'][] = [
             'type'     => 'web_search_20250305',
             'name'     => 'web_search',
             'max_uses' => 3
-        ]];
+        ];
+    }
+
+    $headers = [
+        'Content-Type: application/json',
+        'x-api-key: ' . ANTHROPIC_API_KEY,
+        'anthropic-version: 2023-06-01'
+    ];
+    if ($betaHeader) {
+        $headers[] = 'anthropic-beta: ' . $betaHeader;
     }
 
     $ch = curl_init(ANTHROPIC_API_URL);
@@ -1173,11 +1227,7 @@ function talkCallClaudeAPI($systemPrompt, $messages, $model = null, $enableWebSe
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($data),
-        CURLOPT_HTTPHEADER     => [
-            'Content-Type: application/json',
-            'x-api-key: ' . ANTHROPIC_API_KEY,
-            'anthropic-version: 2023-06-01'
-        ]
+        CURLOPT_HTTPHEADER     => $headers
     ]);
 
     $response = curl_exec($ch);
@@ -1190,6 +1240,164 @@ function talkCallClaudeAPI($systemPrompt, $messages, $model = null, $enableWebSe
     }
 
     return json_decode($response, true);
+}
+
+
+// -- Memory tool handler (per-user, DB-backed) -------------------------
+
+/**
+ * Process a memory tool call from Claude.
+ * Stores memory files per-user in user_ai_memory table.
+ *
+ * @param PDO $pdo
+ * @param int $userId
+ * @param array $input  The tool_use input from Claude
+ * @return string  Response text to send back as tool_result
+ */
+function handleMemoryTool($pdo, $userId, $input) {
+    $command = $input['command'] ?? '';
+    $path    = $input['path'] ?? '';
+
+    // Security: all paths must start with /memories
+    if ($path && !str_starts_with($path, '/memories')) {
+        return "Error: All paths must start with /memories";
+    }
+    // Block traversal
+    if ($path && (str_contains($path, '..') || str_contains($path, '%2e'))) {
+        return "Error: Invalid path";
+    }
+
+    switch ($command) {
+        case 'view':
+            return memoryView($pdo, $userId, $path, $input['view_range'] ?? null);
+        case 'create':
+            return memoryCreate($pdo, $userId, $path, $input['file_text'] ?? '');
+        case 'str_replace':
+            return memoryStrReplace($pdo, $userId, $path, $input['old_str'] ?? '', $input['new_str'] ?? '');
+        case 'insert':
+            return memoryInsert($pdo, $userId, $path, (int)($input['insert_line'] ?? 0), $input['insert_text'] ?? '');
+        case 'delete':
+            return memoryDelete($pdo, $userId, $path);
+        default:
+            return "Error: Unknown memory command: {$command}";
+    }
+}
+
+function memoryView($pdo, $userId, $path, $viewRange = null) {
+    if ($path === '/memories' || $path === '/memories/') {
+        // List directory
+        $stmt = $pdo->prepare("SELECT file_path, LENGTH(content) AS size FROM user_ai_memory WHERE user_id = ? ORDER BY file_path");
+        $stmt->execute([$userId]);
+        $files = $stmt->fetchAll();
+
+        $out = "Here're the files and directories up to 2 levels deep in /memories, excluding hidden items and node_modules:\n";
+        $totalSize = 0;
+        foreach ($files as $f) { $totalSize += $f['size']; }
+        $out .= formatSize($totalSize) . "\t/memories\n";
+        foreach ($files as $f) {
+            $out .= formatSize($f['size']) . "\t" . $f['file_path'] . "\n";
+        }
+        return $out;
+    }
+
+    // View specific file
+    $stmt = $pdo->prepare("SELECT content FROM user_ai_memory WHERE user_id = ? AND file_path = ?");
+    $stmt->execute([$userId, $path]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        return "The path {$path} does not exist. Please provide a valid path.";
+    }
+
+    $lines = explode("\n", $row['content']);
+    if ($viewRange && is_array($viewRange) && count($viewRange) === 2) {
+        $start = max(1, $viewRange[0]);
+        $end = min(count($lines), $viewRange[1]);
+    } else {
+        $start = 1;
+        $end = count($lines);
+    }
+
+    $out = "Here's the content of {$path} with line numbers:\n";
+    for ($i = $start; $i <= $end; $i++) {
+        $out .= sprintf("%6d", $i) . "\t" . $lines[$i - 1] . "\n";
+    }
+    return $out;
+}
+
+function memoryCreate($pdo, $userId, $path, $fileText) {
+    // Check if exists
+    $stmt = $pdo->prepare("SELECT memory_id FROM user_ai_memory WHERE user_id = ? AND file_path = ?");
+    $stmt->execute([$userId, $path]);
+    if ($stmt->fetch()) {
+        return "Error: File {$path} already exists";
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO user_ai_memory (user_id, file_path, content) VALUES (?, ?, ?)");
+    $stmt->execute([$userId, $path, $fileText]);
+    return "File created successfully at: {$path}";
+}
+
+function memoryStrReplace($pdo, $userId, $path, $oldStr, $newStr) {
+    $stmt = $pdo->prepare("SELECT content FROM user_ai_memory WHERE user_id = ? AND file_path = ?");
+    $stmt->execute([$userId, $path]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        return "Error: The path {$path} does not exist. Please provide a valid path.";
+    }
+
+    $content = $row['content'];
+    $count = substr_count($content, $oldStr);
+    if ($count === 0) {
+        return "No replacement was performed, old_str `{$oldStr}` did not appear verbatim in {$path}.";
+    }
+    if ($count > 1) {
+        // Find line numbers
+        $lines = explode("\n", $content);
+        $lineNums = [];
+        foreach ($lines as $i => $line) {
+            if (str_contains($line, $oldStr)) $lineNums[] = $i + 1;
+        }
+        return "No replacement was performed. Multiple occurrences of old_str `{$oldStr}` in lines: " . implode(', ', $lineNums) . ". Please ensure it is unique";
+    }
+
+    $newContent = str_replace($oldStr, $newStr, $content);
+    $pdo->prepare("UPDATE user_ai_memory SET content = ? WHERE user_id = ? AND file_path = ?")->execute([$newContent, $userId, $path]);
+    return "The memory file has been edited.";
+}
+
+function memoryInsert($pdo, $userId, $path, $insertLine, $insertText) {
+    $stmt = $pdo->prepare("SELECT content FROM user_ai_memory WHERE user_id = ? AND file_path = ?");
+    $stmt->execute([$userId, $path]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        return "Error: The path {$path} does not exist";
+    }
+
+    $lines = explode("\n", $row['content']);
+    if ($insertLine < 0 || $insertLine > count($lines)) {
+        return "Error: Invalid `insert_line` parameter: {$insertLine}. It should be within the range of lines of the file: [0, " . count($lines) . "]";
+    }
+
+    array_splice($lines, $insertLine, 0, explode("\n", $insertText));
+    $newContent = implode("\n", $lines);
+    $pdo->prepare("UPDATE user_ai_memory SET content = ? WHERE user_id = ? AND file_path = ?")->execute([$newContent, $userId, $path]);
+    return "The file {$path} has been edited.";
+}
+
+function memoryDelete($pdo, $userId, $path) {
+    // Delete exact file or all files under a directory prefix
+    $stmt = $pdo->prepare("DELETE FROM user_ai_memory WHERE user_id = ? AND (file_path = ? OR file_path LIKE ?)");
+    $stmt->execute([$userId, $path, $path . '/%']);
+    if ($stmt->rowCount() === 0) {
+        return "Error: The path {$path} does not exist";
+    }
+    return "Successfully deleted {$path}";
+}
+
+function formatSize($bytes) {
+    if ($bytes >= 1048576) return round($bytes / 1048576, 1) . 'M';
+    if ($bytes >= 1024) return round($bytes / 1024, 1) . 'K';
+    return $bytes . 'B';
 }
 
 
