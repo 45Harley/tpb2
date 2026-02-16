@@ -138,6 +138,33 @@ This feed intentionally excludes noise events (page visits, scroll depth, button
 
 ---
 
+## Bot Tab
+
+Shows bot detection activity across all forms (thought submission and /talk).
+
+### Summary Cards
+| Stat | What it means |
+|------|---------------|
+| **Attempts (24h)** | Bot attempts detected in the last 24 hours |
+| **Attempts (7d)** | Bot attempts detected in the last 7 days |
+| **Unique IPs (24h)** | Number of distinct IP addresses flagged |
+| **Top Form (7d)** | Which form is most targeted by bots |
+
+### Top Offenders
+IPs with 3 or more attempts in the last 7 days. Shows attempt count, last seen time, and which forms were targeted.
+
+### Recent Attempts
+Last 100 bot attempts with:
+- **Time** — when the attempt occurred
+- **IP** — source IP address
+- **Form** — which form was targeted (submit_thought or talk_save)
+- **Triggers** — what detection fired: honeypot (filled hidden field), too_fast (submitted in under 3 seconds), no_referrer (missing HTTP referrer)
+- **User Agent** — browser string (truncated, hover for full)
+
+Bot detection does not block IPs — it silently rejects submissions and logs the attempt. IP blocking is handled at the server level via .htaccess if needed.
+
+---
+
 ## Security Features
 
 ### CSRF Protection
@@ -169,3 +196,4 @@ Every admin action (delete, hide, restore, approve, reject) is logged to the `ad
 | Undo user removal | Users tab | Click Restore on dimmed row |
 | See who did what | Dashboard | Scroll to Admin Actions section |
 | See citizen activity | Activity tab | Full chronological event feed |
+| Check bot activity | Bot tab | Summary cards + recent attempts |
