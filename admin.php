@@ -58,13 +58,22 @@ function logAdminAction($pdo, $adminUserId, $actionType, $targetType, $targetId,
     }
 }
 
+// --- Handle logout FIRST (before any auth) ---
+if (isset($_GET['logout'])) {
+    unset($_SESSION['tpb_admin']);
+    unset($_SESSION['tpb_admin_user_id']);
+    $_SESSION['tpb_admin_logged_out'] = true;  // suppress auto-login
+    header('Location: admin.php');
+    exit;
+}
+
 // --- Auth: Hybrid (role-based + password fallback) ---
 $adminUser = null;
 $adminUserId = null;
 
-// Method 1: Check if logged-in user has Admin role
+// Method 1: Check if logged-in user has Admin role (skip if just logged out)
 $dbUser = getUser($pdo);
-if ($dbUser) {
+if ($dbUser && empty($_SESSION['tpb_admin_logged_out'])) {
     $stmt = $pdo->prepare("
         SELECT 1 FROM user_role_membership
         WHERE user_id = ? AND role_id = 1 AND is_active = 1
@@ -78,12 +87,13 @@ if ($dbUser) {
     }
 }
 
-// Method 2: Password login
+// Method 2: Password login (clears logged-out flag)
 if (!$adminUser && isset($_POST['password'])) {
     $adminPassword = $config['admin_password'] ?? 'tpb2025admin';
     if ($_POST['password'] === $adminPassword) {
         $_SESSION['tpb_admin'] = true;
         $_SESSION['tpb_admin_user_id'] = null;
+        unset($_SESSION['tpb_admin_logged_out']);
     } else {
         $loginError = 'Invalid password';
     }
@@ -94,14 +104,6 @@ if (!$adminUser && isset($_SESSION['tpb_admin']) && $_SESSION['tpb_admin']) {
     $adminUserId = $_SESSION['tpb_admin_user_id'] ?? null;
 } elseif (!$adminUser) {
     $_SESSION['tpb_admin'] = false;
-}
-
-// Handle logout
-if (isset($_GET['logout'])) {
-    unset($_SESSION['tpb_admin']);
-    unset($_SESSION['tpb_admin_user_id']);
-    header('Location: admin.php');
-    exit;
 }
 
 // Check auth
