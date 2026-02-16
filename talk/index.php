@@ -332,6 +332,27 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         }
         .load-more button:hover { background: rgba(255,255,255,0.12); color: #eee; }
 
+        /* ── Status Filter ── */
+        .filter-bar {
+            display: flex;
+            gap: 6px;
+            padding: 6px 16px;
+            overflow-x: auto;
+        }
+        .filter-btn {
+            padding: 4px 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            background: none;
+            color: #888;
+            font-size: 0.78rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+        .filter-btn:hover { border-color: rgba(255,255,255,0.25); color: #ccc; }
+        .filter-btn.active { border-color: #4fc3f7; color: #4fc3f7; background: rgba(79,195,247,0.1); }
+
         .vote-btn {
             background: none;
             border: 1px solid rgba(255,255,255,0.1);
@@ -439,6 +460,14 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         </div>
     </div>
 
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="setFilter('')" data-filter="">All</button>
+        <button class="filter-btn" onclick="setFilter('raw')" data-filter="raw">Raw</button>
+        <button class="filter-btn" onclick="setFilter('refining')" data-filter="refining">Refining</button>
+        <button class="filter-btn" onclick="setFilter('distilled')" data-filter="distilled">Distilled</button>
+        <button class="filter-btn" onclick="setFilter('actionable')" data-filter="actionable">Actionable</button>
+    </div>
+
     <div class="stream" id="stream">
         <div class="stream-empty" id="streamEmpty">Loading...</div>
     </div>
@@ -462,6 +491,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
     var pollTimer = null;
     var userRole = null;
     var isSubmitting = false;
+    var currentFilter = '';
 
     // ── DOM ──
     var contextSelect = document.getElementById('contextSelect');
@@ -697,6 +727,9 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         if (currentContext) {
             url += '&group_id=' + currentContext;
         }
+        if (currentFilter) {
+            url += '&status=' + currentFilter;
+        }
         if (before) {
             url += '&before=' + encodeURIComponent(before);
         }
@@ -755,6 +788,16 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             streamEmpty.textContent = 'Network error loading ideas';
             streamEmpty.style.display = 'block';
         }
+    }
+
+    // ── Status filter ──
+    function setFilter(status) {
+        currentFilter = status;
+        document.querySelectorAll('.filter-btn').forEach(function(btn) {
+            btn.classList.toggle('active', btn.dataset.filter === status);
+        });
+        loadedIdeas = [];
+        loadIdeas();
     }
 
     // ── Context switch ──
