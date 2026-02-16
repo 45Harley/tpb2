@@ -746,6 +746,40 @@ function handleBrainstorm($pdo, $input, $userId) {
 
     $systemPrompt = buildClerkPrompt($pdo, $clerk, ['brainstorm', 'talk']);
 
+    // User identity context
+    $aiContext = buildAIContext($pdo, $dbUser);
+    if ($aiContext['text']) {
+        $systemPrompt .= "\n\n" . $aiContext['text'];
+    }
+
+    // Idea activity stats for personalization
+    if ($userId) {
+        $statsStmt = $pdo->prepare("
+            SELECT COUNT(*) AS total_ideas,
+                   MIN(created_at) AS first_idea_at,
+                   GROUP_CONCAT(DISTINCT tags ORDER BY id DESC SEPARATOR ', ') AS all_tags
+            FROM idea_log
+            WHERE user_id = ? AND category != 'chat' AND deleted_at IS NULL
+        ");
+        $statsStmt->execute([$userId]);
+        $stats = $statsStmt->fetch();
+
+        if ($stats && (int)$stats['total_ideas'] > 0) {
+            $systemPrompt .= "\n\n## Idea History\n";
+            $systemPrompt .= "- Ideas saved: {$stats['total_ideas']}\n";
+            $systemPrompt .= "- First idea: {$stats['first_idea_at']}\n";
+
+            // Extract top tags (most frequent)
+            if ($stats['all_tags']) {
+                $tagList = array_map('trim', explode(',', $stats['all_tags']));
+                $tagCounts = array_count_values($tagList);
+                arsort($tagCounts);
+                $topTags = implode(', ', array_slice(array_keys($tagCounts), 0, 8));
+                $systemPrompt .= "- Top topics: {$topTags}\n";
+            }
+        }
+    }
+
     // Context injection: group-aware or personal
     if ($groupId) {
         // Group context: shareable ideas from all group members
