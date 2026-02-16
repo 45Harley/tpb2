@@ -32,15 +32,8 @@ $config = require __DIR__ . '/../config.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
 
-$sessionId = $input['session_id'] ?? $_COOKIE['tpb_civic_session'] ?? null;
-$cookieUserId = isset($_COOKIE['tpb_user_id']) ? (int)$_COOKIE['tpb_user_id'] : 0;
 $thoughtId = (int) ($input['thought_id'] ?? 0);
 $voteType = $input['vote_type'] ?? null;
-
-if (!$sessionId) {
-    echo json_encode(['status' => 'error', 'message' => 'Session ID required']);
-    exit();
-}
 
 if (!$thoughtId) {
     echo json_encode(['status' => 'error', 'message' => 'Thought ID required']);
@@ -63,15 +56,11 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    // Find user by session - must be verified
-    $stmt = $pdo->prepare("
-        SELECT u.user_id, COALESCE(uis.email_verified, 0) as email_verified
-        FROM users u
-        LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-        WHERE u.session_id = ?
-    ");
-    $stmt->execute([$sessionId]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Centralized auth
+    require_once __DIR__ . '/../includes/get-user.php';
+    $dbUser = getUser($pdo);
+    $user = $dbUser;
+    $cookieUserId = $dbUser ? (int)$dbUser['user_id'] : 0;
 
     if (!$user) {
         echo json_encode(['status' => 'error', 'message' => 'Please verify your email first']);

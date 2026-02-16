@@ -37,17 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $config = require __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/smtp-mail.php';
+require_once __DIR__ . '/../includes/get-user.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
 
-$sessionId = $input['session_id'] ?? null;
 $phone = trim($input['phone'] ?? '');
 $returnUrl = trim($input['return_url'] ?? '');
-
-if (!$sessionId) {
-    echo json_encode(['status' => 'error', 'message' => 'Session ID required']);
-    exit();
-}
 
 if (!$phone) {
     echo json_encode(['status' => 'error', 'message' => 'Phone number required']);
@@ -69,38 +64,8 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    // Find user — tpb_user_id cookie first (reliable), then session fallback
-    $cookieUserId = isset($_COOKIE['tpb_user_id']) ? (int)$_COOKIE['tpb_user_id'] : 0;
-    $user = null;
-    
-    if ($cookieUserId) {
-        $stmt = $pdo->prepare("
-            SELECT u.user_id, u.email, u.first_name, 
-                   COALESCE(uis.email_verified, 0) as email_verified,
-                   COALESCE(uis.phone_verified, 0) as phone_verified,
-                   uis.phone as current_phone
-            FROM users u
-            LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-            WHERE u.user_id = ?
-        ");
-        $stmt->execute([$cookieUserId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-    
-    if (!$user && $sessionId) {
-        $stmt = $pdo->prepare("
-            SELECT u.user_id, u.email, u.first_name, 
-                   COALESCE(uis.email_verified, 0) as email_verified,
-                   COALESCE(uis.phone_verified, 0) as phone_verified,
-                   uis.phone as current_phone
-            FROM user_devices ud
-            INNER JOIN users u ON ud.user_id = u.user_id
-            LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-            WHERE ud.device_session = ? AND ud.is_active = 1
-        ");
-        $stmt->execute([$sessionId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    }
+    // Find user via centralized auth
+    $user = getUser($pdo);
 
     if (!$user) {
         echo json_encode(['status' => 'error', 'message' => 'Please verify your email first']);

@@ -13,13 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Database connection
-$config = [
-    'host' => 'localhost',
-    'database' => 'sandge5_tpb2',
-    'username' => 'sandge5_tpb2',
-    'password' => '.YeO6kSJAHh5',
-    'charset' => 'utf8mb4'
-];
+$config = require __DIR__ . '/../config.php';
 
 try {
     $pdo = new PDO(
@@ -33,28 +27,16 @@ try {
     die(json_encode(['status' => 'error', 'message' => 'Database connection failed']));
 }
 
-// Get session
-$sessionId = $_COOKIE['tpb_civic_session'] ?? null;
-$cookieUserId = isset($_COOKIE['tpb_user_id']) ? (int)$_COOKIE['tpb_user_id'] : 0;
-if (!$sessionId) {
+// Get user via centralized auth
+require_once __DIR__ . '/../includes/get-user.php';
+$dbUser = getUser($pdo);
+
+if (!$dbUser) {
     http_response_code(401);
     die(json_encode(['status' => 'error', 'message' => 'Not logged in']));
 }
 
-// Get user
-$stmt = $pdo->prepare("
-    SELECT u.user_id, u.email, u.password_hash
-    FROM user_devices ud
-    INNER JOIN users u ON ud.user_id = u.user_id
-    WHERE ud.device_session = ? AND ud.is_active = 1
-");
-$stmt->execute([$sessionId]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$user) {
-    http_response_code(401);
-    die(json_encode(['status' => 'error', 'message' => 'Session invalid']));
-}
+$user = $dbUser;
 
 // Get request data
 $input = json_decode(file_get_contents('php://input'), true);

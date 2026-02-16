@@ -9,13 +9,7 @@
  * On success: Redirects to demo.php?phone_verified=success
  */
 
-$config = [
-    'host' => 'localhost',
-    'database' => 'sandge5_tpb2',
-    'username' => 'sandge5_tpb2',
-    'password' => '.YeO6kSJAHh5',
-    'charset' => 'utf8mb4'
-];
+$config = require __DIR__ . '/../config.php';
 
 $token = $_GET['token'] ?? '';
 $returnUrl = $_GET['return_url'] ?? '';

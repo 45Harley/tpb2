@@ -21,13 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Database connection
-$config = [
-    'host' => 'localhost',
-    'database' => 'sandge5_tpb2',
-    'username' => 'sandge5_tpb2',
-    'password' => '.YeO6kSJAHh5',
-    'charset' => 'utf8mb4'
-];
+$config = require __DIR__ . '/../config.php';
 
 try {
     $pdo = new PDO(
@@ -44,24 +38,16 @@ try {
 // Get input
 $input = json_decode(file_get_contents('php://input'), true);
 
-// Get session
-$sessionId = $_COOKIE['tpb_civic_session'] ?? null;
-$cookieUserId = isset($_COOKIE['tpb_user_id']) ? (int)$_COOKIE['tpb_user_id'] : 0;
+// Get user via centralized auth
+require_once __DIR__ . '/../includes/get-user.php';
+$dbUser = getUser($pdo);
 
-if (!$sessionId) {
+if (!$dbUser) {
     echo json_encode(['status' => 'error', 'message' => 'Not logged in']);
     exit;
 }
 
-// Get user
-$stmt = $pdo->prepare("SELECT user_id, username FROM users WHERE session_id = ?");
-$stmt->execute([$sessionId]);
-$user = $stmt->fetch();
-
-if (!$user) {
-    echo json_encode(['status' => 'error', 'message' => 'User not found']);
-    exit;
-}
+$user = $dbUser;
 
 // Check if volunteer
 $stmt = $pdo->prepare("SELECT status FROM volunteer_applications WHERE user_id = ? ORDER BY applied_at DESC LIMIT 1");

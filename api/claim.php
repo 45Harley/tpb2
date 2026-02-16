@@ -39,29 +39,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Get session from cookie
-$sessionId = $_COOKIE['tpb_civic_session'] ?? null;
-$cookieUserId = isset($_COOKIE['tpb_user_id']) ? (int)$_COOKIE['tpb_user_id'] : 0;
+// Get user via centralized auth
+require_once __DIR__ . '/../includes/get-user.php';
+$dbUser = getUser($pdo);
 
-if (!$sessionId) {
+if (!$dbUser) {
     header('Location: /profile.php?error=login');
     exit;
 }
 
-// Get user via device session
-$stmt = $pdo->prepare("
-    SELECT u.user_id, u.username
-    FROM user_devices ud
-    INNER JOIN users u ON ud.user_id = u.user_id
-    WHERE ud.device_session = ? AND ud.is_active = 1
-");
-$stmt->execute([$sessionId]);
-$user = $stmt->fetch();
-
-if (!$user) {
-    header('Location: /profile.php?error=login');
-    exit;
-}
+$user = $dbUser;
 
 // Check if user is an approved volunteer
 $stmt = $pdo->prepare("SELECT status FROM volunteer_applications WHERE user_id = ? AND status = 'accepted'");

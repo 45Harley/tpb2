@@ -107,17 +107,10 @@ function saveTown($pdo, $input, $sessionId) {
     $stmt->execute([$sessionId]);
     $userId = $stmt->fetchColumn();
     
-    if (!$userId) {
-        // Also check users.session_id
-        $stmt = $pdo->prepare("SELECT user_id FROM users WHERE session_id = ?");
-        $stmt->execute([$sessionId]);
-        $userId = $stmt->fetchColumn();
-    }
-    
     if ($userId) {
         // Update existing user
         $stmt = $pdo->prepare("
-            UPDATE users 
+            UPDATE users
             SET current_state_id = ?, current_town_id = ?
             WHERE user_id = ?
         ");
@@ -174,12 +167,6 @@ function saveZip($pdo, $input, $sessionId) {
     ");
     $stmt->execute([$sessionId]);
     $userId = $stmt->fetchColumn();
-    
-    if (!$userId) {
-        $stmt = $pdo->prepare("SELECT user_id FROM users WHERE session_id = ?");
-        $stmt->execute([$sessionId]);
-        $userId = $stmt->fetchColumn();
-    }
     
     if (!$userId) {
         echo json_encode(['status' => 'error', 'message' => 'User not found - select town first']);
@@ -250,12 +237,6 @@ function saveLocation($pdo, $input, $sessionId) {
             JOIN users u ON ud.user_id = u.user_id 
             WHERE ud.device_session = ? AND ud.is_active = 1
         ");
-        $stmt->execute([$sessionId]);
-        $userId = $stmt->fetchColumn();
-    }
-    
-    if (!$userId) {
-        $stmt = $pdo->prepare("SELECT user_id FROM users WHERE session_id = ?");
         $stmt->execute([$sessionId]);
         $userId = $stmt->fetchColumn();
     }

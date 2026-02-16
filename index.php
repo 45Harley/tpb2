@@ -19,59 +19,11 @@ try {
     $pdo = null;
 }
 
-// Session - get or will be created by JS
+// Use centralized auth
+require_once __DIR__ . '/includes/get-user.php';
+$dbUser = $pdo ? getUser($pdo) : null;
 $sessionId = isset($_COOKIE['tpb_civic_session']) ? $_COOKIE['tpb_civic_session'] : null;
-
-// Load user data if logged in (try tpb_user_id cookie first, then session)
-$dbUser = null;
-$cookieUserId = isset($_COOKIE['tpb_user_id']) ? (int)$_COOKIE['tpb_user_id'] : 0;
-
-if ($cookieUserId && $pdo) {
-    $stmt = $pdo->prepare("
-        SELECT u.user_id, u.email, u.civic_points, u.first_name, u.last_name,
-               u.current_state_id, u.current_town_id,
-               u.latitude, u.longitude, u.street_address, u.zip_code,
-               u.identity_level_id,
-               s.abbreviation as state_abbrev, s.state_name,
-               t.town_name,
-               il.level_name as identity_level_name,
-               COALESCE(uis.email_verified, 0) as email_verified,
-               COALESCE(uis.phone_verified, 0) as phone_verified,
-               u.us_congress_district, u.state_senate_district, u.state_house_district
-        FROM users u
-        LEFT JOIN states s ON u.current_state_id = s.state_id
-        LEFT JOIN towns t ON u.current_town_id = t.town_id
-        LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-        LEFT JOIN identity_levels il ON u.identity_level_id = il.level_id
-        WHERE u.user_id = ?
-    ");
-    $stmt->execute(array($cookieUserId));
-    $dbUser = $stmt->fetch();
-}
-
-if (!$dbUser && $sessionId && $pdo) {
-    $stmt = $pdo->prepare("
-        SELECT u.user_id, u.email, u.civic_points, u.first_name, u.last_name,
-               u.current_state_id, u.current_town_id,
-               u.latitude, u.longitude, u.street_address, u.zip_code,
-               u.identity_level_id,
-               s.abbreviation as state_abbrev, s.state_name,
-               t.town_name,
-               il.level_name as identity_level_name,
-               COALESCE(uis.email_verified, 0) as email_verified,
-               COALESCE(uis.phone_verified, 0) as phone_verified,
-               u.us_congress_district, u.state_senate_district, u.state_house_district
-        FROM user_devices ud
-        INNER JOIN users u ON ud.user_id = u.user_id
-        LEFT JOIN states s ON u.current_state_id = s.state_id
-        LEFT JOIN towns t ON u.current_town_id = t.town_id
-        LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-        LEFT JOIN identity_levels il ON u.identity_level_id = il.level_id
-        WHERE ud.device_session = ? AND ud.is_active = 1
-    ");
-    $stmt->execute(array($sessionId));
-    $dbUser = $stmt->fetch();
-}
+$cookieUserId = $dbUser ? (int)$dbUser['user_id'] : 0;
 
 // Get states with active users (for gold highlighting on map)
 $activeStates = [];
@@ -147,8 +99,7 @@ foreach ($sessionHistory as $h) {
     if ($h['action_type'] === 'zip_lookup') $hasEnteredZip = true;
 }
 
-// Nav variables via helper
-require_once __DIR__ . '/includes/get-user.php';
+// Nav variables via helper (get-user.php already loaded above)
 $navVars = getNavVarsForUser($dbUser, $sessionPoints);
 extract($navVars);
 $currentPage = 'home';

@@ -31,13 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-$config = [
-    'host' => 'localhost',
-    'database' => 'sandge5_tpb2',
-    'username' => 'sandge5_tpb2',
-    'password' => '.YeO6kSJAHh5',
-    'charset' => 'utf8mb4'
-];
+$config = require __DIR__ . '/../config.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
 
@@ -56,38 +50,9 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    // Find user by user_devices first (how index.php loads), then fallback to users.session_id
-    $stmt = $pdo->prepare("
-        SELECT u.user_id, COALESCE(uis.email_verified, 0) as email_verified
-        FROM user_devices ud
-        INNER JOIN users u ON ud.user_id = u.user_id
-        LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-        WHERE ud.device_session = ? AND ud.is_active = 1
-    ");
-    $stmt->execute([$sessionId]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Fallback: check users.session_id directly
-    if (!$user) {
-        $stmt = $pdo->prepare("
-            SELECT u.user_id, COALESCE(uis.email_verified, 0) as email_verified
-            FROM users u
-            LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-            WHERE u.session_id = ?
-        ");
-        $stmt->execute([$sessionId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        // If found by session_id but no user_devices entry, create one
-        if ($user) {
-            $stmt = $pdo->prepare("
-                INSERT INTO user_devices (user_id, device_session, is_active)
-                VALUES (?, ?, 1)
-                ON DUPLICATE KEY UPDATE is_active = 1
-            ");
-            $stmt->execute([$user['user_id'], $sessionId]);
-        }
-    }
+    // Use centralized auth to find user
+    require_once __DIR__ . '/../includes/get-user.php';
+    $user = getUser($pdo);
 
     // If no user found, create one tied to this session
     // This allows anonymous users to save location and build civic points

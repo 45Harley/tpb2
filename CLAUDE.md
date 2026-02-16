@@ -148,3 +148,42 @@ php /tmp/q.php && rm /tmp/q.php"
 - URL routing for states/towns is handled by `.htaccess` rewrite rules
 - `.htaccess` includes a cPanel-generated PHP handler (`ea-php84`) — don't remove it
 - Bot/scanner blocking rules are at the top of `.htaccess`
+
+## Authentication Rules (IRON-CLAD)
+
+### THE ONE AUTH FUNCTION
+`getUser($pdo)` from `includes/get-user.php` is the ONLY way to identify the current user.
+
+Every PHP file that needs to know who the user is MUST:
+```php
+require_once __DIR__ . '/../includes/get-user.php';  // adjust path as needed
+$dbUser = getUser($pdo);
+```
+
+`getUser()` checks (in order):
+1. `tpb_civic_session` cookie → `user_devices` table (DB-validated, `is_active=1`)
+2. `tpb_user_id` cookie → `users` table (direct lookup fallback)
+3. Returns full user array or `false`
+
+### Identity levels (from `identity_levels` table)
+| Level | Name | Meaning |
+|-------|------|---------|
+| 1 | anonymous | No verification |
+| 2 | remembered | Email verified |
+| 3 | verified | Phone verified |
+| 4 | vetted | Background checked |
+
+Access via `$dbUser['identity_level_id']`.
+
+### NEVER do any of these
+1. **NEVER** read `$_COOKIE['tpb_user_id']` directly for auth — use `getUser($pdo)`
+2. **NEVER** query `users.session_id` — legacy column; `getUser()` uses `user_devices`
+3. **NEVER** write inline user lookup queries — `getUser()` handles all auth paths
+4. **NEVER** hardcode database credentials — always `$config = require __DIR__ . '/../config.php';`
+
+### Exceptions (files that legitimately skip getUser)
+- **Token-based**: `verify-magic-link.php`, `verify-parent-consent.php`, `verify-phone-link.php` (auth by URL token, not cookie)
+- **Public read-only**: `api/get-thoughts.php` (no auth needed)
+- **Admin**: `admin.php` (separate session auth — TODO: migrate to proper admin role system)
+- **Test**: `tests/talk-harness.php` (uses `tpb_user_id` cookie fallback deliberately)
+- **Separate apps**: `0t/*.php` (People Power), `tpb-claude/api/claude-chat.php` (AI subsystem)

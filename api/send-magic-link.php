@@ -151,17 +151,7 @@ try {
         $stmt->execute([$sessionId]);
         $sessionUser = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        // Fallback to users.session_id
-        if (!$sessionUser) {
-            $stmt = $pdo->prepare("
-                SELECT u.user_id, u.email, u.first_name, COALESCE(uis.email_verified, 0) as email_verified
-                FROM users u
-                LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-                WHERE u.session_id = ?
-            ");
-            $stmt->execute([$sessionId]);
-            $sessionUser = $stmt->fetch(PDO::FETCH_ASSOC);
-        }
+        // No fallback to users.session_id — user_devices is authoritative
     }
 
     if ($existingUser) {
@@ -265,6 +255,14 @@ try {
         PointLogger::init($pdo);
         PointLogger::transferSession($sessionId, $userId);
         
+        // Link device to user
+        $stmt = $pdo->prepare("
+            INSERT INTO user_devices (user_id, device_session)
+            VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE user_id = ?, is_active = 1
+        ");
+        $stmt->execute([$userId, $sessionId, $userId]);
+
         // Create user_identity_status record with phone if provided
         if ($phone) {
             $stmt = $pdo->prepare("INSERT INTO user_identity_status (user_id, phone) VALUES (?, ?)");

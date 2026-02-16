@@ -38,14 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 require_once __DIR__ . '/bot-detect.php';
+require_once __DIR__ . '/../includes/get-user.php';
 
-$config = [
-    'host' => 'localhost',
-    'database' => 'sandge5_tpb2',
-    'username' => 'sandge5_tpb2',
-    'password' => '.YeO6kSJAHh5',
-    'charset' => 'utf8mb4'
-];
+$config = require __DIR__ . '/../config.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
 
@@ -70,8 +65,6 @@ try {
     // Continue anyway if bot check fails
 }
 
-$sessionId = $input['session_id'] ?? $_COOKIE['tpb_civic_session'] ?? null;
-$cookieUserId = isset($_COOKIE['tpb_user_id']) ? (int)$_COOKIE['tpb_user_id'] : 0;
 $content = trim($input['content'] ?? '');
 $categoryId = $input['category_id'] ?? null;
 $otherTopic = trim($input['other_topic'] ?? '');
@@ -90,12 +83,6 @@ $isJudicial = !empty($input['is_judicial']) ? 1 : 0;
 $jurisdictionLevel = 'federal';
 if ($isLocal) $jurisdictionLevel = 'town';
 elseif ($isState) $jurisdictionLevel = 'state';
-
-// Validation
-if (!$sessionId) {
-    echo json_encode(['status' => 'error', 'message' => 'Session ID required']);
-    exit();
-}
 
 if (empty($content)) {
     echo json_encode(['status' => 'error', 'message' => 'Content required']);
@@ -140,19 +127,8 @@ try {
         );
     }
 
-    // Find user by device session - must be verified
-    $stmt = $pdo->prepare("
-        SELECT u.user_id, u.current_town_id, u.current_state_id,
-               u.first_name, u.last_name, u.age_bracket, u.parent_consent,
-               COALESCE(uis.email_verified, 0) as email_verified,
-               COALESCE(uis.phone, '') as phone
-        FROM user_devices ud
-        INNER JOIN users u ON ud.user_id = u.user_id
-        LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-        WHERE ud.device_session = ? AND ud.is_active = 1
-    ");
-    $stmt->execute([$sessionId]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Find user via centralized auth
+    $user = getUser($pdo);
 
     if (!$user) {
         echo json_encode(['status' => 'error', 'message' => 'Please verify your email first']);

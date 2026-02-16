@@ -17,14 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-$config = [
-    'host' => 'localhost',
-    'database' => 'sandge5_tpb2',
-    'username' => 'sandge5_tpb2',
-    'password' => '.YeO6kSJAHh5',
-    'charset' => 'utf8mb4'
-];
+$config = require __DIR__ . '/../config.php';
 
+// session_id from GET params is used for points_log lookup (browser session)
 $sessionId = $_GET['session_id'] ?? $_COOKIE['tpb_civic_session'] ?? null;
 
 if (!$sessionId) {
@@ -40,20 +35,16 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    // Get points from points_log
+    // Centralized auth
+    require_once __DIR__ . '/../includes/get-user.php';
+    $dbUser = getUser($pdo);
+    $user = $dbUser;
+    $cookieUserId = $dbUser ? (int)$dbUser['user_id'] : 0;
+
+    // Get points from points_log (uses browser session_id from GET params)
     $stmt = $pdo->prepare("SELECT COALESCE(SUM(points_earned), 0) as points FROM points_log WHERE session_id = ?");
     $stmt->execute([$sessionId]);
     $clickPoints = (int) $stmt->fetchColumn();
-
-    // Check if session is linked to a user
-    $stmt = $pdo->prepare("
-        SELECT u.user_id, u.civic_points, COALESCE(uis.email_verified, 0) as email_verified
-        FROM users u
-        LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-        WHERE u.session_id = ?
-    ");
-    $stmt->execute([$sessionId]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     $totalPoints = $clickPoints;
     if ($user) {

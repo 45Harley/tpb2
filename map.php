@@ -26,60 +26,11 @@ try {
     $pdo = null;
 }
 
-// Find user — prefer tpb_user_id cookie, fall back to tpb_civic_session
-$cookieUserId = isset($_COOKIE['tpb_user_id']) ? (int)$_COOKIE['tpb_user_id'] : 0;
+// Use centralized auth
+require_once __DIR__ . '/includes/get-user.php';
+$dbUser = $pdo ? getUser($pdo) : null;
 $sessionId = isset($_COOKIE['tpb_civic_session']) ? $_COOKIE['tpb_civic_session'] : null;
-
-// Load user data
-$dbUser = null;
-if ($cookieUserId && $pdo) {
-    $stmt = $pdo->prepare("
-        SELECT u.user_id, u.email, u.civic_points,
-               u.current_state_id, u.current_town_id,
-               u.zip_code, u.street_address,
-               u.latitude, u.longitude,
-               u.us_congress_district, u.state_senate_district, u.state_house_district,
-               u.identity_level_id,
-               s.abbreviation as state_abbrev, s.state_name,
-               t.town_name,
-               il.level_name as identity_level_name,
-               COALESCE(uis.email_verified, 0) as email_verified,
-               COALESCE(uis.phone_verified, 0) as phone_verified
-        FROM users u
-        LEFT JOIN states s ON u.current_state_id = s.state_id
-        LEFT JOIN towns t ON u.current_town_id = t.town_id
-        LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-        LEFT JOIN identity_levels il ON u.identity_level_id = il.level_id
-        WHERE u.user_id = ?
-    ");
-    $stmt->execute(array($cookieUserId));
-    $dbUser = $stmt->fetch();
-}
-// Fall back to session-based lookup
-if (!$dbUser && $sessionId && $pdo) {
-    $stmt = $pdo->prepare("
-        SELECT u.user_id, u.email, u.civic_points,
-               u.current_state_id, u.current_town_id,
-               u.zip_code, u.street_address,
-               u.latitude, u.longitude,
-               u.us_congress_district, u.state_senate_district, u.state_house_district,
-               u.identity_level_id,
-               s.abbreviation as state_abbrev, s.state_name,
-               t.town_name,
-               il.level_name as identity_level_name,
-               COALESCE(uis.email_verified, 0) as email_verified,
-               COALESCE(uis.phone_verified, 0) as phone_verified
-        FROM user_devices ud
-        INNER JOIN users u ON ud.user_id = u.user_id
-        LEFT JOIN states s ON u.current_state_id = s.state_id
-        LEFT JOIN towns t ON u.current_town_id = t.town_id
-        LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-        LEFT JOIN identity_levels il ON u.identity_level_id = il.level_id
-        WHERE ud.device_session = ? AND ud.is_active = 1
-    ");
-    $stmt->execute(array($sessionId));
-    $dbUser = $stmt->fetch();
-}
+$cookieUserId = $dbUser ? (int)$dbUser['user_id'] : 0;
 
 // Determine mode
 $mode = isset($_GET['mode']) ? $_GET['mode'] : '';
@@ -87,8 +38,7 @@ if (!$mode) {
     $mode = ($dbUser && $dbUser['state_abbrev']) ? 'mymap' : 'onboarding';
 }
 
-// Nav variables via helper
-require_once __DIR__ . '/includes/get-user.php';
+// Nav variables via helper (get-user.php already loaded above)
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'map';
