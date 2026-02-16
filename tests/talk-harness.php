@@ -422,13 +422,13 @@ function scenarioLinks($baseUrl, $users, $prefix) {
     ]);
     $steps[] = step(++$s, 'facilitator', 'create_link', 'Self-link (should fail)', 'fail', $r);
 
-    // Step 4: Duplicate link — should fail
+    // Step 4: Duplicate link — API is idempotent (ON DUPLICATE KEY), returns success with link_id=0
     $r = talkApi($baseUrl, $F, 'POST', 'create_link', [
         'idea_id_a' => $ideaA,
         'idea_id_b' => $ideaB,
         'link_type' => 'related',
     ]);
-    $steps[] = step(++$s, 'facilitator', 'create_link', 'Duplicate link (should fail)', 'fail', $r);
+    $steps[] = step(++$s, 'facilitator', 'create_link', 'Duplicate link (idempotent, no-op)', 'success', $r);
 
     return $steps;
 }
