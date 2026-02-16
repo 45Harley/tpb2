@@ -130,7 +130,10 @@ if (empty($_SESSION['tpb_admin'])) {
                 <hr style="border-color: #333; margin: 20px 0;">
             <?php endif; ?>
             <form method="POST">
-                <input type="password" name="password" placeholder="Admin Password" autofocus>
+                <div style="position:relative;display:inline-block;">
+                    <input type="password" name="password" id="adminPw" placeholder="Admin Password" autofocus>
+                    <span onclick="let p=document.getElementById('adminPw');let t=p.type==='password'?'text':'password';p.type=t;this.textContent=t==='password'?'\u{1F441}':'\u{1F441}\u{200D}\u{1F5E8}';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:1.2em;user-select:none;">&#x1F441;</span>
+                </div>
                 <br>
                 <button type="submit">Login</button>
             </form>
