@@ -434,9 +434,13 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         </div>
     </div>
 
+    <div class="user-status">
 <?php if ($dbUser): ?>
-    <div class="user-status"><span class="dot"></span><?= htmlspecialchars(getDisplayName($dbUser)) ?></div>
+        <span class="dot"></span><?= htmlspecialchars(getDisplayName($dbUser)) ?> · <span id="browserName"></span>
+<?php else: ?>
+        <span id="browserName"></span>
 <?php endif; ?>
+    </div>
 
     <div class="input-area">
         <div style="position:absolute;left:-9999px;"><input type="text" id="talkHoneypot" tabindex="-1" autocomplete="off"></div>
@@ -482,6 +486,17 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
     <script>
     // ── State ──
     var currentUser = <?= $userJson ?>;
+    // Browser detection
+    (function() {
+        var ua = navigator.userAgent, name = 'Unknown';
+        if (ua.indexOf('Edg/') > -1) name = 'Edge';
+        else if (ua.indexOf('OPR/') > -1 || ua.indexOf('Opera') > -1) name = 'Opera';
+        else if (ua.indexOf('Chrome/') > -1) name = 'Chrome';
+        else if (ua.indexOf('Firefox/') > -1) name = 'Firefox';
+        else if (ua.indexOf('Safari/') > -1) name = 'Safari';
+        var el = document.getElementById('browserName');
+        if (el) el.textContent = name;
+    })();
     var currentContext = localStorage.getItem('tpb_talk_context') || '';
     var aiRespond = localStorage.getItem('tpb_talk_ai_respond') === '1';
     var sessionId = sessionStorage.getItem('tpb_session');
