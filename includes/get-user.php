@@ -64,7 +64,7 @@ function getUserByUserId($pdo, $userId) {
         LEFT JOIN towns tw ON u.current_town_id = tw.town_id
         LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
         LEFT JOIN identity_levels il ON u.identity_level_id = il.level_id
-        WHERE u.user_id = ?
+        WHERE u.user_id = ? AND u.deleted_at IS NULL
     ");
     $stmt->execute([$userId]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -96,7 +96,7 @@ function getUserBySession($pdo, $sessionId) {
         LEFT JOIN towns tw ON u.current_town_id = tw.town_id
         LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
         LEFT JOIN identity_levels il ON u.identity_level_id = il.level_id
-        WHERE ud.device_session = ? AND ud.is_active = 1
+        WHERE ud.device_session = ? AND ud.is_active = 1 AND u.deleted_at IS NULL
         LIMIT 1
     ");
     $stmt->execute([$sessionId]);
@@ -108,12 +108,12 @@ function getUserBySession($pdo, $sessionId) {
  */
 function getUserBasicBySession($pdo, $sessionId) {
     if (!$sessionId) return false;
-    
+
     $stmt = $pdo->prepare("
         SELECT u.user_id, u.username, u.civic_points
         FROM user_devices ud
         INNER JOIN users u ON ud.user_id = u.user_id
-        WHERE ud.device_session = ? AND ud.is_active = 1
+        WHERE ud.device_session = ? AND ud.is_active = 1 AND u.deleted_at IS NULL
         LIMIT 1
     ");
     $stmt->execute([$sessionId]);

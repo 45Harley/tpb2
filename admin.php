@@ -197,17 +197,25 @@ if (isset($_POST['restore_thought'])) {
     $messageType = 'success';
 }
 
-// Delete user
+// Soft-delete user (mark as deleted, deactivate devices)
 if (isset($_POST['delete_user'])) {
     validateCsrf();
     $userId = (int)$_POST['user_id'];
-    $pdo->prepare("DELETE FROM user_thought_votes WHERE user_id = ?")->execute([$userId]);
-    $pdo->prepare("DELETE FROM user_thoughts WHERE user_id = ?")->execute([$userId]);
-    $pdo->prepare("DELETE FROM user_identity_status WHERE user_id = ?")->execute([$userId]);
-    $pdo->prepare("DELETE FROM user_devices WHERE user_id = ?")->execute([$userId]);
-    $pdo->prepare("DELETE FROM users WHERE user_id = ?")->execute([$userId]);
-    logAdminAction($pdo, $adminUserId, 'delete_user', 'user', $userId);
-    $message = "User #$userId and all their data deleted";
+    $pdo->prepare("UPDATE users SET deleted_at = NOW() WHERE user_id = ? AND deleted_at IS NULL")->execute([$userId]);
+    $pdo->prepare("UPDATE user_devices SET is_active = 0 WHERE user_id = ?")->execute([$userId]);
+    $pdo->prepare("UPDATE user_thoughts SET status = 'draft' WHERE user_id = ? AND status = 'published'")->execute([$userId]);
+    logAdminAction($pdo, $adminUserId, 'soft_delete_user', 'user', $userId);
+    $message = "User #$userId marked as deleted (devices deactivated, thoughts hidden)";
+    $messageType = 'success';
+}
+
+// Restore soft-deleted user
+if (isset($_POST['restore_user'])) {
+    validateCsrf();
+    $userId = (int)$_POST['user_id'];
+    $pdo->prepare("UPDATE users SET deleted_at = NULL WHERE user_id = ?")->execute([$userId]);
+    logAdminAction($pdo, $adminUserId, 'restore_user', 'user', $userId);
+    $message = "User #$userId restored";
     $messageType = 'success';
 }
 
@@ -303,15 +311,16 @@ if (isset($_POST['reject_volunteer'])) {
 
 // --- Growth ---
 $stats = [];
-$stats['citizens'] = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE email NOT LIKE '%@anonymous.tpb'")->fetchColumn();
-$stats['active_week'] = (int)$pdo->query("SELECT COUNT(DISTINCT user_id) FROM user_devices WHERE is_active = 1 AND last_active_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
-$stats['new_week'] = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND email NOT LIKE '%@anonymous.tpb'")->fetchColumn();
+$stats['citizens'] = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE email NOT LIKE '%@anonymous.tpb' AND deleted_at IS NULL")->fetchColumn();
+$stats['active_week'] = (int)$pdo->query("SELECT COUNT(DISTINCT ud.user_id) FROM user_devices ud JOIN users u ON ud.user_id = u.user_id WHERE ud.is_active = 1 AND ud.last_active_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND u.deleted_at IS NULL")->fetchColumn();
+$stats['new_week'] = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND email NOT LIKE '%@anonymous.tpb' AND deleted_at IS NULL")->fetchColumn();
+$stats['deleted_users'] = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE deleted_at IS NOT NULL")->fetchColumn();
 
 // --- Identity progression ---
 $identityLevels = $pdo->query("
     SELECT il.level_name, il.level_id, COUNT(u.user_id) as cnt
     FROM identity_levels il
-    LEFT JOIN users u ON u.identity_level_id = il.level_id AND u.email NOT LIKE '%@anonymous.tpb'
+    LEFT JOIN users u ON u.identity_level_id = il.level_id AND u.email NOT LIKE '%@anonymous.tpb' AND u.deleted_at IS NULL
     GROUP BY il.level_id, il.level_name
     ORDER BY il.level_id
 ")->fetchAll();
@@ -373,7 +382,7 @@ $thoughts = $pdo->query("
 
 // Users — with identity level and roles
 $users = $pdo->query("
-    SELECT u.user_id, u.email, u.first_name, u.last_name, u.civic_points, u.created_at,
+    SELECT u.user_id, u.email, u.first_name, u.last_name, u.civic_points, u.created_at, u.deleted_at,
            s.abbreviation as state_abbrev, tw.town_name, il.level_name as identity_level,
            (SELECT COUNT(*) FROM user_thoughts WHERE user_id = u.user_id AND status = 'published') as thought_count,
            (SELECT COUNT(*) FROM user_thought_votes WHERE user_id = u.user_id) as vote_count,
@@ -387,7 +396,7 @@ $users = $pdo->query("
     LEFT JOIN towns tw ON u.current_town_id = tw.town_id
     LEFT JOIN identity_levels il ON u.identity_level_id = il.level_id
     WHERE u.email NOT LIKE '%@anonymous.tpb'
-    ORDER BY u.created_at DESC
+    ORDER BY u.deleted_at IS NOT NULL, u.created_at DESC
     LIMIT 50
 ")->fetchAll();
 
@@ -1096,7 +1105,7 @@ $adminActions = $pdo->query("
                 </thead>
                 <tbody>
                     <?php foreach ($users as $user): ?>
-                        <tr>
+                        <tr<?= $user['deleted_at'] ? ' style="opacity: 0.5;"' : '' ?>>
                             <td><?= $user['user_id'] ?></td>
                             <td><?= htmlspecialchars($user['email'] ?? '-') ?></td>
                             <td><?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?: '-') ?></td>
@@ -1106,11 +1115,14 @@ $adminActions = $pdo->query("
                                 <?= htmlspecialchars($user['state_abbrev'] ?? '') ?>
                             </td>
                             <td>
-                                <?php
-                                $levelColors = ['anonymous' => '#666', 'remembered' => '#2196f3', 'verified' => '#4caf50', 'vetted' => '#d4af37'];
-                                $levelColor = $levelColors[$user['identity_level'] ?? ''] ?? '#666';
+                                <?php if ($user['deleted_at']): ?>
+                                    <span style="color: #c62828;">Deleted</span>
+                                <?php else:
+                                    $levelColors = ['anonymous' => '#666', 'remembered' => '#2196f3', 'verified' => '#4caf50', 'vetted' => '#d4af37'];
+                                    $levelColor = $levelColors[$user['identity_level'] ?? ''] ?? '#666';
                                 ?>
-                                <span style="color: <?= $levelColor ?>;"><?= ucfirst(htmlspecialchars($user['identity_level'] ?? 'unknown')) ?></span>
+                                    <span style="color: <?= $levelColor ?>;"><?= ucfirst(htmlspecialchars($user['identity_level'] ?? 'unknown')) ?></span>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <?php if ($user['roles']): ?>
@@ -1125,11 +1137,19 @@ $adminActions = $pdo->query("
                             <td><?= $user['active_devices'] ?></td>
                             <td><?= date('M j', strtotime($user['created_at'])) ?></td>
                             <td>
-                                <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this user and ALL their data? This cannot be undone.');">
-                                    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
-                                    <input type="hidden" name="user_id" value="<?= $user['user_id'] ?>">
-                                    <button type="submit" name="delete_user" class="btn btn-danger">Delete</button>
-                                </form>
+                                <?php if ($user['deleted_at']): ?>
+                                    <form method="POST" style="display: inline;" onsubmit="return confirm('Restore this user?');">
+                                        <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                        <input type="hidden" name="user_id" value="<?= $user['user_id'] ?>">
+                                        <button type="submit" name="restore_user" class="btn btn-success">Restore</button>
+                                    </form>
+                                <?php else: ?>
+                                    <form method="POST" style="display: inline;" onsubmit="return confirm('Mark this user as deleted? Their devices will be deactivated and thoughts hidden.');">
+                                        <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                        <input type="hidden" name="user_id" value="<?= $user['user_id'] ?>">
+                                        <button type="submit" name="delete_user" class="btn btn-danger">Delete</button>
+                                    </form>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
