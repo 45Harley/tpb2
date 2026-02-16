@@ -177,6 +177,11 @@ All lookups filter `deleted_at IS NULL` — soft-deleted users cannot log in.
 
 Access via `$dbUser['identity_level_id']`.
 
+### Roles vs Volunteers (two separate systems)
+- **Platform roles** (`user_roles` + `user_role_membership`): What a user can DO on the platform. 39 roles (Admin, Moderator, Developer, Group Facilitator, etc.). Admin role (role_id=1) gates `admin.php` access.
+- **Volunteer applications** (`volunteer_applications` + `skill_sets`): Application to help BUILD TPB. 15 skill categories (Technical, Content, Designer, etc.). Admin approves/rejects via dashboard.
+- These are **independent systems** — approving a volunteer does not assign a platform role.
+
 ### Soft delete
 Users are **never** hard-deleted. `admin.php` sets `users.deleted_at` timestamp instead.
 - Devices deactivated (`user_devices.is_active = 0`)
