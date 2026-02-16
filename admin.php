@@ -756,6 +756,7 @@ $adminActions = $pdo->query("
             <?php else: ?>
                 <span class="admin-badge">Admin: password</span>
             <?php endif; ?>
+            <a href="?tab=help">Help</a>
             <a href="index.php" target="_blank">View Site</a>
             <a href="?logout=1">Logout</a>
         </div>
@@ -1181,12 +1182,58 @@ $adminActions = $pdo->query("
                 </tbody>
             </table></div>
 
+        <?php elseif ($tab === 'help'): ?>
+            <!-- HELP TAB -->
+            <?php
+            $helpFile = __DIR__ . '/docs/admin-guide.md';
+            if (file_exists($helpFile)) {
+                $md = file_get_contents($helpFile);
+                // Simple markdown to HTML conversion
+                $html = htmlspecialchars($md);
+                // Headers
+                $html = preg_replace('/^### (.+)$/m', '<h3 style="color:#d4af37;margin:25px 0 10px;">$1</h3>', $html);
+                $html = preg_replace('/^## (.+)$/m', '<h2 class="section-title">$1</h2>', $html);
+                $html = preg_replace('/^# (.+)$/m', '<h1 style="color:#d4af37;margin-bottom:10px;">$1</h1>', $html);
+                // Bold
+                $html = preg_replace('/\*\*(.+?)\*\*/', '<strong style="color:#e0e0e0;">$1</strong>', $html);
+                // Inline code
+                $html = preg_replace('/`([^`]+)`/', '<code style="background:#252525;padding:2px 6px;border-radius:3px;font-size:0.9em;">$1</code>', $html);
+                // Horizontal rules
+                $html = preg_replace('/^---$/m', '<hr style="border:none;border-top:1px solid #333;margin:20px 0;">', $html);
+                // Table rows
+                $html = preg_replace_callback('/^\|(.+)\|$/m', function($m) {
+                    $cells = array_map('trim', explode('|', trim($m[1])));
+                    $out = '<tr>';
+                    foreach ($cells as $cell) {
+                        if (preg_match('/^[-:]+$/', $cell)) return '';
+                        $out .= '<td style="padding:8px 12px;border-bottom:1px solid #333;">' . $cell . '</td>';
+                    }
+                    return $out . '</tr>';
+                }, $html);
+                // Wrap table rows in table
+                $html = preg_replace('/(<tr>.*?<\/tr>\s*)+/s', '<div class="table-wrap"><table style="width:100%;border-collapse:collapse;background:#1a1a1a;border-radius:8px;overflow:hidden;margin:15px 0;">$0</table></div>', $html);
+                // List items
+                $html = preg_replace('/^- (.+)$/m', '<li style="margin:4px 0;margin-left:20px;">$1</li>', $html);
+                // Paragraphs (double newlines)
+                $html = preg_replace('/\n\n/', '</p><p style="margin:10px 0;color:#ccc;">', $html);
+                // Single newlines within content
+                $html = str_replace("\n", '<br>', $html);
+                echo '<div style="max-width:900px;line-height:1.8;color:#ccc;">';
+                echo '<p style="margin:10px 0;color:#ccc;">' . $html . '</p>';
+                echo '</div>';
+            } else {
+                echo '<p style="color:#888;">Help file not found at docs/admin-guide.md</p>';
+            }
+            ?>
+
         <?php endif; ?>
     </div>
 
     <script>
-        // Auto-refresh every 60 seconds
+        // Auto-refresh every 60 seconds (skip help tab)
+        <?php if ($tab !== 'help'): ?>
         setTimeout(() => location.reload(), 60000);
+        <?php endif; ?>
     </script>
 </body>
 </html>
