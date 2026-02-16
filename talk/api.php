@@ -2305,6 +2305,26 @@ function handleGather($pdo, $input, $userId) {
         return ['success' => false, 'error' => 'Need at least 2 shareable ideas to gather'];
     }
 
+    // Extract "re: #xxx" reply references and auto-create reply_to links
+    $ideaIdSet = array_flip(array_column($ideas, 'id'));
+    $replyLinks = [];
+    foreach ($ideas as $idea) {
+        if (preg_match_all('/\bre:\s*#(\d+)/i', $idea['content'], $matches)) {
+            foreach ($matches[1] as $refId) {
+                $refId = (int)$refId;
+                if ($refId > 0 && isset($ideaIdSet[$refId]) && $refId !== $idea['id']) {
+                    $replyLinks[] = ['from' => $idea['id'], 'to' => $refId];
+                    // Auto-create the link in DB (idempotent)
+                    $pdo->prepare("
+                        INSERT INTO idea_links (idea_id_a, idea_id_b, link_type, created_by)
+                        VALUES (?, ?, 'reply_to', ?)
+                        ON DUPLICATE KEY UPDATE id = id
+                    ")->execute([$idea['id'], $refId, $userId]);
+                }
+            }
+        }
+    }
+
     // Fetch existing links to avoid duplicates
     $ideaIds = array_column($ideas, 'id');
     $placeholders = implode(',', array_fill(0, count($ideaIds), '?'));
@@ -2378,6 +2398,14 @@ function handleGather($pdo, $input, $userId) {
         return ['success' => false, 'error' => 'No new ideas since last gather'];
     }
 
+    if ($replyLinks) {
+        $systemPrompt .= "\n## Explicit Reply Connections (users linked these themselves)\n";
+        $systemPrompt .= "These are direct replies — treat them as strong, confirmed connections:\n";
+        foreach ($replyLinks as $rl) {
+            $systemPrompt .= "- #{$rl['from']} replies to #{$rl['to']}\n";
+        }
+    }
+
     if ($existingLinks) {
         $systemPrompt .= "\n## Existing Links (do not duplicate)\n";
         foreach ($existingLinks as $link) {
@@ -2431,7 +2459,7 @@ After your analysis, include action tags to create links and summaries.
 [ACTION: LINK]
 idea_id_a: {first idea number}
 idea_id_b: {second idea number}
-link_type: {related|supports|challenges|builds_on}
+link_type: {related|supports|challenges|builds_on|reply_to}
 reason: {brief explanation of the connection}
 
 ### Summarize a cluster of related ideas
@@ -2443,6 +2471,7 @@ source_ids: {comma-separated idea numbers that form this cluster}
 ## Rules
 - Only link ideas that have genuine thematic connections.
 - Do not duplicate existing links.
+- Explicit reply connections (re: #xxx) are already linked — use them as anchors when clustering.
 - Create one SUMMARIZE for each distinct cluster you identify.
 - A cluster needs at least 2 ideas.
 - Write summaries as if presenting to the group — clear, non-partisan, civic-focused.
@@ -2460,7 +2489,7 @@ function processGathererAction($pdo, $action, $userId, $groupId) {
                 return ['action' => 'LINK', 'success' => false, 'error' => 'Invalid idea IDs'];
             }
 
-            $validTypes = ['related', 'supports', 'challenges', 'synthesizes', 'builds_on'];
+            $validTypes = ['related', 'supports', 'challenges', 'synthesizes', 'builds_on', 'reply_to'];
             if (!in_array($linkType, $validTypes)) $linkType = 'related';
 
             // Normalize order for symmetric types
