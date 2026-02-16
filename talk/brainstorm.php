@@ -52,13 +52,13 @@ try {
         .header-links { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
         .header-links a {
-            color: #4fc3f7;
+            color: #90caf9;
             text-decoration: none;
             font-size: 0.8rem;
             font-weight: 500;
         }
 
-        .header-links a:hover { text-decoration: underline; }
+        .header-links a:hover { text-decoration: underline; color: #bbdefb; }
 
         .share-toggle {
             display: flex;

@@ -154,12 +154,12 @@ $mode = $groupId ? 'detail' : 'list';
             margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
         }
 
-        h1 { font-size: 1.3rem; color: #4fc3f7; }
+        h1 { font-size: 1.3rem; color: #ffffff; }
         h2 { font-size: 1.1rem; color: #eee; margin-bottom: 0.75rem; }
 
         .header-links { display: flex; gap: 1rem; font-size: 0.9rem; }
-        .header-links a { color: #4fc3f7; text-decoration: none; }
-        .header-links a:hover { text-decoration: underline; }
+        .header-links a { color: #90caf9; text-decoration: none; }
+        .header-links a:hover { text-decoration: underline; color: #bbdefb; }
 
         .user-status { font-size: 0.8rem; color: #81c784; text-align: right; margin-bottom: 0.75rem; }
         .user-status .dot { display: inline-block; width: 8px; height: 8px; background: #4caf50; border-radius: 50%; margin-right: 4px; }

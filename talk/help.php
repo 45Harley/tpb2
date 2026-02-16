@@ -41,7 +41,7 @@ try {
 
         .page-header h1 {
             font-size: 1.3rem;
-            color: #4fc3f7;
+            color: #ffffff;
         }
 
         .header-links {
@@ -51,11 +51,11 @@ try {
         }
 
         .header-links a {
-            color: #4fc3f7;
+            color: #90caf9;
             text-decoration: none;
         }
 
-        .header-links a:hover { text-decoration: underline; }
+        .header-links a:hover { text-decoration: underline; color: #bbdefb; }
 
         .user-status { font-size: 0.8rem; color: #81c784; text-align: right; margin-bottom: 0.75rem; }
         .user-status .dot { display: inline-block; width: 8px; height: 8px; background: #4caf50; border-radius: 50%; margin-right: 4px; }

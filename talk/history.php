@@ -170,10 +170,10 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
             margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
         }
 
-        h1 { font-size: 1.3rem; color: #4fc3f7; }
+        h1 { font-size: 1.3rem; color: #ffffff; }
 
         .header-links { display: flex; gap: 1rem; font-size: 0.9rem; }
-        .header-links a { color: #4fc3f7; text-decoration: none; }
+        .header-links a { color: #90caf9; text-decoration: none; }
         .header-links a:focus-visible { outline: 2px solid #4fc3f7; outline-offset: 2px; border-radius: 2px; }
 
         .user-status { font-size: 0.8rem; color: #81c784; text-align: right; margin-bottom: 0.75rem; }
@@ -253,7 +253,7 @@ $statusOrder = ['raw' => 'refining', 'refining' => 'distilled', 'distilled' => '
             display: flex; gap: 8px; margin-top: 6px; justify-content: flex-end;
         }
 
-        .user-name { color: #4fc3f7; font-weight: 600; }
+        .user-name { color: #80d8ff; font-weight: 600; }
 
         .empty { text-align: center; padding: 3rem; color: #999; }
         .error { background: rgba(244,67,54,0.2); color: #e57373; padding: 15px; border-radius: 8px; margin-bottom: 1rem; z-index: 10; position: relative; }

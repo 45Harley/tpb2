@@ -36,10 +36,10 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             padding: 12px 16px;
             border-bottom: 1px solid rgba(255,255,255,0.06);
         }
-        .page-header h1 { font-size: 1.2rem; color: #4fc3f7; }
+        .page-header h1 { font-size: 1.2rem; color: #ffffff; }
         .header-links { display: flex; gap: 12px; font-size: 0.85rem; }
-        .header-links a { color: #4fc3f7; text-decoration: none; }
-        .header-links a:hover { text-decoration: underline; }
+        .header-links a { color: #90caf9; text-decoration: none; }
+        .header-links a:hover { text-decoration: underline; color: #bbdefb; }
 
         .user-status { font-size: 0.75rem; color: #81c784; text-align: right; padding: 4px 16px 0; }
         .user-status .dot { display: inline-block; width: 7px; height: 7px; background: #4caf50; border-radius: 50%; margin-right: 3px; }
@@ -211,9 +211,9 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             margin-bottom: 6px;
             font-size: 0.8rem;
         }
-        .card-author { color: #4fc3f7; font-weight: 600; }
-        .card-id { color: #888; font-weight: 400; margin-right: 6px; font-size: 0.8rem; }
-        .card-time { color: #666; }
+        .card-author { color: #80d8ff; font-weight: 600; }
+        .card-id { color: #aaa; font-weight: 400; margin-right: 6px; font-size: 0.8rem; }
+        .card-time { color: #999; }
 
         .card-content {
             font-size: 0.9rem;
@@ -242,9 +242,10 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             color: #4fc3f7;
         }
         .card-tag.cat-tag {
-            background: rgba(255,255,255,0.08);
-            color: #aaa;
+            background: rgba(255,255,255,0.12);
+            color: #ccc;
             text-transform: capitalize;
+            font-weight: 500;
         }
 
         .card-actions { display: flex; gap: 6px; align-items: center; }
@@ -360,7 +361,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             padding: 2px 8px;
             cursor: pointer;
             font-size: 0.8rem;
-            color: #888;
+            color: #aaa;
             transition: all 0.15s;
             display: inline-flex;
             align-items: center;
@@ -369,7 +370,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         .vote-btn:hover { border-color: rgba(255,255,255,0.25); color: #ccc; }
         .vote-btn.active-agree { border-color: #4caf50; color: #4caf50; background: rgba(76,175,80,0.1); }
         .vote-btn.active-disagree { border-color: #ef5350; color: #ef5350; background: rgba(239,83,80,0.1); }
-        .vote-btn .count { font-size: 0.75rem; }
+        .vote-btn .count { font-size: 0.75rem; color: #bbb; }
 
         /* ── Footer Bar ── */
         .footer-bar {
@@ -384,17 +385,26 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         }
         .footer-bar.visible { display: flex; }
         .footer-bar button {
-            padding: 8px 18px;
-            border: 1px solid rgba(255,255,255,0.15);
+            padding: 8px 24px;
             border-radius: 8px;
-            background: rgba(255,255,255,0.06);
-            color: #aaa;
             font-size: 0.85rem;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .footer-bar button:hover { background: rgba(255,255,255,0.12); color: #eee; }
         .footer-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .footer-bar .gather-btn {
+            border: 1px solid rgba(79,195,247,0.4);
+            background: rgba(79,195,247,0.12);
+            color: #80d8ff;
+        }
+        .footer-bar .gather-btn:hover { background: rgba(79,195,247,0.22); color: #b3e5fc; border-color: rgba(79,195,247,0.6); }
+        .footer-bar .crystallize-btn {
+            border: 1px solid rgba(206,147,216,0.4);
+            background: rgba(156,39,176,0.15);
+            color: #e1bee7;
+        }
+        .footer-bar .crystallize-btn:hover { background: rgba(156,39,176,0.25); color: #f3e5f5; border-color: rgba(206,147,216,0.6); }
 
         /* ── Status toast ── */
         .toast {
@@ -477,8 +487,8 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
     </div>
 
     <div class="footer-bar" id="footerBar">
-        <button id="gatherBtn" onclick="runGather()">Gather</button>
-        <button id="crystallizeBtn" onclick="runCrystallize()">Crystallize</button>
+        <button id="gatherBtn" class="gather-btn" onclick="runGather()">Gather</button>
+        <button id="crystallizeBtn" class="crystallize-btn" onclick="runCrystallize()">Crystallize</button>
     </div>
 
     <div class="toast hidden" id="toast"></div>
