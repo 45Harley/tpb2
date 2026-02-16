@@ -17,7 +17,7 @@ test('Talk multi-user harness passes all scenarios', async ({ page }) => {
     await page.goto(`${SITE}/tests/talk-harness.php?auto=1`);
 
     // Wait for harness to complete (auto-run adds #harness-complete on success)
-    await page.waitForSelector('#harness-complete', { timeout: 90000 });
+    await page.waitForSelector('#harness-complete', { state: 'attached', timeout: 90000 });
 
     // Read summary
     const summary = await page.$eval('#harness-summary', el =>
