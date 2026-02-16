@@ -43,7 +43,7 @@ function talkApi($baseUrl, $userId, $method, $action, $data = []) {
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 30,
-        CURLOPT_USERAGENT      => 'TPB-TestHarness/1.0 (Mozilla/5.0 compatible)',
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 TPB-TestHarness/1.0',
         CURLOPT_HTTPHEADER     => [
             'Content-Type: application/json',
             'Cookie: tpb_user_id=' . $userId,
