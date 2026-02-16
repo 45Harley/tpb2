@@ -73,7 +73,8 @@ RewriteRule ^config-claude\.php$ - [F,L]
 #   BLOCKED: everything else dev-only
 <IfModule mod_rewrite.c>
 RewriteEngine On
-# Dev-only directories
+# Dev-only directories (allow test harness for CI)
+RewriteCond %{REQUEST_URI} !^/tests/talk-harness\.php
 RewriteRule ^tests/ - [F,L]
 RewriteRule ^scripts/ - [F,L]
 # Internal docs (NOT the volunteer build kit)
