@@ -462,6 +462,12 @@ $adminActions = $pdo->query("
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html, body {
+            min-height: 100%;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
         body {
             font-family: 'Georgia', serif;
             background: #0a0a0a;
@@ -657,6 +663,12 @@ $adminActions = $pdo->query("
         .btn-warning:hover { background: #e65100; }
         .btn-success { background: #2e7d32; color: white; }
         .btn-success:hover { background: #1b5e20; }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
 
         .thought-content {
             max-width: 400px;
@@ -953,7 +965,7 @@ $adminActions = $pdo->query("
             <?php endif; ?>
 
             <h2 class="section-title" style="margin-top: 40px;">All Applications (<?= count($allVolunteers) ?>)</h2>
-            <table>
+            <div class="table-wrap"><table>
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -988,13 +1000,13 @@ $adminActions = $pdo->query("
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
-            </table>
+            </table></div>
 
         <?php elseif ($tab === 'thoughts'): ?>
             <!-- THOUGHTS TAB -->
             <h2 class="section-title">All Thoughts (<?= $stats['thoughts_total'] ?> published, <?= $stats['hidden_thoughts'] ?> hidden)</h2>
 
-            <table>
+            <div class="table-wrap"><table>
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -1059,13 +1071,13 @@ $adminActions = $pdo->query("
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
-            </table>
+            </table></div>
 
         <?php elseif ($tab === 'users'): ?>
             <!-- USERS TAB -->
             <h2 class="section-title">Citizens (<?= $stats['citizens'] ?>)</h2>
 
-            <table>
+            <div class="table-wrap"><table>
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -1122,13 +1134,13 @@ $adminActions = $pdo->query("
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
-            </table>
+            </table></div>
 
         <?php elseif ($tab === 'activity'): ?>
             <!-- ACTIVITY TAB -->
             <h2 class="section-title">Civic Activity Feed</h2>
 
-            <table>
+            <div class="table-wrap"><table>
                 <thead>
                     <tr>
                         <th>Time</th>
@@ -1147,7 +1159,7 @@ $adminActions = $pdo->query("
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
-            </table>
+            </table></div>
 
         <?php endif; ?>
     </div>
