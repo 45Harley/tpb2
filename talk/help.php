@@ -302,6 +302,8 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
                 <li><strong>AI respond toggle</strong> &mdash; the robot icon next to the input. When on, AI brainstorms back after each idea.</li>
                 <li><strong>Voice input</strong> &mdash; tap the mic, speak naturally, it fills in the text.</li>
                 <li><strong>Live stream</strong> &mdash; in group mode, new ideas from other members appear automatically (polls every 8 seconds).</li>
+                <li><strong>Agree/Disagree</strong> &mdash; 👍 and 👎 buttons on each idea card. Tap to vote, tap again to remove. Shows how the group feels about each idea.</li>
+                <li><strong>Status filter</strong> &mdash; filter bar above the stream: All, Raw, Refining, Distilled, Actionable. Focus on ideas at a specific maturity level.</li>
                 <li><strong>Inline edit/delete</strong> &mdash; pencil to edit, &times; to delete your own ideas. Promote to advance maturity.</li>
                 <li><strong>Ctrl+Enter</strong> (Cmd+Enter on Mac) submits without clicking Send.</li>
             </ul>
@@ -339,7 +341,20 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
                 <span class="status-arrow">&#x2192;</span>
                 <span class="status-pill">Actionable</span>
             </div>
-            <p>Use the promote button (&#x2b06;) on any idea card to advance it one step.</p>
+            <p>Use the promote button (&#x2b06;) on any idea card to advance it one step. Use the <strong>status filter bar</strong> at the top of the stream to view only ideas at a specific stage.</p>
+        </div>
+
+        <!-- Voting -->
+        <div class="page-card">
+            <h3>👍 Agree / Disagree</h3>
+            <p>Every idea card (except AI responses and digests) has agree and disagree buttons. This is civic agreement, not competitive voting &mdash; it shows where the group aligns.</p>
+            <ul>
+                <li><strong>Tap 👍</strong> to agree, tap again to remove your vote</li>
+                <li><strong>Tap 👎</strong> to disagree, or switch from agree to disagree</li>
+                <li><strong>One vote per idea</strong> &mdash; you can't agree and disagree at the same time</li>
+                <li><strong>Login required</strong> &mdash; anonymous users can read but not vote</li>
+            </ul>
+            <p>Vote counts update instantly without reloading the page.</p>
         </div>
 
         <!-- Groups -->
@@ -477,6 +492,20 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
                 <p>Yes &mdash; in the stream, your own ideas show an edit (&#x270E;) and delete (&times;) button. You can also delete AI responses that were triggered by your ideas.</p>
                 <p><strong>Editing</strong> is transparent: an "(edited)" tag appears on modified thoughts. The edit count is tracked.</p>
                 <p><strong>Deleting</strong> is usually a soft delete &mdash; the idea is hidden but preserved so gathered outputs stay intact.</p>
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary>How does voting work?</summary>
+            <div class="answer">
+                <p>You can agree (👍) or disagree (👎) with any human-submitted idea. Voting is a toggle &mdash; tap the same button again to remove your vote, or tap the other to switch. You need to be logged in to vote. AI-generated cards and digests don't have vote buttons.</p>
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary>What does the status filter do?</summary>
+            <div class="answer">
+                <p>The filter bar above the stream lets you show only ideas at a specific maturity level: Raw, Refining, Distilled, or Actionable. Click "All" to see everything again. This is useful when a group has many ideas and you want to focus on the ones that have been refined.</p>
             </div>
         </details>
 
