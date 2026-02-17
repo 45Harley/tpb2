@@ -73,8 +73,8 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
 
         .input-row textarea {
             flex: 1;
-            min-height: 42px;
-            max-height: 120px;
+            min-height: 72px;
+            max-height: 200px;
             padding: 10px 12px;
             border: 1px solid rgba(255,255,255,0.15);
             border-radius: 10px;
@@ -84,9 +84,19 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             font-size: 0.95rem;
             resize: none;
             line-height: 1.4;
+            overflow-y: auto;
         }
         .input-row textarea:focus { outline: none; border-color: #4fc3f7; }
         .input-row textarea::placeholder { color: #888; }
+
+        .char-counter {
+            text-align: right;
+            font-size: 0.7rem;
+            color: #666;
+            padding: 2px 16px 0;
+        }
+        .char-counter.warn { color: #ff9800; }
+        .char-counter.over { color: #ef5350; }
 
         .input-btn {
             width: 42px;
@@ -469,10 +479,11 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
 
         <div class="input-row">
             <button class="input-btn mic-btn" id="micBtn" title="Voice input">&#x1f3a4;</button>
-            <textarea id="ideaInput" placeholder="What's on your mind?" rows="1"></textarea>
+            <textarea id="ideaInput" placeholder="What's on your mind?" rows="3" maxlength="2000"></textarea>
             <button class="input-btn ai-btn" id="aiBtn" title="Toggle AI response">&#x1f916;</button>
             <button class="input-btn send-btn" id="sendBtn" title="Send">&#x27a4;</button>
         </div>
+        <div class="char-counter" id="charCounter">0 / 2,000</div>
     </div>
 
     <div class="filter-bar">
@@ -545,10 +556,18 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         localStorage.setItem('tpb_talk_ai_respond', aiRespond ? '1' : '0');
     });
 
-    // ── Textarea auto-resize ──
+    // ── Textarea auto-resize + char counter ──
+    var charCounter = document.getElementById('charCounter');
+    var maxChars = 2000;
+    function updateCharCounter() {
+        var len = ideaInput.value.length;
+        charCounter.textContent = len.toLocaleString() + ' / ' + maxChars.toLocaleString();
+        charCounter.className = 'char-counter' + (len > maxChars * 0.9 ? (len >= maxChars ? ' over' : ' warn') : '');
+    }
     ideaInput.addEventListener('input', function() {
         this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+        updateCharCounter();
     });
 
     // ── Context selector ──
@@ -598,6 +617,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             if (data.success && data.idea) {
                 ideaInput.value = '';
                 ideaInput.style.height = 'auto';
+                updateCharCounter();
                 prependIdea(data.idea);
 
                 // If AI respond is on, send to brainstorm
@@ -1164,9 +1184,10 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         ideaInput.focus();
         // Place cursor at end
         ideaInput.setSelectionRange(prefix.length, prefix.length);
-        // Auto-resize
+        // Auto-resize + counter
         ideaInput.style.height = 'auto';
-        ideaInput.style.height = Math.min(ideaInput.scrollHeight, 120) + 'px';
+        ideaInput.style.height = Math.min(ideaInput.scrollHeight, 200) + 'px';
+        updateCharCounter();
         // Scroll input into view on mobile
         ideaInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
