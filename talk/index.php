@@ -527,6 +527,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
     var loadedIdeas = [];
     var pollTimer = null;
     var userRole = null;
+    var publicAccess = null;
     var isSubmitting = false;
     var currentFilter = '';
 
@@ -739,11 +740,16 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         }
 
         var voteHtml = '';
+        var canVote = (userRole || publicAccess === 'vote' || !currentContext);
         if (!idea.clerk_key && idea.category !== 'digest') {
-            var agreeActive = idea.user_vote === 'agree' ? ' active-agree' : '';
-            var disagreeActive = idea.user_vote === 'disagree' ? ' active-disagree' : '';
-            voteHtml = '<button class="vote-btn' + agreeActive + '" onclick="voteIdea(' + idea.id + ',\'agree\')" title="Agree">\ud83d\udc4d <span class="count" id="agree-' + idea.id + '">' + (idea.agree_count || 0) + '</span></button>' +
-                       '<button class="vote-btn' + disagreeActive + '" onclick="voteIdea(' + idea.id + ',\'disagree\')" title="Disagree">\ud83d\udc4e <span class="count" id="disagree-' + idea.id + '">' + (idea.disagree_count || 0) + '</span></button>';
+            if (canVote) {
+                var agreeActive = idea.user_vote === 'agree' ? ' active-agree' : '';
+                var disagreeActive = idea.user_vote === 'disagree' ? ' active-disagree' : '';
+                voteHtml = '<button class="vote-btn' + agreeActive + '" onclick="voteIdea(' + idea.id + ',\'agree\')" title="Agree">\ud83d\udc4d <span class="count" id="agree-' + idea.id + '">' + (idea.agree_count || 0) + '</span></button>' +
+                           '<button class="vote-btn' + disagreeActive + '" onclick="voteIdea(' + idea.id + ',\'disagree\')" title="Disagree">\ud83d\udc4e <span class="count" id="disagree-' + idea.id + '">' + (idea.disagree_count || 0) + '</span></button>';
+            } else if (publicAccess === 'read') {
+                voteHtml = '<span style="font-size:0.8rem;color:#888;">\ud83d\udc4d ' + (idea.agree_count || 0) + ' \u00b7 \ud83d\udc4e ' + (idea.disagree_count || 0) + '</span>';
+            }
         }
 
         var actionsHtml = '';
@@ -793,7 +799,20 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             if (data.user_role !== undefined) {
                 userRole = data.user_role;
             }
+            if (data.public_access !== undefined) {
+                publicAccess = data.public_access;
+            }
             updateFooter();
+
+            // Hide input area for non-member public viewers
+            var inputArea = document.querySelector('.input-area');
+            if (inputArea) {
+                if (currentContext && !userRole && publicAccess) {
+                    inputArea.style.display = 'none';
+                } else {
+                    inputArea.style.display = '';
+                }
+            }
 
             if (!before) {
                 // Initial load — clear stream
@@ -851,6 +870,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         stopPolling();
         loadedIdeas = [];
         userRole = null;
+        publicAccess = null;
         loadIdeas();
         if (currentContext) startPolling();
     }

@@ -336,6 +336,16 @@ $mode = $groupId ? 'detail' : 'list';
                             <option value="closed">Closed (invitation only)</option>
                         </select>
                     </div>
+                    <div class="form-group" style="font-size:0.85rem;">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:6px;">
+                            <input type="checkbox" id="groupPublicRead" onchange="if(!this.checked) document.getElementById('groupPublicVote').checked=false;">
+                            Allow verified non-members to read ideas
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="groupPublicVote" onchange="if(this.checked) document.getElementById('groupPublicRead').checked=true;">
+                            Allow verified non-members to vote on ideas
+                        </label>
+                    </div>
                     <button class="btn btn-primary" onclick="createGroup()">Create Group</button>
                 </div>
             <?php endif; ?>
@@ -437,7 +447,9 @@ $mode = $groupId ? 'detail' : 'list';
             name: name,
             description: document.getElementById('groupDesc').value.trim(),
             tags: document.getElementById('groupTags').value.trim(),
-            access_level: document.getElementById('groupAccess').value
+            access_level: document.getElementById('groupAccess').value,
+            public_readable: document.getElementById('groupPublicRead').checked ? 1 : 0,
+            public_voting: document.getElementById('groupPublicVote').checked ? 1 : 0
         });
 
         if (data.success) {
@@ -489,17 +501,24 @@ $mode = $groupId ? 'detail' : 'list';
                 '<span>' + members.length + ' member' + (members.length != 1 ? 's' : '') + '</span>' +
                 '<span>' + g.access_level + '</span>' +
                 (userRole ? '<span class="badge ' + userRole + '">You: ' + userRole + '</span>' : '') +
+                (g.public_voting == 1 ? '<span style="color:#81c784;font-size:0.75rem;">&#127760; Public voting</span>' :
+                 g.public_readable == 1 ? '<span style="color:#90caf9;font-size:0.75rem;">&#127760; Public reading</span>' : '') +
             '</div>' +
             (tags ? '<div class="tags" style="margin-top:6px;">' + tags + '</div>' : '') +
         '</div>';
 
         // Actions
+        var publicAccess = data.public_access;
         html += '<div class="actions">';
         if (isMember) {
             html += '<a href="index.php?group=' + g.id + '" class="btn btn-primary">Open in Talk</a>';
         }
         if (!isMember && g.access_level !== 'closed') {
             html += '<button class="btn btn-primary" onclick="joinGroup(' + g.id + ')">Join Group</button>';
+        }
+        if (!isMember && publicAccess) {
+            var paLabel = publicAccess === 'vote' ? 'View & Vote' : 'View Ideas';
+            html += '<a href="index.php?group=' + g.id + '" class="btn btn-secondary">&#127760; ' + paLabel + '</a>';
         }
         if (isMember && !isFacilitator) {
             html += '<button class="btn btn-danger" onclick="leaveGroup(' + g.id + ')">Leave</button>';
@@ -553,6 +572,25 @@ $mode = $groupId ? 'detail' : 'list';
 
 
         html += '</div>';
+
+        // Public access settings (facilitator only)
+        if (isFacilitator) {
+            html += '<div class="section" style="margin-top:1.5rem;"><h2>Public Access</h2>' +
+                '<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:14px;">' +
+                '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px;font-size:0.9rem;">' +
+                    '<input type="checkbox" id="pubReadToggle"' + (g.public_readable == 1 ? ' checked' : '') +
+                    ' onchange="if(!this.checked){document.getElementById(\'pubVoteToggle\').checked=false;}">' +
+                    ' Verified non-members can read ideas' +
+                '</label>' +
+                '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;font-size:0.9rem;">' +
+                    '<input type="checkbox" id="pubVoteToggle"' + (g.public_voting == 1 ? ' checked' : '') +
+                    ' onchange="if(this.checked){document.getElementById(\'pubReadToggle\').checked=true;}">' +
+                    ' Verified non-members can vote on ideas' +
+                '</label>' +
+                '<div style="font-size:0.75rem;color:#888;margin-bottom:10px;">Only affects users with verified accounts (phone-verified or higher).</div>' +
+                '<button class="btn btn-secondary" onclick="savePublicAccess(' + g.id + ')">Save</button>' +
+                '</div></div>';
+        }
 
         // Invite form (facilitator only)
         if (isFacilitator) {
@@ -615,6 +653,20 @@ $mode = $groupId ? 'detail' : 'list';
                 banner += '</div>';
                 area.innerHTML = banner;
             }
+        }
+    }
+
+    async function savePublicAccess(gId) {
+        var data = await apiPost('update_group', {
+            group_id: gId,
+            public_readable: document.getElementById('pubReadToggle').checked ? 1 : 0,
+            public_voting: document.getElementById('pubVoteToggle').checked ? 1 : 0
+        });
+        if (data.success) {
+            showStatus('Public access settings updated', 'success');
+            loadGroupDetail();
+        } else {
+            showStatus(data.error || 'Error updating settings', 'error');
         }
     }
 

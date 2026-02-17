@@ -76,13 +76,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
 }
 
+// Helper: determine public access level for non-member verified users
+function getPublicAccess($group, $dbUser) {
+    if (!$dbUser || (int)($dbUser['identity_level_id'] ?? 1) < 3) return null;
+    if (!empty($group['public_voting'])) return 'vote';
+    if (!empty($group['public_readable'])) return 'read';
+    return null;
+}
+
 try {
     switch ($action) {
         case 'save':
             echo json_encode(handleSave($pdo, $input, $userId));
             break;
         case 'history':
-            echo json_encode(handleHistory($pdo, $userId));
+            echo json_encode(handleHistory($pdo, $userId, $dbUser));
             break;
         case 'promote':
             echo json_encode(handlePromote($pdo, $input, $userId));
@@ -119,7 +127,7 @@ try {
             echo json_encode(handleListGroups($pdo, $userId));
             break;
         case 'get_group':
-            echo json_encode(handleGetGroup($pdo, $userId));
+            echo json_encode(handleGetGroup($pdo, $userId, $dbUser));
             break;
         case 'join_group':
             echo json_encode(handleJoinGroup($pdo, $input, $userId));
@@ -149,7 +157,7 @@ try {
             break;
 
         case 'vote':
-            echo json_encode(handleVote($pdo, $input, $userId));
+            echo json_encode(handleVote($pdo, $input, $userId, $dbUser));
             break;
 
         // Phase 5: Group Invites
@@ -330,7 +338,7 @@ function handleSave($pdo, $input, $userId) {
 
 // ── History ────────────────────────────────────────────────────────
 
-function handleHistory($pdo, $userId) {
+function handleHistory($pdo, $userId, $dbUser = null) {
     $sessionId = $_GET['session_id'] ?? null;
     $category  = $_GET['category']   ?? null;
     $status    = $_GET['status']     ?? null;
@@ -357,11 +365,18 @@ function handleHistory($pdo, $userId) {
             $userRole = $membership ? $membership['role'] : null;
         }
         // Check group access
-        $stmt = $pdo->prepare("SELECT access_level FROM idea_groups WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT access_level, public_readable, public_voting FROM idea_groups WHERE id = ?");
         $stmt->execute([$groupId]);
         $group = $stmt->fetch();
+        $publicAccess = null;
         if ($group && $group['access_level'] === 'closed' && !$userRole) {
-            return ['success' => false, 'error' => 'This group is closed'];
+            $publicAccess = getPublicAccess($group, $dbUser);
+            if (!$publicAccess) {
+                return ['success' => false, 'error' => 'This group is closed'];
+            }
+        }
+        if (!$userRole && !$publicAccess && $group) {
+            $publicAccess = getPublicAccess($group, $dbUser);
         }
 
         $where[] = 'i.group_id = :group_id';
@@ -453,6 +468,7 @@ function handleHistory($pdo, $userId) {
     ];
     if ($groupId !== null) {
         $result['user_role'] = $userRole;
+        $result['public_access'] = $publicAccess ?? null;
     }
     return $result;
 }
@@ -1403,7 +1419,7 @@ function formatSize($bytes) {
 
 // ── Vote ──────────────────────────────────────────────────────────
 
-function handleVote($pdo, $input, $userId) {
+function handleVote($pdo, $input, $userId, $dbUser = null) {
     if (!$userId) {
         return ['success' => false, 'error' => 'Log in to vote'];
     }
@@ -1419,7 +1435,7 @@ function handleVote($pdo, $input, $userId) {
     }
 
     // Verify idea exists and is votable (not AI-generated, not digest/crystal)
-    $stmt = $pdo->prepare("SELECT id, clerk_key, category FROM idea_log WHERE id = ? AND deleted_at IS NULL");
+    $stmt = $pdo->prepare("SELECT id, clerk_key, category, group_id FROM idea_log WHERE id = ? AND deleted_at IS NULL");
     $stmt->execute([$ideaId]);
     $idea = $stmt->fetch();
     if (!$idea) {
@@ -1430,6 +1446,24 @@ function handleVote($pdo, $input, $userId) {
     }
     if ($idea['category'] === 'digest') {
         return ['success' => false, 'error' => 'Cannot vote on digests'];
+    }
+
+    // Check group-level vote permission for non-members
+    if ($idea['group_id']) {
+        $mStmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
+        $mStmt->execute([$idea['group_id'], $userId]);
+        if (!$mStmt->fetch()) {
+            // Non-member: check if public_voting is enabled
+            $gStmt = $pdo->prepare("SELECT public_voting FROM idea_groups WHERE id = ?");
+            $gStmt->execute([$idea['group_id']]);
+            $votingGroup = $gStmt->fetch();
+            if (!$votingGroup || !$votingGroup['public_voting']) {
+                return ['success' => false, 'error' => 'You must be a group member to vote on this idea'];
+            }
+            if (!$dbUser || (int)($dbUser['identity_level_id'] ?? 1) < 3) {
+                return ['success' => false, 'error' => 'Verified account required to vote on public group ideas'];
+            }
+        }
     }
 
     // Check existing vote
@@ -1593,6 +1627,10 @@ function handleCreateGroup($pdo, $input, $userId) {
         $accessLevel = 'observable';
     }
 
+    $publicReadable = !empty($input['public_readable']) ? 1 : 0;
+    $publicVoting   = !empty($input['public_voting']) ? 1 : 0;
+    if ($publicVoting) $publicReadable = 1;
+
     // Validate scope
     $validScopes = ['town', 'state', 'federal'];
     if ($scope && !in_array($scope, $validScopes)) {
@@ -1636,8 +1674,8 @@ function handleCreateGroup($pdo, $input, $userId) {
 
     // Create the group
     $stmt = $pdo->prepare("
-        INSERT INTO idea_groups (parent_group_id, scope, state_id, town_id, name, description, tags, access_level, created_by)
-        VALUES (:parent, :scope, :state_id, :town_id, :name, :desc, :tags, :access, :user)
+        INSERT INTO idea_groups (parent_group_id, scope, state_id, town_id, name, description, tags, access_level, public_readable, public_voting, created_by)
+        VALUES (:parent, :scope, :state_id, :town_id, :name, :desc, :tags, :access, :pub_read, :pub_vote, :user)
     ");
     $stmt->execute([
         ':parent'   => $parentId,
@@ -1648,6 +1686,8 @@ function handleCreateGroup($pdo, $input, $userId) {
         ':desc'     => $description,
         ':tags'     => $tags,
         ':access'   => $accessLevel,
+        ':pub_read' => $publicReadable,
+        ':pub_vote' => $publicVoting,
         ':user'     => $userId
     ]);
     $groupId = (int)$pdo->lastInsertId();
@@ -1725,7 +1765,7 @@ function handleListGroups($pdo, $userId) {
                 FROM idea_groups g
                 LEFT JOIN idea_group_members m ON m.group_id = g.id AND m.user_id = ?
                 {$locationJoin}
-                WHERE (g.access_level IN ('open', 'observable') OR m.user_id IS NOT NULL) {$geoWhere}
+                WHERE (g.access_level IN ('open', 'observable') OR m.user_id IS NOT NULL OR g.public_readable = 1) {$geoWhere}
                 ORDER BY g.created_at DESC
             ");
             $stmt->execute(array_merge([$userId], $geoParams));
@@ -1749,7 +1789,7 @@ function handleListGroups($pdo, $userId) {
     ];
 }
 
-function handleGetGroup($pdo, $userId) {
+function handleGetGroup($pdo, $userId, $dbUser = null) {
     $groupId = (int)($_GET['group_id'] ?? 0);
     if (!$groupId) {
         return ['success' => false, 'error' => 'group_id is required'];
@@ -1779,8 +1819,15 @@ function handleGetGroup($pdo, $userId) {
         $userRole = $membership ? $membership['role'] : null;
     }
 
+    $publicAccess = null;
     if ($group['access_level'] === 'closed' && !$userRole) {
-        return ['success' => false, 'error' => 'This group is closed'];
+        $publicAccess = getPublicAccess($group, $dbUser);
+        if (!$publicAccess) {
+            return ['success' => false, 'error' => 'This group is closed'];
+        }
+    }
+    if (!$userRole && !$publicAccess) {
+        $publicAccess = getPublicAccess($group, $dbUser);
     }
 
     // Members
@@ -1839,12 +1886,13 @@ function handleGetGroup($pdo, $userId) {
     $subGroups = $stmt->fetchAll();
 
     return [
-        'success'    => true,
-        'group'      => $group,
-        'user_role'  => $userRole,
-        'members'    => $members,
-        'ideas'      => $ideas,
-        'sub_groups' => $subGroups
+        'success'       => true,
+        'group'         => $group,
+        'user_role'     => $userRole,
+        'public_access' => $publicAccess,
+        'members'       => $members,
+        'ideas'         => $ideas,
+        'sub_groups'    => $subGroups
     ];
 }
 
@@ -1991,6 +2039,19 @@ function handleUpdateGroup($pdo, $input, $userId) {
         if (in_array($input['access_level'], $validAccess)) {
             $updates[] = 'access_level = ?';
             $params[] = $input['access_level'];
+        }
+    }
+    if (array_key_exists('public_readable', $input)) {
+        $updates[] = 'public_readable = ?';
+        $params[] = !empty($input['public_readable']) ? 1 : 0;
+    }
+    if (array_key_exists('public_voting', $input)) {
+        $pubVote = !empty($input['public_voting']) ? 1 : 0;
+        $updates[] = 'public_voting = ?';
+        $params[] = $pubVote;
+        if ($pubVote && !in_array('public_readable = ?', $updates)) {
+            $updates[] = 'public_readable = ?';
+            $params[] = 1;
         }
     }
     if (isset($input['status'])) {
