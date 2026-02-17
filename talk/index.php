@@ -777,7 +777,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
     async function loadIdeas(before) {
         var url = 'api.php?action=history&limit=50';
         if (currentContext) {
-            url += '&group_id=' + currentContext;
+            url += '&group_id=' + currentContext + '&include_chat=1';
         }
         if (currentFilter) {
             url += '&status=' + currentFilter;
@@ -891,7 +891,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         if (!newest) return;
 
         try {
-            var url = 'api.php?action=history&group_id=' + currentContext + '&since=' + encodeURIComponent(newest) + '&limit=20';
+            var url = 'api.php?action=history&group_id=' + currentContext + '&include_chat=1&since=' + encodeURIComponent(newest) + '&limit=20';
             var resp = await fetch(url);
             var data = await resp.json();
 
