@@ -520,7 +520,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         if (el) el.textContent = name;
     })();
     var currentContext = localStorage.getItem('tpb_talk_context') || '';
-    var aiRespond = localStorage.getItem('tpb_talk_ai_respond') === '1';
+    var aiRespond = false;
     var sessionId = sessionStorage.getItem('tpb_session');
     if (!sessionId) { sessionId = crypto.randomUUID(); sessionStorage.setItem('tpb_session', sessionId); }
     var formLoadTime = Math.floor(Date.now() / 1000);
@@ -554,7 +554,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
     aiBtn.addEventListener('click', function() {
         aiRespond = !aiRespond;
         aiBtn.classList.toggle('active', aiRespond);
-        localStorage.setItem('tpb_talk_ai_respond', aiRespond ? '1' : '0');
+        // AI toggle is session-only — always starts off on page load
     });
 
     // ── Textarea auto-resize + char counter ──
@@ -719,7 +719,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
 
         // Header
         var idBadge = idea.id ? '<span class="card-id" onclick="replyTo(' + idea.id + ')" title="Reply to #' + idea.id + '">#' + idea.id + '</span>' : '';
-        var header = '<div class="card-header"><span class="card-author">' + idBadge + escHtml(authorName) + clerkBadge + editedTag + '</span><span class="card-time">' + timeStr + '</span></div>';
+        var header = '<div class="card-header"><span class="card-author">' + idBadge + escHtml(authorName) + clerkBadge + editedTag + '</span><span class="card-time" title="' + escHtml(idea.created_at) + '">' + timeStr + '</span></div>';
 
         // Content
         var content = '<div class="card-content" id="content-' + idea.id + '">' + escHtml(idea.content) + '</div>';
@@ -1228,7 +1228,9 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         if (diff < 60) return 'just now';
         if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
         if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        var opts = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+        if (d.getFullYear() !== now.getFullYear()) opts.year = 'numeric';
+        return d.toLocaleDateString(undefined, opts);
     }
 
     function escHtml(str) {

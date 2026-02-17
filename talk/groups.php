@@ -495,7 +495,10 @@ $mode = $groupId ? 'detail' : 'list';
         // Header
         html += '<div class="detail-header">' +
             '<div class="name">' + escHtml(g.name) + '</div>' +
-            (g.description ? '<div class="desc">' + escHtml(g.description) + '</div>' : '') +
+            '<div class="desc" id="groupDesc">' +
+                (g.description ? escHtml(g.description) : '<span style="color:#666;font-style:italic;">No description</span>') +
+                (isFacilitator ? ' <span onclick="editDescription(' + g.id + ')" style="cursor:pointer;color:#4fc3f7;font-size:0.8rem;" title="Edit description">&#x270E;</span>' : '') +
+            '</div>' +
             '<div class="meta">' +
                 '<span class="badge ' + g.status + '">' + g.status + '</span>' +
                 '<span>' + members.length + ' member' + (members.length != 1 ? 's' : '') + '</span>' +
@@ -667,6 +670,33 @@ $mode = $groupId ? 'detail' : 'list';
             loadGroupDetail();
         } else {
             showStatus(data.error || 'Error updating settings', 'error');
+        }
+    }
+
+    function editDescription(gId) {
+        var el = document.getElementById('groupDesc');
+        var current = el.textContent.replace(/\s*✎$/, '').trim();
+        if (current === 'No description') current = '';
+        el.innerHTML = '<textarea id="descEdit" rows="3" style="width:100%;background:rgba(255,255,255,0.08);color:#eee;border:1px solid rgba(79,195,247,0.3);border-radius:8px;padding:8px;font-size:0.9rem;resize:vertical;font-family:inherit;">' + escHtml(current) + '</textarea>' +
+            '<div style="display:flex;gap:6px;margin-top:6px;">' +
+            '<button class="btn btn-secondary" onclick="cancelDescEdit()" style="padding:4px 12px;font-size:0.8rem;">Cancel</button>' +
+            '<button class="btn btn-primary" onclick="saveDescription(' + gId + ')" style="padding:4px 12px;font-size:0.8rem;">Save</button>' +
+            '</div>';
+        document.getElementById('descEdit').focus();
+    }
+
+    function cancelDescEdit() {
+        loadGroupDetail();
+    }
+
+    async function saveDescription(gId) {
+        var val = document.getElementById('descEdit').value.trim();
+        var data = await apiPost('update_group', { group_id: gId, description: val });
+        if (data.success) {
+            showStatus('Description updated', 'success');
+            loadGroupDetail();
+        } else {
+            showStatus(data.error || 'Error updating description', 'error');
         }
     }
 
