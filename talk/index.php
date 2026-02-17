@@ -1222,7 +1222,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
 
     function formatTime(dateStr) {
         if (!dateStr) return '';
-        var d = new Date(dateStr.replace(' ', 'T') + 'Z');
+        var d = new Date(dateStr.replace(' ', 'T'));
         var now = new Date();
         var diff = (now - d) / 1000;
         if (diff < 60) return 'just now';
