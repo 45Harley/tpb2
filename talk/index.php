@@ -92,7 +92,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         .char-counter {
             text-align: right;
             font-size: 0.7rem;
-            color: #666;
+            color: #aaa;
             padding: 2px 16px 0;
         }
         .char-counter.warn { color: #ff9800; }
