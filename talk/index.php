@@ -90,10 +90,10 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         .input-row textarea::placeholder { color: #888; }
 
         .char-counter {
-            text-align: right;
+            text-align: center;
             font-size: 0.7rem;
             color: #aaa;
-            padding: 2px 16px 0;
+            padding: 2px 0 0;
         }
         .char-counter.warn { color: #ff9800; }
         .char-counter.over { color: #ef5350; }
