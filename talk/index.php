@@ -84,7 +84,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             font-size: 0.95rem;
             resize: none;
             line-height: 1.4;
-            overflow-y: auto;
+            overflow-y: scroll;
         }
         .input-row textarea:focus { outline: none; border-color: #4fc3f7; }
         .input-row textarea::placeholder { color: #888; }
