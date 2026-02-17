@@ -507,6 +507,9 @@ $mode = $groupId ? 'detail' : 'list';
         if (isFacilitator && g.status === 'forming') {
             html += '<button class="btn btn-secondary" onclick="updateStatus(' + g.id + ', \'active\')">Activate Group</button>';
         }
+        if (isFacilitator && g.status === 'active') {
+            html += '<button class="btn btn-danger" onclick="archiveGroup(' + g.id + ')">📦 Archive</button>';
+        }
         if (isFacilitator && g.status === 'crystallized') {
             html += '<button class="btn btn-danger" onclick="archiveGroup(' + g.id + ')">📦 Archive (Final)</button>';
             html += '<button class="btn btn-secondary" onclick="updateStatus(' + g.id + ', \'active\')">🔓 Reopen</button>';
