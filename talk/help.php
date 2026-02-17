@@ -304,6 +304,7 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
                 <li><strong>Live stream</strong> &mdash; in group mode, new ideas from other members appear automatically (polls every 8 seconds).</li>
                 <li><strong>Agree/Disagree</strong> &mdash; 👍 and 👎 buttons on each idea card. Tap to vote, tap again to remove. Shows how the group feels about each idea.</li>
                 <li><strong>Status filter</strong> &mdash; filter bar above the stream: All, Raw, Refining, Distilled, Actionable. Focus on ideas at a specific maturity level.</li>
+                <li><strong>Reply to an idea</strong> &mdash; click any card's <strong>#ID</strong> number to start a reply. The input fills with <code>re: #52 -&nbsp;</code> and focuses so you can type your response. The gatherer later uses these references to link ideas together.</li>
                 <li><strong>Inline edit/delete</strong> &mdash; pencil to edit, &times; to delete your own ideas. Promote to advance maturity.</li>
                 <li><strong>Ctrl+Enter</strong> (Cmd+Enter on Mac) submits without clicking Send.</li>
             </ul>
@@ -411,7 +412,7 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
         <h3>Gather &amp; Crystallize</h3>
         <p>In group mode on the Talk page, facilitators see a footer bar with <strong>Gather</strong> and <strong>Crystallize</strong> buttons.</p>
         <ul>
-            <li><strong>Gather</strong> &mdash; AI scans all group ideas, finds thematic connections, creates summary digests. Safe to run often (incremental).</li>
+            <li><strong>Gather</strong> &mdash; AI scans all group ideas, finds thematic connections, creates summary digests. It also detects <code>re: #xx</code> reply references and auto-creates links between those ideas, giving the AI confirmed connections to cluster around. Safe to run often (incremental).</li>
             <li><strong>Crystallize</strong> &mdash; AI produces a structured proposal document from all the group's ideas and digests. Re-runnable &mdash; each run improves on the last.</li>
         </ul>
         <p>The cycle: add ideas &rarr; gather &rarr; crystallize &rarr; repeat until satisfied &rarr; archive to lock.</p>
