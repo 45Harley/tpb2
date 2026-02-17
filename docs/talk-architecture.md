@@ -1,6 +1,6 @@
 # /talk Architecture
 
-**Living document — last updated 2026-02-15 (Phase 7 complete: unified one-page Talk)**
+**Living document — last updated 2026-02-16 (Phase 7+: public access settings for groups)**
 
 This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built (Phase 1–7), what's designed for the future, and the conceptual model that drives both.
 
@@ -188,6 +188,7 @@ All pages include a **server-rendered login indicator** (green dot + username) v
 | `delete` | POST | Soft-delete own idea (or hard-delete if ungathered with no children) | 4 |
 | `check_staleness` | GET | Check if gather/crystallize digests are stale due to edited/deleted source ideas | 4 |
 | `invite_to_group` | POST | Facilitator sends email invites — validates emails, generates tokens, sends accept/decline emails | 5 |
+| `vote` | POST | Agree/disagree on an idea (login required; non-members allowed if `public_voting` enabled + verified) | 7 |
 | `get_invites` | GET | List invites for a group (members + facilitators only, batch-expires stale) | 5 |
 
 **Deleted-idea filtering (Phase 4):** All read queries (`history`, `brainstorm` context, `get_group`, `gather`, `crystallize`, `READ_BACK`) add `AND deleted_at IS NULL`. Write actions (`promote`, `toggle_shareable`, `link`) reject deleted ideas.
@@ -255,6 +256,7 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 - **Display names** (Phase 4.5): `getDisplayName()` respects `show_first_name`/`show_last_name` privacy flags across all pages, API responses, and AI clerk prompts
 - **Email invites** (Phase 5+7): Facilitators enter email addresses → system validates → generates dual accept/decline tokens → sends HTML email with CTA buttons → tracks responses. Token-based response requires no login. 7-day expiry. Invite list visible to members/facilitators, hidden from observers. **Anonymous invites**: unknown emails get invites with `user_id = NULL`; accepting auto-creates a verified TPB account with device session and login cookies.
 - **Member status management** (Phase 7): Facilitators can deactivate/reactivate members. All access-check queries gate on `status = 'active'`. Inactive members remain listed (dimmed) but blocked from group access. Facilitators can also remove members entirely.
+- **Public access settings** (Phase 7+): Per-group `public_readable` and `public_voting` flags. When enabled, verified non-members (identity_level >= 3) can view ideas and/or vote without joining. Facilitators toggle via creation form or group detail settings panel. Public viewers see the Talk stream read-only (input area hidden); public voters get interactive agree/disagree buttons. Non-members cannot submit ideas.
 
 ### Database State
 
@@ -272,6 +274,7 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 -- Columns added in Phase 7: status VARCHAR(10) DEFAULT 'active' on idea_group_members
 --   FK to idea_groups ON DELETE SET NULL
 --   Index: idx_idea_log_group_id
+-- Columns added in Phase 7+: public_readable TINYINT(1) DEFAULT 0, public_voting TINYINT(1) DEFAULT 0 on idea_groups
 -- ai_clerks: brainstorm + gatherer clerk rows registered
 -- system_documentation: clerk-gatherer-rules doc registered
 -- user_roles: Group Facilitator (37), Group Member (38), Group Observer (39) registered
@@ -378,6 +381,21 @@ Multiple facilitators allowed. Creator is first facilitator. Auto-promotion safe
 
 Civic deliberation defaults toward **observable** — transparency matters.
 
+#### Public access settings (Phase 7+)
+
+Two optional per-group flags that extend visibility beyond group members:
+
+| Setting | Default | Effect |
+|---------|---------|--------|
+| `public_readable` | 0 (off) | Verified non-members (identity_level >= 3) can view group ideas in the Talk stream (read-only, no input) |
+| `public_voting` | 0 (off) | Verified non-members can also agree/disagree vote on ideas (implies public_readable) |
+
+- Enforced server-side: `getPublicAccess($group, $dbUser)` checks identity level + group flags, returns `'vote'`, `'read'`, or `null`
+- `handleVote()` gates non-member votes via group membership check + `public_voting` escape hatch
+- `handleListGroups()` includes `public_readable = 1` groups in the Discover list
+- Non-members CANNOT submit ideas — existing `handleSave()` membership check blocks this
+- Settings toggled by facilitators in group creation form and "Public Access" section on group detail page
+
 #### Email invites (Phase 5 + anonymous invite enhancement)
 
 Facilitators invite members by entering email addresses in the group detail UI. The flow:
@@ -453,8 +471,8 @@ AI roles are assigned per group, not global. A small brainstorm might only need 
 AI creates nodes in `idea_log` with `source` and `clerk_key` identifying the role. Its contributions appear in the group feed alongside user thoughts.
 
 Tables:
-- `idea_groups` — name, description, tags, status, access_level, parent_group_id, created_by
-- `idea_group_members` — group_id, user_id, role (member/facilitator/observer), joined_at
+- `idea_groups` — name, description, tags, status, access_level, public_readable, public_voting, parent_group_id, created_by
+- `idea_group_members` — group_id, user_id, role (member/facilitator/observer), status, joined_at
 
 ### 5e. Crystallization output (.md documents) ✅
 
@@ -1098,6 +1116,8 @@ CREATE TABLE idea_groups (
     tags VARCHAR(255) NULL,
     status ENUM('forming','active','crystallizing','crystallized','archived') DEFAULT 'forming',
     access_level ENUM('open','closed','observable') DEFAULT 'observable',
+    public_readable TINYINT(1) NOT NULL DEFAULT 0,   -- Phase 7+: verified non-members can read
+    public_voting TINYINT(1) NOT NULL DEFAULT 0,     -- Phase 7+: verified non-members can vote
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (parent_group_id) REFERENCES idea_groups(id) ON DELETE SET NULL,
@@ -1198,6 +1218,7 @@ scripts/db/
   talk-phase4-group-roles.sql     — Phase 4 group roles in user_roles table
   add-member-status.php           — Phase 7: ADD status column to idea_group_members
   invite-nullable-userid.php      — Phase 7: make group_invites.user_id nullable for anonymous invites
+  talk-phase7-public-access.sql  — Phase 7+: public_readable + public_voting on idea_groups
 
 docs/
   talk-architecture.md       — This document (system architecture)

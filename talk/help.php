@@ -374,6 +374,12 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
                 <li><strong>Archive</strong> &mdash; lock the final proposal</li>
             </ol>
             <p><strong>Roles:</strong> &#x1f3af; Group Facilitator (manages everything), &#x1f4ac; Group Member (contributes ideas), &#x1f441; Group Observer (read-only).</p>
+            <p><strong>Public access:</strong> Facilitators can optionally open a group for verified non-members (phone-verified accounts). Two toggles:</p>
+            <ul>
+                <li><strong>Public reading</strong> &mdash; verified non-members can view the group's ideas without joining</li>
+                <li><strong>Public voting</strong> &mdash; verified non-members can also agree/disagree on ideas (implies public reading)</li>
+            </ul>
+            <p>Public viewers cannot submit ideas &mdash; only group members can contribute. These settings are in the group creation form and in the "Public Access" settings section on the group detail page.</p>
         </div>
 
         <!-- ═══════ FACILITATOR GUIDE ═══════ -->
@@ -389,6 +395,14 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
             <li><strong>Open</strong> &mdash; anyone can jump in. Good for broad community input.</li>
             <li><strong>Closed</strong> &mdash; invitation only. Good for focused working groups.</li>
         </ul>
+
+        <h3>Public access settings</h3>
+        <p>Want outsiders to see what your group is working on? Two optional toggles let verified non-members (phone-verified or higher) access your group's ideas:</p>
+        <ul>
+            <li><strong>Allow reading</strong> &mdash; non-members can browse your group's ideas in the Talk stream (read-only, no input box)</li>
+            <li><strong>Allow voting</strong> &mdash; non-members can also agree/disagree on ideas (automatically enables reading)</li>
+        </ul>
+        <p>Set these when creating the group, or change them later from the "Public Access" section on the group detail page. Only verified accounts qualify &mdash; anonymous and email-only users won't see public groups.</p>
 
         <h3>Managing members</h3>
         <ul>
@@ -476,6 +490,7 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
             <div class="answer">
                 <p>A group is 2+ people around a topic. Anyone with an account can create one on the <a href="groups.php">Groups page</a>. Once created, members select the group from the Talk page's context dropdown to contribute ideas.</p>
                 <p>Groups have three access levels: <strong>Open</strong> (anyone can join), <strong>Observable</strong> (anyone can see, only members contribute), and <strong>Closed</strong> (invitation only).</p>
+                <p>Facilitators can also enable <strong>public reading</strong> and/or <strong>public voting</strong> &mdash; letting verified non-members view ideas or vote without joining.</p>
                 <p>Each idea belongs to exactly one group (or no group for personal ideas). Ideas don't leak across groups.</p>
             </div>
         </details>
