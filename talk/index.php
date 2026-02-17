@@ -688,6 +688,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
 
     // ── Stream rendering ──
     function prependIdea(idea) {
+        if (document.getElementById('idea-' + idea.id)) return; // already in DOM
         streamEmpty.style.display = 'none';
         var card = renderIdeaCard(idea);
         stream.insertBefore(card, stream.firstChild);
@@ -885,10 +886,12 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     }
 
+    var isPolling = false;
     async function pollForNew() {
-        if (document.hidden || !currentContext) return;
+        if (isPolling || document.hidden || !currentContext) return;
+        isPolling = true;
         var newest = loadedIdeas.length ? loadedIdeas[0].created_at : null;
-        if (!newest) return;
+        if (!newest) { isPolling = false; return; }
 
         try {
             var url = 'api.php?action=history&group_id=' + currentContext + '&include_chat=1&since=' + encodeURIComponent(newest) + '&limit=20';
@@ -902,6 +905,7 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
                 });
             }
         } catch (e) {}
+        isPolling = false;
     }
 
     // Pause polling when tab hidden
