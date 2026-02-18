@@ -27,31 +27,9 @@ try {
     die("Database connection failed");
 }
 
-// Get session
-$sessionId = isset($_COOKIE['tpb_civic_session']) ? $_COOKIE['tpb_civic_session'] : null;
-
 // Get user data
-$dbUser = null;
-if ($sessionId) {
-    $stmt = $pdo->prepare("
-        SELECT u.*,
-               u.identity_level_id,
-               s.abbreviation as state_abbrev, s.state_name,
-               t.town_name,
-               il.level_name as identity_level_name,
-               COALESCE(uis.email_verified, 0) as email_verified,
-               COALESCE(uis.phone_verified, 0) as phone_verified
-        FROM user_devices ud
-        JOIN users u ON ud.user_id = u.user_id
-        LEFT JOIN states s ON u.current_state_id = s.state_id
-        LEFT JOIN towns t ON u.current_town_id = t.town_id
-        LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-        LEFT JOIN identity_levels il ON u.identity_level_id = il.level_id
-        WHERE ud.device_session = ? AND ud.is_active = 1
-    ");
-    $stmt->execute(array($sessionId));
-    $dbUser = $stmt->fetch();
-}
+require_once __DIR__ . '/includes/get-user.php';
+$dbUser = getUser($pdo);
 
 // Get filters from URL
 $myRepsMode = isset($_GET['my']) && $_GET['my'] == '1';
@@ -218,7 +196,6 @@ foreach ($officials as $o) {
 }
 
 // Nav variables via helper
-require_once __DIR__ . '/includes/get-user.php';
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 

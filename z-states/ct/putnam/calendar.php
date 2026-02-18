@@ -26,12 +26,9 @@ $townName = 'Putnam';
 $townSlug = 'putnam';
 $stateAbbr = 'ct';
 
-// Session handling
-$sessionId = $_COOKIE['tpb_civic_session'] ?? null;
-
 // Load user data
 require_once __DIR__ . '/../../../includes/get-user.php';
-$dbUser = $sessionId ? getUserBySession($pdo, $sessionId) : null;
+$dbUser = getUser($pdo);
 
 // Calculate trust level for nav
 $trustLevel = 'Visitor';

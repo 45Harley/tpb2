@@ -39,12 +39,9 @@ $stateId = 7;
 $stateName = 'Connecticut';
 $stateAbbr = 'ct';
 
-// Session handling
-$sessionId = $_COOKIE['tpb_civic_session'] ?? null;
-
 // Load user data
 require_once __DIR__ . '/../../includes/get-user.php';
-$dbUser = $sessionId ? getUserBySession($pdo, $sessionId) : null;
+$dbUser = getUser($pdo);
 
 // Nav variables via helper
 $navVars = getNavVarsForUser($dbUser);
