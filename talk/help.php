@@ -249,7 +249,17 @@ require __DIR__ . '/../includes/nav.php';
             <a href="groups.php">
                 <span class="qr-icon">&#x1f465;</span>
                 <span class="qr-label">Groups</span>
-                <span class="qr-desc">Create &amp; manage groups</span>
+                <span class="qr-desc">Civic topics &amp; community</span>
+            </a>
+            <a href="index.php?state=7">
+                <span class="qr-icon">&#x1f3db;</span>
+                <span class="qr-label">CT Stream</span>
+                <span class="qr-desc">Connecticut ideas</span>
+            </a>
+            <a href="index.php?town=119">
+                <span class="qr-icon">&#x1f3e0;</span>
+                <span class="qr-label">Putnam</span>
+                <span class="qr-desc">Putnam, CT ideas</span>
             </a>
         </div>
 
@@ -268,6 +278,31 @@ Stream builds live &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Your ideas + group m
 Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connections)
                               &#x2502;
                          Crystallize (structured proposal)</div>
+
+        <!-- Geo Streams -->
+        <div class="page-card">
+            <h3>&#x1f30e; Geographic Streams</h3>
+            <p>Talk is organized by location. Every idea is automatically stamped with the poster's state and town. You can view ideas at three levels:</p>
+            <ul>
+                <li><strong>USA</strong> (<a href="index.php">/talk/</a>) &mdash; all ungrouped ideas from everyone</li>
+                <li><strong>State</strong> (<a href="index.php?state=7">/talk/?state=7</a>) &mdash; ideas from people in that state</li>
+                <li><strong>Town</strong> (<a href="index.php?town=119">/talk/?town=119</a>) &mdash; ideas from people in that town</li>
+            </ul>
+            <p>A breadcrumb at the top shows where you are: <strong>USA &rsaquo; Connecticut &rsaquo; Putnam</strong>. Click any level to zoom out.</p>
+            <p>Town and state pages (like the <a href="/z-states/ct/putnam/">Putnam page</a>) have a <strong>Talk</strong> link in their navigation that takes you directly to the local stream.</p>
+        </div>
+
+        <!-- Access Requirements -->
+        <div class="page-card">
+            <h3>&#x1f512; Who Can Post</h3>
+            <p>To post ideas in Talk, you need two things:</p>
+            <ol>
+                <li><strong>Verified email</strong> &mdash; <a href="/join.php">create an account</a> and verify your email address</li>
+                <li><strong>Location set</strong> &mdash; <a href="/profile.php#town">set your town</a> in your profile so your ideas land in the right stream</li>
+            </ol>
+            <p>If you haven't done these steps, you'll see a banner at the top of Talk guiding you. The banner is clickable &mdash; it takes you directly to the right page.</p>
+            <p>Everyone can <strong>read</strong> all streams, even without an account. Posting, voting, and joining groups require verification.</p>
+        </div>
 
         <!-- Talk Page -->
         <div class="page-card">
@@ -340,7 +375,12 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
         <div class="page-card">
             <h3>&#x1f465; Groups</h3>
             <span class="page-link">/talk/groups.php</span>
-            <p>Groups are where individual thoughts become collective proposals. Create, discover, and manage groups on the Groups page. Once you're in a group, select it in the Talk page's context dropdown to contribute ideas and see the live stream.</p>
+            <p>Groups are where individual thoughts become collective proposals. There are two kinds:</p>
+            <ul>
+                <li><strong>Civic Topics</strong> &mdash; standard groups auto-created for each community from SIC civic codes (public administration, courts, fire, education, etc.). These appear automatically when you visit a town or state's groups page.</li>
+                <li><strong>Community Groups</strong> &mdash; created by users around any topic. These are the groups you create and manage yourself.</li>
+            </ul>
+            <p>Use the <strong>geo filter tabs</strong> at the top of the Groups page (All/USA, My State, My Town) to see groups scoped to your location.</p>
             <p><strong>The deliberation flow:</strong></p>
             <ol>
                 <li><strong>Create</strong> a group with a clear purpose (on Groups page)</li>
@@ -419,7 +459,7 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
         <details class="faq-item">
             <summary>Do I need an account to use /talk?</summary>
             <div class="answer">
-                <p>No &mdash; you can try Talk without an account. But your thoughts are tied to your browser tab. Close the tab and they're gone forever. <a href="/join.php">Create an account</a> to keep your work.</p>
+                <p>You can <strong>read</strong> all streams without an account. To <strong>post ideas</strong>, you need a verified email and a location set in your profile. <a href="/join.php">Create an account</a> to get started &mdash; it takes 30 seconds.</p>
             </div>
         </details>
 
@@ -514,6 +554,33 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
             <summary>What about the old Brainstorm and History pages?</summary>
             <div class="answer">
                 <p>They still work. The Talk page combines their functionality into one place. If you prefer the dedicated pages, you can still use <a href="brainstorm.php">Brainstorm</a> for AI chat and <a href="history.php">History</a> for filtering and threaded views.</p>
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary>How do geographic streams work?</summary>
+            <div class="answer">
+                <p>When you post an idea, it's automatically tagged with your state and town from your profile. Ideas then appear in the matching geographic streams:</p>
+                <ul>
+                    <li>A Putnam idea appears in the Putnam stream, the Connecticut stream, and the USA stream</li>
+                    <li>A Hartford idea appears in the Hartford stream and CT stream, but NOT in the Putnam stream</li>
+                </ul>
+                <p>Group ideas (posted inside a group) only appear in that group &mdash; not in the geographic streams.</p>
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary>What are Civic Topics?</summary>
+            <div class="answer">
+                <p>Civic Topics are standard groups that are automatically created for each community based on SIC codes (Standard Industrial Classification). They cover civic functions like public administration, courts, fire protection, education, highways, and more.</p>
+                <p>When you visit a town or state's <a href="groups.php">Groups page</a>, civic topics for that location are created automatically. Anyone can join and contribute to these standard groups.</p>
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary>Why do I need to set my location?</summary>
+            <div class="answer">
+                <p>Your location determines which geographic stream your ideas appear in. Without it, the system doesn't know where to place your contributions. Set your town at <a href="/profile.php#town">/profile.php#town</a> &mdash; it takes a few seconds.</p>
             </div>
         </details>
 

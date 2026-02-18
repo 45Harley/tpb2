@@ -1,6 +1,6 @@
 # /talk Architecture
 
-**Living document — last updated 2026-02-16 (Phase 7+: public access settings for groups)**
+**Living document — last updated 2026-02-18 (Phase 8: geo-streams, SIC standard groups, access gates)**
 
 This document captures the full system architecture for `/talk`, TPB's collective deliberation tool. It covers what's built (Phase 1–7), what's designed for the future, and the conceptual model that drives both.
 
@@ -90,6 +90,8 @@ idea_log
   id              INT AUTO_INCREMENT PRIMARY KEY
   user_id         INT NULL                -- NULL for anonymous, FK to users
   group_id        INT NULL                -- FK to idea_groups. NULL = personal, non-NULL = belongs to that group
+  state_id        INT NULL                -- Phase 8: auto-stamped from creator's profile
+  town_id         INT NULL                -- Phase 8: auto-stamped from creator's profile
   session_id      VARCHAR(36) NULL        -- browser session UUID
   parent_id       INT NULL                -- reply chain (tree structure), FK to self
   content         TEXT                    -- what was said
@@ -106,6 +108,8 @@ idea_log
   updated_at      TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 
   INDEX idx_deleted_at (deleted_at)       -- efficient active-idea filtering
+  INDEX idx_idea_state (state_id)         -- Phase 8: geo-filtered streams
+  INDEX idx_idea_town (town_id)           -- Phase 8: geo-filtered streams
 ```
 
 **Key principle**: Both user and AI nodes live in the same table. The `source` and `clerk_key` fields distinguish who created the row and in what role.
@@ -152,9 +156,9 @@ Summarizing is the operation that makes both structures work together: the AI re
 
 | Page | URL | Purpose | Phase |
 |------|-----|---------|-------|
-| **Talk** (unified) | `/talk/index.php` | One-page: input, AI classify, AI respond toggle, live stream, edit/delete/promote, gather/crystallize footer | 7 |
-| Groups | `/talk/groups.php` | Create/browse/manage groups, invite members, manage roles | 3+4+7 |
-| Help / FAQ | `/talk/help.php` | FAQ page, card type guide, facilitator guide, Ask AI | 3+7 |
+| **Talk** (unified) | `/talk/index.php` | One-page: input, AI classify, AI respond toggle, live stream, geo-filtered streams (USA/State/Town), access banners, edit/delete/promote, gather/crystallize footer | 7+8 |
+| Groups | `/talk/groups.php` | Civic Topics (SIC standard groups) + Community Groups, geo filter tabs, create/browse/manage groups, invite members | 3+4+7+8 |
+| Help / FAQ | `/talk/help.php` | FAQ page, card type guide, geo-streams guide, facilitator guide | 3+7+8 |
 | Brainstorm (legacy) | `/talk/brainstorm.php` | Dedicated AI chat, group-aware context (transition banner to Talk) | 1+3 |
 | History (legacy) | `/talk/history.php` | Filter/thread/promote ideas (transition banner to Talk) | 1+3+4 |
 
@@ -166,8 +170,8 @@ All pages include a **server-rendered login indicator** (green dot + username) v
 
 | Action | Method | What it does | Phase |
 |--------|--------|-------------|-------|
-| `save` | POST | Save a thought (with category, source, tags, parent_id, shareable, clerk_key) | 1 |
-| `history` | GET | Read back ideas with filters | 1 |
+| `save` | POST | Save a thought (with category, source, tags, parent_id, shareable, clerk_key); access gate (level 2+ + location); auto-stamps state_id/town_id from user profile | 1+8 |
+| `history` | GET | Read back ideas with filters; supports `state_id`/`town_id` for geo-filtered streams | 1+8 |
 | `promote` | POST | Advance idea status (raw → refining → distilled → actionable) | 1 |
 | `link` | POST | Set parent_id on an idea (tree linking) | 1 |
 | `brainstorm` | POST | AI-assisted brainstorming via clerk (group-aware context) | 1+3 |
@@ -175,7 +179,7 @@ All pages include a **server-rendered login indicator** (green dot + username) v
 | `create_link` | POST | Create thematic link between ideas (`idea_links`) | 3 |
 | `get_links` | GET | Get all thematic links for an idea | 3 |
 | `create_group` | POST | Create a deliberation group (with optional parent) | 3 |
-| `list_groups` | GET | List discoverable groups (or `?mine=1` for user's groups) | 3 |
+| `list_groups` | GET | List discoverable groups (or `?mine=1` for user's groups); includes SIC joins for standard groups | 3+8 |
 | `get_group` | GET | Group details + members + shareable ideas + sub-groups | 3 |
 | `join_group` | POST | Join a group (open → member, observable → observer) | 3 |
 | `leave_group` | POST | Leave a group (auto-promotes facilitator if last one) | 3 |
@@ -190,6 +194,8 @@ All pages include a **server-rendered login indicator** (green dot + username) v
 | `invite_to_group` | POST | Facilitator sends email invites — validates emails, generates tokens, sends accept/decline emails | 5 |
 | `vote` | POST | Agree/disagree on an idea (login required; non-members allowed if `public_voting` enabled + verified) | 7 |
 | `get_invites` | GET | List invites for a group (members + facilitators only, batch-expires stale) | 5 |
+| `auto_create_standard_groups` | POST | Auto-create SIC Division J civic groups for a scope+geo (idempotent) | 8 |
+| `get_access_status` | GET | Returns user's Talk access level: can_post, needs (verify_email/set_location), identity_level, has_location | 8 |
 
 **Deleted-idea filtering (Phase 4):** All read queries (`history`, `brainstorm` context, `get_group`, `gather`, `crystallize`, `READ_BACK`) add `AND deleted_at IS NULL`. Write actions (`promote`, `toggle_shareable`, `link`) reject deleted ideas.
 
@@ -257,6 +263,9 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 - **Email invites** (Phase 5+7): Facilitators enter email addresses → system validates → generates dual accept/decline tokens → sends HTML email with CTA buttons → tracks responses. Token-based response requires no login. 7-day expiry. Invite list visible to members/facilitators, hidden from observers. **Anonymous invites**: unknown emails get invites with `user_id = NULL`; accepting auto-creates a verified TPB account with device session and login cookies.
 - **Member status management** (Phase 7): Facilitators can deactivate/reactivate members. All access-check queries gate on `status = 'active'`. Inactive members remain listed (dimmed) but blocked from group access. Facilitators can also remove members entirely.
 - **Public access settings** (Phase 7+): Per-group `public_readable` and `public_voting` flags. When enabled, verified non-members (identity_level >= 3) can view ideas and/or vote without joining. Facilitators toggle via creation form or group detail settings panel. Public viewers see the Talk stream read-only (input area hidden); public voters get interactive agree/disagree buttons. Non-members cannot submit ideas.
+- **Geographic scoping** (Phase 8): Groups have `scope` (town/state/federal), `state_id`, and `town_id` columns. Geo filter tabs on groups.php: All/USA, My State, My Town.
+- **Standard civic groups** (Phase 8): `is_standard = 1` groups auto-created from SIC Division J (Public Administration) codes — 28 civic categories per community (courts, fire, highways, education, etc.). Created lazily on first visit via `auto_create_standard_groups` action. Open access, public readable/voting. Cannot be deleted by users.
+- **SIC code integration** (Phase 8): `sic_code` column on `idea_groups` + `LEFT JOIN sic_codes` for description. Standard groups show "Civic" badge with gold border. SIC code badge on group cards.
 
 ### Database State
 
@@ -275,6 +284,11 @@ This replaces the Phase 2 model where AI responses were stored in an `ai_respons
 --   FK to idea_groups ON DELETE SET NULL
 --   Index: idx_idea_log_group_id
 -- Columns added in Phase 7+: public_readable TINYINT(1) DEFAULT 0, public_voting TINYINT(1) DEFAULT 0 on idea_groups
+-- Columns added in Phase 8: state_id INT(11) NULL, town_id INT(11) NULL on idea_log (geo-stamp)
+--   Indexes: idx_idea_state (state_id), idx_idea_town (town_id)
+-- Columns added in Phase 8: sic_code VARCHAR(4) NULL, is_standard TINYINT(1) DEFAULT 0 on idea_groups
+--   Indexes: idx_group_sic (sic_code), idx_group_standard (is_standard)
+-- Table: sic_codes (sic_code PK, description, division, division_desc, major_group, major_group_desc) — 1,007 SIC codes
 -- ai_clerks: brainstorm + gatherer clerk rows registered
 -- system_documentation: clerk-gatherer-rules doc registered
 -- user_roles: Group Facilitator (37), Group Member (38), Group Observer (39) registered
@@ -471,8 +485,9 @@ AI roles are assigned per group, not global. A small brainstorm might only need 
 AI creates nodes in `idea_log` with `source` and `clerk_key` identifying the role. Its contributions appear in the group feed alongside user thoughts.
 
 Tables:
-- `idea_groups` — name, description, tags, status, access_level, public_readable, public_voting, parent_group_id, created_by
+- `idea_groups` — name, description, tags, status, access_level, public_readable, public_voting, parent_group_id, scope, state_id, town_id, sic_code, is_standard, created_by
 - `idea_group_members` — group_id, user_id, role (member/facilitator/observer), status, joined_at
+- `sic_codes` — sic_code (PK), description, division, division_desc, major_group, major_group_desc (1,007 codes)
 
 ### 5e. Crystallization output (.md documents) ✅
 
@@ -780,6 +795,66 @@ The core insight: pages are context focal-points for humans, not for AI. Differe
 #### help.php rewrite
 
 Updated to reflect unified model: two quick-ref links (Talk, Groups), flow diagram showing AI classify → stream → gather → crystallize, card type guide with color swatches, new FAQ items (AI auto-classify, AI respond toggle, old pages still work).
+
+### 5g-quater. Geo-Streams, SIC Standard Groups & Access Gates (Phase 8) ✅
+
+#### The problem
+
+Talk showed all ideas in one flat stream. A Putnam user and a Hartford user saw the same feed. There was no geographic filtering, no standard civic topic structure, and no access gates — anyone could post without verifying their identity or setting their location.
+
+#### The fix: three layers
+
+**1. Geographic streams (auto-stamp ideas)**
+
+Every idea is stamped with `state_id` and `town_id` from the poster's profile at insert time. `handleHistory()` supports `?state_id=` and `?town_id=` params for filtered views. Frontend uses `?state=` and `?town=` URL params on `index.php`.
+
+Hierarchy: USA (no filter) → State → Town. Ideas bubble up — a Putnam idea appears in CT and USA streams. Group ideas (`group_id IS NOT NULL`) are excluded from geo streams.
+
+Existing ideas were backfilled: `UPDATE idea_log i JOIN users u ON i.user_id = u.user_id SET i.state_id = u.current_state_id, i.town_id = u.current_town_id`.
+
+**2. Standard civic groups (SIC Division J)**
+
+The `sic_codes` table (1,007 four-digit SIC codes across divisions A–J) provides taxonomy. Division J = Public Administration (28 codes covering courts, police, fire, highways, education, environmental, etc.).
+
+`auto_create_standard_groups` creates one group per SIC-J code per scope+geo combination. Idempotent — skips existing. Created with `is_standard = 1`, `access_level = 'open'`, `public_readable = 1`, `public_voting = 1`. Triggered lazily on first visit to a geo-scoped groups page.
+
+Groups page separates "Civic Topics" (standard) from "Community Groups" (user-created). Standard groups have gold border and "Civic" badge.
+
+**3. Access gates**
+
+`handleSave()` enforces:
+- Identity level 2+ (email verified) required to post
+- `current_state_id` must be set (location required)
+- Returns `needs: 'verify_email'` or `needs: 'set_location'` error
+
+Frontend (`index.php`):
+- Persistent clickable banners: "Verify your email" → `/join.php`, "Set your town" → `/profile.php#town`
+- Input area hidden for users who can't post
+- Everyone can read all streams
+
+`get_access_status` endpoint returns the user's current access status for frontend use.
+
+#### Schema changes
+
+```sql
+-- idea_log: geo-stamp
+ALTER TABLE idea_log ADD COLUMN state_id INT(11) DEFAULT NULL;
+ALTER TABLE idea_log ADD COLUMN town_id INT(11) DEFAULT NULL;
+ALTER TABLE idea_log ADD INDEX idx_idea_state (state_id);
+ALTER TABLE idea_log ADD INDEX idx_idea_town (town_id);
+
+-- idea_groups: SIC + standard flag
+ALTER TABLE idea_groups ADD COLUMN sic_code VARCHAR(4) DEFAULT NULL;
+ALTER TABLE idea_groups ADD COLUMN is_standard TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE idea_groups ADD INDEX idx_group_sic (sic_code);
+ALTER TABLE idea_groups ADD INDEX idx_group_standard (is_standard);
+```
+
+#### Integration
+
+Town/state pages link to geo-scoped Talk:
+- Putnam secondary nav: Talk → `/talk/?town=119`
+- Connecticut secondary nav: Talk → `/talk/?state=7`
 
 ### 5h. Builder kits as group use case (future)
 
@@ -1186,10 +1261,50 @@ After edit or delete, downstream gather/crystallize digests may be stale:
 3. Staleness **cascades**: if a source idea is edited after gather, both the gather digest AND any crystallize built on it are stale
 4. Groups page shows an orange warning banner prompting the facilitator to re-run
 
+### Phase 8 Migration (complete — applied 2026-02-18)
+
+SQL lives in `scripts/db/talk-phase8-geo-streams.sql`. SIC data imported via `scripts/db/sic-import.php`.
+
+```sql
+-- Geo-stamp ideas with creator's geography
+ALTER TABLE idea_log ADD COLUMN state_id INT(11) DEFAULT NULL AFTER group_id;
+ALTER TABLE idea_log ADD COLUMN town_id INT(11) DEFAULT NULL AFTER state_id;
+ALTER TABLE idea_log ADD INDEX idx_idea_state (state_id);
+ALTER TABLE idea_log ADD INDEX idx_idea_town (town_id);
+
+-- SIC code + standard flag on groups
+ALTER TABLE idea_groups ADD COLUMN sic_code VARCHAR(4) DEFAULT NULL AFTER town_id;
+ALTER TABLE idea_groups ADD COLUMN is_standard TINYINT(1) NOT NULL DEFAULT 0 AFTER sic_code;
+ALTER TABLE idea_groups ADD INDEX idx_group_sic (sic_code);
+ALTER TABLE idea_groups ADD INDEX idx_group_standard (is_standard);
+
+-- Backfill existing ideas with user geography
+UPDATE idea_log i
+JOIN users u ON i.user_id = u.user_id
+SET i.state_id = u.current_state_id, i.town_id = u.current_town_id
+WHERE i.state_id IS NULL AND i.user_id IS NOT NULL;
+```
+
+#### SIC codes table
+
+`sic_codes` was created and populated separately (1,007 rows across 10 divisions A–J):
+
+```sql
+CREATE TABLE sic_codes (
+    sic_code VARCHAR(4) PRIMARY KEY,
+    description VARCHAR(255) NOT NULL,
+    division CHAR(1) NOT NULL,
+    division_desc VARCHAR(100) NOT NULL,
+    major_group VARCHAR(2) NOT NULL,
+    major_group_desc VARCHAR(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+Division J (Public Administration) contains 28 codes used for standard civic group auto-creation.
+
 ### Future Schema Considerations
 
 - `ai_response` column could be dropped after backfill migration (convert old rows to separate AI nodes)
-- `idea_groups` may need a `town` or `jurisdiction` column if groups become location-scoped
 - `idea_links` may need a `weight` or `confidence` column as AI link quality improves
 
 ---
@@ -1201,7 +1316,7 @@ talk/
   index.php        — Unified Talk page: input, AI classify, AI respond, live stream, edit/delete/promote, gather/crystallize footer
   groups.php       — Browse/create/manage groups, invite members, manage roles (ideas/brainstorm/gather moved to Talk)
   help.php         — FAQ, card type guide, facilitator guide, Ask AI
-  api.php          — All API actions (28+ actions across Phase 1–7, including auto_classify + enhanced history)
+  api.php          — All API actions (30+ actions across Phase 1–8, including geo-streams, SIC groups, access gates)
   brainstorm.php   — [legacy] Dedicated AI chat (transition banner to Talk)
   history.php      — [legacy] Filter/thread/promote ideas (transition banner to Talk)
   output/          — Crystallized .md deliverables (runtime, not in git)
@@ -1219,6 +1334,8 @@ scripts/db/
   add-member-status.php           — Phase 7: ADD status column to idea_group_members
   invite-nullable-userid.php      — Phase 7: make group_invites.user_id nullable for anonymous invites
   talk-phase7-public-access.sql  — Phase 7+: public_readable + public_voting on idea_groups
+  talk-phase8-geo-streams.sql    — Phase 8: state_id/town_id on idea_log, sic_code/is_standard on idea_groups
+  sic-import.php                 — Phase 8: imports 1,007 SIC codes from CSV into sic_codes table
 
 docs/
   talk-architecture.md       — This document (system architecture)
