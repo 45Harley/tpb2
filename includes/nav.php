@@ -46,8 +46,19 @@ $userTownSlug = isset($userTownSlug) ? $userTownSlug : '';
 $userStateAbbr = isset($userStateAbbr) ? $userStateAbbr : '';
 $userStateDisplay = isset($userStateDisplay) ? $userStateDisplay : strtoupper($userStateAbbr);
 
+$userTownId = isset($userTownId) ? (int)$userTownId : 0;
+$userStateId = isset($userStateId) ? (int)$userStateId : 0;
 $hasTown = !empty($userTownSlug) && !empty($userStateAbbr);
 $hasEmail = !empty($userEmail);
+
+// Dynamic Talk link — scoped to user's town > state > USA
+if ($userTownId) {
+    $talkUrl = '/talk/?town=' . $userTownId;
+} elseif ($userStateId) {
+    $talkUrl = '/talk/?state=' . $userStateId;
+} else {
+    $talkUrl = '/talk/';
+}
 
 // Secondary nav (optional - set by town/state pages)
 // Can be set as $secondaryNav or legacy $townNav
@@ -409,7 +420,7 @@ $electionSite = 'https://tpb.sandgems.net';
                 <?php else: ?>
                 <a href="/profile.php#town" class="add-link">Add State</a>
                 <?php endif; ?>
-                <a href="/talk/" <?= $currentPage === 'talk' ? 'class="active"' : '' ?>>Talk</a>
+                <a href="<?= htmlspecialchars($talkUrl) ?>" <?= $currentPage === 'talk' ? 'class="active"' : '' ?>>Talk</a>
                 
                 <!-- My Government Dropdown -->
                 <div class="nav-dropdown">

@@ -177,7 +177,9 @@ function getNavVarsForUser($dbUser, $sessionPoints = 0) {
         'userEmail' => $dbUser['email'] ?? '',
         'userTownName' => $townName,
         'userTownSlug' => $townName ? strtolower(str_replace(' ', '-', $townName)) : '',
+        'userTownId' => (int)($dbUser['current_town_id'] ?? 0),
         'userStateAbbr' => strtolower($dbUser['state_abbrev'] ?? ''),
-        'userStateDisplay' => $dbUser['state_abbrev'] ?? ''
+        'userStateDisplay' => $dbUser['state_abbrev'] ?? '',
+        'userStateId' => (int)($dbUser['current_state_id'] ?? 0)
     ];
 }
