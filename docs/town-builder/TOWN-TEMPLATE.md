@@ -100,7 +100,7 @@ $secondaryNav = [
     ['label' => 'Budget', 'anchor' => 'budget'],
     ['label' => 'Schools', 'anchor' => 'schools'],
     ['label' => 'Living Here', 'anchor' => 'living'],
-    ['label' => 'Brainstorm', 'anchor' => 'voice'],
+    ['label' => 'Talk', 'url' => '/talk/?town=[town_id]'],
 ];
 ```
 
@@ -173,13 +173,15 @@ SELECT * FROM government_branches WHERE town_id = 119;
 ### 7. Living Here
 **Data needed:** Key local businesses/districts, recreation, library, arts venues, police/fire, weather notes, tourism links.
 
-### 8. Brainstorm / Your Voice
-This section includes the shared thought-form. Copy from Putnam:
+### 8. Talk
+Town pages link to their Talk stream instead of embedding a brainstorm form. Add a "Get Involved" section:
 ```php
-<section class="voice" id="voice">
-    <h2>Brainstorm [Town]</h2>
-    <p class="section-intro">What would make [Town] better? Share a thought.</p>
-    <?php require __DIR__ . '/../../../includes/thought-form.php'; ?>
+<section id="voice">
+    <h3>Get Involved</h3>
+    <ul style="color: #ccc; line-height: 1.8;">
+        <li><a href="/talk/?town=[town_id]" class="external-link">Join the conversation on Talk</a> — share ideas for [Town]</li>
+        <li><a href="/volunteer/" class="external-link">Volunteer with TPB</a> — Help build civic infrastructure</li>
+    </ul>
 </section>
 ```
 

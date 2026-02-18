@@ -39,7 +39,7 @@ Putnam sections to show (in order):
 5. **Budget & Taxes** — Town budget, major projects, TA reports
 6. **Schools** — District info, school list, school budget dashboard
 7. **Living Here** — Local links grid (dining, shopping, recreation, library)
-8. **Brainstorm/Voice** — Citizen thoughts submission (future feature)
+8. **Talk** — Link to town's Talk stream (`/talk/?town=ID`)
 9. **Vision page** — "Just Imagine" standalone page (putnam-vision.html)
 
 ### Phase 2: Research & Fill

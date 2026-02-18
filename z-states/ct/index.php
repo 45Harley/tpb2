@@ -15,7 +15,7 @@
  *   - Elections & Voting
  *   - Your Town (169 towns grid)
  *   - Key Contacts
- *   - Brainstorm CT (civic thoughts)
+ *   - Talk link (civic ideas via /talk/?state=7)
  *
  * Built: Feb 2026 | Task: build-state-ct
  */
@@ -74,7 +74,6 @@ $secondaryNav = [
     ['label' => 'Elections',   'anchor' => 'elections'],
     ['label' => 'Your Town',   'anchor' => 'towns'],
     ['label' => 'Contacts',    'anchor' => 'contacts'],
-    ['label' => 'Brainstorm',  'anchor' => 'voice'],
     ['label' => 'Talk',        'url' => '/talk/?state=7'],
 ];
 
@@ -1102,18 +1101,14 @@ require __DIR__ . '/../../includes/nav.php';
     </div>
 </section>
 
-<!-- BRAINSTORM CT -->
-<section class="voice" id="voice">
-    <h2>Brainstorm Connecticut</h2>
-    <p class="section-intro">
-        What should Connecticut's leaders focus on? Share your thought — it takes 30 seconds.
-    </p>
-
-    <?php require __DIR__ . '/../../includes/thought-form.php'; ?>
-
-    <div class="scope-links">
-        Want to share about your town instead? <a href="#towns">Find your town page →</a>
-    </div>
+<!-- GET INVOLVED -->
+<section id="voice">
+    <h3>Get Involved</h3>
+    <ul style="color: #ccc; line-height: 1.8;">
+        <li><a href="/talk/?state=7" class="external-link">Join the conversation on Talk</a> — share ideas for Connecticut</li>
+        <li><a href="/volunteer/" class="external-link">Volunteer with TPB</a> — Help build civic infrastructure</li>
+        <li><a href="#towns">Find your town page</a></li>
+    </ul>
 </section>
 
 <!-- SOURCE FOOTER -->

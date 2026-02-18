@@ -72,7 +72,7 @@ $secondaryNav = [
     ['label' => 'Schools', 'url' => 'index.php#schools'],
     ['label' => 'School Budget', 'url' => 'putnam-schools-budget.html'],
     ['label' => 'Living Here', 'url' => 'index.php#living'],
-    ['label' => 'Brainstorm', 'url' => 'index.php#voice'],
+    ['label' => 'Talk', 'url' => '/talk/?town=119'],
 ];
 
 // =====================================================

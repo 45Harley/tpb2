@@ -70,7 +70,6 @@ $secondaryNav = [
     ['label' => 'Schools', 'anchor' => 'schools'],
     ['label' => 'School Budget', 'url' => 'putnam-schools-budget.html'],
     ['label' => 'Living Here', 'anchor' => 'living'],
-    ['label' => 'Brainstorm', 'anchor' => 'voice'],
     ['label' => 'Talk', 'url' => '/talk/?town=119'],
 ];
 
@@ -668,117 +667,15 @@ require __DIR__ . '/../../../includes/nav.php';
     </p>
 </section>
 
-<!-- BRAINSTORM PUTNAM -->
-<section class="voice" id="voice">
-    <h2>Brainstorm Putnam</h2>
-    <p class="section-intro">
-        What could make Putnam better? Share your ideas — all voices welcome.
-    </p>
-    
-    <!-- Recent Putnam Ideas -->
-    <div class="thoughts-container">
-        <h3 style="color: #d4af37;">💬 What Neighbors Are Thinking</h3>
-        <div id="thoughtsList" class="thoughts-list">
-            <p style="color: #888;">Loading ideas...</p>
-        </div>
-    </div>
-    
-    <!-- Submit Idea Form -->
-    <div class="thought-form">
-        <h3 style="color: #d4af37; margin-top: 0;">💭 Share an Idea for Putnam</h3>
-        
-        <div style="background: #252535; padding: 12px 15px; border-radius: 8px; margin: 1em 0; border-left: 3px solid #d4af37;">
-            <p style="color: #d4af37; font-weight: 600; margin: 0 0 8px 0; font-size: 0.9rem;">💡 Brainstorming Rules</p>
-            <ol style="color: #ccc; font-size: 0.8rem; margin: 0; padding-left: 1.2em; line-height: 1.6;">
-                <li>No criticism — every idea is valid</li>
-                <li>Build on ideas — "Yes, and..." not "No, but..."</li>
-                <li>Quantity over quality — get everything out</li>
-                <li>Wild ideas welcome — refine later</li>
-                <li>Stay on topic — Putnam improvements</li>
-            </ol>
-        </div>
-        
-        <?php require __DIR__ . '/../../../includes/thought-form.php'; ?>
-        
-        <p class="scope-links">
-            Bigger issue? Share at: 
-            <a href="/z-states/ct/#voice">Connecticut</a> | 
-            <a href="/voice.php">National</a>
-        </p>
-    </div>
-    
+<!-- GET INVOLVED -->
+<section id="voice">
     <h3>Get Involved</h3>
     <ul style="color: #ccc; line-height: 1.8;">
+        <li><a href="/talk/?town=119" class="external-link">Join the conversation on Talk</a> — share ideas for Putnam</li>
         <li><a href="https://onboard.putnamct.us/" class="external-link" target="_blank">Apply for a Board Seat</a> — <?= $totalVacancies ?> vacancies need you</li>
         <li><a href="/volunteer/" class="external-link">Volunteer with TPB</a> — Help build civic infrastructure</li>
         <li><a href="https://www.putnamct.us/government/mayors-office/elected-officials" class="external-link" target="_blank">Contact Your Officials</a></li>
     </ul>
 </section>
-
-<script>
-var sessionId = '<?= htmlspecialchars($sessionId ?? '') ?>';
-var townId = <?= $townId ?>;
-
-// Load Putnam thoughts
-async function loadThoughts() {
-    try {
-        const response = await fetch('/api/get-thoughts.php?town_id=' + townId + '&limit=10');
-        const data = await response.json();
-        
-        const container = document.getElementById('thoughtsList');
-        
-        if (!data.thoughts || data.thoughts.length === 0) {
-            container.innerHTML = '<div class="empty-state"><div class="icon">💭</div><p>Be the first to share a thought about Putnam!</p></div>';
-            return;
-        }
-        
-        container.innerHTML = data.thoughts.map(function(t) {
-            var displayName = t.display_name || 'A neighbor';
-            var timeAgo = t.time_ago || '';
-            return '<div class="thought-card">' +
-                '<div class="thought-content">' + escapeHtml(t.content) + '</div>' +
-                '<div class="thought-meta">' +
-                    '<span>' + displayName + ' · ' + timeAgo + '</span>' +
-                    '<div class="thought-votes">' +
-                        '<button class="vote-btn agree" data-id="' + t.thought_id + '" data-vote="1">👍 <span class="count">' + (t.agree_count || 0) + '</span></button>' +
-                        '<button class="vote-btn disagree" data-id="' + t.thought_id + '" data-vote="-1">👎 <span class="count">' + (t.disagree_count || 0) + '</span></button>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-        }).join('');
-        
-        // Add vote handlers
-        document.querySelectorAll('.vote-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                voteThought(this.dataset.id, this.dataset.vote);
-            });
-        });
-    } catch (err) {
-        document.getElementById('thoughtsList').innerHTML = '<p style="color: #666; text-align: center;">Could not load thoughts</p>';
-    }
-}
-
-function escapeHtml(text) {
-    var div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-async function voteThought(thoughtId, vote) {
-    try {
-        await fetch('/api/vote-thought.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ thought_id: thoughtId, vote: vote, session_id: sessionId })
-        });
-        loadThoughts();
-    } catch (err) {
-        console.error('Vote failed');
-    }
-}
-
-// Load thoughts on page load
-loadThoughts();
-</script>
 
 <?php require __DIR__ . '/../../../includes/footer.php'; ?>

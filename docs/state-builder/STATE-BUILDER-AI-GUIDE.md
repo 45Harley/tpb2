@@ -104,7 +104,6 @@ require_once __DIR__ . '/../../includes/get-user.php';
 require __DIR__ . '/../../includes/header.php';
 require __DIR__ . '/../../includes/nav.php';
 // ... page content ...
-require __DIR__ . '/../../includes/thought-form.php';
 require __DIR__ . '/../../includes/footer.php';
 ```
 
@@ -122,7 +121,7 @@ $secondaryNav = [
     ['label' => 'Jobs & Economy', 'anchor' => 'economy'],
     ['label' => 'Elections', 'anchor' => 'elections'],
     ['label' => 'Your Town', 'anchor' => 'towns'],
-    ['label' => 'Brainstorm [State]', 'anchor' => 'voice'],
+    ['label' => 'Talk', 'url' => '/talk/?state=[state_id]'],
 ];
 ```
 
@@ -137,7 +136,7 @@ $secondaryNav = [
 8. **Jobs & Economy** - Key industries, unemployment, major employers
 9. **Elections** - Voter registration, recent results, voting info
 10. **Your Town** - Interactive grid of all towns (active vs coming soon)
-11. **Brainstorm [State]** - State-level thought submission
+11. **Talk** - Link to state's Talk stream (`/talk/?state=ID`)
 
 ### Hero Civic Metrics (auto-populated)
 
@@ -938,15 +937,6 @@ $dbUser = getUser($pdo);
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 
-// Variables for thought-form include
-$userTown = $dbUser['town_name'] ?? null;
-$userState = $dbUser['state_abbrev'] ?? null;
-$canPost = $dbUser && !empty($dbUser['email_verified']);
-$isMinor = $dbUser && ($dbUser['age_bracket'] === '13-17');
-$needsParentConsent = $isMinor && !($dbUser['parent_consent'] ?? false);
-if ($needsParentConsent) $canPost = false;
-$defaultIsLocal = false; // Pre-check STATE for state pages
-
 // Page config
 $currentPage = 'town'; // Uses town page nav
 $pageTitle = 'Connecticut - Your Voice, Your Benefits | The People\'s Branch';
@@ -966,7 +956,7 @@ $secondaryNav = [
     ['label' => 'Jobs & Economy', 'anchor' => 'economy'],
     ['label' => 'Elections', 'anchor' => 'elections'],
     ['label' => 'Your Town', 'anchor' => 'towns'],
-    ['label' => 'Brainstorm CT', 'anchor' => 'voice'],
+    ['label' => 'Talk', 'url' => '/talk/?state=7'],
 ];
 
 // =====================================================
@@ -1446,17 +1436,14 @@ require __DIR__ . '/../../includes/nav.php';
     </div>
 </section>
 
-<!-- BRAINSTORM CONNECTICUT -->
-<section class="voice" id="voice">
-    <h2>Brainstorm Connecticut</h2>
-    <p class="section-intro">
-        What should Connecticut's leaders hear from you? Share your thoughts on state-level issues.
-    </p>
-
-    <?php
-    // Include thought submission form
-    require __DIR__ . '/../../includes/thought-form.php';
-    ?>
+<!-- GET INVOLVED -->
+<section id="voice">
+    <h3>Get Involved</h3>
+    <ul style="color: #ccc; line-height: 1.8;">
+        <li><a href="/talk/?state=7" class="external-link">Join the conversation on Talk</a> — share ideas for Connecticut</li>
+        <li><a href="/volunteer/" class="external-link">Volunteer with TPB</a> — Help build civic infrastructure</li>
+        <li><a href="#towns">Find your town page</a></li>
+    </ul>
 </section>
 
 <?php
@@ -1556,7 +1543,7 @@ Generate: `BUILD-LOG-[STATE].md`
 - [x] Jobs & Economy (Key industries, unemployment, GDP)
 - [x] Elections (Voter registration, recent results, voting info)
 - [x] Towns Grid (169 towns, 4 active, search functionality)
-- [x] Brainstorm CT (State-level thought submission)
+- [x] Talk link (State-level Talk stream)
 
 ## Data Sources Used
 1. Connecticut General Assembly (https://www.cga.ct.gov)
