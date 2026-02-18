@@ -129,6 +129,23 @@ if ($inviteResult && ($inviteResult['type'] ?? '') === 'success' && isset($invit
 }
 $mode = $groupId ? 'detail' : 'list';
 
+// Geo context from URL params
+$geoStateId = isset($_GET['state']) ? (int)$_GET['state'] : null;
+$geoTownId  = isset($_GET['town'])  ? (int)$_GET['town']  : null;
+$geoScope = 'federal';
+$geoLabel = 'USA';
+if ($geoTownId && $pdo) {
+    $stmt = $pdo->prepare("SELECT t.town_name, s.abbreviation, s.state_id FROM towns t JOIN states s ON t.state_id = s.state_id WHERE t.town_id = ?");
+    $stmt->execute([$geoTownId]);
+    $geo = $stmt->fetch();
+    if ($geo) { $geoScope = 'town'; $geoStateId = (int)$geo['state_id']; $geoLabel = $geo['town_name'] . ', ' . $geo['abbreviation']; }
+} elseif ($geoStateId && $pdo) {
+    $stmt = $pdo->prepare("SELECT state_name FROM states WHERE state_id = ?");
+    $stmt->execute([$geoStateId]);
+    $geo = $stmt->fetch();
+    if ($geo) { $geoScope = 'state'; $geoLabel = $geo['state_name']; }
+}
+
 // Nav setup
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
@@ -282,6 +299,29 @@ $pageStyles = <<<'CSS'
         .sub-groups { margin-top: 1rem; }
         .sub-group { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 6px; font-size: 0.85rem; }
         .sub-group a { color: #4fc3f7; text-decoration: none; font-weight: 600; }
+
+        .sic-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 8px;
+            font-size: 0.65rem; font-weight: 600;
+            background: rgba(156,39,176,0.15); color: #ce93d8;
+        }
+        .standard-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 8px;
+            font-size: 0.65rem; font-weight: 600;
+            background: rgba(255,215,0,0.15); color: #ffd700;
+        }
+        .group-card.standard { border-left-color: #ffd700; }
+
+        .geo-filter {
+            display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap;
+        }
+        .geo-filter-btn {
+            padding: 6px 14px; border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px; background: none; color: #888;
+            font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
+        }
+        .geo-filter-btn:hover { border-color: rgba(255,255,255,0.25); color: #ccc; }
+        .geo-filter-btn.active { border-color: #4fc3f7; color: #4fc3f7; background: rgba(79,195,247,0.1); }
 CSS;
 
 require __DIR__ . '/../includes/header.php';
@@ -303,6 +343,17 @@ require __DIR__ . '/../includes/nav.php';
 
         <?php if ($mode === 'list'): ?>
             <!-- ════ LIST VIEW ════ -->
+
+            <div class="geo-filter">
+                <button class="geo-filter-btn<?= !$geoStateId && !$geoTownId ? ' active' : '' ?>" onclick="location.href='groups.php'">All / USA</button>
+<?php if ($dbUser && !empty($dbUser['current_state_id'])): ?>
+                <button class="geo-filter-btn<?= $geoStateId && !$geoTownId ? ' active' : '' ?>" onclick="location.href='groups.php?state=<?= (int)$dbUser['current_state_id'] ?>'">My State</button>
+<?php endif; ?>
+<?php if ($dbUser && !empty($dbUser['current_town_id'])): ?>
+                <button class="geo-filter-btn<?= $geoTownId ? ' active' : '' ?>" onclick="location.href='groups.php?town=<?= (int)$dbUser['current_town_id'] ?>'">My Town</button>
+<?php endif; ?>
+            </div>
+
             <?php if ($currentUserId): ?>
                 <button class="btn btn-primary" onclick="document.getElementById('createForm').classList.toggle('visible')" style="margin-bottom: 1rem;">+ Create Group</button>
 
@@ -342,13 +393,18 @@ require __DIR__ . '/../includes/nav.php';
                 </div>
             <?php endif; ?>
 
+            <div id="civicGroups" class="section">
+                <h2>Civic Topics</h2>
+                <div id="civicGroupsList"><div class="empty">Loading...</div></div>
+            </div>
+
             <div id="myGroups" class="section">
                 <h2>My Groups</h2>
                 <div id="myGroupsList"><div class="empty">Loading...</div></div>
             </div>
 
             <div id="discoverSection" class="section">
-                <h2>Discover</h2>
+                <h2>Community Groups</h2>
                 <div id="discoverList"><div class="empty">Loading...</div></div>
             </div>
 
@@ -361,6 +417,9 @@ require __DIR__ . '/../includes/nav.php';
     <script>
     var currentUserId = <?= $currentUserId ?>;
     var groupId = <?= $groupId ?>;
+    var geoState = <?= $geoStateId ? $geoStateId : 'null' ?>;
+    var geoTown = <?= $geoTownId ? $geoTownId : 'null' ?>;
+    var geoScope = <?= json_encode($geoScope) ?>;
 
     function showStatus(msg, type) {
         var el = document.getElementById('statusMsg');
@@ -388,27 +447,54 @@ require __DIR__ . '/../includes/nav.php';
     // ─── List Mode ───
 
     async function loadGroups() {
+        // Build geo filter params
+        var geoParams = {};
+        if (geoTown) { geoParams.scope = 'town'; geoParams.state_id = geoState; geoParams.town_id = geoTown; }
+        else if (geoState) { geoParams.scope = 'state'; geoParams.state_id = geoState; }
+
+        // Auto-create standard groups for this geo scope if needed
+        if (geoTown || geoState) {
+            var autoParams = { scope: geoScope };
+            if (geoState) autoParams.state_id = geoState;
+            if (geoTown) autoParams.town_id = geoTown;
+            await apiPost('auto_create_standard_groups', autoParams);
+        }
+
+        // Load all groups (with geo filter)
+        var all = await apiGet('list_groups', geoParams);
+        var allGroups = all.success ? all.groups : [];
+
+        // Separate standard (civic) from user-created
+        var civicGroups = allGroups.filter(function(g) { return g.is_standard == 1; });
+        var communityGroups = allGroups.filter(function(g) { return g.is_standard != 1 && !g.user_role; });
+
+        // Civic Topics
+        var civicList = document.getElementById('civicGroupsList');
+        if (civicGroups.length > 0) {
+            civicList.innerHTML = civicGroups.map(renderGroupCard).join('');
+        } else {
+            civicList.innerHTML = '<div class="empty">No civic topics here yet.</div>';
+        }
+
         // My groups
         if (currentUserId) {
-            var mine = await apiGet('list_groups', { mine: 1 });
+            var mine = await apiGet('list_groups', Object.assign({ mine: 1 }, geoParams));
             var myList = document.getElementById('myGroupsList');
             if (mine.success && mine.groups.length > 0) {
                 myList.innerHTML = mine.groups.map(renderGroupCard).join('');
             } else {
-                myList.innerHTML = '<div class="empty">No groups yet. Create one!</div>';
+                myList.innerHTML = '<div class="empty">No groups yet. Create or join one!</div>';
             }
         } else {
             document.getElementById('myGroups').style.display = 'none';
         }
 
-        // Discover
-        var all = await apiGet('list_groups', {});
+        // Community Groups (user-created, not mine)
         var discoverList = document.getElementById('discoverList');
-        var discoverGroups = all.success ? all.groups.filter(function(g) { return !g.user_role; }) : [];
-        if (discoverGroups.length > 0) {
-            discoverList.innerHTML = discoverGroups.map(renderGroupCard).join('');
+        if (communityGroups.length > 0) {
+            discoverList.innerHTML = communityGroups.map(renderGroupCard).join('');
         } else {
-            discoverList.innerHTML = '<div class="empty">No groups to discover yet.</div>';
+            discoverList.innerHTML = '<div class="empty">No community groups yet.</div>';
         }
     }
 
@@ -418,10 +504,14 @@ require __DIR__ . '/../includes/nav.php';
         }).join('') : '';
         var roleLabels = { facilitator: '🎯 Group Facilitator', member: '💬 Group Member', observer: '👁 Group Observer' };
         var roleBadge = g.user_role ? '<span class="badge ' + g.user_role + '">' + (roleLabels[g.user_role] || g.user_role) + '</span>' : '';
+        var standardBadge = g.is_standard == 1 ? '<span class="standard-badge">Civic</span> ' : '';
+        var sicBadge = g.sic_code ? '<span class="sic-badge">SIC ' + escHtml(g.sic_code) + '</span> ' : '';
+        var cardClass = 'group-card' + (g.is_standard == 1 ? ' standard' : '');
 
-        return '<div class="group-card" onclick="location.href=\'?id=' + g.id + '\'">' +
-            '<div class="name">' + escHtml(g.name) + ' ' + roleBadge + '</div>' +
-            (g.description ? '<div class="desc">' + escHtml(g.description) + '</div>' : '') +
+        return '<div class="' + cardClass + '" onclick="location.href=\'?id=' + g.id + '\'">' +
+            '<div class="name">' + standardBadge + escHtml(g.name) + ' ' + roleBadge + '</div>' +
+            (g.sic_description ? '<div class="desc">' + sicBadge + escHtml(g.sic_description) + '</div>' :
+             g.description ? '<div class="desc">' + escHtml(g.description) + '</div>' : '') +
             '<div class="meta">' +
                 '<span class="badge ' + g.status + '">' + g.status + '</span>' +
                 '<span>' + (g.member_count || 0) + ' member' + (g.member_count != 1 ? 's' : '') + '</span>' +

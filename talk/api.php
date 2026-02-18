@@ -87,7 +87,7 @@ function getPublicAccess($group, $dbUser) {
 try {
     switch ($action) {
         case 'save':
-            echo json_encode(handleSave($pdo, $input, $userId));
+            echo json_encode(handleSave($pdo, $input, $userId, $dbUser));
             break;
         case 'history':
             echo json_encode(handleHistory($pdo, $userId, $dbUser));
@@ -168,6 +168,14 @@ try {
             echo json_encode(handleGetInvites($pdo, $userId));
             break;
 
+        // Phase 8: Geo-Streams
+        case 'auto_create_standard_groups':
+            echo json_encode(handleAutoCreateStandardGroups($pdo, $input, $userId));
+            break;
+        case 'get_access_status':
+            echo json_encode(handleGetAccessStatus($dbUser));
+            break;
+
         default:
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action]);
@@ -180,7 +188,16 @@ try {
 
 // ── Save ───────────────────────────────────────────────────────────
 
-function handleSave($pdo, $input, $userId) {
+function handleSave($pdo, $input, $userId, $dbUser = null) {
+    // Access gate: level 2+ required to post
+    if (!$dbUser || (int)($dbUser['identity_level_id'] ?? 1) < 2) {
+        return ['success' => false, 'error' => 'Verify your email to post ideas', 'needs' => 'verify_email'];
+    }
+    // Access gate: location required for level 2+
+    if (empty($dbUser['current_state_id'])) {
+        return ['success' => false, 'error' => 'Set your town to participate', 'needs' => 'set_location'];
+    }
+
     // Bot detection
     require_once __DIR__ . '/../api/bot-detect.php';
     $formLoadTime = isset($input['_form_load_time']) ? (int)$input['_form_load_time'] : null;
@@ -241,9 +258,13 @@ function handleSave($pdo, $input, $userId) {
         }
     }
 
+    // Auto-stamp with creator's geography
+    $stateId = $dbUser['current_state_id'] ?? null;
+    $townId  = $dbUser['current_town_id'] ?? null;
+
     $stmt = $pdo->prepare("
-        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, tags, source, shareable, clerk_key, group_id)
-        VALUES (:user_id, :session_id, :parent_id, :content, :category, 'raw', :tags, :source, :shareable, :clerk_key, :group_id)
+        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, tags, source, shareable, clerk_key, group_id, state_id, town_id)
+        VALUES (:user_id, :session_id, :parent_id, :content, :category, 'raw', :tags, :source, :shareable, :clerk_key, :group_id, :state_id, :town_id)
     ");
 
     $stmt->execute([
@@ -256,7 +277,9 @@ function handleSave($pdo, $input, $userId) {
         ':source'     => $source,
         ':shareable'  => $shareable,
         ':clerk_key'  => $clerkKey,
-        ':group_id'   => $groupId
+        ':group_id'   => $groupId,
+        ':state_id'   => $stateId,
+        ':town_id'    => $townId
     ]);
 
     $id = (int)$pdo->lastInsertId();
@@ -339,14 +362,16 @@ function handleSave($pdo, $input, $userId) {
 // ── History ────────────────────────────────────────────────────────
 
 function handleHistory($pdo, $userId, $dbUser = null) {
-    $sessionId = $_GET['session_id'] ?? null;
-    $category  = $_GET['category']   ?? null;
-    $status    = $_GET['status']     ?? null;
-    $limit     = min((int)($_GET['limit'] ?? 50), 200);
-    $includeAi = (bool)($_GET['include_ai'] ?? false);
-    $groupId   = isset($_GET['group_id']) && $_GET['group_id'] !== '' ? (int)$_GET['group_id'] : null;
-    $since     = $_GET['since']  ?? null;
-    $before    = $_GET['before'] ?? null;
+    $sessionId  = $_GET['session_id'] ?? null;
+    $category   = $_GET['category']   ?? null;
+    $status     = $_GET['status']     ?? null;
+    $limit      = min((int)($_GET['limit'] ?? 50), 200);
+    $includeAi  = (bool)($_GET['include_ai'] ?? false);
+    $groupId    = isset($_GET['group_id']) && $_GET['group_id'] !== '' ? (int)$_GET['group_id'] : null;
+    $geoStateId = isset($_GET['state_id']) && $_GET['state_id'] !== '' ? (int)$_GET['state_id'] : null;
+    $geoTownId  = isset($_GET['town_id']) && $_GET['town_id'] !== '' ? (int)$_GET['town_id'] : null;
+    $since      = $_GET['since']  ?? null;
+    $before     = $_GET['before'] ?? null;
     $excludeChat = !isset($_GET['include_chat']);
 
     if ($limit < 1) $limit = 50;
@@ -355,7 +380,7 @@ function handleHistory($pdo, $userId, $dbUser = null) {
     $params = [];
     $userRole = null;
 
-    // Group-scoped or personal-scoped
+    // Group-scoped, geo-scoped, or personal-scoped
     if ($groupId !== null) {
         // Verify membership for closed groups
         if ($userId) {
@@ -381,7 +406,17 @@ function handleHistory($pdo, $userId, $dbUser = null) {
 
         $where[] = 'i.group_id = :group_id';
         $params[':group_id'] = $groupId;
-    } elseif ($userId && !$sessionId) {
+    } elseif ($geoTownId !== null) {
+        // Town-scoped stream: ungrouped ideas from this town
+        $where[] = 'i.town_id = :town_id';
+        $where[] = 'i.group_id IS NULL';
+        $params[':town_id'] = $geoTownId;
+    } elseif ($geoStateId !== null) {
+        // State-scoped stream: ungrouped ideas from this state
+        $where[] = 'i.state_id = :state_id';
+        $where[] = 'i.group_id IS NULL';
+        $params[':state_id'] = $geoStateId;
+    } elseif ($userId && !$sessionId && !$geoStateId && !$geoTownId) {
         // Personal mode: user's own ideas with no group
         $where[] = 'i.user_id = :user_id';
         $where[] = 'i.group_id IS NULL';
@@ -423,7 +458,7 @@ function handleHistory($pdo, $userId, $dbUser = null) {
     $sql = "
         SELECT i.id, i.user_id, i.session_id, i.parent_id,
                i.content{$aiColumn}, i.category, i.status, i.tags, i.source,
-               i.shareable, i.clerk_key, i.group_id, i.edit_count,
+               i.shareable, i.clerk_key, i.group_id, i.state_id, i.town_id, i.edit_count,
                i.agree_count, i.disagree_count,
                i.created_at, i.updated_at,
                u.first_name, u.last_name, u.username AS user_username,
@@ -1738,10 +1773,12 @@ function handleListGroups($pdo, $userId) {
     // Resolve location names for display
     $locationSelect = ",
         s.state_name, s.abbreviation AS state_abbrev,
-        tw.town_name";
+        tw.town_name,
+        sc.description AS sic_description";
     $locationJoin = "
         LEFT JOIN states s ON g.state_id = s.state_id
-        LEFT JOIN towns tw ON g.town_id = tw.town_id";
+        LEFT JOIN towns tw ON g.town_id = tw.town_id
+        LEFT JOIN sic_codes sc ON g.sic_code = sc.sic_code";
 
     if ($mine) {
         $stmt = $pdo->prepare("
@@ -3223,5 +3260,123 @@ function handleGetInvites($pdo, $userId) {
     return [
         'success' => true,
         'invites' => $invites
+    ];
+}
+
+
+// ── Phase 8: Auto-Create Standard Groups ──────────────────────────
+
+function handleAutoCreateStandardGroups($pdo, $input, $userId) {
+    $scope   = $input['scope']    ?? $_GET['scope']    ?? null;
+    $stateId = $input['state_id'] ?? $_GET['state_id'] ?? null;
+    $townId  = $input['town_id']  ?? $_GET['town_id']  ?? null;
+
+    if ($stateId) $stateId = (int)$stateId;
+    if ($townId)  $townId  = (int)$townId;
+
+    // Determine scope from geo params if not explicit
+    if (!$scope) {
+        if ($townId)       $scope = 'town';
+        elseif ($stateId)  $scope = 'state';
+        else               $scope = 'federal';
+    }
+
+    // Get all Division J (Public Administration) SIC codes
+    $stmt = $pdo->query("SELECT sic_code, description FROM sic_codes WHERE division = 'J' ORDER BY sic_code");
+    $sicCodes = $stmt->fetchAll();
+
+    $created = 0;
+    foreach ($sicCodes as $sic) {
+        // Check if standard group already exists for this scope+geo+sic
+        $checkSql = "SELECT id FROM idea_groups WHERE is_standard = 1 AND sic_code = ? AND scope = ?";
+        $checkParams = [$sic['sic_code'], $scope];
+
+        if ($stateId) {
+            $checkSql .= " AND state_id = ?";
+            $checkParams[] = $stateId;
+        } else {
+            $checkSql .= " AND state_id IS NULL";
+        }
+        if ($townId) {
+            $checkSql .= " AND town_id = ?";
+            $checkParams[] = $townId;
+        } else {
+            $checkSql .= " AND town_id IS NULL";
+        }
+
+        $check = $pdo->prepare($checkSql);
+        $check->execute($checkParams);
+        if ($check->fetch()) continue;
+
+        // Create the standard group
+        $ins = $pdo->prepare("
+            INSERT INTO idea_groups (name, description, access_level, scope, state_id, town_id, sic_code, is_standard, created_by, public_readable, public_voting)
+            VALUES (?, ?, 'open', ?, ?, ?, ?, 1, NULL, 1, 1)
+        ");
+        $ins->execute([
+            $sic['description'],
+            'Standard civic topic: ' . $sic['description'],
+            $scope,
+            $stateId,
+            $townId,
+            $sic['sic_code']
+        ]);
+        $created++;
+    }
+
+    return [
+        'success' => true,
+        'created' => $created,
+        'scope'   => $scope,
+        'state_id' => $stateId,
+        'town_id'  => $townId
+    ];
+}
+
+
+// ── Phase 8: Access Status ────────────────────────────────────────
+
+function handleGetAccessStatus($dbUser) {
+    if (!$dbUser) {
+        return [
+            'success'  => true,
+            'can_post'  => false,
+            'needs'     => 'verify_email',
+            'identity_level' => 0,
+            'has_location'   => false
+        ];
+    }
+
+    $level = (int)($dbUser['identity_level_id'] ?? 1);
+    $hasLocation = !empty($dbUser['current_state_id']);
+
+    if ($level < 2) {
+        return [
+            'success'  => true,
+            'can_post'  => false,
+            'needs'     => 'verify_email',
+            'identity_level' => $level,
+            'has_location'   => $hasLocation
+        ];
+    }
+
+    if (!$hasLocation) {
+        return [
+            'success'  => true,
+            'can_post'  => false,
+            'needs'     => 'set_location',
+            'identity_level' => $level,
+            'has_location'   => false
+        ];
+    }
+
+    return [
+        'success'  => true,
+        'can_post'  => true,
+        'needs'     => null,
+        'identity_level' => $level,
+        'has_location'   => true,
+        'state_id' => (int)$dbUser['current_state_id'],
+        'town_id'  => $dbUser['current_town_id'] ? (int)$dbUser['current_town_id'] : null
     ];
 }

@@ -9,6 +9,38 @@ try {
 $currentUserId = $dbUser ? (int)$dbUser['user_id'] : 0;
 $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'display_name' => getDisplayName($dbUser)]) : 'null';
 
+// Geo context from URL params
+$geoStateId = isset($_GET['state']) ? (int)$_GET['state'] : null;
+$geoTownId  = isset($_GET['town'])  ? (int)$_GET['town']  : null;
+$geoStateName = null;
+$geoTownName = null;
+$geoLabel = 'USA';
+
+if ($geoTownId && isset($pdo)) {
+    $stmt = $pdo->prepare("SELECT t.town_name, s.abbreviation, s.state_id FROM towns t JOIN states s ON t.state_id = s.state_id WHERE t.town_id = ?");
+    $stmt->execute([$geoTownId]);
+    $geo = $stmt->fetch();
+    if ($geo) {
+        $geoTownName = $geo['town_name'];
+        $geoStateName = $geo['abbreviation'];
+        $geoStateId = (int)$geo['state_id'];
+        $geoLabel = $geoTownName . ', ' . $geoStateName;
+    }
+} elseif ($geoStateId && isset($pdo)) {
+    $stmt = $pdo->prepare("SELECT state_name, abbreviation FROM states WHERE state_id = ?");
+    $stmt->execute([$geoStateId]);
+    $geo = $stmt->fetch();
+    if ($geo) {
+        $geoStateName = $geo['state_name'];
+        $geoLabel = $geoStateName;
+    }
+}
+
+// Access status for banners
+$userLevel = $dbUser ? (int)($dbUser['identity_level_id'] ?? 1) : 0;
+$hasLocation = $dbUser && !empty($dbUser['current_state_id']);
+$canPost = $userLevel >= 2 && $hasLocation;
+
 // Nav setup
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
@@ -433,9 +465,54 @@ $pageStyles = <<<'CSS'
         .toast.info { background: rgba(33,150,243,0.9); color: white; }
         .toast.hidden { opacity: 0; pointer-events: none; }
 
+        /* ── Access Banner ── */
+        .access-banner {
+            display: block;
+            padding: 12px 16px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #fff;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .access-banner:hover { filter: brightness(1.15); }
+        .access-banner.verify-email {
+            background: linear-gradient(135deg, rgba(33,150,243,0.25), rgba(33,150,243,0.15));
+            border-bottom: 1px solid rgba(33,150,243,0.3);
+        }
+        .access-banner.set-location {
+            background: linear-gradient(135deg, rgba(76,175,80,0.25), rgba(76,175,80,0.15));
+            border-bottom: 1px solid rgba(76,175,80,0.3);
+        }
+        .access-banner .banner-sub {
+            display: block;
+            font-size: 0.75rem;
+            color: #bbb;
+            margin-top: 2px;
+        }
+
+        /* ── Geo Stream Header ── */
+        .geo-header {
+            text-align: center;
+            padding: 10px 16px 4px;
+            font-size: 1rem;
+            color: #90caf9;
+            font-weight: 600;
+        }
+        .geo-header .geo-breadcrumb {
+            font-size: 0.75rem;
+            color: #888;
+            font-weight: 400;
+        }
+        .geo-header .geo-breadcrumb a {
+            color: #666;
+            text-decoration: none;
+        }
+        .geo-header .geo-breadcrumb a:hover { color: #90caf9; text-decoration: underline; }
+
         /* ── Responsive ── */
         @media (min-width: 700px) {
-            .input-area, .stream, .page-header { max-width: 700px; margin-left: auto; margin-right: auto; width: 100%; }
+            .input-area, .stream, .page-header, .geo-header, .access-banner { max-width: 700px; margin-left: auto; margin-right: auto; width: 100%; }
             .footer-bar { max-width: 700px; margin-left: auto; margin-right: auto; width: 100%; }
         }
 CSS;
@@ -452,13 +529,36 @@ require __DIR__ . '/../includes/nav.php';
 <?php endif; ?>
     </div>
 
+<?php // Access banner (persistent, clickable)
+if ($userLevel < 2): ?>
+    <a href="/join.php" class="access-banner verify-email">
+        Verify your email to join the conversation.
+        <span class="banner-sub">Your voice matters.</span>
+    </a>
+<?php elseif (!$hasLocation): ?>
+    <a href="/profile.php#town" class="access-banner set-location">
+        Set your town to join your local community.
+        <span class="banner-sub">Civic life starts where you live.</span>
+    </a>
+<?php endif; ?>
+
+<?php // Geo stream header
+if ($geoTownId || $geoStateId): ?>
+    <div class="geo-header">
+        <?= htmlspecialchars($geoLabel) ?>
+        <div class="geo-breadcrumb">
+<?php if ($geoTownId): ?>
+            <a href="/talk/">USA</a> &rsaquo; <a href="/talk/?state=<?= $geoStateId ?>"><?= htmlspecialchars($geoStateName) ?></a> &rsaquo; <?= htmlspecialchars($geoTownName) ?>
+<?php elseif ($geoStateId): ?>
+            <a href="/talk/">USA</a> &rsaquo; <?= htmlspecialchars($geoStateName) ?>
+<?php endif; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if ($canPost): ?>
     <div class="input-area">
         <div style="position:absolute;left:-9999px;"><input type="text" id="talkHoneypot" tabindex="-1" autocomplete="off"></div>
-<?php if (!$dbUser): ?>
-        <div class="anon-nudge">
-            Ideas are tied to this browser tab. <a href="/join.php">Create an account</a> or <a href="/login.php">log in</a> to keep your work.
-        </div>
-<?php endif; ?>
 
         <div class="context-bar">
             <select id="contextSelect" title="Where to save your ideas">
@@ -474,6 +574,7 @@ require __DIR__ . '/../includes/nav.php';
         </div>
         <div class="char-counter" id="charCounter">0 / 2,000</div>
     </div>
+<?php endif; ?>
 
     <div class="filter-bar">
         <button class="filter-btn active" onclick="setFilter('')" data-filter="">All</button>
@@ -497,6 +598,9 @@ require __DIR__ . '/../includes/nav.php';
     <script>
     // ── State ──
     var currentUser = <?= $userJson ?>;
+    var canPost = <?= $canPost ? 'true' : 'false' ?>;
+    var geoState = <?= $geoStateId ? $geoStateId : 'null' ?>;
+    var geoTown = <?= $geoTownId ? $geoTownId : 'null' ?>;
     // Browser detection
     (function() {
         var ua = navigator.userAgent, name = 'Unknown';
@@ -532,49 +636,63 @@ require __DIR__ . '/../includes/nav.php';
     var toast = document.getElementById('toast');
 
     // ── URL override ──
-    var urlGroup = new URLSearchParams(window.location.search).get('group');
-    if (urlGroup) {
-        currentContext = urlGroup;
-        localStorage.setItem('tpb_talk_context', currentContext);
+    // Geo params override group context
+    if (geoState || geoTown) {
+        currentContext = '';
+        localStorage.removeItem('tpb_talk_context');
+    } else {
+        var urlGroup = new URLSearchParams(window.location.search).get('group');
+        if (urlGroup) {
+            currentContext = urlGroup;
+            localStorage.setItem('tpb_talk_context', currentContext);
+        }
     }
 
     // ── AI toggle ──
-    if (aiRespond) aiBtn.classList.add('active');
-    aiBtn.addEventListener('click', function() {
-        aiRespond = !aiRespond;
-        aiBtn.classList.toggle('active', aiRespond);
-        // AI toggle is session-only — always starts off on page load
-    });
+    if (aiBtn) {
+        if (aiRespond) aiBtn.classList.add('active');
+        aiBtn.addEventListener('click', function() {
+            aiRespond = !aiRespond;
+            aiBtn.classList.toggle('active', aiRespond);
+        });
+    }
 
     // ── Textarea auto-resize + char counter ──
     var charCounter = document.getElementById('charCounter');
     var maxChars = 2000;
     function updateCharCounter() {
+        if (!ideaInput || !charCounter) return;
         var len = ideaInput.value.length;
         charCounter.textContent = len.toLocaleString() + ' / ' + maxChars.toLocaleString();
         charCounter.className = 'char-counter' + (len > maxChars * 0.9 ? (len >= maxChars ? ' over' : ' warn') : '');
     }
-    ideaInput.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 200) + 'px';
-        updateCharCounter();
-    });
+    if (ideaInput) {
+        ideaInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+            updateCharCounter();
+        });
+    }
 
     // ── Context selector ──
-    contextSelect.addEventListener('change', function() {
-        currentContext = this.value;
-        localStorage.setItem('tpb_talk_context', currentContext);
-        switchContext();
-    });
+    if (contextSelect) {
+        contextSelect.addEventListener('change', function() {
+            currentContext = this.value;
+            localStorage.setItem('tpb_talk_context', currentContext);
+            switchContext();
+        });
+    }
 
     // ── Submit ──
-    sendBtn.addEventListener('click', submitIdea);
-    ideaInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            submitIdea();
-        }
-    });
+    if (sendBtn) sendBtn.addEventListener('click', submitIdea);
+    if (ideaInput) {
+        ideaInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitIdea();
+            }
+        });
+    }
 
     async function submitIdea() {
         // Stop mic if listening
@@ -768,6 +886,10 @@ require __DIR__ . '/../includes/nav.php';
         var url = 'api.php?action=history&limit=50';
         if (currentContext) {
             url += '&group_id=' + currentContext + '&include_chat=1';
+        } else if (geoTown) {
+            url += '&town_id=' + geoTown;
+        } else if (geoState) {
+            url += '&state_id=' + geoState;
         }
         if (currentFilter) {
             url += '&status=' + currentFilter;
@@ -812,7 +934,10 @@ require __DIR__ . '/../includes/nav.php';
             }
 
             if (data.ideas.length === 0 && loadedIdeas.length === 0) {
-                streamEmpty.textContent = currentContext ? 'No ideas in this group yet. Start the conversation!' : 'No ideas yet. What\'s on your mind?';
+                var emptyMsg = 'No ideas yet. What\'s on your mind?';
+                if (currentContext) emptyMsg = 'No ideas in this group yet. Start the conversation!';
+                else if (geoTown || geoState) emptyMsg = 'No ideas here yet. Be the first to share!';
+                streamEmpty.textContent = emptyMsg;
                 streamEmpty.style.display = 'block';
                 return;
             }
@@ -876,14 +1001,22 @@ require __DIR__ . '/../includes/nav.php';
     }
 
     var isPolling = false;
+    var hasGeoOrGroup = currentContext || geoState || geoTown;
     async function pollForNew() {
-        if (isPolling || document.hidden || !currentContext) return;
+        if (isPolling || document.hidden || !hasGeoOrGroup) return;
         isPolling = true;
         var newest = loadedIdeas.length ? loadedIdeas[0].created_at : null;
         if (!newest) { isPolling = false; return; }
 
         try {
-            var url = 'api.php?action=history&group_id=' + currentContext + '&include_chat=1&since=' + encodeURIComponent(newest) + '&limit=20';
+            var url = 'api.php?action=history&since=' + encodeURIComponent(newest) + '&limit=20';
+            if (currentContext) {
+                url += '&group_id=' + currentContext + '&include_chat=1';
+            } else if (geoTown) {
+                url += '&town_id=' + geoTown;
+            } else if (geoState) {
+                url += '&state_id=' + geoState;
+            }
             var resp = await fetch(url);
             var data = await resp.json();
 
@@ -901,7 +1034,7 @@ require __DIR__ . '/../includes/nav.php';
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
             stopPolling();
-        } else if (currentContext) {
+        } else if (hasGeoOrGroup) {
             pollForNew(); // immediate check
             startPolling();
         }
@@ -1235,8 +1368,13 @@ require __DIR__ . '/../includes/nav.php';
 
     // ── Init ──
     async function init() {
+        // In geo stream mode, hide context selector (geo overrides group)
+        if ((geoState || geoTown) && contextSelect) {
+            contextSelect.parentElement.style.display = 'none';
+        }
+
         // Load user's groups into selector
-        if (currentUser) {
+        if (currentUser && contextSelect) {
             try {
                 var resp = await fetch('api.php?action=list_groups&mine=1');
                 var data = await resp.json();
@@ -1253,8 +1391,8 @@ require __DIR__ . '/../includes/nav.php';
             } catch (e) {}
         }
 
-        // Restore context
-        if (currentContext) {
+        // Restore context (only if not in geo mode)
+        if (currentContext && contextSelect && !geoState && !geoTown) {
             var found = false;
             for (var i = 0; i < contextSelect.options.length; i++) {
                 if (contextSelect.options[i].value === currentContext) {
@@ -1264,7 +1402,6 @@ require __DIR__ . '/../includes/nav.php';
                 }
             }
             if (!found) {
-                // Group no longer exists or user left — reset to personal
                 currentContext = '';
                 localStorage.setItem('tpb_talk_context', '');
             }
@@ -1273,8 +1410,8 @@ require __DIR__ . '/../includes/nav.php';
         // Load ideas
         loadIdeas();
 
-        // Start polling if in group mode
-        if (currentContext) startPolling();
+        // Start polling if in group or geo mode
+        if (hasGeoOrGroup) startPolling();
     }
 
     init();
