@@ -479,7 +479,15 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
                 <li><strong>Closed</strong> &mdash; invisible to non-members. Only accessible via direct invitation. Good for focused working groups.</li>
             </ul>
 
-            <p><strong>2. Public access flags</strong> &mdash; what non-members can do (set by facilitator):</p>
+            <p><strong>2. Scope</strong> &mdash; where the group appears geographically:</p>
+            <ul>
+                <li><strong>National</strong> &mdash; appears in the All / USA groups list</li>
+                <li><strong>State</strong> &mdash; appears when filtering by your state (e.g., "My State" tab)</li>
+                <li><strong>Town</strong> &mdash; appears when filtering by your town (e.g., "My Town" tab)</li>
+            </ul>
+            <p style="color:#aaa; font-size:0.85rem;">The scope defaults to your current view when creating a group. A Putnam-scoped group will show up under "My Town" for Putnam residents.</p>
+
+            <p><strong>3. Public access flags</strong> &mdash; what non-members can do (set by facilitator):</p>
             <ul>
                 <li><strong>Public reading OFF</strong> (default) &mdash; only group members see the ideas. The group is private.</li>
                 <li><strong>Public reading ON</strong> &mdash; verified non-members (phone-verified+) can browse the group's ideas in the Talk stream, read-only. They cannot post.</li>
@@ -487,7 +495,7 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
             </ul>
             <p style="color:#aaa; font-size:0.85rem;">Non-members can never submit ideas, even with public access on. Only group members can contribute.</p>
 
-            <p><strong>3. Member roles</strong> &mdash; what each member can do inside the group:</p>
+            <p><strong>4. Member roles</strong> &mdash; what each member can do inside the group:</p>
             <ul>
                 <li><strong>&#x1f3af; Facilitator</strong> &mdash; manages everything: members, invites, settings, gather, crystallize, archive</li>
                 <li><strong>&#x1f4ac; Member</strong> &mdash; submits ideas, votes, participates in discussion</li>

@@ -146,6 +146,24 @@ if ($geoTownId && $pdo) {
     if ($geo) { $geoScope = 'state'; $geoLabel = $geo['state_name']; }
 }
 
+// Resolve user's town/state names for scope selector
+$userTownName = null;
+$userStateName = null;
+$userTownId = $dbUser ? (int)($dbUser['current_town_id'] ?? 0) : 0;
+$userStateId = $dbUser ? (int)($dbUser['current_state_id'] ?? 0) : 0;
+if ($userTownId && $pdo) {
+    $stmt = $pdo->prepare("SELECT t.town_name, s.abbreviation FROM towns t JOIN states s ON t.state_id = s.state_id WHERE t.town_id = ?");
+    $stmt->execute([$userTownId]);
+    $row = $stmt->fetch();
+    if ($row) $userTownName = $row['town_name'] . ', ' . $row['abbreviation'];
+}
+if ($userStateId && $pdo) {
+    $stmt = $pdo->prepare("SELECT state_name FROM states WHERE state_id = ?");
+    $stmt->execute([$userStateId]);
+    $row = $stmt->fetch();
+    if ($row) $userStateName = $row['state_name'];
+}
+
 // Nav setup
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
@@ -373,6 +391,19 @@ require __DIR__ . '/../includes/nav.php';
                         <input type="text" id="groupTags" placeholder="e.g., housing, putnam, ct">
                     </div>
                     <div class="form-group">
+                        <label>Scope</label>
+                        <select id="groupScope">
+                            <option value="">National (all of USA)</option>
+<?php if ($userStateName): ?>
+                            <option value="state"<?= $geoScope === 'state' ? ' selected' : '' ?>><?= htmlspecialchars($userStateName) ?></option>
+<?php endif; ?>
+<?php if ($userTownName): ?>
+                            <option value="town"<?= $geoScope === 'town' ? ' selected' : '' ?>><?= htmlspecialchars($userTownName) ?></option>
+<?php endif; ?>
+                        </select>
+                        <span style="font-size:0.8rem;color:#888;">Where should this group appear?</span>
+                    </div>
+                    <div class="form-group">
                         <label>Access Level</label>
                         <select id="groupAccess">
                             <option value="observable">Observable (anyone can see, members contribute)</option>
@@ -421,6 +452,8 @@ require __DIR__ . '/../includes/nav.php';
     var geoState = <?= $geoStateId ? $geoStateId : 'null' ?>;
     var geoTown = <?= $geoTownId ? $geoTownId : 'null' ?>;
     var geoScope = <?= json_encode($geoScope) ?>;
+    var userTownId = <?= $userTownId ?: 'null' ?>;
+    var userStateId = <?= $userStateId ?: 'null' ?>;
 
     function showStatus(msg, type) {
         var el = document.getElementById('statusMsg');
@@ -526,14 +559,24 @@ require __DIR__ . '/../includes/nav.php';
         var name = document.getElementById('groupName').value.trim();
         if (!name) { showStatus('Group name is required', 'error'); return; }
 
-        var data = await apiPost('create_group', {
+        var scopeVal = document.getElementById('groupScope').value;
+        var body = {
             name: name,
             description: document.getElementById('groupDesc').value.trim(),
             tags: document.getElementById('groupTags').value.trim(),
             access_level: document.getElementById('groupAccess').value,
             public_readable: document.getElementById('groupPublicRead').checked ? 1 : 0,
             public_voting: document.getElementById('groupPublicVote').checked ? 1 : 0
-        });
+        };
+        if (scopeVal === 'town' && userTownId) {
+            body.scope = 'town';
+            body.town_id = userTownId;
+            if (userStateId) body.state_id = userStateId;
+        } else if (scopeVal === 'state' && userStateId) {
+            body.scope = 'state';
+            body.state_id = userStateId;
+        }
+        var data = await apiPost('create_group', body);
 
         if (data.success) {
             showStatus('Group "' + name + '" created!', 'success');

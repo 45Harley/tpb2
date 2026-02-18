@@ -117,6 +117,20 @@ Ideas live in one of two contexts — they don't overlap:
 
 **Important:** Group ideas (`group_id IS NOT NULL`) do NOT appear in geo streams. They're scoped to the group only.
 
+### Group geographic scope
+
+Groups themselves can be scoped to a geographic level. This controls **where the group appears** in the Groups discovery page:
+
+| Scope | Appears in | Example |
+|-------|-----------|---------|
+| (none/national) | All / USA groups | "National Housing Policy" |
+| `state` | State groups filter | "CT Housing" appears under My State for CT users |
+| `town` | Town groups filter | "Putnam Housing" appears under My Town for Putnam users |
+
+When creating a group, the scope selector defaults to the current geo context (e.g., if you're on `groups.php?town=119`, town is pre-selected). Users can also pick National, My State, or My Town.
+
+Scope is optional for user-created groups. Standard civic groups always have scope.
+
 ---
 
 ## 7. Standard Civic Groups (SIC)
