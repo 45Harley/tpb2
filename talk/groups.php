@@ -232,14 +232,16 @@ $mode = $groupId ? 'detail' : 'list';
 
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 4px; }
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 8px; background: rgba(255,255,255,0.06); color: #eee;
+        .form-group input, .form-group textarea, .form-group select,
+        textarea, input[type="text"], input[type="email"], select {
+            width: 100%; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px; background: #2a2a3e; color: #fff;
             font-family: inherit; font-size: 0.9rem;
         }
         .form-group select option, select option { background: #1a1a2e; color: #eee; }
-        .form-group textarea { min-height: 80px; resize: vertical; }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+        .form-group textarea, textarea { min-height: 80px; resize: vertical; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus,
+        textarea:focus, input:focus, select:focus {
             outline: none; border-color: #4fc3f7;
         }
 
@@ -600,8 +602,7 @@ $mode = $groupId ? 'detail' : 'list';
             html += '<div class="section" style="margin-top:1.5rem;">' +
                 '<h2>Invite Members</h2>' +
                 '<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:14px;">' +
-                    '<textarea id="inviteEmails" rows="3" placeholder="Enter email addresses (one per line, or comma-separated)" ' +
-                        'style="width:100%;background:rgba(255,255,255,0.08);color:#eee;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px;font-size:0.9rem;resize:vertical;font-family:inherit;"></textarea>' +
+                    '<textarea id="inviteEmails" rows="3" placeholder="Enter email addresses (one per line, or comma-separated)"></textarea>' +
                     '<button class="btn btn-primary" onclick="sendInvites(' + g.id + ')" style="margin-top:8px;">📧 Send Invites</button>' +
                     '<div id="inviteResults" style="margin-top:10px;"></div>' +
                 '</div>' +
@@ -677,7 +678,7 @@ $mode = $groupId ? 'detail' : 'list';
         var el = document.getElementById('groupDesc');
         var current = el.textContent.replace(/\s*✎$/, '').trim();
         if (current === 'No description') current = '';
-        el.innerHTML = '<textarea id="descEdit" rows="3" style="width:100%;background:rgba(255,255,255,0.08);color:#eee;border:1px solid rgba(79,195,247,0.3);border-radius:8px;padding:8px;font-size:0.9rem;resize:vertical;font-family:inherit;">' + escHtml(current) + '</textarea>' +
+        el.innerHTML = '<textarea id="descEdit" rows="3">' + escHtml(current) + '</textarea>' +
             '<div style="display:flex;gap:6px;margin-top:6px;">' +
             '<button class="btn btn-secondary" onclick="cancelDescEdit()" style="padding:4px 12px;font-size:0.8rem;">Cancel</button>' +
             '<button class="btn btn-primary" onclick="saveDescription(' + gId + ')" style="padding:4px 12px;font-size:0.8rem;">Save</button>' +
