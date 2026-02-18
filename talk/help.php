@@ -5,38 +5,24 @@ try {
     $pdo = new PDO("mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}", $config['username'], $config['password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
     $dbUser = getUser($pdo);
 } catch (PDOException $e) { $dbUser = false; }
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#1a1a2e">
-    <title>Help - Talk</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2753;</text></svg>">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #eee;
-        }
+// Nav setup
+$navVars = getNavVarsForUser($dbUser);
+extract($navVars);
+$currentPage = 'talk';
+$pageTitle = 'Help - Talk | The People\'s Branch';
+$secondaryNavBrand = 'Talk';
+$secondaryNav = [
+    ['label' => 'Stream',  'url' => '/talk/'],
+    ['label' => 'Groups',  'url' => '/talk/groups.php'],
+    ['label' => 'Help',    'url' => '/talk/help.php'],
+];
 
+$pageStyles = <<<'CSS'
         .container {
             max-width: 700px;
             margin: 0 auto;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
+            padding: 20px;
         }
 
         .page-header h1 {
@@ -244,21 +230,13 @@ try {
             .header-links { gap: 0.75rem; font-size: 0.8rem; }
             .quick-ref { grid-template-columns: 1fr 1fr; }
         }
-    </style>
-</head>
-<body>
+CSS;
+
+require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/../includes/nav.php';
+?>
+
     <div class="container">
-        <div class="page-header">
-            <h1>Help &amp; FAQ</h1>
-            <div class="header-links">
-                <a href="index.php">Talk</a>
-                <a href="groups.php">Groups</a>
-                <a href="brainstorm.php">Brainstorm</a>
-            </div>
-        </div>
-<?php if ($dbUser): ?>
-        <div class="user-status"><span class="dot"></span><?= htmlspecialchars(getDisplayName($dbUser)) ?></div>
-<?php endif; ?>
 
         <!-- ═══════ QUICK REFERENCE ═══════ -->
 
@@ -562,5 +540,4 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
             The People's Branch &middot; Your voice, aggregated
         </p>
     </div>
-</body>
-</html>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

@@ -8,24 +8,23 @@ try {
 
 $currentUserId = $dbUser ? (int)$dbUser['user_id'] : 0;
 $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'display_name' => getDisplayName($dbUser)]) : 'null';
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#1a1a2e">
-    <title>Talk</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1f4ac;</text></svg>">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
 
+// Nav setup
+$navVars = getNavVarsForUser($dbUser);
+extract($navVars);
+$currentPage = 'talk';
+$pageTitle = 'Talk | The People\'s Branch';
+$secondaryNavBrand = 'Talk';
+$secondaryNav = [
+    ['label' => 'Stream',  'url' => '/talk/'],
+    ['label' => 'Groups',  'url' => '/talk/groups.php'],
+    ['label' => 'Help',    'url' => '/talk/help.php'],
+];
+
+$pageStyles = <<<'CSS'
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             background-attachment: fixed;
-            min-height: 100vh;
-            color: #eee;
         }
 
         /* ── Header ── */
@@ -439,21 +438,11 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
             .input-area, .stream, .page-header { max-width: 700px; margin-left: auto; margin-right: auto; width: 100%; }
             .footer-bar { max-width: 700px; margin-left: auto; margin-right: auto; width: 100%; }
         }
-    </style>
-</head>
-<body>
-    <div class="page-header">
-        <h1>Talk</h1>
-        <div class="header-links">
-            <a href="groups.php">Groups</a>
-            <a href="help.php">Help</a>
-<?php if ($dbUser): ?>
-            <a href="/profile.php">Profile</a>
-<?php else: ?>
-            <a href="/login.php">Log in</a>
-<?php endif; ?>
-        </div>
-    </div>
+CSS;
+
+require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/../includes/nav.php';
+?>
 
     <div class="user-status">
 <?php if ($dbUser): ?>
@@ -1290,5 +1279,5 @@ $userJson = $dbUser ? json_encode(['user_id' => (int)$dbUser['user_id'], 'displa
 
     init();
     </script>
-</body>
-</html>
+
+<?php require __DIR__ . '/../includes/footer.php'; ?>

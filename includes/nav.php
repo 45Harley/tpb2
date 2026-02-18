@@ -409,7 +409,7 @@ $electionSite = 'https://tpb.sandgems.net';
                 <?php else: ?>
                 <a href="/profile.php#town" class="add-link">Add State</a>
                 <?php endif; ?>
-                <a href="/voice.php" <?= $currentPage === 'voice' ? 'class="active"' : '' ?>>My Voice</a>
+                <a href="/talk/" <?= $currentPage === 'talk' ? 'class="active"' : '' ?>>Talk</a>
                 
                 <!-- My Government Dropdown -->
                 <div class="nav-dropdown">

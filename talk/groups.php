@@ -128,24 +128,21 @@ if ($inviteResult && ($inviteResult['type'] ?? '') === 'success' && isset($invit
     $groupId = (int)$inviteResult['group_id'];
 }
 $mode = $groupId ? 'detail' : 'list';
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#1a1a2e">
-    <title><?= $groupId ? 'Group' : 'Groups' ?> - Talk</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #eee;
-        }
+// Nav setup
+$navVars = getNavVarsForUser($dbUser);
+extract($navVars);
+$currentPage = 'talk';
+$pageTitle = ($groupId ? 'Group' : 'Groups') . ' - Talk | The People\'s Branch';
+$secondaryNavBrand = 'Talk';
+$secondaryNav = [
+    ['label' => 'Stream',  'url' => '/talk/'],
+    ['label' => 'Groups',  'url' => '/talk/groups.php'],
+    ['label' => 'Help',    'url' => '/talk/help.php'],
+];
+
+$pageStyles = <<<'CSS'
+        .container { padding: 20px; }
 
         .container { max-width: 700px; margin: 0 auto; }
 
@@ -285,20 +282,13 @@ $mode = $groupId ? 'detail' : 'list';
         .sub-groups { margin-top: 1rem; }
         .sub-group { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 6px; font-size: 0.85rem; }
         .sub-group a { color: #4fc3f7; text-decoration: none; font-weight: 600; }
-    </style>
-</head>
-<body>
+CSS;
+
+require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/../includes/nav.php';
+?>
+
     <div class="container">
-        <header>
-            <h1>👥 Groups</h1>
-            <div class="header-links">
-                <a href="index.php">💬 Talk</a>
-                <a href="help.php">? Help</a>
-            </div>
-        </header>
-<?php if ($dbUser): ?>
-        <div class="user-status"><span class="dot"></span><?= htmlspecialchars(getDisplayName($dbUser)) ?></div>
-<?php endif; ?>
 
         <div id="statusMsg"></div>
 
@@ -872,5 +862,5 @@ $mode = $groupId ? 'detail' : 'list';
         return div.innerHTML;
     }
     </script>
-</body>
-</html>
+
+<?php require __DIR__ . '/../includes/footer.php'; ?>
