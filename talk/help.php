@@ -464,12 +464,102 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
                 <li><strong>Archive</strong> &mdash; lock the final proposal</li>
             </ol>
             <p><strong>Roles:</strong> &#x1f3af; Group Facilitator (manages everything), &#x1f4ac; Group Member (contributes ideas), &#x1f441; Group Observer (read-only).</p>
-            <p><strong>Public access:</strong> Facilitators can optionally open a group for verified non-members (phone-verified accounts). Two toggles:</p>
+            <p>See the <strong>Group Privacy &amp; Access</strong> section below for the full access model, including public reading/voting and the permissions matrix.</p>
+        </div>
+
+        <!-- Group Privacy & Access -->
+        <div class="page-card">
+            <h3>&#x1f512; Group Privacy &amp; Access</h3>
+            <p>Groups have three layers of access control. Here's what each setting means:</p>
+
+            <p><strong>1. Access level</strong> &mdash; who can find and join the group:</p>
             <ul>
-                <li><strong>Public reading</strong> &mdash; verified non-members can view the group's ideas without joining</li>
-                <li><strong>Public voting</strong> &mdash; verified non-members can also agree/disagree on ideas (implies public reading)</li>
+                <li><strong>Open</strong> &mdash; anyone can discover and join. Good for broad community input.</li>
+                <li><strong>Observable</strong> (default) &mdash; anyone can see it exists, but joining requires an invitation. Best for civic transparency.</li>
+                <li><strong>Closed</strong> &mdash; invisible to non-members. Only accessible via direct invitation. Good for focused working groups.</li>
             </ul>
-            <p>Public viewers cannot submit ideas &mdash; only group members can contribute. These settings are in the group creation form and in the "Public Access" settings section on the group detail page.</p>
+
+            <p><strong>2. Public access flags</strong> &mdash; what non-members can do (set by facilitator):</p>
+            <ul>
+                <li><strong>Public reading OFF</strong> (default) &mdash; only group members see the ideas. The group is private.</li>
+                <li><strong>Public reading ON</strong> &mdash; verified non-members (phone-verified+) can browse the group's ideas in the Talk stream, read-only. They cannot post.</li>
+                <li><strong>Public voting ON</strong> &mdash; verified non-members can also agree/disagree on ideas. Automatically enables public reading.</li>
+            </ul>
+            <p style="color:#aaa; font-size:0.85rem;">Non-members can never submit ideas, even with public access on. Only group members can contribute.</p>
+
+            <p><strong>3. Member roles</strong> &mdash; what each member can do inside the group:</p>
+            <ul>
+                <li><strong>&#x1f3af; Facilitator</strong> &mdash; manages everything: members, invites, settings, gather, crystallize, archive</li>
+                <li><strong>&#x1f4ac; Member</strong> &mdash; submits ideas, votes, participates in discussion</li>
+                <li><strong>&#x1f441; Observer</strong> &mdash; read-only, cannot post or vote</li>
+            </ul>
+
+            <p><strong>Quick reference:</strong></p>
+            <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem; color:#ccc; margin:0.5rem 0;">
+                <thead>
+                    <tr style="border-bottom:1px solid #444;">
+                        <th style="text-align:left; padding:6px 8px; color:#d4af37;">Person</th>
+                        <th style="text-align:center; padding:6px 4px;">See group</th>
+                        <th style="text-align:center; padding:6px 4px;">Read ideas</th>
+                        <th style="text-align:center; padding:6px 4px;">Post</th>
+                        <th style="text-align:center; padding:6px 4px;">Vote</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid #333;">
+                        <td style="padding:5px 8px;">Not logged in</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #333;">
+                        <td style="padding:5px 8px;">Verified, not a member, public OFF</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #333;">
+                        <td style="padding:5px 8px;">Verified, not a member, public reading ON</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px; color:#4caf50;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #333;">
+                        <td style="padding:5px 8px;">Verified, not a member, public voting ON</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px; color:#4caf50;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                        <td style="text-align:center; padding:5px 4px; color:#4caf50;">&#x2713;</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #333;">
+                        <td style="padding:5px 8px;">&#x1f441; Observer</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px; color:#4caf50;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2014;</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #333;">
+                        <td style="padding:5px 8px;">&#x1f4ac; Member</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px; color:#4caf50;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px; color:#4caf50;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px; color:#4caf50;">&#x2713;</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:5px 8px;">&#x1f3af; Facilitator</td>
+                        <td style="text-align:center; padding:5px 4px;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px; color:#4caf50;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px; color:#4caf50;">&#x2713;</td>
+                        <td style="text-align:center; padding:5px 4px; color:#4caf50;">&#x2713;</td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+            <p style="color:#888; font-size:0.8rem;">For closed groups, non-members can't see the group at all. "Verified" means phone-verified (identity level 3+).</p>
         </div>
 
         <!-- ═══════ FACILITATOR GUIDE ═══════ -->
@@ -653,6 +743,19 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
             <summary>Why do I need to set my location?</summary>
             <div class="answer">
                 <p>Your location determines which geographic stream your ideas appear in. Without it, the system doesn't know where to place your contributions. Set your town at <a href="/profile.php#town">/profile.php#town</a> &mdash; it takes a few seconds.</p>
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary>What's the difference between a private and public group?</summary>
+            <div class="answer">
+                <p>By default, groups are <strong>private</strong> &mdash; only members can see the ideas inside. The facilitator can flip two switches to make it public:</p>
+                <ul>
+                    <li><strong>Public reading</strong> &mdash; verified non-members can browse the group's ideas (read-only)</li>
+                    <li><strong>Public voting</strong> &mdash; verified non-members can also agree/disagree on ideas</li>
+                </ul>
+                <p>Even with public access on, <strong>only members can post ideas</strong>. Non-members can watch and react, but they can't add to the conversation. "Verified" means phone-verified (identity level 3+).</p>
+                <p>Standard Civic Topic groups are always public &mdash; open access, public reading and voting enabled.</p>
             </div>
         </details>
 

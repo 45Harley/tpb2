@@ -397,6 +397,8 @@ Civic deliberation defaults toward **observable** — transparency matters.
 
 #### Public access settings (Phase 7+)
 
+> **See also:** [talk-access-model.md](talk-access-model.md) for the complete access reference with permissions matrix.
+
 Two optional per-group flags that extend visibility beyond group members:
 
 | Setting | Default | Effect |
