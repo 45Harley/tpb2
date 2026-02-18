@@ -221,6 +221,44 @@ $pageStyles = <<<'CSS'
             border-radius: 2px;
         }
 
+        .ground-rules {
+            background: rgba(212, 175, 55, 0.08);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin-bottom: 1.5rem;
+        }
+
+        .ground-rules h2 {
+            color: #d4af37;
+            font-size: 1.15rem;
+            margin: 0 0 0.5rem;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .ground-rules .golden-rule {
+            color: #e0c868;
+            font-style: italic;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .ground-rules ol {
+            margin: 0.5rem 0 0 1.5rem;
+        }
+
+        .ground-rules li {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 0.35rem;
+            line-height: 1.5;
+        }
+
+        .ground-rules li strong {
+            color: #eee;
+        }
+
         @media (max-width: 480px) {
             .page-header {
                 flex-direction: column;
@@ -237,6 +275,23 @@ require __DIR__ . '/../includes/nav.php';
 ?>
 
     <div class="container">
+
+        <!-- ═══════ GROUND RULES ═══════ -->
+
+        <div class="ground-rules">
+            <h2>Ground Rules</h2>
+            <p class="golden-rule">"Do to others what you would have them do to you."</p>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 0.75rem;">
+                Talk is a brainstorming space. These rules apply to every stream, every group, every conversation.
+            </p>
+            <ol>
+                <li><strong>No criticism</strong> &mdash; every idea is valid</li>
+                <li><strong>Build on ideas</strong> &mdash; "Yes, and&hellip;" not "No, but&hellip;"</li>
+                <li><strong>Quantity over quality</strong> &mdash; get everything out</li>
+                <li><strong>Wild ideas welcome</strong> &mdash; refine later</li>
+                <li><strong>Stay on topic</strong> &mdash; keep it about your community</li>
+            </ol>
+        </div>
 
         <!-- ═══════ QUICK REFERENCE ═══════ -->
 
