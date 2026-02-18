@@ -25,65 +25,39 @@ if ($pdo && $sessionId) {
     $sessionPoints = (int) $stmt->fetchColumn();
 }
 
-// =====================================================
-// USER TRUST PATH DETECTION
-// =====================================================
-// Levels: 
-//   0 = Anonymous (no session or no user)
-//   1 = Has profile but not 2FA verified
-//   2 = Has 2FA (email+phone verified) but not volunteer
-//   3 = Volunteer application pending
-//   4 = Approved volunteer
-// =====================================================
+// User trust path detection
+require_once __DIR__ . '/includes/get-user.php';
+$user = getUser($pdo);
 $userTrustLevel = 0;
 $userId = null;
 $volunteerStatus = null;
 
-if ($pdo && $sessionId) {
-    // Check if session links to a user
-    $stmt = $pdo->prepare("
-        SELECT u.user_id, u.email, u.first_name, u.last_name,
-               u.current_town_id, u.current_state_id, u.civic_points,
-               s.abbreviation as state_abbrev,
-               tw.town_name,
-               uis.email_verified, uis.phone_verified
-        FROM user_devices ud
-        INNER JOIN users u ON ud.user_id = u.user_id
-        LEFT JOIN states s ON u.current_state_id = s.state_id
-        LEFT JOIN towns tw ON u.current_town_id = tw.town_id
-        LEFT JOIN user_identity_status uis ON u.user_id = uis.user_id
-        WHERE ud.device_session = ? AND ud.is_active = 1
-    ");
-    $stmt->execute([$sessionId]);
-    $user = $stmt->fetch();
-    
-    if ($user) {
-        $userId = $user['user_id'];
-        $has2FA = ($user['email_verified'] && $user['phone_verified']);
-        
-        if ($has2FA) {
-            $userTrustLevel = 2; // Has 2FA
-            
-            // Check volunteer status
-            $stmt = $pdo->prepare("
-                SELECT status FROM volunteer_applications 
-                WHERE user_id = ? 
-                ORDER BY applied_at DESC LIMIT 1
-            ");
-            $stmt->execute([$userId]);
-            $volApp = $stmt->fetch();
-            
-            if ($volApp) {
-                $volunteerStatus = $volApp['status'];
-                if ($volunteerStatus === 'pending') {
-                    $userTrustLevel = 3; // Applied, pending
-                } elseif ($volunteerStatus === 'accepted') {
-                    $userTrustLevel = 4; // Approved volunteer
-                }
+if ($user) {
+    $userId = $user['user_id'];
+    $has2FA = ($user['email_verified'] && $user['phone_verified']);
+
+    if ($has2FA) {
+        $userTrustLevel = 2; // Has 2FA
+
+        // Check volunteer status
+        $stmt = $pdo->prepare("
+            SELECT status FROM volunteer_applications
+            WHERE user_id = ?
+            ORDER BY applied_at DESC LIMIT 1
+        ");
+        $stmt->execute([$userId]);
+        $volApp = $stmt->fetch();
+
+        if ($volApp) {
+            $volunteerStatus = $volApp['status'];
+            if ($volunteerStatus === 'pending') {
+                $userTrustLevel = 3; // Applied, pending
+            } elseif ($volunteerStatus === 'accepted') {
+                $userTrustLevel = 4; // Approved volunteer
             }
-        } else {
-            $userTrustLevel = 1; // Has profile but no 2FA
         }
+    } else {
+        $userTrustLevel = 1; // Has profile but no 2FA
     }
 }
 
