@@ -74,7 +74,7 @@ $secondaryNav = [
     ['label' => 'Elections',   'anchor' => 'elections'],
     ['label' => 'Your Town',   'anchor' => 'towns'],
     ['label' => 'Contacts',    'anchor' => 'contacts'],
-    ['label' => 'Talk',        'url' => '/talk/?state=7'],
+    ['label' => 'CT Talk',     'url' => '/talk/?state=7'],
 ];
 
 // Civic metrics for hero

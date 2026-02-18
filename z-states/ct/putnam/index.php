@@ -70,7 +70,7 @@ $secondaryNav = [
     ['label' => 'Schools', 'anchor' => 'schools'],
     ['label' => 'School Budget', 'url' => 'putnam-schools-budget.html'],
     ['label' => 'Living Here', 'anchor' => 'living'],
-    ['label' => 'Talk', 'url' => '/talk/?town=119'],
+    ['label' => 'Putnam Talk', 'url' => '/talk/?town=119'],
 ];
 
 // =====================================================
