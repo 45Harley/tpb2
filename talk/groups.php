@@ -150,11 +150,12 @@ if ($geoTownId && $pdo) {
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'talk';
-$pageTitle = ($groupId ? 'Group' : 'Groups') . ' - Talk | The People\'s Branch';
-$secondaryNavBrand = 'Talk';
+$geoQuery = $geoTownId ? '?town=' . $geoTownId : ($geoStateId ? '?state=' . $geoStateId : '');
+$pageTitle = ($groupId ? 'Group' : 'Groups') . ' - ' . ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Talk | The People\'s Branch';
+$secondaryNavBrand = ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Talk';
 $secondaryNav = [
-    ['label' => 'Stream',  'url' => '/talk/'],
-    ['label' => 'Groups',  'url' => '/talk/groups.php'],
+    ['label' => 'Stream',  'url' => '/talk/' . $geoQuery],
+    ['label' => 'Groups',  'url' => '/talk/groups.php' . $geoQuery],
     ['label' => 'Help',    'url' => '/talk/help.php'],
 ];
 

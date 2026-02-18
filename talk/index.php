@@ -45,11 +45,12 @@ $canPost = $userLevel >= 2 && $hasLocation;
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'talk';
-$pageTitle = 'Talk | The People\'s Branch';
-$secondaryNavBrand = 'Talk';
+$pageTitle = ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Talk | The People\'s Branch';
+$geoQuery = $geoTownId ? '?town=' . $geoTownId : ($geoStateId ? '?state=' . $geoStateId : '');
+$secondaryNavBrand = ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Talk';
 $secondaryNav = [
-    ['label' => 'Stream',  'url' => '/talk/'],
-    ['label' => 'Groups',  'url' => '/talk/groups.php'],
+    ['label' => 'Stream',  'url' => '/talk/' . $geoQuery],
+    ['label' => 'Groups',  'url' => '/talk/groups.php' . $geoQuery],
     ['label' => 'Help',    'url' => '/talk/help.php'],
 ];
 

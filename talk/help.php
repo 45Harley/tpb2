@@ -6,16 +6,33 @@ try {
     $dbUser = getUser($pdo);
 } catch (PDOException $e) { $dbUser = false; }
 
+// Geo context passthrough (so nav links preserve state/town)
+$geoStateId = isset($_GET['state']) ? (int)$_GET['state'] : null;
+$geoTownId  = isset($_GET['town'])  ? (int)$_GET['town']  : null;
+$geoLabel = 'USA';
+if ($geoTownId && isset($pdo)) {
+    $stmt = $pdo->prepare("SELECT t.town_name, s.abbreviation, s.state_id FROM towns t JOIN states s ON t.state_id = s.state_id WHERE t.town_id = ?");
+    $stmt->execute([$geoTownId]);
+    $geo = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($geo) { $geoLabel = $geo['town_name'] . ', ' . $geo['abbreviation']; $geoStateId = (int)$geo['state_id']; }
+} elseif ($geoStateId && isset($pdo)) {
+    $stmt = $pdo->prepare("SELECT state_name FROM states WHERE state_id = ?");
+    $stmt->execute([$geoStateId]);
+    $geo = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($geo) { $geoLabel = $geo['state_name']; }
+}
+$geoQuery = $geoTownId ? '?town=' . $geoTownId : ($geoStateId ? '?state=' . $geoStateId : '');
+
 // Nav setup
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'talk';
-$pageTitle = 'Help - Talk | The People\'s Branch';
-$secondaryNavBrand = 'Talk';
+$pageTitle = 'Help - ' . ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Talk | The People\'s Branch';
+$secondaryNavBrand = ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Talk';
 $secondaryNav = [
-    ['label' => 'Stream',  'url' => '/talk/'],
-    ['label' => 'Groups',  'url' => '/talk/groups.php'],
-    ['label' => 'Help',    'url' => '/talk/help.php'],
+    ['label' => 'Stream',  'url' => '/talk/' . $geoQuery],
+    ['label' => 'Groups',  'url' => '/talk/groups.php' . $geoQuery],
+    ['label' => 'Help',    'url' => '/talk/help.php' . $geoQuery],
 ];
 
 $pageStyles = <<<'CSS'
