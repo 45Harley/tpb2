@@ -330,6 +330,11 @@ $pageStyles = <<<'CSS'
             background: rgba(255,215,0,0.15); color: #ffd700;
         }
         .group-card.standard { border-left-color: #ffd700; }
+        .collapsible { cursor: pointer; user-select: none; }
+        .collapsible:hover { color: #4fc3f7; }
+        .toggle-arrow { display: inline-block; transition: transform 0.2s; font-size: 0.7em; margin-right: 4px; }
+        .toggle-arrow.open { transform: rotate(90deg); }
+        .section-count { font-size: 0.75rem; color: #888; font-weight: 400; margin-left: 6px; }
         .dept-list {
             font-size: 0.8rem; color: #aaa; margin: 4px 0 2px;
             line-height: 1.5;
@@ -430,8 +435,11 @@ require __DIR__ . '/../includes/nav.php';
             <?php endif; ?>
 
             <div id="civicGroups" class="section">
-                <h2>Civic Topics</h2>
-                <div id="civicGroupsList"><div class="empty">Loading...</div></div>
+                <h2 class="collapsible" onclick="toggleCivic()">
+                    <span id="civicToggle" class="toggle-arrow">&#9654;</span> Civic Topics
+                    <span id="civicCount" class="section-count"></span>
+                </h2>
+                <div id="civicGroupsList" style="display:none;"><div class="empty">Loading...</div></div>
             </div>
 
             <div id="myGroups" class="section">
@@ -506,12 +514,15 @@ require __DIR__ . '/../includes/nav.php';
         var civicGroups = allGroups.filter(function(g) { return g.is_standard == 1; });
         var communityGroups = allGroups.filter(function(g) { return g.is_standard != 1 && !g.user_role; });
 
-        // Civic Topics
+        // Civic Topics (collapsed by default, show count)
         var civicList = document.getElementById('civicGroupsList');
+        var civicCount = document.getElementById('civicCount');
         if (civicGroups.length > 0) {
             civicList.innerHTML = civicGroups.map(renderGroupCard).join('');
+            civicCount.textContent = '(' + civicGroups.length + ')';
         } else {
             civicList.innerHTML = '<div class="empty">No civic topics here yet.</div>';
+            civicCount.textContent = '';
         }
 
         // My groups
@@ -1012,6 +1023,18 @@ require __DIR__ . '/../includes/nav.php';
         var div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    function toggleCivic() {
+        var list = document.getElementById('civicGroupsList');
+        var arrow = document.getElementById('civicToggle');
+        if (list.style.display === 'none') {
+            list.style.display = '';
+            arrow.classList.add('open');
+        } else {
+            list.style.display = 'none';
+            arrow.classList.remove('open');
+        }
     }
     </script>
 
