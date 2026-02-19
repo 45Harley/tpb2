@@ -416,14 +416,12 @@ function handleHistory($pdo, $userId, $dbUser = null) {
         $where[] = 'i.state_id = :state_id';
         $where[] = 'i.group_id IS NULL';
         $params[':state_id'] = $geoStateId;
-    } elseif ($userId && !$sessionId && !$geoStateId && !$geoTownId) {
-        // Personal mode: user's own ideas with no group
-        $where[] = 'i.user_id = :user_id';
-        $where[] = 'i.group_id IS NULL';
-        $params[':user_id'] = $userId;
     } elseif ($sessionId) {
         $where[] = 'i.session_id = :session_id';
         $params[':session_id'] = $sessionId;
+    } else {
+        // USA stream: all ungrouped ideas
+        $where[] = 'i.group_id IS NULL';
     }
 
     if ($excludeChat) {
