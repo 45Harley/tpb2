@@ -99,7 +99,7 @@ try {
             echo json_encode(handleLink($pdo, $input, $userId));
             break;
         case 'brainstorm':
-            echo json_encode(handleBrainstorm($pdo, $input, $userId));
+            echo json_encode(handleBrainstorm($pdo, $input, $userId, $dbUser));
             break;
         case 'toggle_shareable':
             echo json_encode(handleToggleShareable($pdo, $input, $userId));
@@ -758,7 +758,7 @@ function handleDelete($pdo, $input, $userId) {
 
 // -- Brainstorm (AI-assisted) ------------------------------------------
 
-function handleBrainstorm($pdo, $input, $userId) {
+function handleBrainstorm($pdo, $input, $userId, $dbUser) {
     $message   = trim($input['message'] ?? '');
     $history   = $input['history'] ?? [];
     $sessionId = $input['session_id'] ?? null;
