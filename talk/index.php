@@ -397,6 +397,25 @@ $pageStyles = <<<'CSS'
         .filter-btn:hover { border-color: rgba(255,255,255,0.25); color: #ccc; }
         .filter-btn.active { border-color: #4fc3f7; color: #4fc3f7; background: rgba(79,195,247,0.1); }
 
+        .cat-btn {
+            padding: 4px 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            background: none;
+            color: #888;
+            font-size: 0.78rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+        .cat-btn:hover { border-color: rgba(255,255,255,0.25); color: #ccc; }
+        .cat-btn.active[data-cat=""] { border-color: #4fc3f7; color: #4fc3f7; background: rgba(79,195,247,0.1); }
+        .cat-btn.active[data-cat="idea"] { border-color: #4fc3f7; color: #4fc3f7; background: rgba(79,195,247,0.1); }
+        .cat-btn.active[data-cat="decision"] { border-color: #4caf50; color: #4caf50; background: rgba(76,175,80,0.1); }
+        .cat-btn.active[data-cat="todo"] { border-color: #ff9800; color: #ff9800; background: rgba(255,152,0,0.1); }
+        .cat-btn.active[data-cat="note"] { border-color: #9c27b0; color: #9c27b0; background: rgba(156,39,176,0.1); }
+        .cat-btn.active[data-cat="question"] { border-color: #e91e63; color: #e91e63; background: rgba(233,30,99,0.1); }
+
         .vote-btn {
             background: none;
             border: 1px solid rgba(255,255,255,0.1);
@@ -584,6 +603,14 @@ if ($geoTownId || $geoStateId): ?>
         <button class="filter-btn" onclick="setFilter('distilled')" data-filter="distilled">Distilled</button>
         <button class="filter-btn" onclick="setFilter('actionable')" data-filter="actionable">Actionable</button>
     </div>
+    <div class="filter-bar" style="padding-top:0;">
+        <button class="cat-btn active" onclick="setCategoryFilter('')" data-cat="">All</button>
+        <button class="cat-btn" onclick="setCategoryFilter('idea')" data-cat="idea" style="border-color:rgba(79,195,247,0.3);">Idea</button>
+        <button class="cat-btn" onclick="setCategoryFilter('decision')" data-cat="decision" style="border-color:rgba(76,175,80,0.3);">Decision</button>
+        <button class="cat-btn" onclick="setCategoryFilter('todo')" data-cat="todo" style="border-color:rgba(255,152,0,0.3);">Todo</button>
+        <button class="cat-btn" onclick="setCategoryFilter('note')" data-cat="note" style="border-color:rgba(156,39,176,0.3);">Note</button>
+        <button class="cat-btn" onclick="setCategoryFilter('question')" data-cat="question" style="border-color:rgba(233,30,99,0.3);">Question</button>
+    </div>
 
     <div class="stream" id="stream">
         <div class="stream-empty" id="streamEmpty">Loading...</div>
@@ -624,6 +651,7 @@ if ($geoTownId || $geoStateId): ?>
     var publicAccess = null;
     var isSubmitting = false;
     var currentFilter = '';
+    var currentCategoryFilter = '';
 
     // ── DOM ──
     var contextSelect = document.getElementById('contextSelect');
@@ -895,6 +923,9 @@ if ($geoTownId || $geoStateId): ?>
         if (currentFilter) {
             url += '&status=' + currentFilter;
         }
+        if (currentCategoryFilter) {
+            url += '&category=' + currentCategoryFilter;
+        }
         if (before) {
             url += '&before=' + encodeURIComponent(before);
         }
@@ -976,6 +1007,15 @@ if ($geoTownId || $geoStateId): ?>
         currentFilter = status;
         document.querySelectorAll('.filter-btn').forEach(function(btn) {
             btn.classList.toggle('active', btn.dataset.filter === status);
+        });
+        loadedIdeas = [];
+        loadIdeas();
+    }
+
+    function setCategoryFilter(cat) {
+        currentCategoryFilter = cat;
+        document.querySelectorAll('.cat-btn').forEach(function(btn) {
+            btn.classList.toggle('active', btn.dataset.cat === cat);
         });
         loadedIdeas = [];
         loadIdeas();
