@@ -1822,15 +1822,26 @@ function handleListGroups($pdo, $userId) {
 
     // Attach local department names for standard groups with template_id
     $templateIds = array_filter(array_column($groups, 'template_id'));
-    if ($templateIds && $townId) {
+    if ($templateIds) {
         $deptPlaceholders = implode(',', array_fill(0, count($templateIds), '?'));
+        // Build scope-appropriate WHERE clause
+        if ($townId) {
+            $deptWhere = 'town_id = ?';
+            $deptParams = array_merge([$townId], $templateIds);
+        } elseif ($stateId) {
+            $deptWhere = 'state_id = ? AND town_id IS NULL';
+            $deptParams = array_merge([$stateId], $templateIds);
+        } else {
+            $deptWhere = 'state_id IS NULL AND town_id IS NULL';
+            $deptParams = $templateIds;
+        }
         $deptStmt = $pdo->prepare("
             SELECT template_id, local_name, contact_url
             FROM town_department_map
-            WHERE town_id = ? AND template_id IN ($deptPlaceholders)
+            WHERE $deptWhere AND template_id IN ($deptPlaceholders)
             ORDER BY local_name
         ");
-        $deptStmt->execute(array_merge([$townId], $templateIds));
+        $deptStmt->execute($deptParams);
         $deptMap = [];
         while ($d = $deptStmt->fetch(PDO::FETCH_ASSOC)) {
             $deptMap[$d['template_id']][] = [
