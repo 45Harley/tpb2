@@ -239,25 +239,27 @@ $pageStyles = <<<'CSS'
             display: flex;
             align-items: center;
             gap: 10px;
-            color: #b0b0b0;
+            color: #e0d0ff;
             font-style: italic;
+            font-size: 0.95rem;
         }
         .ai-thinking-dots {
             display: flex;
-            gap: 4px;
+            gap: 5px;
         }
         .ai-thinking-dots span {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: #7c4dff;
+            background: #b388ff;
+            box-shadow: 0 0 6px rgba(179,136,255,0.6);
             animation: aiPulse 1.4s infinite;
         }
         .ai-thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
         .ai-thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes aiPulse {
-            0%, 60%, 100% { opacity: 0.25; transform: scale(0.8); }
-            30% { opacity: 1; transform: scale(1); }
+            0%, 60%, 100% { opacity: 0.35; transform: scale(0.85); }
+            30% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 10px rgba(179,136,255,0.9); }
         }
 
         /* Digest/crystallization cards */
