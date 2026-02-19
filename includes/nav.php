@@ -51,14 +51,9 @@ $userStateId = isset($userStateId) ? (int)$userStateId : 0;
 $hasTown = !empty($userTownSlug) && !empty($userStateAbbr);
 $hasEmail = !empty($userEmail);
 
-// Dynamic Talk link — scoped to user's town > state > USA
-if ($userTownId) {
-    $talkUrl = '/talk/?town=' . $userTownId;
-} elseif ($userStateId) {
-    $talkUrl = '/talk/?state=' . $userStateId;
-} else {
-    $talkUrl = '/talk/';
-}
+// Talk link — always USA level from top nav
+// Town/state Talk is accessed from town/state pages
+$talkUrl = '/talk/';
 
 // Secondary nav (optional - set by town/state pages)
 // Can be set as $secondaryNav or legacy $townNav
