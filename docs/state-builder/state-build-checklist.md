@@ -53,6 +53,15 @@ Use this checklist before submitting your state page build to ensure everything 
 - [ ] Services descriptions are accurate
 - [ ] Search keywords are relevant
 
+### Department → Civic Group Mapping
+- [ ] Each agency is mapped to a standard group template (22 civic categories)
+- [ ] Mappings seeded into `town_department_map` (with `state_id`, `town_id = NULL`)
+- [ ] Local agency names are accurate (e.g., "CT Dept of Emergency Services" not generic "Public Safety")
+- [ ] Contact URLs point to the agency's official page
+- [ ] All 18 scope-appropriate templates have at least one agency mapped
+- [ ] Run `seed-all-departments.php` or equivalent to populate staging DB
+- [ ] Verify Talk groups page shows agency names under civic topic headings
+
 ---
 
 ## Content Quality

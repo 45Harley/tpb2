@@ -36,11 +36,45 @@ Putnam sections to show (in order):
 2. **Overview** — Quick facts grid (population, area, incorporated, etc.)
 3. **History** — Founding narrative, key events, audio option
 4. **Government** — Mayor, boards/commissions, departments, vacancies
-5. **Budget & Taxes** — Town budget, major projects, TA reports
-6. **Schools** — District info, school list, school budget dashboard
-7. **Living Here** — Local links grid (dining, shopping, recreation, library)
-8. **Talk** — Link to town's Talk stream (`/talk/?town=ID`)
-9. **Vision page** — "Just Imagine" standalone page (putnam-vision.html)
+5. **Department Mapping** — Map local departments/boards to civic group templates (see below)
+6. **Budget & Taxes** — Town budget, major projects, TA reports
+7. **Schools** — District info, school list, school budget dashboard
+8. **Living Here** — Local links grid (dining, shopping, recreation, library)
+9. **Talk** — Link to town's Talk stream (`/talk/?town=ID`)
+10. **Vision page** — "Just Imagine" standalone page (putnam-vision.html)
+
+> **Note:** Department Mapping (step 5) feeds directly into Talk (step 9). The civic group templates power Talk's standard groups, and the local department names appear as subtitles on group cards.
+
+### Department Mapping Step (during Phase 1, section 5)
+
+After the volunteer identifies their town's government structure (boards, commissions, departments), map each one to a **standard civic group template**. There are 13 town-level templates:
+
+| # | Template | Example Departments |
+|---|----------|-------------------|
+| 1 | Police & Public Safety | Police Dept, Animal Control |
+| 2 | Fire Protection | Fire Dept, Fire Marshal |
+| 3 | Courts & Legal | Probate Court, Town Attorney |
+| 4 | Schools & Education | Board of Education, Library |
+| 5 | Public Health | Health Dept, Health District |
+| 6 | Social Services | Social Services, Senior Center |
+| 7 | Roads & Transportation | Public Works, Highway Dept |
+| 8 | Water, Sewer & Waste | WPCA, Transfer Station |
+| 9 | Parks, Land & Conservation | Parks & Rec, Conservation Commission |
+| 10 | Housing | Housing Authority, Redevelopment Agency |
+| 11 | Zoning & Planning | Planning & Zoning, Inland Wetlands |
+| 12 | Budget & Taxes | Finance Board, Tax Collector, Assessor |
+| 13 | General Government | Selectmen, Town Clerk, Town Meeting |
+
+**How to do it:**
+1. List every board, commission, and department the town has
+2. Match each to the closest template above (multiple depts can map to one template)
+3. Record the local name exactly as the town uses it (e.g., "Putnam Police Department" not "Police")
+4. Add the official contact URL if available
+5. Save mappings to `town_department_map` table (town_id, template_id, local_name, contact_url)
+
+**Why it matters:** When Talk creates civic groups for the town, it shows the **real local names** under each topic heading. Citizens see "Putnam Board of Education" not generic "Schools & Education."
+
+**Reference:** See Putnam's 18 mappings in `scripts/db/run-standard-templates.php` for the model implementation.
 
 ### Phase 2: Research & Fill
 For each section the volunteer wants:
