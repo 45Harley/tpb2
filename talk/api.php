@@ -1821,7 +1821,7 @@ function handleListGroups($pdo, $userId) {
     $groups = $stmt->fetchAll();
 
     // Attach local department names for standard groups with template_id
-    $templateIds = array_filter(array_column($groups, 'template_id'));
+    $templateIds = array_values(array_filter(array_column($groups, 'template_id')));
     if ($templateIds) {
         $deptPlaceholders = implode(',', array_fill(0, count($templateIds), '?'));
         // Build scope-appropriate WHERE clause
