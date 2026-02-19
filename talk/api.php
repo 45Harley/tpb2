@@ -3318,10 +3318,16 @@ function handleAutoCreateStandardGroups($pdo, $input, $userId) {
         else               $scope = 'federal';
     }
 
-    // Map scope to template filter: town gets town-level, state gets town+state, national gets all
+    // Federal groups are pre-seeded with proper names (not template-derived)
+    // They don't cascade from town/state templates — see scripts/db/redo-federal-groups.php
+    if ($scope === 'federal') {
+        $count = $pdo->query("SELECT COUNT(*) FROM idea_groups WHERE is_standard = 1 AND scope = 'federal'")->fetchColumn();
+        return ['success' => true, 'created' => 0, 'scope' => 'federal', 'message' => "Federal groups are pre-seeded ($count exist)"];
+    }
+
+    // Map scope to template filter: town gets town-level, state gets town+state
     $scopeFilter = ['town'];
-    if ($scope === 'state')   $scopeFilter = ['town', 'state'];
-    if ($scope === 'federal') $scopeFilter = ['town', 'state', 'national'];
+    if ($scope === 'state') $scopeFilter = ['town', 'state'];
 
     $placeholders = implode(',', array_fill(0, count($scopeFilter), '?'));
     $stmt = $pdo->prepare("SELECT id, name, sic_codes, min_scope, sort_order FROM standard_group_templates WHERE min_scope IN ($placeholders) ORDER BY sort_order");
