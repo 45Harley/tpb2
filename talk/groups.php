@@ -330,6 +330,10 @@ $pageStyles = <<<'CSS'
             background: rgba(255,215,0,0.15); color: #ffd700;
         }
         .group-card.standard { border-left-color: #ffd700; }
+        .dept-list {
+            font-size: 0.8rem; color: #aaa; margin: 4px 0 2px;
+            line-height: 1.5;
+        }
 
         .geo-filter {
             display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap;
@@ -539,13 +543,27 @@ require __DIR__ . '/../includes/nav.php';
         var roleLabels = { facilitator: '🎯 Group Facilitator', member: '💬 Group Member', observer: '👁 Group Observer' };
         var roleBadge = g.user_role ? '<span class="badge ' + g.user_role + '">' + (roleLabels[g.user_role] || g.user_role) + '</span>' : '';
         var standardBadge = g.is_standard == 1 ? '<span class="standard-badge">Civic</span> ' : '';
-        var sicBadge = g.sic_code ? '<span class="sic-badge">SIC ' + escHtml(g.sic_code) + '</span> ' : '';
         var cardClass = 'group-card' + (g.is_standard == 1 ? ' standard' : '');
+
+        // Local department names for standard groups
+        var deptHtml = '';
+        if (g.local_departments && g.local_departments.length) {
+            var deptNames = g.local_departments.map(function(d) {
+                return d.url ? '<a href="' + escHtml(d.url) + '" target="_blank" onclick="event.stopPropagation();" style="color:#4fc3f7;text-decoration:none;">' + escHtml(d.name) + '</a>' : escHtml(d.name);
+            });
+            deptHtml = '<div class="dept-list">' + deptNames.join(' · ') + '</div>';
+        }
+
+        var descHtml = '';
+        if (g.is_standard == 1 && deptHtml) {
+            descHtml = deptHtml;
+        } else if (g.description) {
+            descHtml = '<div class="desc">' + escHtml(g.description) + '</div>';
+        }
 
         return '<div class="' + cardClass + '" onclick="location.href=\'?id=' + g.id + '\'">' +
             '<div class="name">' + standardBadge + escHtml(g.name) + ' ' + roleBadge + '</div>' +
-            (g.sic_description ? '<div class="desc">' + sicBadge + escHtml(g.sic_description) + '</div>' :
-             g.description ? '<div class="desc">' + escHtml(g.description) + '</div>' : '') +
+            descHtml +
             '<div class="meta">' +
                 '<span class="badge ' + g.status + '">' + g.status + '</span>' +
                 '<span>' + (g.member_count || 0) + ' member' + (g.member_count != 1 ? 's' : '') + '</span>' +

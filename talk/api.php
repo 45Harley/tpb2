@@ -1818,9 +1818,37 @@ function handleListGroups($pdo, $userId) {
         }
     }
 
+    $groups = $stmt->fetchAll();
+
+    // Attach local department names for standard groups with template_id
+    $templateIds = array_filter(array_column($groups, 'template_id'));
+    if ($templateIds && $townId) {
+        $deptPlaceholders = implode(',', array_fill(0, count($templateIds), '?'));
+        $deptStmt = $pdo->prepare("
+            SELECT template_id, local_name, contact_url
+            FROM town_department_map
+            WHERE town_id = ? AND template_id IN ($deptPlaceholders)
+            ORDER BY local_name
+        ");
+        $deptStmt->execute(array_merge([$townId], $templateIds));
+        $deptMap = [];
+        while ($d = $deptStmt->fetch(PDO::FETCH_ASSOC)) {
+            $deptMap[$d['template_id']][] = [
+                'name' => $d['local_name'],
+                'url'  => $d['contact_url']
+            ];
+        }
+        foreach ($groups as &$g) {
+            if ($g['template_id'] && isset($deptMap[$g['template_id']])) {
+                $g['local_departments'] = $deptMap[$g['template_id']];
+            }
+        }
+        unset($g);
+    }
+
     return [
         'success' => true,
-        'groups'  => $stmt->fetchAll()
+        'groups'  => $groups
     ];
 }
 
@@ -3279,15 +3307,21 @@ function handleAutoCreateStandardGroups($pdo, $input, $userId) {
         else               $scope = 'federal';
     }
 
-    // Get all Division J (Public Administration) SIC codes
-    $stmt = $pdo->query("SELECT sic_code, description FROM sic_codes WHERE division = 'J' ORDER BY sic_code");
-    $sicCodes = $stmt->fetchAll();
+    // Map scope to template filter: town gets town-level, state gets town+state, national gets all
+    $scopeFilter = ['town'];
+    if ($scope === 'state')   $scopeFilter = ['town', 'state'];
+    if ($scope === 'federal') $scopeFilter = ['town', 'state', 'national'];
+
+    $placeholders = implode(',', array_fill(0, count($scopeFilter), '?'));
+    $stmt = $pdo->prepare("SELECT id, name, sic_codes, min_scope, sort_order FROM standard_group_templates WHERE min_scope IN ($placeholders) ORDER BY sort_order");
+    $stmt->execute($scopeFilter);
+    $templates = $stmt->fetchAll();
 
     $created = 0;
-    foreach ($sicCodes as $sic) {
-        // Check if standard group already exists for this scope+geo+sic
-        $checkSql = "SELECT id FROM idea_groups WHERE is_standard = 1 AND sic_code = ? AND scope = ?";
-        $checkParams = [$sic['sic_code'], $scope];
+    foreach ($templates as $tpl) {
+        // Check if standard group already exists for this template+scope+geo
+        $checkSql = "SELECT id FROM idea_groups WHERE is_standard = 1 AND template_id = ? AND scope = ?";
+        $checkParams = [$tpl['id'], $scope];
 
         if ($stateId) {
             $checkSql .= " AND state_id = ?";
@@ -3306,18 +3340,19 @@ function handleAutoCreateStandardGroups($pdo, $input, $userId) {
         $check->execute($checkParams);
         if ($check->fetch()) continue;
 
-        // Create the standard group
+        // Create the standard group from template
         $ins = $pdo->prepare("
-            INSERT INTO idea_groups (name, description, access_level, scope, state_id, town_id, sic_code, is_standard, created_by, public_readable, public_voting)
-            VALUES (?, ?, 'open', ?, ?, ?, ?, 1, NULL, 1, 1)
+            INSERT INTO idea_groups (name, description, access_level, scope, state_id, town_id, sic_code, is_standard, template_id, created_by, public_readable, public_voting)
+            VALUES (?, ?, 'open', ?, ?, ?, ?, 1, ?, NULL, 1, 1)
         ");
         $ins->execute([
-            $sic['description'],
-            'Standard civic topic: ' . $sic['description'],
+            $tpl['name'],
+            'Standard civic topic: ' . $tpl['name'],
             $scope,
             $stateId,
             $townId,
-            $sic['sic_code']
+            $tpl['sic_codes'],
+            $tpl['id']
         ]);
         $created++;
     }
