@@ -1332,89 +1332,182 @@ $adminActions = $pdo->query("
         <?php elseif ($tab === 'docs'): ?>
             <!-- DOCS TAB -->
             <?php
-            $docsFilter = $_GET['role'] ?? '';
-            $docsSearch = $_GET['q'] ?? '';
-            $docsQuery = "SELECT doc_id, doc_key, doc_title, doc_path, roles, tags, updated_at FROM system_documentation";
-            $docsParams = [];
-            $docsWhere = [];
-            if ($docsFilter) {
-                $docsWhere[] = "FIND_IN_SET(?, REPLACE(roles, ' ', ''))";
-                $docsParams[] = $docsFilter;
-            }
-            if ($docsSearch) {
-                $docsWhere[] = "(doc_key LIKE ? OR doc_title LIKE ? OR tags LIKE ?)";
-                $docsParams[] = "%$docsSearch%";
-                $docsParams[] = "%$docsSearch%";
-                $docsParams[] = "%$docsSearch%";
-            }
-            if ($docsWhere) $docsQuery .= " WHERE " . implode(' AND ', $docsWhere);
-            $docsQuery .= " ORDER BY doc_key";
-            $docsStmt = $pdo->prepare($docsQuery);
-            $docsStmt->execute($docsParams);
-            $allDocs = $docsStmt->fetchAll(PDO::FETCH_ASSOC);
+            $viewDoc = $_GET['view'] ?? '';
 
-            // Collect unique roles for filter dropdown
-            $allRoles = [];
-            foreach ($allDocs as $d) {
-                foreach (preg_split('/[,\s]+/', $d['roles']) as $r) {
-                    $r = trim($r);
-                    if ($r) $allRoles[$r] = true;
-                }
-            }
-            ksort($allRoles);
+            if ($viewDoc):
+                // ── Single doc view ──
+                $docStmt = $pdo->prepare("SELECT * FROM system_documentation WHERE doc_key = ?");
+                $docStmt->execute([$viewDoc]);
+                $docRow = $docStmt->fetch(PDO::FETCH_ASSOC);
+                if ($docRow):
+                    // Get content: prefer file, fall back to inline doc_content
+                    $docContent = '';
+                    $docSource = '';
+                    if ($docRow['doc_path']) {
+                        $filePath = __DIR__ . '/' . ltrim($docRow['doc_path'], '/');
+                        if (file_exists($filePath)) {
+                            $docContent = file_get_contents($filePath);
+                            $docSource = $docRow['doc_path'];
+                        } else {
+                            $docContent = "(File not found: {$docRow['doc_path']})";
+                            $docSource = 'missing';
+                        }
+                    } elseif ($docRow['doc_content']) {
+                        $docContent = $docRow['doc_content'];
+                        $docSource = 'inline (db)';
+                    } else {
+                        $docContent = '(No content — neither doc_path nor doc_content is set)';
+                        $docSource = 'empty';
+                    }
+
+                    // Render markdown (reuse the help tab renderer)
+                    $isMarkdown = str_ends_with($docRow['doc_path'] ?? '', '.md') || !$docRow['doc_path'];
+                    if ($isMarkdown) {
+                        $html = htmlspecialchars($docContent);
+                        $html = preg_replace('/^#### (.+)$/m', '<h4 style="color:#90caf9;margin:20px 0 8px;">$1</h4>', $html);
+                        $html = preg_replace('/^### (.+)$/m', '<h3 style="color:#d4af37;margin:25px 0 10px;">$1</h3>', $html);
+                        $html = preg_replace('/^## (.+)$/m', '<h2 class="section-title">$1</h2>', $html);
+                        $html = preg_replace('/^# (.+)$/m', '<h1 style="color:#d4af37;margin-bottom:10px;">$1</h1>', $html);
+                        $html = preg_replace('/\*\*(.+?)\*\*/', '<strong style="color:#e0e0e0;">$1</strong>', $html);
+                        $html = preg_replace('/`([^`]+)`/', '<code style="background:#252525;padding:2px 6px;border-radius:3px;font-size:0.9em;">$1</code>', $html);
+                        $html = preg_replace('/^---$/m', '<hr style="border:none;border-top:1px solid #333;margin:20px 0;">', $html);
+                        $html = preg_replace_callback('/^\|(.+)\|$/m', function($m) {
+                            $cells = array_map('trim', explode('|', trim($m[1])));
+                            $out = '<tr>';
+                            foreach ($cells as $cell) {
+                                if (preg_match('/^[-:]+$/', $cell)) return '';
+                                $out .= '<td style="padding:8px 12px;border-bottom:1px solid #333;">' . $cell . '</td>';
+                            }
+                            return $out . '</tr>';
+                        }, $html);
+                        $html = preg_replace('/(<tr>.*?<\/tr>\s*)+/s', '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;background:#1a1a1a;border-radius:8px;overflow:hidden;margin:15px 0;">$0</table></div>', $html);
+                        $html = preg_replace('/^- (.+)$/m', '<li style="margin:4px 0;margin-left:20px;">$1</li>', $html);
+                        $html = preg_replace('/^\d+\. (.+)$/m', '<li style="margin:4px 0;margin-left:20px;list-style:decimal;">$1</li>', $html);
+                        $html = preg_replace('/\n\n/', '</p><p style="margin:10px 0;color:#ccc;">', $html);
+                        $html = str_replace("\n", '<br>', $html);
+                        $renderedContent = '<p style="margin:10px 0;color:#ccc;">' . $html . '</p>';
+                    } else {
+                        // HTML or other — render as-is (it's already HTML)
+                        $renderedContent = $docContent;
+                    }
             ?>
-            <h2 class="section-title">Documentation Registry <span style="color:#888;font-size:0.8em;">(<?= count($allDocs) ?> docs)</span></h2>
+                <div style="margin-bottom:16px;">
+                    <a href="?tab=docs" style="color:#4fc3f7;font-size:0.9rem;">&larr; Back to docs list</a>
+                </div>
+                <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:20px 24px;margin-bottom:16px;">
+                    <h2 style="color:#d4af37;margin:0 0 8px;font-size:1.2rem;"><?= htmlspecialchars($docRow['doc_title']) ?></h2>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:0.8rem;color:#888;margin-bottom:12px;">
+                        <span>Key: <code style="background:#252525;padding:2px 6px;border-radius:3px;color:#4fc3f7;"><?= htmlspecialchars($docRow['doc_key']) ?></code></span>
+                        <span>Source: <code style="background:#252525;padding:2px 6px;border-radius:3px;color:#81c784;"><?= htmlspecialchars($docSource) ?></code></span>
+                        <?php if ($docRow['updated_at']): ?>
+                            <span>Updated: <?= htmlspecialchars($docRow['updated_at']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">
+                        <?php foreach (preg_split('/[,\s]+/', $docRow['roles']) as $r): $r = trim($r); if (!$r) continue; ?>
+                            <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;background:<?= str_starts_with($r, 'clerk:') ? 'rgba(156,39,176,0.2);color:#ce93d8' : ($r === 'developer' ? 'rgba(79,195,247,0.2);color:#4fc3f7' : ($r === 'admin' ? 'rgba(212,175,55,0.2);color:#d4af37' : 'rgba(129,199,132,0.2);color:#81c784')) ?>;"><?= htmlspecialchars($r) ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php if ($docRow['tags']): ?>
+                        <div style="font-size:0.75rem;color:#666;">Tags: <?= htmlspecialchars($docRow['tags']) ?></div>
+                    <?php endif; ?>
+                </div>
+                <div style="max-width:900px;line-height:1.8;color:#ccc;">
+                    <?= $renderedContent ?>
+                </div>
+            <?php else: ?>
+                <p style="color:#888;">Doc not found: <code><?= htmlspecialchars($viewDoc) ?></code></p>
+                <a href="?tab=docs" style="color:#4fc3f7;">&larr; Back to docs list</a>
+            <?php endif; ?>
 
-            <form method="get" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-                <input type="hidden" name="tab" value="docs">
-                <input type="text" name="q" value="<?= htmlspecialchars($docsSearch) ?>" placeholder="Search title, key, or tags..." style="flex:1;min-width:200px;padding:8px 12px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#e0e0e0;font-size:0.9rem;">
-                <select name="role" style="padding:8px 12px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#e0e0e0;font-size:0.9rem;">
-                    <option value="">All roles</option>
-                    <?php foreach ($allRoles as $r => $_): ?>
-                        <option value="<?= htmlspecialchars($r) ?>" <?= $docsFilter === $r ? 'selected' : '' ?>><?= htmlspecialchars($r) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <button type="submit" style="padding:8px 16px;background:#d4af37;color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Filter</button>
-                <?php if ($docsFilter || $docsSearch): ?>
-                    <a href="?tab=docs" style="color:#888;font-size:0.85rem;">Clear</a>
-                <?php endif; ?>
-            </form>
+            <?php else:
+                // ── Docs list view ──
+                $docsFilter = $_GET['role'] ?? '';
+                $docsSearch = $_GET['q'] ?? '';
+                $docsQuery = "SELECT doc_id, doc_key, doc_title, doc_path, roles, tags, updated_at FROM system_documentation";
+                $docsParams = [];
+                $docsWhere = [];
+                if ($docsFilter) {
+                    $docsWhere[] = "FIND_IN_SET(?, REPLACE(roles, ' ', ''))";
+                    $docsParams[] = $docsFilter;
+                }
+                if ($docsSearch) {
+                    $docsWhere[] = "(doc_key LIKE ? OR doc_title LIKE ? OR tags LIKE ?)";
+                    $docsParams[] = "%$docsSearch%";
+                    $docsParams[] = "%$docsSearch%";
+                    $docsParams[] = "%$docsSearch%";
+                }
+                if ($docsWhere) $docsQuery .= " WHERE " . implode(' AND ', $docsWhere);
+                $docsQuery .= " ORDER BY doc_key";
+                $docsStmt = $pdo->prepare($docsQuery);
+                $docsStmt->execute($docsParams);
+                $allDocs = $docsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-            <div class="table-wrap"><table style="width:100%;border-collapse:collapse;">
-                <thead>
-                    <tr style="border-bottom:2px solid #333;">
-                        <th style="text-align:left;padding:10px 8px;color:#d4af37;font-size:0.85rem;">Key</th>
-                        <th style="text-align:left;padding:10px 8px;color:#d4af37;font-size:0.85rem;">Title</th>
-                        <th style="text-align:left;padding:10px 8px;color:#d4af37;font-size:0.85rem;">Path</th>
-                        <th style="text-align:left;padding:10px 8px;color:#d4af37;font-size:0.85rem;">Roles</th>
-                        <th style="text-align:left;padding:10px 8px;color:#d4af37;font-size:0.85rem;">Tags</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($allDocs as $doc): ?>
-                        <tr style="border-bottom:1px solid #222;">
-                            <td style="padding:8px;font-family:monospace;font-size:0.8rem;color:#4fc3f7;white-space:nowrap;"><?= htmlspecialchars($doc['doc_key']) ?></td>
-                            <td style="padding:8px;font-size:0.9rem;color:#e0e0e0;"><?= htmlspecialchars($doc['doc_title']) ?></td>
-                            <td style="padding:8px;font-size:0.8rem;">
-                                <?php if ($doc['doc_path']): ?>
-                                    <span style="color:#81c784;font-family:monospace;"><?= htmlspecialchars($doc['doc_path']) ?></span>
-                                <?php else: ?>
-                                    <span style="color:#666;" title="Content stored inline in doc_content column">inline</span>
-                                <?php endif; ?>
-                            </td>
-                            <td style="padding:8px;font-size:0.75rem;">
-                                <?php foreach (preg_split('/[,\s]+/', $doc['roles']) as $r): $r = trim($r); if (!$r) continue; ?>
-                                    <span style="display:inline-block;padding:1px 6px;border-radius:4px;margin:1px;background:<?= str_starts_with($r, 'clerk:') ? 'rgba(156,39,176,0.2);color:#ce93d8' : ($r === 'developer' ? 'rgba(79,195,247,0.2);color:#4fc3f7' : ($r === 'admin' ? 'rgba(212,175,55,0.2);color:#d4af37' : 'rgba(129,199,132,0.2);color:#81c784')) ?>;"><?= htmlspecialchars($r) ?></span>
-                                <?php endforeach; ?>
-                            </td>
-                            <td style="padding:8px;font-size:0.75rem;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;" title="<?= htmlspecialchars($doc['tags']) ?>"><?= htmlspecialchars($doc['tags']) ?></td>
+                // Collect unique roles for filter dropdown (from unfiltered set)
+                $allRolesStmt = $pdo->query("SELECT DISTINCT roles FROM system_documentation WHERE roles != ''");
+                $allRoles = [];
+                while ($row = $allRolesStmt->fetch(PDO::FETCH_ASSOC)) {
+                    foreach (preg_split('/[,\s]+/', $row['roles']) as $r) {
+                        $r = trim($r);
+                        if ($r) $allRoles[$r] = true;
+                    }
+                }
+                ksort($allRoles);
+            ?>
+                <h2 class="section-title">Documentation Registry <span style="color:#888;font-size:0.8em;">(<?= count($allDocs) ?> docs)</span></h2>
+
+                <form method="get" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+                    <input type="hidden" name="tab" value="docs">
+                    <input type="text" name="q" value="<?= htmlspecialchars($docsSearch) ?>" placeholder="Search title, key, or tags..." style="flex:1;min-width:200px;padding:8px 12px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#e0e0e0;font-size:0.9rem;">
+                    <select name="role" style="padding:8px 12px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#e0e0e0;font-size:0.9rem;">
+                        <option value="">All roles</option>
+                        <?php foreach ($allRoles as $r => $_): ?>
+                            <option value="<?= htmlspecialchars($r) ?>" <?= $docsFilter === $r ? 'selected' : '' ?>><?= htmlspecialchars($r) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="submit" style="padding:8px 16px;background:#d4af37;color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Filter</button>
+                    <?php if ($docsFilter || $docsSearch): ?>
+                        <a href="?tab=docs" style="color:#888;font-size:0.85rem;">Clear</a>
+                    <?php endif; ?>
+                </form>
+
+                <div class="table-wrap"><table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="border-bottom:2px solid #333;">
+                            <th style="text-align:left;padding:10px 8px;color:#d4af37;font-size:0.85rem;">Title</th>
+                            <th style="text-align:left;padding:10px 8px;color:#d4af37;font-size:0.85rem;">Source</th>
+                            <th style="text-align:left;padding:10px 8px;color:#d4af37;font-size:0.85rem;">Roles</th>
+                            <th style="text-align:left;padding:10px 8px;color:#d4af37;font-size:0.85rem;">Tags</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table></div>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($allDocs as $doc): ?>
+                            <tr style="border-bottom:1px solid #222;cursor:pointer;" onclick="location.href='?tab=docs&view=<?= urlencode($doc['doc_key']) ?>'" onmouseover="this.style.background='rgba(79,195,247,0.05)'" onmouseout="this.style.background=''">
+                                <td style="padding:8px;">
+                                    <a href="?tab=docs&view=<?= urlencode($doc['doc_key']) ?>" style="color:#4fc3f7;text-decoration:none;font-size:0.9rem;"><?= htmlspecialchars($doc['doc_title']) ?></a>
+                                    <div style="font-size:0.75rem;color:#666;font-family:monospace;"><?= htmlspecialchars($doc['doc_key']) ?></div>
+                                </td>
+                                <td style="padding:8px;font-size:0.8rem;">
+                                    <?php if ($doc['doc_path']): ?>
+                                        <span style="color:#81c784;font-family:monospace;"><?= htmlspecialchars($doc['doc_path']) ?></span>
+                                    <?php else: ?>
+                                        <span style="color:#666;">inline</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="padding:8px;font-size:0.75rem;">
+                                    <?php foreach (preg_split('/[,\s]+/', $doc['roles']) as $r): $r = trim($r); if (!$r) continue; ?>
+                                        <span style="display:inline-block;padding:1px 6px;border-radius:4px;margin:1px;background:<?= str_starts_with($r, 'clerk:') ? 'rgba(156,39,176,0.2);color:#ce93d8' : ($r === 'developer' ? 'rgba(79,195,247,0.2);color:#4fc3f7' : ($r === 'admin' ? 'rgba(212,175,55,0.2);color:#d4af37' : 'rgba(129,199,132,0.2);color:#81c784')) ?>;"><?= htmlspecialchars($r) ?></span>
+                                    <?php endforeach; ?>
+                                </td>
+                                <td style="padding:8px;font-size:0.75rem;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;" title="<?= htmlspecialchars($doc['tags']) ?>"><?= htmlspecialchars($doc['tags']) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table></div>
 
-            <?php if (empty($allDocs)): ?>
-                <p style="color:#888;text-align:center;padding:20px;">No docs match your filter.</p>
+                <?php if (empty($allDocs)): ?>
+                    <p style="color:#888;text-align:center;padding:20px;">No docs match your filter.</p>
+                <?php endif; ?>
             <?php endif; ?>
 
         <?php elseif ($tab === 'help'): ?>
