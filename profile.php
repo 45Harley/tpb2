@@ -612,7 +612,7 @@ require 'includes/nav.php';
             
             <!-- Password Section (show after email verified) -->
             <?php if ($dbUser && $dbUser['email_verified']): ?>
-            <div class="password-section">
+            <div class="password-section" id="password">
                 <h3>🔐 Password <?= !empty($dbUser['password_hash']) ? '<span class="password-set-badge">✓ Set</span>' : '' ?></h3>
                 
                 <div id="passwordLockout" class="lockout-warning" style="display: none;"></div>
