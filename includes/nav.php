@@ -42,9 +42,13 @@ $isLoggedIn = isset($isLoggedIn) ? $isLoggedIn : ($trustLevel !== 'Visitor');
 // Profile nudge: detect missing password or location from $dbUser (if available in calling scope)
 $_navNudge = null;
 if ($isLoggedIn && isset($dbUser) && is_array($dbUser)) {
-    if (empty($dbUser['password_hash'])) {
+    $needsPassword = empty($dbUser['password_hash']);
+    $needsLocation = empty($dbUser['current_state_id']) || empty($dbUser['current_town_id']);
+    if ($needsPassword && $needsLocation) {
+        $_navNudge = ['msg' => 'Complete your profile — set a password and your town', 'url' => '/profile.php'];
+    } elseif ($needsPassword) {
         $_navNudge = ['msg' => 'Set a password to secure your account', 'url' => '/profile.php#password'];
-    } elseif (empty($dbUser['current_state_id']) || empty($dbUser['current_town_id'])) {
+    } elseif ($needsLocation) {
         $_navNudge = ['msg' => 'Set your town to join your local community', 'url' => '/profile.php#town'];
     }
 }
