@@ -74,7 +74,7 @@ if (isset($_GET['invite_action'], $_GET['token']) && $pdo) {
                     // Auto-create account
                     $emailPrefix = explode('@', $invEmail)[0];
                     $autoUsername = preg_replace('/[^a-z0-9]/', '', $emailPrefix) . '_' . substr(md5($invEmail . time()), 0, 4);
-                    $pdo->prepare("INSERT INTO users (username, email, civic_points) VALUES (?, ?, 0)")
+                    $pdo->prepare("INSERT INTO users (username, email, civic_points, identity_level_id) VALUES (?, ?, 0, 2)")
                         ->execute([$autoUsername, $invEmail]);
                     $acceptUserId = (int)$pdo->lastInsertId();
 
