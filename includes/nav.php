@@ -39,6 +39,16 @@ $points = isset($points) ? (int)$points : 0;
 $userTrustLevel = isset($userTrustLevel) ? (int)$userTrustLevel : 0;
 $isLoggedIn = isset($isLoggedIn) ? $isLoggedIn : ($trustLevel !== 'Visitor');
 
+// Profile nudge: detect missing password or location from $dbUser (if available in calling scope)
+$_navNudge = null;
+if ($isLoggedIn && isset($dbUser) && is_array($dbUser)) {
+    if (empty($dbUser['password_hash'])) {
+        $_navNudge = ['msg' => 'Set a password to secure your account', 'url' => '/profile.php#password'];
+    } elseif (empty($dbUser['current_state_id']) || empty($dbUser['current_town_id'])) {
+        $_navNudge = ['msg' => 'Set your town to join your local community', 'url' => '/profile.php#town'];
+    }
+}
+
 // Variables for email and town
 $userEmail = isset($userEmail) ? $userEmail : '';
 $userTownName = isset($userTownName) ? $userTownName : '';
@@ -344,6 +354,27 @@ $electionSite = 'https://tpb.sandgems.net';
         .nav-dropdown-menu a { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
         .secondary-nav-links > a { padding: 0.25rem 0.4rem; font-size: 0.75rem; }
     }
+
+    /* Profile nudge banner */
+    .nav-nudge {
+        display: none;
+        background: linear-gradient(90deg, #3a2a1a, #2a1f0f);
+        border-bottom: 1px solid #f39c12;
+        text-align: center;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        transition: opacity 0.5s ease;
+    }
+    .nav-nudge.show { display: block; }
+    .nav-nudge:hover { background: linear-gradient(90deg, #4a3a2a, #3a2f1f); }
+    .nav-nudge-text {
+        color: #f5c842;
+        font-size: 0.9rem;
+    }
+    .nav-nudge-arrow {
+        color: #f39c12;
+        margin-left: 0.5rem;
+    }
     </style>
     
     <nav class="top-nav">
@@ -475,7 +506,13 @@ $electionSite = 'https://tpb.sandgems.net';
         </div>
         <?php endif; ?>
     </nav>
-    
+    <?php if ($_navNudge): ?>
+    <div class="nav-nudge" id="navNudge" onclick="window.location.href='<?= $_navNudge['url'] ?>'">
+        <span class="nav-nudge-text"><?= htmlspecialchars($_navNudge['msg']) ?></span>
+        <span class="nav-nudge-arrow">→</span>
+    </div>
+    <?php endif; ?>
+
     <script>
     var TPB_USER_TRUST_LEVEL = <?= $userTrustLevel ?>;
     function handleVolunteerClick() {
@@ -511,4 +548,17 @@ $electionSite = 'https://tpb.sandgems.net';
         });
     })();
     <?php endif; ?>
+
+    // Profile nudge — once per session, auto-dismiss after 10s
+    (function() {
+        var nudge = document.getElementById('navNudge');
+        if (!nudge) return;
+        if (sessionStorage.getItem('tpb_nudge_shown')) return;
+        sessionStorage.setItem('tpb_nudge_shown', '1');
+        nudge.classList.add('show');
+        setTimeout(function() {
+            nudge.style.opacity = '0';
+            setTimeout(function() { nudge.classList.remove('show'); }, 500);
+        }, 10000);
+    })();
     </script>
