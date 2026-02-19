@@ -497,8 +497,10 @@ require __DIR__ . '/../includes/nav.php';
         var geoParams = {};
         if (geoTown) { geoParams.scope = 'town'; geoParams.state_id = geoState; geoParams.town_id = geoTown; }
         else if (geoState) { geoParams.scope = 'state'; geoParams.state_id = geoState; }
+        else { geoParams.scope = 'federal'; }
 
-        // Auto-create standard groups for this geo scope if needed
+        // Auto-create standard groups for town/state scope if needed
+        // (federal groups are pre-seeded, not auto-created)
         if (geoTown || geoState) {
             var autoParams = { scope: geoScope };
             if (geoState) autoParams.state_id = geoState;
@@ -525,9 +527,9 @@ require __DIR__ . '/../includes/nav.php';
             civicCount.textContent = '';
         }
 
-        // My groups
+        // My groups (always show all, regardless of current geo view)
         if (currentUserId) {
-            var mine = await apiGet('list_groups', Object.assign({ mine: 1 }, geoParams));
+            var mine = await apiGet('list_groups', { mine: 1 });
             var myList = document.getElementById('myGroupsList');
             if (mine.success && mine.groups.length > 0) {
                 myList.innerHTML = mine.groups.map(renderGroupCard).join('');
