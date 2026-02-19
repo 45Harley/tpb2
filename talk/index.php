@@ -234,6 +234,32 @@ $pageStyles = <<<'CSS'
             border-left: 3px solid #7c4dff;
         }
 
+        /* AI thinking spinner */
+        .ai-thinking-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #b0b0b0;
+            font-style: italic;
+        }
+        .ai-thinking-dots {
+            display: flex;
+            gap: 4px;
+        }
+        .ai-thinking-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #7c4dff;
+            animation: aiPulse 1.4s infinite;
+        }
+        .ai-thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .ai-thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes aiPulse {
+            0%, 60%, 100% { opacity: 0.25; transform: scale(0.8); }
+            30% { opacity: 1; transform: scale(1); }
+        }
+
         /* Digest/crystallization cards */
         .idea-card.digest-card {
             background: rgba(255,215,0,0.10);
@@ -774,13 +800,23 @@ if ($geoTownId || $geoStateId): ?>
     }
 
     async function brainstormRespond(message, groupId) {
-        // Show thinking indicator
+        // Show thinking indicator with animated dots
         var thinkingId = 'thinking-' + Date.now();
         var thinkingCard = document.createElement('div');
         thinkingCard.id = thinkingId;
         thinkingCard.className = 'idea-card ai-response';
-        thinkingCard.innerHTML = '<div class="card-header"><span class="card-author">AI</span></div><div class="card-content" style="color:#888;font-style:italic;">Thinking...</div>';
+        thinkingCard.innerHTML = '<div class="card-header"><span class="card-author">AI</span></div>'
+            + '<div class="card-content"><div class="ai-thinking-content">'
+            + '<div class="ai-thinking-dots"><span></span><span></span><span></span></div>'
+            + '<span class="ai-thinking-label">Thinking...</span>'
+            + '</div></div>';
         stream.insertBefore(thinkingCard, stream.firstChild);
+
+        // Update label after 6 seconds
+        var thinkingTimer = setTimeout(function() {
+            var label = thinkingCard.querySelector('.ai-thinking-label');
+            if (label) label.textContent = 'Still thinking, one moment...';
+        }, 6000);
 
         try {
             var resp = await fetch('api.php?action=brainstorm', {
@@ -795,6 +831,7 @@ if ($geoTownId || $geoStateId): ?>
                 })
             });
             var data = await resp.json();
+            clearTimeout(thinkingTimer);
 
             var el = document.getElementById(thinkingId);
             if (el) {
@@ -814,6 +851,7 @@ if ($geoTownId || $geoStateId): ?>
                 }
             }
         } catch (err) {
+            clearTimeout(thinkingTimer);
             var el = document.getElementById(thinkingId);
             if (el) {
                 el.querySelector('.card-content').textContent = 'Network error';
