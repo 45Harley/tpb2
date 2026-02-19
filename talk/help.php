@@ -449,7 +449,7 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
             <span class="page-link">/talk/groups.php</span>
             <p>Groups are where individual thoughts become collective proposals. There are two kinds:</p>
             <ul>
-                <li><strong>Civic Topics</strong> &mdash; standard groups auto-created for each community from SIC civic codes (public administration, courts, fire, education, etc.). These appear automatically when you visit a town or state's groups page.</li>
+                <li><strong>Civic Topics</strong> &mdash; standard groups for each level of government. Towns get 13 topics (police, fire, schools, etc.), states get 18, and the USA level has 19 federal categories (Defense, Justice, Treasury, etc.). Each shows real department/agency names with links to official websites. These appear automatically.</li>
                 <li><strong>Community Groups</strong> &mdash; created by users around any topic. These are the groups you create and manage yourself.</li>
             </ul>
             <p>Use the <strong>geo filter tabs</strong> at the top of the Groups page (All/USA, My State, My Town) to see groups scoped to your location.</p>
@@ -481,7 +481,7 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
 
             <p><strong>2. Scope</strong> &mdash; where the group appears geographically:</p>
             <ul>
-                <li><strong>National</strong> &mdash; appears in the All / USA groups list</li>
+                <li><strong>Federal / USA</strong> &mdash; appears in the All / USA groups list. Civic Topics at this level cover federal agencies (DOJ, NASA, FEMA, etc.).</li>
                 <li><strong>State</strong> &mdash; appears when filtering by your state (e.g., "My State" tab)</li>
                 <li><strong>Town</strong> &mdash; appears when filtering by your town (e.g., "My Town" tab)</li>
             </ul>
@@ -742,8 +742,13 @@ Facilitator clicks &#x2500;&#x2500;&#x2500;&#x2500;&#x2192; Gather (find connect
         <details class="faq-item">
             <summary>What are Civic Topics?</summary>
             <div class="answer">
-                <p>Civic Topics are standard groups that are automatically created for each community based on SIC codes (Standard Industrial Classification). They cover civic functions like public administration, courts, fire protection, education, highways, and more.</p>
-                <p>When you visit a town or state's <a href="groups.php">Groups page</a>, civic topics for that location are created automatically. Anyone can join and contribute to these standard groups.</p>
+                <p>Civic Topics are standard groups that cover the functions of government at each level. They're organized in three tiers:</p>
+                <ul>
+                    <li><strong>Town</strong> (13 topics) &mdash; Police, Fire, Courts, Schools, Public Health, Social Services, Roads, Water/Sewer, Parks, Housing, Zoning, Budget, General Government. Shows your town's actual department names (e.g., "Putnam Board of Education").</li>
+                    <li><strong>State</strong> (18 topics) &mdash; all town topics plus Utilities Regulation, Agriculture, Commercial Licensing, Veterans' Affairs, and Corrections. Shows state agency names (e.g., "CT State Police").</li>
+                    <li><strong>USA / Federal</strong> (19 topics) &mdash; categories built around the real structure of the federal government: Defense &amp; Military, Justice &amp; Law Enforcement, Federal Courts, Health &amp; Human Services, Treasury &amp; Finance, and more. Each maps to actual agencies (e.g., FBI, NASA, FEMA) with links to official .gov websites.</li>
+                </ul>
+                <p>Town and state civic topics are created automatically when you first visit that location's <a href="groups.php">Groups page</a>. Federal topics are pre-seeded. Anyone can join and contribute to civic topics &mdash; they're always open with public reading and voting enabled.</p>
             </div>
         </details>
 
