@@ -462,33 +462,6 @@ $pageTitle = 'Our Story - The People\'s Branch';
             color: #4a90d9;
         }
         
-        /* FOOTER */
-        footer {
-            background: #0a0a0a;
-            color: #888;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        
-        footer p {
-            margin: 10px 0;
-        }
-        
-        footer a {
-            color: #d4af37;
-            text-decoration: none;
-        }
-        
-        footer a:hover {
-            text-decoration: underline;
-        }
-        
-        .no-kings {
-            font-size: 1.5em;
-            color: #d4af37;
-            margin-top: 20px;
-            font-weight: bold;
-        }
         
         /* RESPONSIVE */
         @media (max-width: 768px) {
@@ -979,14 +952,13 @@ HTML;
         </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer>
-        <!-- VOLUNTEER SECTION -->
-        <div style="background: #1a1a1a; border: 1px solid #d4af37; border-radius: 10px; padding: 25px; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto;">
-            <h3 style="color: #d4af37; margin-bottom: 15px; font-size: 1.3em;">🔨 Want to Help Build TPB?</h3>
+    <!-- VOLUNTEER CTA -->
+    <div style="background: #0a0a0a; padding: 40px 20px 0; text-align: center;">
+        <div style="background: #1a1a1a; border: 1px solid #d4af37; border-radius: 10px; padding: 25px; max-width: 600px; margin: 0 auto;">
+            <h3 style="color: #d4af37; margin-bottom: 15px; font-size: 1.3em;">Want to Help Build TPB?</h3>
             <p style="color: #ccc; margin-bottom: 15px; line-height: 1.6;">
-                We're looking for volunteers to help build The People's Branch. 
-                Before you can apply, you'll need to complete your profile on our platform 
+                We're looking for volunteers to help build The People's Branch.
+                Before you can apply, you'll need to complete your profile on our platform
                 (name, email verified, location, and phone number).
             </p>
             <p style="color: #888; font-size: 0.9em; margin-bottom: 20px;">
@@ -994,17 +966,9 @@ HTML;
             </p>
             <a href="volunteer/apply.php" style="display: inline-block; background: #d4af37; color: #1a1a1a; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">Apply to Volunteer</a>
         </div>
-        
-        <p>&copy; 2025 The People's Branch. Built by citizens, for citizens.</p>
-        <p>
-            <a href="/demo.php">Platform Demo</a> | 
-            <a href="mailto:<?= htmlspecialchars($adminEmail) ?>">Contact</a> | 
-            <a href="0media/onemarblman.mp3" target="_blank">Listen: One Marble Man</a>
-        </p>
-        <p style="margin-top: 20px; font-size: 0.9em;">
-            Built with Claude AI • Powered by One        </p>
-        <p class="no-kings">No Kings. Only Citizens.</p>
-    </footer>
+    </div>
+
+    <?php require 'includes/footer.php'; ?>
 
     <!-- CIVIC CLICK TRACKING -->
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
