@@ -139,6 +139,11 @@ $electionSite = 'https://tpb.sandgems.net';
     .nav-brand:hover {
         color: #e4bf47;
     }
+    .nav-subtitle {
+        font-size: 0.75rem;
+        color: #aaa;
+        letter-spacing: 0.05em;
+    }
     .nav-toggle {
         background: none;
         border: 1px solid #555;
@@ -354,6 +359,7 @@ $electionSite = 'https://tpb.sandgems.net';
         .nav-links { gap: 0.2rem; }
         .nav-links > a, .nav-dropdown-toggle { padding: 0.3rem 0.5rem; font-size: 0.8rem; }
         .nav-brand { font-size: 1.2rem; }
+        .nav-subtitle { display: none; }
         .nav-dropdown-menu { min-width: 160px; }
         .nav-dropdown-menu a { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
         .secondary-nav-links > a { padding: 0.25rem 0.4rem; font-size: 0.75rem; }
@@ -386,6 +392,7 @@ $electionSite = 'https://tpb.sandgems.net';
         <div class="nav-row nav-row-1">
             <div class="nav-brand-group">
                 <a href="/" class="nav-brand">🏛️ TPB</a>
+                <span class="nav-subtitle">Democracy that works</span>
                 <?php if ($hasSecondaryNav): ?>
                 <button class="nav-toggle" id="navToggle" title="Toggle main menu">
                     <span class="icon-expanded">▲</span>
