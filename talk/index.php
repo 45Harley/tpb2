@@ -79,7 +79,9 @@ $pageStyles = <<<'CSS'
         /* ── Input Area ── */
         .input-area {
             padding: 12px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            margin: 12px 16px;
         }
 
         .context-bar {
