@@ -79,7 +79,7 @@ $pageStyles = <<<'CSS'
         /* ── Input Area ── */
         .input-area {
             padding: 12px 16px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
             border-radius: 12px;
             margin: 12px 16px;
         }
