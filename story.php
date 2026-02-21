@@ -1021,12 +1021,15 @@ HTML;
         function updatePoints(newTotal) {
             if (newTotal > civicPoints) {
                 civicPoints = newTotal;
+                // Update story badge
                 const el = document.getElementById('civicPoints');
                 if (el) {
                     el.textContent = civicPoints;
                     el.classList.add('pulse');
                     setTimeout(() => el.classList.remove('pulse'), 500);
                 }
+                // Update nav points
+                if (window.tpbUpdateNavPoints) window.tpbUpdateNavPoints(newTotal);
             }
         }
 

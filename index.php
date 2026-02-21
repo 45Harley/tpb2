@@ -1445,12 +1445,7 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
         function updatePointsDisplay(newTotal, earned) {
             if (newTotal > civicPoints) {
                 civicPoints = newTotal;
-                const el = document.getElementById('navPoints');
-                if (el) {
-                    el.textContent = civicPoints;
-                    el.classList.add('pulse');
-                    setTimeout(() => el.classList.remove('pulse'), 500);
-                }
+                if (window.tpbUpdateNavPoints) window.tpbUpdateNavPoints(newTotal);
             }
         }
         

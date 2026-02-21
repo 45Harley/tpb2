@@ -366,6 +366,7 @@ $categories = $pdo->query("
                 const result = await response.json();
                 
                 if (result.status === 'success') {
+                    if (result.total_points && window.tpbUpdateNavPoints) window.tpbUpdateNavPoints(result.total_points);
                     submitStatus.innerHTML = '<div class="status-msg success" style="color: #4caf50; margin-top: 1rem;">✓ Thought submitted! Refreshing...</div>';
                     setTimeout(function() { window.location.reload(); }, 1500);
                 } else {

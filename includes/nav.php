@@ -194,7 +194,15 @@ $electionSite = 'https://tpb.sandgems.net';
         font-size: 0.9em;
     }
     .nav-status .points {
-        color: #888;
+        color: #f5c842;
+        font-weight: 700;
+        background: rgba(212, 175, 55, 0.15);
+        padding: 0.15rem 0.5rem;
+        border-radius: 12px;
+        border: 1px solid rgba(212, 175, 55, 0.4);
+        font-size: 0.9em;
+        letter-spacing: 0.03em;
+        display: inline-block;
     }
     .nav-status .level {
         color: #d4af37;
@@ -385,8 +393,17 @@ $electionSite = 'https://tpb.sandgems.net';
         color: #f39c12;
         margin-left: 0.5rem;
     }
+    /* Points pulse animation */
+    @keyframes pointsPulse {
+        0% { color: #f5c842; transform: scale(1); background: rgba(212, 175, 55, 0.15); }
+        40% { color: #fff; transform: scale(1.25); background: rgba(212, 175, 55, 0.4); border-color: #f5c842; }
+        100% { color: #f5c842; transform: scale(1); background: rgba(212, 175, 55, 0.15); }
+    }
+    .nav-status .points.pulse {
+        animation: pointsPulse 0.6s ease;
+    }
     </style>
-    
+
     <nav class="top-nav">
         <!-- Row 1: Brand + Toggle (if secondary nav) + Status -->
         <div class="nav-row nav-row-1">
@@ -416,7 +433,7 @@ $electionSite = 'https://tpb.sandgems.net';
                     <a href="/profile.php#town" class="add-link">Add Town</a>
                     <?php endif; ?>
                     <span class="divider">|</span>
-                    <span class="points"><?= $points ?> pts</span>
+                    <span class="points" id="navPoints" data-points="<?= $points ?>"><?= $points ?> pts</span>
                     <span class="divider">|</span>
                     <span class="level"><?= htmlspecialchars($trustLevel) ?></span>
                     <span class="divider">|</span>
@@ -526,6 +543,23 @@ $electionSite = 'https://tpb.sandgems.net';
 
     <script>
     var TPB_USER_TRUST_LEVEL = <?= $userTrustLevel ?>;
+
+    // Global nav points updater — call from any page after earning points
+    // Usage: window.tpbUpdateNavPoints(newTotal) or window.tpbUpdateNavPoints(null, earned)
+    window.tpbUpdateNavPoints = function(newTotal, earned) {
+        var el = document.getElementById('navPoints');
+        if (!el) return;
+        var current = parseInt(el.getAttribute('data-points')) || 0;
+        var updated = newTotal ? parseInt(newTotal) : current + (parseInt(earned) || 0);
+        if (updated > current) {
+            el.setAttribute('data-points', updated);
+            el.textContent = updated + ' pts';
+            el.classList.remove('pulse');
+            void el.offsetWidth; // reflow to restart animation
+            el.classList.add('pulse');
+        }
+    };
+
     function handleVolunteerClick() {
         if (TPB_USER_TRUST_LEVEL === 0 || TPB_USER_TRUST_LEVEL === 1) {
             alert('To volunteer, you\'ll need to set up your Two-Factor Authentication profile first (email and phone verification).');

@@ -607,6 +607,7 @@ $categories = $pdo->query("SELECT * FROM thought_categories WHERE is_active = 1 
             const data = await response.json();
             
             if (data.status === 'success') {
+                if (data.total_points && window.tpbUpdateNavPoints) window.tpbUpdateNavPoints(data.total_points);
                 document.getElementById('thoughtForm').style.display = 'none';
                 document.getElementById('successMsg').style.display = 'block';
             } else {

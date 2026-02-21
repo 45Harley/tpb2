@@ -1150,7 +1150,13 @@ include 'includes/nav.php';
                 element_id: elementId,
                 extra_data: extraData || ''
             })
-        }).catch(function() { /* non-critical */ });
+        }).then(function(r) { return r.json(); })
+          .then(function(data) {
+              if (data.session && data.session.total_points && window.tpbUpdateNavPoints) {
+                  window.tpbUpdateNavPoints(data.session.total_points);
+              }
+          })
+          .catch(function() { /* non-critical */ });
     }
 
     // =========================================================
