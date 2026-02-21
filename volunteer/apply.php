@@ -27,6 +27,12 @@ require_once __DIR__ . '/../includes/get-user.php';
 $dbUser = getUser($pdo);
 $sessionId = $_COOKIE['tpb_civic_session'] ?? null;
 
+// Nav variables
+$navVars = getNavVarsForUser($dbUser);
+extract($navVars);
+$currentPage = 'volunteer';
+$pageTitle = 'Volunteer Application | The People\'s Branch';
+
 // Load user data
 $existingApplication = null;
 $profileComplete = false;
@@ -179,16 +185,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dbUser && $profileComplete) {
         }
     }
 }
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Volunteer Application | The People's Branch</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap');
-        
+
+
+$pageStyles = <<<'CSS'
         :root {
             --gold: #d4af37;
             --gold-light: #ffdb58;
@@ -202,32 +201,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dbUser && $profileComplete) {
             --error: #e74c3c;
             --info: #3498db;
         }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Source Sans Pro', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-            border-bottom: 2px solid var(--gold);
-            padding: 15px 30px;
-        }
-        
-        .logo {
-            font-family: 'Cinzel', serif;
-            font-size: 1.5rem;
-            color: var(--gold);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        body { line-height: 1.6; }
+CSS;
+
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/nav.php';
+?>
+    <style>
         
         .main-container { max-width: 700px; margin: 0 auto; padding: 40px 20px; }
         
@@ -447,12 +427,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dbUser && $profileComplete) {
         .verification-item { margin-bottom: 15px; }
         .verification-item label { display: block; font-weight: 600; margin-bottom: 5px; }
     </style>
-</head>
-<body>
-    <header class="header">
-        <a href="/" class="logo">🏛️ TPB</a>
-    </header>
-    
+
     <div class="main-container">
         <a href="./" class="back-link">← Maybe later, take me back</a>
         

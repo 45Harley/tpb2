@@ -30,6 +30,12 @@ require_once __DIR__ . '/../includes/get-user.php';
 $dbUser = getUser($pdo);
 $sessionId = $_COOKIE['tpb_civic_session'] ?? null;
 
+// Nav variables
+$navVars = getNavVarsForUser($dbUser);
+extract($navVars);
+$currentPage = 'volunteer';
+$pageTitle = 'Volunteer Workspace | The People\'s Branch';
+
 // Volunteer-specific data
 $isVolunteer = false;
 $volunteerStatus = null;
@@ -297,16 +303,9 @@ $claimStatusColors = [
     'approved' => '#2ecc71',
     'denied' => '#e74c3c'
 ];
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Volunteer Workspace | The People's Branch</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap');
-        
+
+
+$pageStyles = <<<'CSS'
         :root {
             --gold: #d4af37;
             --gold-light: #ffdb58;
@@ -323,92 +322,13 @@ $claimStatusColors = [
             --info: #3498db;
             --purple: #9b59b6;
         }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Source Sans Pro', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-        
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-            border-bottom: 2px solid var(--gold);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .logo {
-            font-family: 'Cinzel', serif;
-            font-size: 1.5rem;
-            color: var(--gold);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .logo-icon { font-size: 1.8rem; }
-        
-        .header-nav {
-            display: flex;
-            gap: 25px;
-            align-items: center;
-        }
-        
-        .header-nav a {
-            color: var(--text);
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s;
-        }
-        
-        .header-nav a:hover { color: var(--gold); }
-        .header-nav a.active {
-            color: var(--gold);
-            border-bottom: 2px solid var(--gold);
-            padding-bottom: 2px;
-        }
-        
-        .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg-card);
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-        }
-        
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--gold);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            color: var(--bg-dark);
-        }
-        
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.2;
-        }
-        
-        .user-name { font-weight: 600; font-size: 0.9rem; }
-        .user-points { font-size: 0.75rem; color: var(--gold); }
+        body { line-height: 1.6; }
+CSS;
+
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/nav.php';
+?>
+    <style>
         
         /* Sub Navigation */
         .sub-nav {
@@ -924,8 +844,6 @@ $claimStatusColors = [
         
         /* Responsive */
         @media (max-width: 768px) {
-            .header { padding: 15px; }
-            .header-nav { display: none; }
             .sub-nav { padding: 0 15px; overflow-x: auto; }
             .sub-nav a { padding: 12px 15px; white-space: nowrap; }
             .stats-bar { justify-content: center; }
@@ -933,34 +851,7 @@ $claimStatusColors = [
             .page-header { flex-direction: column; align-items: flex-start; }
         }
     </style>
-</head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <a href="/" class="logo">🏛️ TPB</a>
-        
-        <nav class="header-nav">
-            <a href="/profile.php">Me</a>
-            <a href="/voice.php">My Voice</a>
-            <a href="/reps.php">My Government</a>
-            <a href="/poll/">Polls</a>
-            <a href="/story.php">Our Story</a>
-            <a href="./" class="active">Volunteer</a>
-        </nav>
-        
-        <?php if ($dbUser): ?>
-        <div class="user-badge">
-            <div class="user-avatar"><?= strtoupper(substr($dbUser['username'], 0, 1)) ?></div>
-            <div class="user-info">
-                <span class="user-name">@<?= htmlspecialchars($dbUser['username']) ?></span>
-                <span class="user-points"><?= number_format($dbUser['civic_points']) ?> pts</span>
-            </div>
-        </div>
-        <?php else: ?>
-        <a href="/profile.php" class="btn btn-secondary">Sign In</a>
-        <?php endif; ?>
-    </header>
-    
+
     <?php if ($dbUser && $isVolunteer): ?>
     <!-- Sub Navigation -->
     <nav class="sub-nav">

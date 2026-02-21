@@ -53,6 +53,11 @@ require_once __DIR__ . '/../includes/get-user.php';
 $dbUser = getUser($pdo);
 $sessionId = $_COOKIE['tpb_civic_session'] ?? null;
 
+// Nav variables
+$navVars = getNavVarsForUser($dbUser);
+extract($navVars);
+$currentPage = 'volunteer';
+
 // Load user data
 $isVolunteer = false;
 
@@ -104,16 +109,10 @@ function parseContent($text) {
     
     return $text;
 }
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($task['title']) ?> | TPB Volunteer</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap');
-        
+
+
+$pageTitle = htmlspecialchars($task['title']) . ' | TPB Volunteer';
+$pageStyles = <<<'CSS'
         :root {
             --gold: #d4af37;
             --gold-light: #ffdb58;
@@ -129,36 +128,13 @@ function parseContent($text) {
             --critical: #e74c3c;
             --info: #3498db;
         }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Source Sans Pro', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-        
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-            border-bottom: 2px solid var(--gold);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-family: 'Cinzel', serif;
-            font-size: 1.5rem;
-            color: var(--gold);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        body { line-height: 1.6; }
+CSS;
+
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/nav.php';
+?>
+    <style>
         
         /* Main Container */
         .main-container {
@@ -363,13 +339,7 @@ function parseContent($text) {
             .task-title { font-size: 1.4rem; }
         }
     </style>
-</head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <a href="/" class="logo">🏛️ TPB</a>
-    </header>
-    
+
     <div class="main-container">
         <a href="./" class="back-link">← Back to Tasks</a>
         
