@@ -304,6 +304,23 @@ $claimStatusColors = [
     'denied' => '#e74c3c'
 ];
 
+// Secondary nav — activates the collapsible toggle in shared nav
+if ($dbUser && $isVolunteer) {
+    $secondaryNavBrand = 'Volunteer';
+    $secondaryNav = [
+        ['label' => 'My Work', 'url' => '?tab=mywork', 'active' => $currentTab === 'mywork',
+         'badge' => $tabCounts['mywork'] > 0 ? $tabCounts['mywork'] : null],
+        ['label' => 'Available', 'url' => '?tab=available', 'active' => $currentTab === 'available',
+         'badge' => $tabCounts['available'] > 0 ? $tabCounts['available'] : null],
+        ['label' => 'Completed', 'url' => '?tab=completed', 'active' => $currentTab === 'completed',
+         'badge' => $tabCounts['completed'] > 0 ? $tabCounts['completed'] : null],
+    ];
+    if ($isPM) {
+        $pmBadge = $tabCounts['pending_claims'] + $tabCounts['pending_reviews'];
+        $secondaryNav[] = ['label' => 'PM', 'url' => '?tab=pm', 'active' => $currentTab === 'pm',
+            'badge' => $pmBadge > 0 ? $pmBadge : null, 'badgeClass' => 'alert'];
+    }
+}
 
 $pageStyles = <<<'CSS'
         :root {
@@ -329,52 +346,6 @@ require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/nav.php';
 ?>
     <style>
-        
-        /* Sub Navigation */
-        .sub-nav {
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            padding: 0 30px;
-            display: flex;
-            gap: 0;
-        }
-        
-        .sub-nav a {
-            color: var(--text-dim);
-            text-decoration: none;
-            padding: 15px 20px;
-            font-weight: 600;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .sub-nav a:hover {
-            color: var(--text);
-            background: var(--bg-hover);
-        }
-        
-        .sub-nav a.active {
-            color: var(--gold);
-            border-bottom-color: var(--gold);
-        }
-        
-        .sub-nav .badge {
-            background: var(--gold);
-            color: var(--bg-dark);
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 700;
-        }
-        
-        .sub-nav .badge.alert {
-            background: var(--critical);
-            color: white;
-        }
-        
         /* Main Container */
         .main-container {
             max-width: 1200px;
@@ -844,44 +815,12 @@ require_once __DIR__ . '/../includes/nav.php';
         
         /* Responsive */
         @media (max-width: 768px) {
-            .sub-nav { padding: 0 15px; overflow-x: auto; }
-            .sub-nav a { padding: 12px 15px; white-space: nowrap; }
             .stats-bar { justify-content: center; }
             .task-footer { flex-direction: column; align-items: flex-start; }
             .page-header { flex-direction: column; align-items: flex-start; }
         }
     </style>
 
-    <?php if ($dbUser && $isVolunteer): ?>
-    <!-- Sub Navigation -->
-    <nav class="sub-nav">
-        <a href="?tab=mywork" class="<?= $currentTab === 'mywork' ? 'active' : '' ?>">
-            📋 My Work
-            <?php if ($tabCounts['mywork'] > 0): ?>
-            <span class="badge"><?= $tabCounts['mywork'] ?></span>
-            <?php endif; ?>
-        </a>
-        <a href="?tab=available" class="<?= $currentTab === 'available' ? 'active' : '' ?>">
-            🟢 Available
-            <span class="badge"><?= $tabCounts['available'] ?></span>
-        </a>
-        <a href="?tab=completed" class="<?= $currentTab === 'completed' ? 'active' : '' ?>">
-            ✅ Completed
-            <?php if ($tabCounts['completed'] > 0): ?>
-            <span class="badge"><?= $tabCounts['completed'] ?></span>
-            <?php endif; ?>
-        </a>
-        <?php if ($isPM): ?>
-        <a href="?tab=pm" class="<?= $currentTab === 'pm' ? 'active' : '' ?>">
-            📊 PM
-            <?php if ($tabCounts['pending_claims'] + $tabCounts['pending_reviews'] > 0): ?>
-            <span class="badge alert"><?= $tabCounts['pending_claims'] + $tabCounts['pending_reviews'] ?></span>
-            <?php endif; ?>
-        </a>
-        <?php endif; ?>
-    </nav>
-    <?php endif; ?>
-    
     <div class="main-container">
         <?php if (!$dbUser): ?>
         <!-- Not Logged In -->

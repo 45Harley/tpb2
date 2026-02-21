@@ -32,6 +32,11 @@ $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'volunteer';
 $pageTitle = 'Volunteer Application | The People\'s Branch';
+$secondaryNavBrand = 'Volunteer';
+$secondaryNav = [
+    ['label' => 'Tasks', 'url' => './'],
+    ['label' => 'Apply', 'url' => 'apply.php', 'active' => true],
+];
 
 // Load user data
 $existingApplication = null;

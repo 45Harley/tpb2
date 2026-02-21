@@ -57,6 +57,11 @@ $sessionId = $_COOKIE['tpb_civic_session'] ?? null;
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'volunteer';
+$secondaryNavBrand = 'Volunteer';
+$secondaryNav = [
+    ['label' => 'Tasks', 'url' => './'],
+    ['label' => htmlspecialchars($task['title']), 'url' => '#', 'active' => true],
+];
 
 // Load user data
 $isVolunteer = false;

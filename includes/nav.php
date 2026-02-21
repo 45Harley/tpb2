@@ -282,6 +282,19 @@ $electionSite = 'https://tpb.sandgems.net';
         background: rgba(212, 175, 55, 0.25);
         color: #d4af37;
     }
+    .secondary-nav-links .sec-badge {
+        background: #d4af37;
+        color: #0d0d0d;
+        font-size: 0.7rem;
+        padding: 1px 6px;
+        border-radius: 8px;
+        font-weight: 700;
+        margin-left: 4px;
+    }
+    .secondary-nav-links .sec-badge.alert {
+        background: #e74c3c;
+        color: #fff;
+    }
     
     /* Dropdown styles */
     .nav-dropdown {
@@ -524,11 +537,17 @@ $electionSite = 'https://tpb.sandgems.net';
                 <span class="secondary-nav-brand"><?= htmlspecialchars($secondaryNavBrand) ?> ›</span>
                 <?php endif; ?>
                 <?php foreach ($secondaryNav as $item): ?>
-                <?php if (isset($item['url'])): ?>
-                <a href="<?= htmlspecialchars($item['url']) ?>"<?= isset($item['target']) ? ' target="' . htmlspecialchars($item['target']) . '"' : '' ?>><?= htmlspecialchars($item['label']) ?></a>
-                <?php else: ?>
-                <a href="#<?= htmlspecialchars($item['anchor']) ?>"><?= htmlspecialchars($item['label']) ?></a>
-                <?php endif; ?>
+                <?php
+                    $href = isset($item['url']) ? htmlspecialchars($item['url']) : '#' . htmlspecialchars($item['anchor'] ?? '');
+                    $cls = !empty($item['active']) ? ' class="active"' : '';
+                    $tgt = isset($item['target']) ? ' target="' . htmlspecialchars($item['target']) . '"' : '';
+                    $badge = '';
+                    if (isset($item['badge']) && $item['badge'] !== null && $item['badge'] !== '') {
+                        $bc = !empty($item['badgeClass']) ? ' ' . htmlspecialchars($item['badgeClass']) : '';
+                        $badge = ' <span class="sec-badge' . $bc . '">' . htmlspecialchars($item['badge']) . '</span>';
+                    }
+                ?>
+                <a href="<?= $href ?>"<?= $cls ?><?= $tgt ?>><?= htmlspecialchars($item['label']) ?><?= $badge ?></a>
                 <?php endforeach; ?>
             </div>
         </div>
