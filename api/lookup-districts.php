@@ -142,6 +142,21 @@ foreach ($data['results'] as $person) {
     ];
 }
 
+// Award civic points for district lookup
+$config = require __DIR__ . '/../config.php';
+$pdo = new PDO(
+    "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}",
+    $config['username'], $config['password'],
+    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+);
+require_once __DIR__ . '/../includes/get-user.php';
+$dbUser = getUser($pdo);
+if ($dbUser) {
+    require_once __DIR__ . '/../includes/point-logger.php';
+    PointLogger::init($pdo);
+    PointLogger::award($dbUser['user_id'], 'district_lookup', 'civic', null, 'reps');
+}
+
 echo json_encode([
     'status' => 'success',
     'districts' => $districts,

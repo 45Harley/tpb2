@@ -56,6 +56,18 @@ $needsParentConsent = $isMinor && !($dbUser['parent_consent'] ?? false);
 if ($needsParentConsent) $canPost = false;
 $defaultIsLocal = false; // State-level scope
 
+// Award civic points for visiting state page
+require_once __DIR__ . '/../../includes/point-logger.php';
+PointLogger::init($pdo);
+if ($dbUser) {
+    PointLogger::award($dbUser['user_id'], 'state_page_visit', 'state', $stateId, 'state');
+} else {
+    $sessionId = $_COOKIE['tpb_civic_session'] ?? null;
+    if ($sessionId) {
+        PointLogger::awardSession($sessionId, 'state_page_visit', 'state', $stateId, 'state');
+    }
+}
+
 // Page config
 $currentPage = 'town';
 $pageTitle = 'Connecticut - Your Civic Home | The People\'s Branch';

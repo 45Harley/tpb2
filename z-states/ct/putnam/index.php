@@ -53,6 +53,17 @@ $needsParentConsent = $isMinor && !($dbUser['parent_consent'] ?? false);
 if ($needsParentConsent) $canPost = false;
 $defaultIsLocal = true; // Pre-check local for town pages
 
+// Award civic points for visiting town page
+require_once __DIR__ . '/../../../includes/point-logger.php';
+PointLogger::init($pdo);
+if ($dbUser) {
+    PointLogger::award($dbUser['user_id'], 'town_page_visit', 'town', $townId, 'town');
+} else {
+    if ($sessionId) {
+        PointLogger::awardSession($sessionId, 'town_page_visit', 'town', $townId, 'town');
+    }
+}
+
 // Page config
 $currentPage = 'town';
 $pageTitle = 'Putnam CT - A More Perfect Town | The People\'s Branch';

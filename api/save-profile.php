@@ -272,6 +272,18 @@ try {
         $stmt->execute($params);
     }
 
+    // Check if profile is now "complete" (has name + town + state) — award once
+    $stmt = $pdo->prepare("SELECT first_name, current_state_id, current_town_id FROM users WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($profile && $profile['first_name'] && $profile['current_state_id'] && $profile['current_town_id']) {
+        if (!isset($pointLoggerInit)) {
+            require_once __DIR__ . '/../includes/point-logger.php';
+            PointLogger::init($pdo);
+        }
+        PointLogger::award($userId, 'profile_completed', 'profile', null, 'profile');
+    }
+
     echo json_encode([
         'status' => 'success',
         'message' => 'Profile saved',

@@ -136,6 +136,11 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$user['user_id'], $ipHash]);
 
+// Award civic points for setting/changing password
+require_once __DIR__ . '/../includes/point-logger.php';
+PointLogger::init($pdo);
+PointLogger::award($user['user_id'], 'password_set', 'security', null, 'profile');
+
 echo json_encode([
     'status' => 'success',
     'action' => $hasExistingPassword ? 'changed' : 'set',

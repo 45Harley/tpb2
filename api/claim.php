@@ -132,6 +132,11 @@ switch ($action) {
         $stmt->execute([$user['user_id'], $taskId]);
         
         if ($stmt->rowCount() > 0) {
+            // Award points for claiming a task
+            require_once __DIR__ . '/../includes/point-logger.php';
+            PointLogger::init($pdo);
+            PointLogger::award($user['user_id'], 'task_claimed', 'task', $taskId, 'volunteer');
+
             $success = 'claim_requested';
             $redirect = '/volunteer/?tab=available&claimed=pending';
         } else {
