@@ -1,7 +1,8 @@
 # USA Map Modes & National Landing Page — Design Doc
 
 **Date:** 2026-02-21
-**Status:** Proposed
+**Updated:** 2026-02-22
+**Status:** Data layer complete. Frontend build next.
 
 ---
 
@@ -292,43 +293,29 @@ CREATE TABLE election_races (
 └───────────────────────────────────────────┘
 ```
 
-**Data source:** Congress.gov API
-- `GET /v3/bill` — list bills (filter by congress, type)
-- `GET /v3/house-vote/{congress}/{session}/{rollCallNumber}` — House roll call votes (beta, 2023+)
-- **Limitation:** Senate votes NOT available via this API yet
-- **Workaround:** senate.gov publishes XML vote data at `senate.gov/legislative/LIS/roll_call_votes/`
+**Data source:** ✅ All loaded — Congress.gov API + clerk.house.gov XML + senate.gov XML
+- Bills: Congress.gov API (`/v3/bill/{congress}/{type}`)
+- House votes: clerk.house.gov XML (individual member votes with bioguide_id)
+- Senate votes: senate.gov XML (individual member votes with bioguide_id)
 
-**Data storage:**
-```sql
-CREATE TABLE tracked_bills (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    congress INT,
-    bill_type VARCHAR(10),      -- hr, s, hjres, sjres
-    bill_number INT,
-    title VARCHAR(500),
-    summary TEXT,
-    status VARCHAR(100),        -- introduced, passed_house, passed_senate, signed
-    last_action_date DATE,
-    is_featured TINYINT(1) DEFAULT 0,  -- curated for map display
-    congress_url VARCHAR(255),
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+**Data loaded (119th Congress):**
 
-CREATE TABLE bill_votes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bill_id INT,
-    bioguide_id VARCHAR(20),
-    chamber ENUM('senate','house'),
-    vote ENUM('yea','nay','not_voting','present'),
-    roll_call_number INT,
-    vote_date DATE,
-    FOREIGN KEY (bill_id) REFERENCES tracked_bills(id),
-    -- Links to elected_officials via bioguide_id
-    KEY idx_bioguide (bioguide_id)
-);
-```
+| Table | Rows | Notes |
+|-------|------|-------|
+| `tracked_bills` | 13,553 | All bill types, 500 enriched with sponsor data |
+| `roll_call_votes` | 1,081 | 432 House + 649 Senate |
+| `member_votes` | 251,813 | Individual votes linked to `elected_officials` (74%) |
+| `amendments` | 4,466 | Bill amendments |
+| `committee_reports` | 598 | Committee reports on bills |
+| `committee_meetings` | 1,839 | Meetings with dates |
+| `hearings` | 175 | Committee hearings |
+| `nominations` | 804 | Presidential nominations |
+| `congressional_communications` | 5,838 | House + Senate communications |
 
-**Sync strategy:** Cron job polls Congress.gov for featured bills. Admin curates which bills appear in the map dropdown (via `is_featured` flag). Vote data pulled when a bill gets a roll call vote.
+Schema: `scripts/db/create-congressional-tables.sql`
+Update script: `php scripts/db/load-congressional-data.php --congress=119 [--step=bills|house-votes|senate-votes|extras]`
+
+**Sync strategy:** Re-run loader script to refresh. Idempotent (uses ON DUPLICATE KEY UPDATE). Admin curates featured bills via `is_featured` flag for map dropdown.
 
 ### 5. Executive Orders Mode (new)
 
@@ -552,7 +539,7 @@ $secondaryNav = [
 
 ### Limitations
 
-- **Senate votes**: Not available via Congress.gov API. Workaround: scrape senate.gov XML roll call data.
+- ~~**Senate votes**: Not available via Congress.gov API.~~ ✅ Solved — loaded 649 roll calls from senate.gov XML
 - **State impact of EOs**: No API filter. TPB must tag manually or infer from agencies.
 - **State impact of court rulings**: Filter by circuit (maps to states), not by individual state impact.
 - **Election data**: No free comprehensive API. TPB curates manually or uses FEC API for campaign finance data.
@@ -562,38 +549,39 @@ $secondaryNav = [
 ## Implementation Phases
 
 ### Phase 1: Foundation (National Mode)
-- ~~Create `federal_representatives` table~~ ✅ Using `elected_officials` (541 federal, validated)
+- ~~Create data tables~~ ✅ `elected_officials` (8,665 rows, 541 federal, validated)
 - ~~Pull current Congress members from Congress.gov API~~ ✅ Validated 2026-02-22
 - ~~Import committee assignments~~ ✅ 231 committees, 3,908 memberships
 - Add National mode to map — partisan delegation coloring + rep/committee popup
 - Build `/usa/` landing page with three-branch layout
-- **Estimated effort:** Reduced. Data layer done. Need map mode + page.
+- **Status:** Data done. Frontend build next.
 
 ### Phase 2: Election Mode
 - Create `election_races` table
 - Manually populate 2026 races (predictable: all House + known Senate/Governor)
 - Add Election mode to map — race coloring + ballot popup
-- **Estimated effort:** Small. Mostly manual data entry + new map mode.
+- **Status:** Not started. Small effort — manual data entry + new map mode.
 
 ### Phase 3: Bills / Legislative Mode
-- Create `tracked_bills` and `bill_votes` tables
-- Build admin curation UI (pick featured bills)
-- Integrate Congress.gov API for bill data + House votes
+- ~~Create `tracked_bills` and vote tables~~ ✅ 13,553 bills + 251,813 member votes loaded
+- ~~Integrate Congress.gov API + House/Senate vote XML~~ ✅ Full pipeline built
+- ~~Import amendments, reports, meetings, hearings, nominations, communications~~ ✅ 13,720 supplementary records
+- Build admin curation UI (pick featured bills via `is_featured` flag)
 - Add Bills mode with bill selector + vote-by-state coloring
-- **Estimated effort:** Large. Admin UI + API sync + complex map coloring.
+- **Status:** Data done. Need admin UI + map mode.
 
 ### Phase 4: Executive Orders Mode
 - Create `executive_orders` and `eo_state_impact` tables
 - Integrate Federal Register API
 - Build admin curation for state impact tagging
 - Add EO mode with order selector + impact coloring
-- **Estimated effort:** Medium. Clean API + manual tagging.
+- **Status:** Not started. Medium effort — clean API + manual tagging.
 
 ### Phase 5: Courts / Judicial Mode
 - Create `court_opinions` and `circuit_states` tables
 - Integrate CourtListener API
 - Add circuit coloring to map + opinion popup
-- **Estimated effort:** Medium. API integration + static circuit mapping.
+- **Status:** Not started. Medium effort — API integration + static circuit mapping.
 
 ---
 
