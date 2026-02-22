@@ -595,6 +595,74 @@ CREATE TABLE congressional_digest (
 
 ---
 
+## Fourth Branch Votes — Citizen Opinion on Real Bills
+
+The existing poll system (`/poll/`) becomes the Fourth Branch's voting mechanism on real legislation. When Congress votes on a bill, TPB citizens get to vote too. The gap between the two is the most powerful data on the platform.
+
+### How It Works
+
+1. A featured bill gets a roll call vote in Congress
+2. TPB auto-creates a poll linked to that bill
+3. Citizens cast their vote via My Opinion (`/poll/`)
+4. Bills map mode shows **both votes side by side** per state
+
+### Bill Popup With Citizen Vote
+
+```
+┌─ HR 390 — ACERO Act (Drone Wildfire Response) ──────┐
+│                                                       │
+│  Congress voted:  House 387-42  ✓ Passed             │
+│                                                       │
+│  Fourth Branch voted:                                 │
+│  ████████████████░░░░  82% YES  (1,247 citizens)     │
+│                                                       │
+│  Your state (CT):                                     │
+│    Congress: 5 YES / 0 NO                            │
+│    Citizens: 89% YES (43 voters)                     │
+│                                                       │
+│  [Cast Your Vote →]  [Full Bill Details →]           │
+└───────────────────────────────────────────────────────┘
+```
+
+### Map Color Layer: Alignment
+
+The Bills map mode gains a third view toggle — not just "how Congress voted" or "how citizens voted" but **alignment**:
+
+- **Green** = reps voted the same way as their constituents
+- **Red** = reps diverged from citizen opinion
+- **Gray** = not enough citizen votes to compare
+
+This is the accountability layer. *"Your rep voted NO, but 78% of your district said YES."*
+
+### Data Changes
+
+The existing `polls` table gets an optional foreign key to `tracked_bills`:
+
+```sql
+ALTER TABLE polls ADD COLUMN bill_id INT NULL;
+ALTER TABLE polls ADD FOREIGN KEY (bill_id) REFERENCES tracked_bills(id);
+```
+
+When `bill_id` is set:
+- Poll question auto-generated from bill title + CRS summary
+- Poll results aggregate by state (using voter's `current_state_id`)
+- Bills map mode queries both `bill_votes` (Congress) and `poll_responses` (citizens)
+
+### Auto-Creation Flow
+
+1. Cron detects a roll call vote on a featured bill (via Congress.gov API)
+2. Creates a poll: *"Should [bill title] become law? [Yes / No / Unsure]"*
+3. Poll appears in My Opinion and in the bill's map popup
+4. As citizens vote, the alignment map updates in real time
+
+### Why This Matters
+
+Every other civic platform shows you what government did. TPB is the only one that asks: **"What do YOU think?"** — and then puts the answer next to the official vote for everyone to see.
+
+The Fourth Branch doesn't just watch. It votes.
+
+---
+
 ## Non-Partisan Commitment
 
 Per TPB's CLAUDE.md: "Non-partisan — Serve ALL citizens (describe, don't editorialize)."
