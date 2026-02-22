@@ -476,25 +476,34 @@ $electionSite = 'https://tpb.sandgems.net';
                     </div>
                 </div>
                 <?php if ($isLoggedIn): ?>
-                <a href="/profile.php" <?= $currentPage === 'profile' ? 'class="active"' : '' ?>>Me</a>
-                <?php if ($hasTown): ?>
-                <a href="/z-states/<?= htmlspecialchars($userStateAbbr) ?>/<?= htmlspecialchars($userTownSlug) ?>/" <?= $currentPage === 'town' ? 'class="active"' : '' ?>>My Town</a>
-                <?php else: ?>
-                <a href="/profile.php#town" class="add-link">Add Town</a>
-                <?php endif; ?>
-                <?php if ($userStateAbbr): ?>
-                <a href="/<?= htmlspecialchars($userStateAbbr) ?>/">my State</a>
-                <?php else: ?>
-                <a href="/profile.php#town" class="add-link">Add State</a>
-                <?php endif; ?>
+                <!-- My TPB Dropdown -->
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle <?= in_array($currentPage, ['profile','town','power']) ? 'active' : '' ?>">My TPB</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="/profile.php">My Profile</a>
+                        <?php if ($hasTown): ?>
+                        <a href="/z-states/<?= htmlspecialchars($userStateAbbr) ?>/<?= htmlspecialchars($userTownSlug) ?>/">My Town</a>
+                        <?php else: ?>
+                        <a href="/profile.php#town" class="add-link">Add Town</a>
+                        <?php endif; ?>
+                        <?php if ($userStateAbbr): ?>
+                        <a href="/<?= htmlspecialchars($userStateAbbr) ?>/">My State</a>
+                        <?php else: ?>
+                        <a href="/profile.php#town" class="add-link">Add State</a>
+                        <?php endif; ?>
+                        <a href="/reps.php?my=1">My Reps</a>
+                        <a href="/poll/">My Opinion</a>
+                        <a href="/0t/">My Power</a>
+                        <a href="/profile.php#points">My Points</a>
+                    </div>
+                </div>
                 <a href="<?= htmlspecialchars($talkUrl) ?>" <?= $currentPage === 'talk' ? 'class="active"' : '' ?>>USA Talk</a>
-                
+
                 <!-- My Government Dropdown -->
                 <div class="nav-dropdown">
                     <span class="nav-dropdown-toggle <?= $currentPage === 'government' ? 'active' : '' ?>">My Government</span>
                     <div class="nav-dropdown-menu">
                         <a href="/aspirations.php">Our Aspirations</a>
-                        <a href="/reps.php?my=1">My Reps</a>
                         <a href="/constitution/">The Constitution</a>
                     </div>
                 </div>
@@ -515,15 +524,12 @@ $electionSite = 'https://tpb.sandgems.net';
                     <div class="nav-dropdown-menu">
                         <a href="<?= $electionSite ?>/" class="external">Election 2026</a>
                         <a href="/28/">Amendment 28</a>
-                        <a href="/poll/">My Opinion</a>
                         <a href="<?= $electionSite ?>/threats.php" class="external">Threats</a>
                         <a href="<?= $electionSite ?>/mobsters.php" class="external">Gangs &amp; Mobsters</a>
                         <a href="<?= $electionSite ?>/the-fight.php" class="external">The Fight</a>
                         <a href="<?= $electionSite ?>/war.php" class="external">The War</a>
                     </div>
                 </div>
-                
-                <a href="/0t/" <?= $currentPage === 'power' ? 'class="active"' : '' ?>>My Power</a>
                 <a href="/story.php" <?= $currentPage === 'story' ? 'class="active"' : '' ?>>Our Story</a>
                 <a href="#" onclick="handleVolunteerClick(); return false;" <?= $currentPage === 'volunteer' ? 'class="active"' : '' ?>>Volunteer</a>
             </div>
