@@ -499,10 +499,11 @@ $electionSite = 'https://tpb.sandgems.net';
                 </div>
                 <a href="<?= htmlspecialchars($talkUrl) ?>" <?= $currentPage === 'talk' ? 'class="active"' : '' ?>>USA Talk</a>
 
-                <!-- My Government Dropdown -->
+                <!-- USA Dropdown -->
                 <div class="nav-dropdown">
-                    <span class="nav-dropdown-toggle <?= $currentPage === 'government' ? 'active' : '' ?>">My Government</span>
+                    <span class="nav-dropdown-toggle <?= $currentPage === 'government' ? 'active' : '' ?>">USA</span>
                     <div class="nav-dropdown-menu">
+                        <a href="/usa/">Our Nation</a>
                         <a href="/aspirations.php">Our Aspirations</a>
                         <a href="/constitution/">The Constitution</a>
                     </div>
