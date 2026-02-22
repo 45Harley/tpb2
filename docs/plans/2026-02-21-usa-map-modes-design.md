@@ -9,10 +9,76 @@
 
 The homepage map is already TPB's centerpiece. Today it does one thing: show states and let you claim yours. This design transforms it into a **multi-mode civic dashboard** — the interface through which the Fourth Branch watches its government.
 
-The map gains six modes organized in two tiers:
+### The Civic Story: WHO → WHERE → WHAT → WHY
 
-- **People Modes** — Who represents you
-- **Action Modes** — What they're doing
+The map modes aren't six independent views. They're a **narrative chain** — each layer answers the next question a citizen asks:
+
+```
+WHO represents me?
+ └─ National Mode → Your 2 senators + your house rep
+     │
+WHERE do they have power?
+ └─ Committees → Armed Services, Judiciary, Appropriations...
+     │               Each committee is a room where laws are born.
+     │               Your rep's committee seats = their leverage.
+     │
+WHAT are they doing with it?
+ └─ Bills → Introduced in committee → debated → voted → law
+ └─ Executive Orders → President acts, agencies execute
+ └─ Court Rulings → Judges interpret, circuits enforce
+     │
+WHY should I care?
+ └─ Fourth Branch Votes → "Your rep voted NO, but 78% of
+     │                       your district said YES."
+     └─ Alignment Map → Green = rep matches constituents
+     │                   Red = rep diverges from constituents
+     │
+NOW WHAT? ← This is what makes TPB different.
+ └─ Citizens don't just watch. They speak back.
+     └─ Vote on the bill before Congress does
+     └─ Post a Thought routed to the right rep
+     └─ Your rep sees: "3,400 CT constituents say YES on S.1234"
+     └─ The committee chair sees district-level sentiment
+     │
+     └─── loops back to WHO ───┘
+```
+
+This is not a dashboard. It's a **feedback loop**.
+
+### What TPB Replaces
+
+Today, civic engagement looks like this:
+
+| Tool | Reality |
+|------|---------|
+| **"Call your rep"** | One person. One call. A staffer makes a tally mark. Forgotten by Friday. |
+| **Protest** | Show up. Hold a sign. Go home. Hope someone noticed. |
+| **Online petition** | Anonymous clicks. No verification. No targeting. Ignored. |
+| **Vote** | Once every two years. Binary choice. Blunt instrument. |
+
+All of these are **anonymous, untargeted, and forgettable**. The rep doesn't know who you are. Doesn't know your district. Can't verify you're a constituent. Has no reason to listen.
+
+TPB replaces all of it:
+
+| TPB | How it's different |
+|-----|-------------------|
+| **Fourth Branch Vote** | Verified citizens vote on the actual bill. District-level results. Rep sees real numbers, not tally marks. |
+| **Thoughts** | Structured, routed to the right official, tagged by jurisdiction. Not a shout — a delivery. |
+| **Alignment Map** | Public, persistent, visual. Everyone sees whether their rep voted with them. Accountability that doesn't expire. |
+| **Constituent Dashboard** | The rep's office gets real-time, district-level sentiment. Better data than any lobbyist. For free. |
+
+Forget the solicitation to call your rep. Do more than anonymously protest if you have time. **Join TPB and be heard.** Not as a voice in a crowd — as a verified citizen whose opinion is counted, routed, and visible.
+
+Every other civic platform is one-way: government acts, citizens watch. TPB is **two-way**: citizens inject content, context, and opinion into the governing process — not every two years at the ballot box, but **continuously**, aimed at the specific person on the specific committee handling the specific bill that affects them.
+
+The committee data makes this precise. You're not shouting into the void. You're telling the Ranking Member of the Armed Services Subcommittee on Seapower what the people of Connecticut's 2nd District think about the Navy budget — and he's Joe Courtney, and he represents you, and he's up for re-election in 2026.
+
+Every click goes deeper. State → rep → committee → bill → vote → alignment → citizen response → back to the rep. The Fourth Branch doesn't just observe government. It participates in it.
+
+The map organizes these layers into two tiers:
+
+- **People Modes** — WHO and WHERE (reps, committees, elections)
+- **Action Modes** — WHAT and WHY (bills, orders, courts, alignment, citizen voice)
 
 ---
 
@@ -46,17 +112,19 @@ The `/usa/` landing page visualizes this hierarchy. The map modes let you drill 
 
 ## Map Mode UI
 
-Simple toggle bar above the map. Two rows — People and Action:
+Simple toggle bar above the map. Two rows — WHO/WHERE and WHAT/WHY:
 
 ```
-People:  [ State ]  [ National ]  [ Election ]
-Action:  [ Bills ]  [ Orders ]    [ Courts ]
+WHO & WHERE:  [ State ]  [ National ]  [ Election ]
+WHAT & WHY:   [ Bills ]  [ Orders ]    [ Courts ]
 ─────────────────────────────────────────────
                     MAP
          (colors change per mode)
 ─────────────────────────────────────────────
                    Legend
 ```
+
+The top row answers "Who has power?" The bottom row answers "What are they doing with it?"
 
 - Default mode: **State** (current behavior, no change)
 - Mode selection saved in `localStorage('tpb_map_mode')`
@@ -65,7 +133,7 @@ Action:  [ Bills ]  [ Orders ]    [ Courts ]
 
 ---
 
-## People Modes
+## WHO & WHERE — People Modes
 
 ### 1. State Mode (exists today)
 
@@ -88,15 +156,24 @@ Action:  [ Bills ]  [ Orders ]    [ Courts ]
 │  Electoral Votes: 7                       │
 │                                           │
 │  US Senators:                             │
-│    • Chris Murphy (D) — term ends 2027    │
-│    • Richard Blumenthal (D) — term ends 2029│
+│    • Chris Murphy (D) — term ends 2031    │
+│      Appropriations · Foreign Relations · │
+│      HELP                                 │
+│    • Richard Blumenthal (D) — ends 2029   │
+│      Armed Services · Judiciary ·         │
+│      Veterans' Affairs [Ranking]          │
 │                                           │
 │  US House: 5 seats                        │
-│    • District 1: John Larson (D)          │
-│    • District 2: Joe Courtney (D)         │
-│    • District 3: Rosa DeLauro (D)         │
-│    • District 4: Jim Himes (D)            │
-│    • District 5: Jahana Hayes (D)         │
+│    • CT-1: John Larson (D)               │
+│      Ways and Means                       │
+│    • CT-2: Joe Courtney (D)              │
+│      Armed Services · Education           │
+│    • CT-3: Rosa DeLauro (D)              │
+│      Appropriations [Ranking]             │
+│    • CT-4: Jim Himes (D)                 │
+│      Financial Svcs · Intelligence [Rank] │
+│    • CT-5: Jahana Hayes (D)              │
+│      Agriculture · Education              │
 │                                           │
 │  Party Balance: ████████████ 7D / 0R      │
 │                                           │
@@ -104,32 +181,34 @@ Action:  [ Bills ]  [ Orders ]    [ Courts ]
 └───────────────────────────────────────────┘
 ```
 
-**Data source:** Congress.gov API
-- `GET /v3/member/{congress}/{stateCode}` — current members by state
-- Free API key from api.data.gov
-- Rate limit: 5,000 requests/hour (more than enough)
-- Cache locally: members change rarely (update on election cycle)
+**Data source:** Already in DB + Congress.gov API for validation
+- `elected_officials` table: 100 U.S. Senators + 441 U.S. Representatives (validated 2026-02-22)
+- `committees` + `committee_memberships` tables: 231 committees, 3,908 assignments
+- All 541 federal officials have `bioguide_id` for API cross-referencing
+- Congress.gov API key in `config.php` (`apis.congress_gov.key`) — 5,000 req/hour
 
-**Data storage:**
+**Existing tables (no new schema needed):**
 ```sql
-CREATE TABLE federal_representatives (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bioguide_id VARCHAR(20) UNIQUE,
-    first_name VARCHAR(100),
-    last_name VARCHAR(100),
-    party CHAR(1),              -- D, R, I
-    chamber ENUM('senate','house'),
-    state_code CHAR(2),
-    district INT NULL,          -- NULL for senators
-    term_start DATE,
-    term_end DATE,
-    photo_url VARCHAR(255),
-    congress_url VARCHAR(255),
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+-- Already exists: elected_officials (8,663 rows total, 541 federal)
+-- Key columns: official_id, bioguide_id, full_name, title, party,
+--              state_code, office_name, term_start, term_end, photo_url
+
+-- Already exists: committees (231 rows for 119th Congress)
+-- Key columns: committee_id, system_code, name, chamber, parent_id, congress
+
+-- Already exists: committee_memberships (3,908 rows)
+-- Key columns: official_id, committee_id, role, congress
 ```
 
-**Sync strategy:** Cron job or manual trigger to pull from Congress.gov API after each election. Data is very stable between elections.
+**Popup can now show committee assignments per rep:**
+```
+  Chris Murphy (D) — term ends 2031
+    Committees: Appropriations, Foreign Relations, HELP
+    Roles: Ranking Member (Homeland Security Approps),
+           Ranking Member (Europe & Regional Security)
+```
+
+**Sync strategy:** `php scripts/db/update-committees.php --congress=N` — idempotent, re-run at start of each Congress or mid-session. Validate reps against Congress.gov API annually.
 
 ### 3. Election Mode (new)
 
@@ -181,7 +260,7 @@ CREATE TABLE election_races (
 
 ---
 
-## Action Modes
+## WHAT & WHY — Action Modes
 
 ### 4. Bills / Legislative Mode (new)
 
@@ -244,7 +323,8 @@ CREATE TABLE bill_votes (
     roll_call_number INT,
     vote_date DATE,
     FOREIGN KEY (bill_id) REFERENCES tracked_bills(id),
-    FOREIGN KEY (bioguide_id) REFERENCES federal_representatives(bioguide_id)
+    -- Links to elected_officials via bioguide_id
+    KEY idx_bioguide (bioguide_id)
 );
 ```
 
@@ -482,11 +562,12 @@ $secondaryNav = [
 ## Implementation Phases
 
 ### Phase 1: Foundation (National Mode)
-- Create `federal_representatives` table
-- Pull current Congress members from Congress.gov API
-- Add National mode to map — partisan delegation coloring + rep popup
+- ~~Create `federal_representatives` table~~ ✅ Using `elected_officials` (541 federal, validated)
+- ~~Pull current Congress members from Congress.gov API~~ ✅ Validated 2026-02-22
+- ~~Import committee assignments~~ ✅ 231 committees, 3,908 memberships
+- Add National mode to map — partisan delegation coloring + rep/committee popup
 - Build `/usa/` landing page with three-branch layout
-- **Estimated effort:** Medium. API integration + new map mode + new page.
+- **Estimated effort:** Reduced. Data layer done. Need map mode + page.
 
 ### Phase 2: Election Mode
 - Create `election_races` table
@@ -518,11 +599,20 @@ $secondaryNav = [
 
 ## Database Schema Summary
 
-New tables needed: **9**
+### Already built (3 tables)
+
+| Table | Purpose | Rows | Status |
+|-------|---------|------|--------|
+| `elected_officials` | All elected officials (federal + state + local) | 8,665 (541 federal) | Live, validated against Congress.gov API |
+| `committees` | Congressional committees & subcommittees | 231 (119th Congress) | Live, synced from unitedstates/congress-legislators |
+| `committee_memberships` | Who sits on what committee + role | 3,908 | Live, 532/541 members covered |
+
+Update script: `php scripts/db/update-committees.php --congress=119`
+
+### Still needed (7 tables)
 
 | Table | Purpose | Rows (est.) |
 |-------|---------|-------------|
-| `federal_representatives` | Current Congress members | ~540 |
 | `election_races` | 2026 races by state | ~500 |
 | `tracked_bills` | Curated notable bills | ~50-100/session |
 | `bill_votes` | How each rep voted | ~50K/session |
@@ -794,3 +884,5 @@ All map modes must:
 - Let citizens form their own opinions from facts
 
 The Fourth Branch watches. It does not judge. It empowers.
+
+**WHO** represents you. **WHERE** they sit. **WHAT** they're doing. **WHY** it matters to you. **NOW WHAT** — your voice goes back. Not every two years. Every day. One map. One loop. One platform.
