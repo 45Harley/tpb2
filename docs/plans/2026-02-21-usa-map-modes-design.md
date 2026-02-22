@@ -518,7 +518,7 @@ $secondaryNav = [
 
 ## Database Schema Summary
 
-New tables needed: **7**
+New tables needed: **9**
 
 | Table | Purpose | Rows (est.) |
 |-------|---------|-------------|
@@ -530,6 +530,68 @@ New tables needed: **7**
 | `eo_state_impact` | EO impact by state | ~500-1000 |
 | `court_opinions` | Notable rulings | ~100-500 curated |
 | `circuit_states` | Circuit-to-state mapping | 56 (static) |
+| `congressional_digest` | Daily digest from Congressional Record | ~250/year |
+
+---
+
+## Daily Digest — "What Happened Today in Congress"
+
+The Congress.gov API provides the **Congressional Record** and **Daily Digest** — a daily summary of everything Congress did. TPB can pull this automatically to give the Fourth Branch a daily briefing.
+
+### Congressional Record Endpoints
+
+| Endpoint | What it contains |
+|----------|-----------------|
+| `GET /v3/congressional-record` | Full record by issue — Daily Digest, House Section, Senate Section, Extensions of Remarks |
+| `GET /v3/daily-congressional-record` | Same data indexed by issue number |
+| `GET /v3/summaries` | Plain-English bill summaries (written by CRS) |
+| `GET /v3/committee-report` | Committee reports on bills |
+| `GET /v3/committee-meeting` | Upcoming/past committee meetings |
+| `GET /v3/hearing` | Committee hearing transcripts |
+| `GET /v3/house-communication` | Messages from the President, executive reports to House |
+| `GET /v3/senate-communication` | Same for Senate |
+
+### Daily Digest Contains
+
+- What the **Senate** did today (bills passed, votes taken, nominations confirmed)
+- What the **House** did today (bills passed, votes taken, resolutions)
+- **Committee meetings** held (hearings, markups, votes)
+- **Bills introduced** that day
+- **Floor schedule** for next session
+
+### How TPB Uses It
+
+**On the `/usa/` landing page:**
+- "Today in Congress" feed — auto-updated daily
+- Summarized in plain English (not legalese)
+- Links to full bill details for anything mentioned
+
+**In the Bills map mode:**
+- When a vote happens, it appears in the digest first
+- User clicks → map colors by how each state's delegation voted
+
+**Data storage:**
+```sql
+CREATE TABLE congressional_digest (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    issue_date DATE UNIQUE,
+    congress INT,
+    session INT,
+    volume INT,
+    issue_number INT,
+    senate_summary TEXT,
+    house_summary TEXT,
+    committees_summary TEXT,
+    bills_introduced JSON,          -- ["HR 1234","S 567"]
+    votes_taken JSON,               -- [{bill, result, roll_call}]
+    pdf_url VARCHAR(255),
+    fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Sync strategy:** Cron job runs each morning, pulls previous day's digest from Congressional Record API. AI clerk summarizes into plain English for the feed. Raw PDFs linked for full text.
+
+**5,757 issues** already in the API database — full historical archive back decades.
 
 ---
 
