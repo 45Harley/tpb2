@@ -74,7 +74,54 @@ CREATE TABLE IF NOT EXISTS member_votes (
     KEY idx_vote_id (vote_id),
     KEY idx_bioguide (bioguide_id),
     KEY idx_official (official_id),
-    KEY idx_vote_value (vote)
+    KEY idx_vote_value (vote),
+    KEY idx_official_vote (official_id, vote),
+    KEY idx_party_vote (party, vote_id, vote),
+    KEY idx_vote_official (vote_id, official_id, vote)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =============================================
+-- REP SCORECARD (pre-computed metrics per member)
+-- =============================================
+CREATE TABLE IF NOT EXISTS rep_scorecard (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    official_id INT NOT NULL,
+    congress INT NOT NULL,
+    chamber ENUM('House','Senate') NOT NULL,
+    -- Vote metrics
+    total_roll_calls INT DEFAULT 0,
+    votes_cast INT DEFAULT 0,
+    missed_votes INT DEFAULT 0,
+    yea_count INT DEFAULT 0,
+    nay_count INT DEFAULT 0,
+    present_count INT DEFAULT 0,
+    participation_pct DECIMAL(5,1) DEFAULT 0,
+    -- Party metrics
+    party_loyalty_pct DECIMAL(5,1) DEFAULT 0,
+    bipartisan_pct DECIMAL(5,1) DEFAULT 0,
+    -- Legislative activity
+    bills_sponsored INT DEFAULT 0,
+    bills_substantive INT DEFAULT 0,
+    bills_resolutions INT DEFAULT 0,
+    amendments_sponsored INT DEFAULT 0,
+    -- Rankings (within chamber)
+    chamber_rank_participation SMALLINT DEFAULT NULL,
+    chamber_rank_loyalty SMALLINT DEFAULT NULL,
+    chamber_rank_bipartisan SMALLINT DEFAULT NULL,
+    chamber_rank_bills SMALLINT DEFAULT NULL,
+    -- Rankings (within state)
+    state_rank_participation SMALLINT DEFAULT NULL,
+    -- Chamber averages (denormalized for easy comparison)
+    chamber_avg_participation DECIMAL(5,1) DEFAULT 0,
+    chamber_avg_loyalty DECIMAL(5,1) DEFAULT 0,
+    chamber_avg_bipartisan DECIMAL(5,1) DEFAULT 0,
+    -- Metadata
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_scorecard (official_id, congress),
+    KEY idx_chamber (chamber),
+    KEY idx_congress (congress),
+    KEY idx_participation (participation_pct),
+    KEY idx_bipartisan (bipartisan_pct)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =============================================
