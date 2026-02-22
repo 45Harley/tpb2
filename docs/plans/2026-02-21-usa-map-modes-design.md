@@ -663,6 +663,125 @@ The Fourth Branch doesn't just watch. It votes.
 
 ---
 
+## Representative Outreach — The 8th Growth Vector
+
+The seven growth vectors in TPB's expansion plan target citizens. This is the eighth: **elected officials themselves**.
+
+### The Pitch
+
+Every representative has the same problem: *"What do my constituents actually think?"*
+
+Their current tools:
+- **Town halls** — 50 people show up, the loudest ones dominate
+- **Phone calls** — staffers tally for/against, tiny sample size
+- **Lobbyists** — tell them what donors want, not what voters want
+- **Polls** — expensive, slow, conducted by third parties with agendas
+
+TPB offers something none of them can: **verified, real-time constituent sentiment on actual bills, broken down by district.**
+
+### Sample Outreach
+
+```
+Senator Murphy,
+
+Before you vote on S.1234, would you like to know
+what 3,400 verified Connecticut residents think?
+
+  YES: 71%  (2,414 constituents)
+  NO:  22%  (748 constituents)
+  UNSURE: 7% (238 constituents)
+
+  By district:
+    CT-1 (Hartford):   78% YES
+    CT-2 (Eastern):    69% YES
+    CT-3 (New Haven):  74% YES
+    CT-4 (Fairfield):  62% YES
+    CT-5 (NW CT):      73% YES
+
+This data is from verified TPB citizens in your state.
+View full breakdown: https://4tpb.org/poll/s1234
+
+The People's Branch
+```
+
+### Why Representatives Care
+
+| What they get now | What TPB offers |
+|-------------------|-----------------|
+| 50 people at a town hall | Thousands of verified voters |
+| Lobbyist spin | Raw constituent data, no agenda |
+| Expensive polls (weeks) | Real-time, always on |
+| National polls (not their state) | Broken down by their districts |
+| Anonymous online petitions | Identity-verified citizens |
+
+TPB's identity levels matter here — a rep trusts data from verified (level 3-4) constituents more than anonymous clicks. The verification system that seemed like overhead becomes the **credibility layer**.
+
+### The Adoption Cascade
+
+1. One senator's office uses TPB data for a vote → it's legitimized
+2. That office tells other offices → "Have you seen this?"
+3. Reps link to TPB polls from their own sites → citizens flood in to vote
+4. Now every rep wants their state active on TPB
+5. Reps' constituents join → those citizens explore the rest of the platform
+6. TPB grows from the top down AND bottom up simultaneously
+
+### Representative Dashboard (Future)
+
+A private dashboard for verified elected officials:
+
+```
+┌─ Sen. Murphy — Constituent Dashboard ─────────┐
+│                                                 │
+│  Active Bills With Constituent Opinion:         │
+│                                                 │
+│  S.1234 Border Security    71% YES  (3,400)    │
+│  HR.567 Clean Energy       84% YES  (2,100)    │
+│  S.890 Healthcare          52% YES  (4,700)    │
+│                                                 │
+│  Trending Topics (from /talk):                  │
+│    • Infrastructure spending (89 threads)       │
+│    • School safety (64 threads)                 │
+│    • Housing costs (51 threads)                 │
+│                                                 │
+│  CT Civic Engagement:                           │
+│    • 12,400 verified citizens                   │
+│    • 3,200 active this month                    │
+│    • Top concern: economy (34%)                 │
+└─────────────────────────────────────────────────┘
+```
+
+This dashboard pulls from:
+- **Polls** → bill-linked citizen votes
+- **/talk** → trending deliberation topics by state
+- **User profiles** → engagement metrics by state/district
+
+### Non-Partisan Positioning
+
+This works because TPB doesn't advocate. It reports.
+
+- TPB never tells a rep HOW to vote
+- TPB shows what constituents think — that's it
+- Both parties benefit equally
+- The data is the same regardless of who looks at it
+- No editorializing, no scoring, no "report cards"
+
+The moment TPB starts grading representatives, it becomes advocacy and loses trust from half the aisle. **Stay neutral. Serve data. Let democracy work.**
+
+### Implementation
+
+- **Phase 1**: Email outreach to CT delegation with sample poll data (manual)
+- **Phase 2**: API endpoint for rep offices to pull constituent data (`/api/rep-dashboard.php`)
+- **Phase 3**: Verified "Elected Official" role with private dashboard
+- **Phase 4**: Automated pre-vote briefings sent to rep offices
+
+New role needed:
+```sql
+INSERT INTO user_roles (role_name, description)
+VALUES ('Elected Official', 'Verified elected representative with access to constituent sentiment dashboard.');
+```
+
+---
+
 ## Non-Partisan Commitment
 
 Per TPB's CLAUDE.md: "Non-partisan — Serve ALL citizens (describe, don't editorialize)."
