@@ -82,6 +82,23 @@ function apiGetAll($baseUrl, $apiKey, $ctx, $dataKey, $limit = 250) {
     return $all;
 }
 
+/**
+ * Update pre-computed party tallies on roll_call_votes for a single vote.
+ * Called after member_votes are inserted/re-imported for a vote.
+ */
+function updatePartyTallies(PDO $pdo, int $voteId): void {
+    $pdo->prepare("
+        UPDATE roll_call_votes rv SET
+            r_yea = (SELECT COUNT(*) FROM member_votes mv JOIN elected_officials eo ON mv.official_id = eo.official_id WHERE mv.vote_id = ? AND mv.vote = 'Yea' AND eo.party LIKE 'R%'),
+            r_nay = (SELECT COUNT(*) FROM member_votes mv JOIN elected_officials eo ON mv.official_id = eo.official_id WHERE mv.vote_id = ? AND mv.vote = 'Nay' AND eo.party LIKE 'R%'),
+            d_yea = (SELECT COUNT(*) FROM member_votes mv JOIN elected_officials eo ON mv.official_id = eo.official_id WHERE mv.vote_id = ? AND mv.vote = 'Yea' AND eo.party LIKE 'D%'),
+            d_nay = (SELECT COUNT(*) FROM member_votes mv JOIN elected_officials eo ON mv.official_id = eo.official_id WHERE mv.vote_id = ? AND mv.vote = 'Nay' AND eo.party LIKE 'D%'),
+            i_yea = (SELECT COUNT(*) FROM member_votes mv JOIN elected_officials eo ON mv.official_id = eo.official_id WHERE mv.vote_id = ? AND mv.vote = 'Yea' AND eo.party NOT LIKE 'R%' AND eo.party NOT LIKE 'D%'),
+            i_nay = (SELECT COUNT(*) FROM member_votes mv JOIN elected_officials eo ON mv.official_id = eo.official_id WHERE mv.vote_id = ? AND mv.vote = 'Nay' AND eo.party NOT LIKE 'R%' AND eo.party NOT LIKE 'D%')
+        WHERE rv.vote_id = ?
+    ")->execute([$voteId, $voteId, $voteId, $voteId, $voteId, $voteId, $voteId]);
+}
+
 echo "╔══════════════════════════════════════════════════════════╗" . PHP_EOL;
 echo "║   CONGRESSIONAL DATA LOADER — Congress $congress              ║" . PHP_EOL;
 echo "╚══════════════════════════════════════════════════════════╝" . PHP_EOL;
@@ -278,6 +295,9 @@ if ($step === 'all' || $step === 'house-votes') {
                 }
             }
 
+            // Compute party breakdown for this vote
+            updatePartyTallies($pdo, $voteId);
+
             $memberTotal += $memberCount;
             $processed++;
             if ($processed % 10 == 0) echo "    House: $processed / " . count($votes) . " roll calls ($memberTotal member votes)\r";
@@ -410,6 +430,9 @@ if ($step === 'all' || $step === 'senate-votes') {
                     $memberCount++;
                 }
             }
+
+            // Compute party breakdown for this vote
+            updatePartyTallies($pdo, $voteId);
 
             $memberTotal += $memberCount;
             $processed++;
