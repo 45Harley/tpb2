@@ -85,7 +85,7 @@ if ($hasEmail) {
     }
 }
 
-// Election site base URL
+// Election site base URL (legacy — most links now internal)
 $electionSite = 'https://tpb.sandgems.net';
 ?>
     <!-- Navigation (Collapsible) -->
@@ -522,18 +522,7 @@ $electionSite = 'https://tpb.sandgems.net';
                 </div>
                 <?php endif; ?>
                 
-                <!-- Action Dropdown -->
-                <div class="nav-dropdown">
-                    <span class="nav-dropdown-toggle <?= $currentPage === 'action' ? 'active' : '' ?>">Action</span>
-                    <div class="nav-dropdown-menu">
-                        <a href="<?= $electionSite ?>/" class="external">Election 2026</a>
-                        <a href="/28/">Amendment 28</a>
-                        <a href="<?= $electionSite ?>/threats.php" class="external">Threats</a>
-                        <a href="<?= $electionSite ?>/mobsters.php" class="external">Gangs &amp; Mobsters</a>
-                        <a href="<?= $electionSite ?>/the-fight.php" class="external">The Fight</a>
-                        <a href="<?= $electionSite ?>/war.php" class="external">The War</a>
-                    </div>
-                </div>
+                <a href="/28/" <?= $currentPage === 'action' ? 'class="active"' : '' ?>>Amendment 28</a>
                 <a href="/story.php" <?= $currentPage === 'story' ? 'class="active"' : '' ?>>Our Story</a>
                 <a href="#" onclick="handleVolunteerClick(); return false;" <?= $currentPage === 'volunteer' ? 'class="active"' : '' ?>>Volunteer</a>
             </div>
