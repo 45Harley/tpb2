@@ -10,7 +10,25 @@
  *   /usa/glossary.php?cat=Budget    (jump to category)
  *   /usa/glossary.php?q=filibuster  (search)
  */
+$c = require dirname(__DIR__) . '/config.php';
+$pdo = new PDO('mysql:host='.$c['host'].';dbname='.$c['database'], $c['username'], $c['password']);
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+require_once dirname(__DIR__) . '/includes/get-user.php';
 require_once dirname(__DIR__) . '/includes/congressional-glossary.php';
+$dbUser = getUser($pdo);
+$navVars = getNavVarsForUser($dbUser);
+extract($navVars);
+$currentPage = 'usa';
+$pageTitle = 'Congressional Glossary';
+$secondaryNavBrand = 'USA';
+$secondaryNav = [
+    ['label' => 'Map', 'url' => '/usa/'],
+    ['label' => 'Congressional', 'url' => '/usa/digest.php'],
+    ['label' => 'Executive', 'url' => '/usa/executive.php'],
+    ['label' => 'Judicial', 'url' => '/usa/judicial.php'],
+    ['label' => 'Documents', 'url' => '/usa/docs/'],
+    ['label' => 'Glossary', 'url' => '/usa/glossary.php'],
+];
 
 $termSlug = $_GET['term'] ?? null;
 $catFilter = $_GET['cat'] ?? null;
@@ -254,9 +272,10 @@ a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
+<?php require dirname(__DIR__) . '/includes/header.php'; require dirname(__DIR__) . '/includes/nav.php'; ?>
 
 <div class="breadcrumb">
-    <a href="/usa/">Congressional Digest</a> &rsaquo; <span style="color:var(--text)">Glossary</span>
+    <a href="/usa/">USA</a> &rsaquo; <a href="/usa/digest.php" style="color:var(--muted)">Digest</a> &rsaquo; <span style="color:var(--text)">Glossary</span>
 </div>
 
 <div class="page-hero">
@@ -326,7 +345,7 @@ a:hover { text-decoration: underline; }
 
 <div class="footer">
     119th Congress &middot; <strong style="color:var(--gold)">The People's Branch</strong>
-    &middot; <a href="/usa/">Back to Digest</a>
+    &middot; <a href="/usa/">Map</a> &middot; <a href="/usa/digest.php">Digest</a>
 </div>
 
 <?php if ($termSlug): ?>

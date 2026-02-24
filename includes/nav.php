@@ -501,11 +501,14 @@ $electionSite = 'https://tpb.sandgems.net';
 
                 <!-- USA Dropdown -->
                 <div class="nav-dropdown">
-                    <span class="nav-dropdown-toggle <?= $currentPage === 'government' ? 'active' : '' ?>">USA</span>
+                    <span class="nav-dropdown-toggle <?= in_array($currentPage, ['government', 'usa']) ? 'active' : '' ?>">USA</span>
                     <div class="nav-dropdown-menu">
                         <a href="/usa/">Our Nation</a>
+                        <a href="/usa/digest.php">Congressional</a>
+                        <a href="/usa/executive.php">Executive</a>
+                        <a href="/usa/judicial.php">Judicial</a>
+                        <a href="/usa/docs/">Documents</a>
                         <a href="/aspirations.php">Our Aspirations</a>
-                        <a href="/constitution/">The Constitution</a>
                     </div>
                 </div>
                 
