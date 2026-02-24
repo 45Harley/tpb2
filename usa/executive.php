@@ -48,6 +48,18 @@ $cabinet = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $allIds = [$presId];
 foreach ($cabinet as $m) $allIds[] = $m['official_id'];
 
+// All tags
+$allTags = $pdo->query("SELECT * FROM threat_tags WHERE is_active = 1 ORDER BY sort_order")->fetchAll(PDO::FETCH_ASSOC);
+$tagsById = [];
+foreach ($allTags as $tag) $tagsById[$tag['tag_id']] = $tag;
+
+// Tag assignments per threat
+$threatTags = [];
+$r = $pdo->query("SELECT tm.threat_id, tm.tag_id FROM threat_tag_map tm JOIN threat_tags t ON tm.tag_id = t.tag_id WHERE t.is_active = 1");
+while ($row = $r->fetch(PDO::FETCH_ASSOC)) {
+    $threatTags[$row['threat_id']][] = $tagsById[$row['tag_id']];
+}
+
 // Threats per official
 $in = implode(',', array_map('intval', $allIds));
 $threats = $pdo->query("
@@ -58,13 +70,32 @@ $threats = $pdo->query("
     ORDER BY et.threat_date DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// Group threats by official
+// Group threats by official + compute severity stats
 $threatsByOfficial = [];
 $totalThreats = 0;
+$officialSeverity = []; // oid => [scores]
 foreach ($threats as $t) {
     $oid = $t['official_id'] ?: 0;
     $threatsByOfficial[$oid][] = $t;
     $totalThreats++;
+    if ($t['severity_score'] !== null) {
+        $officialSeverity[$oid][] = (int)$t['severity_score'];
+    }
+}
+
+// Severity zone helper
+function getSeverityZone($score) {
+    if ($score === null) return ['label' => 'Unscored', 'color' => '#555', 'class' => 'unscored'];
+    if ($score === 0) return ['label' => 'Clean', 'color' => '#4caf50', 'class' => 'clean'];
+    if ($score <= 10) return ['label' => 'Questionable', 'color' => '#8bc34a', 'class' => 'questionable'];
+    if ($score <= 30) return ['label' => 'Misconduct', 'color' => '#cddc39', 'class' => 'misconduct'];
+    if ($score <= 70) return ['label' => 'Misdemeanor', 'color' => '#ffeb3b', 'class' => 'misdemeanor'];
+    if ($score <= 150) return ['label' => 'Felony', 'color' => '#ff9800', 'class' => 'felony'];
+    if ($score <= 300) return ['label' => 'Serious Felony', 'color' => '#ff5722', 'class' => 'serious-felony'];
+    if ($score <= 500) return ['label' => 'High Crime', 'color' => '#f44336', 'class' => 'high-crime'];
+    if ($score <= 700) return ['label' => 'Atrocity', 'color' => '#d32f2f', 'class' => 'atrocity'];
+    if ($score <= 900) return ['label' => 'Crime Against Humanity', 'color' => '#b71c1c', 'class' => 'crime-humanity'];
+    return ['label' => 'Genocide', 'color' => '#000', 'class' => 'genocide'];
 }
 
 // Threat response counts
@@ -223,6 +254,34 @@ $pageStyles = <<<'CSS'
 .jan6-quote { font-style: italic; color: #8892a8; text-align: center; margin-top: 16px; font-size: 0.9rem; }
 .jan6-quote cite { color: #ff6b6b; }
 
+/* Severity badge */
+.severity-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 3px; font-size: 0.75rem; font-weight: 700; font-family: monospace; white-space: nowrap; }
+.severity-score { font-size: 0.8rem; }
+
+/* Tag pills */
+.tag-pills { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
+.tag-pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; border: 1px solid transparent; }
+.tag-pill:hover { opacity: 0.8; }
+.tag-pill.active-filter { outline: 2px solid #fff; outline-offset: 1px; }
+
+/* Filter bar */
+.filter-bar { background: #141929; border: 1px solid #252d44; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; }
+.filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-label { font-size: 0.8rem; color: #6b7394; white-space: nowrap; }
+.filter-pills { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
+.filter-pill { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid #3a4468; background: #1a2038; color: #8892a8; transition: all 0.2s; }
+.filter-pill:hover { border-color: #5a6488; }
+.filter-pill.active { border-color: currentColor; }
+.sort-select { padding: 4px 8px; background: #1a2038; border: 1px solid #3a4468; color: #e0e0e0; border-radius: 4px; font-size: 0.8rem; }
+.filter-count { font-size: 0.75rem; color: #6b7394; margin-left: 8px; }
+
+/* Official severity stats */
+.severity-summary { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.severity-avg { font-size: 0.8rem; color: #8892a8; }
+.severity-avg strong { font-family: monospace; }
+.severity-bar-mini { width: 80px; height: 6px; background: #252d44; border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
+.severity-bar-fill { height: 100%; border-radius: 3px; }
+
 .toast { position: fixed; bottom: 20px; right: 20px; background: #2a5a2a; color: #88c088; padding: 12px 24px; border-radius: 8px; display: none; z-index: 100; font-size: 0.9rem; }
 .toast.show { display: block; }
 
@@ -232,6 +291,7 @@ $pageStyles = <<<'CSS'
     .stats-bar { gap: 8px; }
     .stat-box { min-width: 80px; padding: 12px; }
     .action-row { flex-direction: column; }
+    .filter-row { flex-direction: column; align-items: flex-start; }
 }
 CSS;
 
@@ -262,6 +322,28 @@ require_once dirname(__DIR__) . '/includes/nav.php';
         <div class="stat-box">
             <div class="stat-num" id="stat-actions"><?= array_sum(array_map(fn($c) => array_sum($c), $responseCounts)) ?></div>
             <div class="stat-label">Actions Taken</div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar" id="filter-bar">
+        <div class="filter-row" style="margin-bottom:8px;">
+            <span class="filter-label">Filter by tag:</span>
+            <div class="filter-pills" id="tag-filters">
+                <span class="filter-pill active" data-tag="all" onclick="filterByTag('all',this)" style="color:#d4af37;border-color:#d4af37">All</span>
+                <?php foreach ($allTags as $tag): ?>
+                <span class="filter-pill" data-tag="<?= $tag['tag_name'] ?>" onclick="filterByTag('<?= $tag['tag_name'] ?>',this)" style="color:<?= $tag['color'] ?>"><?= htmlspecialchars($tag['tag_label']) ?></span>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <div class="filter-row">
+            <span class="filter-label">Sort:</span>
+            <select class="sort-select" id="sort-select" onchange="sortThreats(this.value)">
+                <option value="date">Date (newest)</option>
+                <option value="severity">Severity (highest)</option>
+                <option value="official">By official</option>
+            </select>
+            <span class="filter-count" id="filter-count"><?= $totalThreats ?> threats</span>
         </div>
     </div>
 
@@ -318,9 +400,20 @@ require_once dirname(__DIR__) . '/includes/nav.php';
                 </div>
             </div>
 
-            <?php if ($threatCount > 0): ?>
+            <?php if ($threatCount > 0):
+                $myScores = $officialSeverity[$oid] ?? [];
+                $avgSev = $myScores ? round(array_sum($myScores) / count($myScores)) : 0;
+                $maxSev = $myScores ? max($myScores) : 0;
+                $avgZone = getSeverityZone($avgSev);
+                $barPct = min(100, $avgSev / 10);
+            ?>
             <div class="person-stats">
-                <span class="person-stat"><strong><?= $threatCount ?></strong> threat<?= $threatCount !== 1 ? 's' : '' ?> linked</span>
+                <span class="person-stat"><strong><?= $threatCount ?></strong> threat<?= $threatCount !== 1 ? 's' : '' ?></span>
+                <span class="person-stat severity-summary">
+                    <span class="severity-avg">Avg: <strong style="color:<?= $avgZone['color'] ?>"><?= $avgSev ?></strong></span>
+                    <span class="severity-bar-mini"><span class="severity-bar-fill" style="width:<?= $barPct ?>%;background:<?= $avgZone['color'] ?>"></span></span>
+                    <span class="severity-avg">Max: <strong style="color:<?= getSeverityZone($maxSev)['color'] ?>"><?= $maxSev ?></strong></span>
+                </span>
             </div>
 
             <div class="threat-toggle" onclick="toggleThreats(<?= $oid ?>)">
@@ -341,12 +434,23 @@ require_once dirname(__DIR__) . '/includes/nav.php';
                     $userR = $userRatings[$tid] ?? null;
                     $rc = $responseCounts[$tid] ?? [];
                 ?>
-                <div class="threat-item" id="threat-<?= $tid ?>">
+                <div class="threat-item" id="threat-<?= $tid ?>" data-severity="<?= (int)$t['severity_score'] ?>" data-date="<?= $t['threat_date'] ?>" data-official="<?= $oid ?>" data-tags="<?= implode(',', array_map(fn($tg) => $tg['tag_name'], $threatTags[$tid] ?? [])) ?>">
                     <div class="threat-date"><?= date('F j, Y', strtotime($t['threat_date'])) ?></div>
                     <div class="threat-title-row">
+                        <?php $zone = getSeverityZone($t['severity_score']); ?>
+                        <span class="severity-badge" style="background:<?= $zone['color'] ?>;color:<?= ($t['severity_score'] ?? 0) > 500 ? '#fff' : '#000' ?>">
+                            <span class="severity-score"><?= (int)$t['severity_score'] ?></span>
+                        </span>
                         <span class="threat-title"><?= htmlspecialchars($t['title']) ?></span>
                         <span class="threat-type <?= $t['threat_type'] ?>"><?= $t['threat_type'] ?></span>
                     </div>
+                    <?php if (!empty($threatTags[$tid])): ?>
+                    <div class="tag-pills">
+                        <?php foreach ($threatTags[$tid] as $tg): ?>
+                        <span class="tag-pill" style="background:<?= $tg['color'] ?>22;color:<?= $tg['color'] ?>;border-color:<?= $tg['color'] ?>44" onclick="filterByTag('<?= $tg['tag_name'] ?>')"><?= htmlspecialchars($tg['tag_label']) ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
                     <?php if ($t['target']): ?>
                     <div style="font-size:0.8rem;color:#7ab8e0;margin-bottom:6px;">Target: <?= htmlspecialchars($t['target']) ?></div>
                     <?php endif; ?>
@@ -521,6 +625,71 @@ function showToast(msg) {
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+// ============================================================
+// Tag filtering + severity sorting
+// ============================================================
+var activeTag = 'all';
+
+function filterByTag(tag, pill) {
+    activeTag = tag;
+    // Update filter pills
+    document.querySelectorAll('#tag-filters .filter-pill').forEach(function(p) {
+        p.classList.toggle('active', p.dataset.tag === tag);
+    });
+
+    var shown = 0;
+    var total = 0;
+    document.querySelectorAll('.threat-item').forEach(function(item) {
+        total++;
+        var tags = item.dataset.tags || '';
+        if (tag === 'all' || tags.split(',').indexOf(tag) !== -1) {
+            item.style.display = '';
+            shown++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+
+    document.getElementById('filter-count').textContent = shown + ' of ' + total + ' threats';
+
+    // Update person card visibility — hide cards with 0 visible threats
+    document.querySelectorAll('.person-card').forEach(function(card) {
+        var visible = card.querySelectorAll('.threat-item:not([style*="display: none"])').length;
+        var threatsList = card.querySelector('.threats-list');
+        var toggle = card.querySelector('.threat-toggle');
+        if (tag !== 'all' && visible === 0 && threatsList) {
+            card.style.opacity = '0.3';
+        } else {
+            card.style.opacity = '';
+        }
+    });
+}
+
+function sortThreats(sortBy) {
+    document.querySelectorAll('.threats-list').forEach(function(list) {
+        var items = Array.from(list.querySelectorAll('.threat-item'));
+        items.sort(function(a, b) {
+            if (sortBy === 'severity') {
+                return (parseInt(b.dataset.severity) || 0) - (parseInt(a.dataset.severity) || 0);
+            } else if (sortBy === 'date') {
+                return b.dataset.date.localeCompare(a.dataset.date);
+            }
+            return 0;
+        });
+        items.forEach(function(item) { list.appendChild(item); });
+    });
+
+    // For "by official" sort, reorder person cards
+    if (sortBy === 'official') {
+        var grid = document.querySelector('.people-grid');
+        var cards = Array.from(grid.querySelectorAll('.person-card'));
+        cards.sort(function(a, b) {
+            return (parseInt(b.dataset.threats) || 0) - (parseInt(a.dataset.threats) || 0);
+        });
+        cards.forEach(function(card) { grid.appendChild(card); });
+    }
 }
 </script>
 
