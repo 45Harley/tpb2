@@ -104,21 +104,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = 'Poll reopened.';
         }
     }
+
+    if ($action === 'sync_threats') {
+        // Create polls for any new 300+ threats that don't have one yet
+        $stmt = $pdo->query("
+            SELECT et.threat_id, et.title
+            FROM executive_threats et
+            LEFT JOIN polls p ON p.threat_id = et.threat_id AND p.poll_type = 'threat'
+            WHERE et.severity_score >= 300 AND p.poll_id IS NULL
+        ");
+        $newThreats = $stmt->fetchAll();
+        $count = 0;
+        foreach ($newThreats as $threat) {
+            $slug = 'threat-' . $threat['threat_id'];
+            $ins = $pdo->prepare("INSERT INTO polls (question, slug, threat_id, poll_type, created_by) VALUES (?, ?, ?, 'threat', ?)");
+            $ins->execute([$threat['title'], $slug, $threat['threat_id'], $dbUser['user_id']]);
+            $count++;
+        }
+        $message = $count > 0 ? "Synced {$count} new threat polls." : 'All threat polls are already synced.';
+    }
 }
 
 // Get all polls with results
 $stmt = $pdo->query("
-    SELECT p.poll_id, p.slug, p.question, p.active, p.closed_at, p.created_at,
+    SELECT p.poll_id, p.slug, p.question, p.active, p.closed_at, p.created_at, p.poll_type,
            COUNT(pv.poll_vote_id) as total_votes,
-           SUM(CASE WHEN pv.vote_choice = 'yes' THEN 1 ELSE 0 END) as yes_votes,
-           SUM(CASE WHEN pv.vote_choice = 'no' THEN 1 ELSE 0 END) as no_votes,
-           ROUND(SUM(CASE WHEN pv.vote_choice = 'yes' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(pv.poll_vote_id), 0), 1) as yes_percent
+           SUM(CASE WHEN pv.vote_choice IN ('yes','yea') THEN 1 ELSE 0 END) as yes_votes,
+           SUM(CASE WHEN pv.vote_choice IN ('no','nay') THEN 1 ELSE 0 END) as no_votes,
+           ROUND(SUM(CASE WHEN pv.vote_choice IN ('yes','yea') THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(pv.poll_vote_id), 0), 1) as yes_percent
     FROM polls p
     LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id
     GROUP BY p.poll_id
     ORDER BY p.active DESC, p.created_at DESC
 ");
 $polls = $stmt->fetchAll();
+
+// Threat poll stats
+$threatStats = $pdo->query("
+    SELECT COUNT(DISTINCT p.poll_id) as threat_polls,
+           COUNT(pv.poll_vote_id) as threat_votes,
+           COUNT(DISTINCT CASE WHEN et.severity_score >= 300 AND p.threat_id IS NULL THEN et.threat_id END) as unsynced
+    FROM executive_threats et
+    LEFT JOIN polls p ON p.threat_id = et.threat_id AND p.poll_type = 'threat'
+    LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id
+    WHERE et.severity_score >= 300
+")->fetch();
 
 // Get state breakdown for selected poll
 $stateBreakdown = [];
@@ -255,6 +285,24 @@ $isLoggedIn = (bool)$dbUser;
             <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
         
+        <!-- Threat Poll Stats -->
+        <div class="section">
+            <h2>Threat Polls</h2>
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                <div><span style="font-size: 1.5rem; font-weight: 700; color: #d4af37;"><?= $threatStats['threat_polls'] ?></span><br><small style="color: #888;">Threat Polls</small></div>
+                <div><span style="font-size: 1.5rem; font-weight: 700; color: #d4af37;"><?= number_format($threatStats['threat_votes']) ?></span><br><small style="color: #888;">Total Votes</small></div>
+                <div><span style="font-size: 1.5rem; font-weight: 700; color: <?= $threatStats['unsynced'] > 0 ? '#f44336' : '#4caf50' ?>;"><?= $threatStats['unsynced'] ?></span><br><small style="color: #888;">Unsynced Threats</small></div>
+            </div>
+            <?php if ($threatStats['unsynced'] > 0): ?>
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="sync_threats">
+                    <button type="submit" class="btn btn-primary" onclick="return confirm('Create polls for <?= $threatStats['unsynced'] ?> new threat(s)?')">Sync New Threats</button>
+                </form>
+            <?php else: ?>
+                <span style="color: #4caf50; font-size: 0.9rem;">All 300+ threats have polls.</span>
+            <?php endif; ?>
+        </div>
+
         <!-- Create Poll -->
         <div class="section">
             <h2>Create New Poll</h2>
@@ -289,6 +337,11 @@ $isLoggedIn = (bool)$dbUser;
                     <?php foreach ($polls as $poll): ?>
                         <tr>
                             <td>
+                                <?php if ($poll['poll_type'] === 'threat'): ?>
+                                    <span style="display: inline-block; background: #8B0000; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 3px; vertical-align: middle; margin-right: 0.3rem;">threat</span>
+                                <?php else: ?>
+                                    <span style="display: inline-block; background: #555; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 3px; vertical-align: middle; margin-right: 0.3rem;">general</span>
+                                <?php endif; ?>
                                 <strong><?= htmlspecialchars($poll['question']) ?></strong><br>
                                 <small style="color: #666;"><?= htmlspecialchars($poll['slug']) ?></small>
                             </td>
