@@ -117,7 +117,7 @@ if (!$rep) {
             LEFT JOIN poll_votes pv ON pv.user_id = u.user_id AND pv.is_rep_vote = 1
             WHERE eo.is_current = 1
               AND eo.state_code = ?
-              AND eo.bioguide_id IS NOT NULL
+              AND eo.bioguide_id IS NOT NULL AND eo.bioguide_id != ''
             GROUP BY eo.official_id
             ORDER BY eo.title DESC, eo.full_name
         ");
