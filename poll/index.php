@@ -343,6 +343,7 @@ extract($navVars);
             <p>Each threat lists one primary executive official, but most acts involve additional conspirators &mdash; aides, appointees, or agencies that carried out or enabled the action. The score rates the act itself, not any single person.</p>
             <p>After you vote, see how the country responded in <a href="/poll/national/" style="color:#d4af37">National</a>, how your state compares in <a href="/poll/by-state/" style="color:#d4af37">By State</a>, and whether your representatives are listening in <a href="/poll/by-rep/" style="color:#d4af37">By Rep</a>.</p>
             <div class="scale-legend">
+                <div style="font-size:0.8rem; font-weight:700; color:#d4af37; margin-bottom:0.3rem;">Criminality Scale &nbsp;1 &ndash; 1,000</div>
                 <div class="scale-row">
                     <span class="scale-muted" style="color:#4caf50; border:1px solid #4caf50">0 Clean</span>
                     <span class="scale-muted" style="color:#8bc34a; border:1px solid #8bc34a">1&ndash;10 Questionable</span>
