@@ -335,6 +335,7 @@ extract($navVars);
                 <li><strong>Citizens:</strong> &ldquo;Is this acceptable?&rdquo; &mdash; your moral judgment on the act</li>
                 <li><strong>Congress Members:</strong> &ldquo;Will you act on this?&rdquo; &mdash; their commitment, on the record</li>
             </ul>
+            <p>Each threat lists one primary executive official, but most acts involve additional conspirators &mdash; aides, appointees, or agencies that carried out or enabled the action. The score rates the act itself, not any single person.</p>
             <p>After you vote, see how the country responded in <a href="/poll/national/" style="color:#d4af37">National</a>, how your state compares in <a href="/poll/by-state/" style="color:#d4af37">By State</a>, and whether your representatives are listening in <a href="/poll/by-rep/" style="color:#d4af37">By Rep</a>.</p>
             <div class="scale-legend">
                 <span class="scale-chip" style="background:#f44336">300&ndash;500 High Crime</span>
