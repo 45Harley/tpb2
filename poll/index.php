@@ -422,6 +422,8 @@ extract($navVars);
             <span class="count"><?= count($threatPolls) ?> threats scored 300+</span>
         </div>
 
+        <p style="color:#d4af37; font-weight:600; font-size:0.95rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.05em;">Vote and scroll. Vote and scroll. Every vote counts.</p>
+
         <!-- Threat poll cards -->
         <div id="pollList">
         <?php foreach ($threatPolls as $tp):
