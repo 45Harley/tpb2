@@ -396,11 +396,11 @@ require_once dirname(__DIR__) . '/includes/nav.php';
                 $barPct = min(100, $avgSev / 10);
             ?>
             <div class="person-stats">
-                <span class="person-stat"><strong><?= $threatCount ?></strong> threat<?= $threatCount !== 1 ? 's' : '' ?></span>
+                <span class="person-stat" title="Total documented threats attributed to this official"><strong><?= $threatCount ?></strong> threat<?= $threatCount !== 1 ? 's' : '' ?></span>
                 <span class="person-stat severity-summary">
-                    <span class="severity-avg">Avg: <strong style="color:<?= $avgZone['color'] ?>"><?= $avgSev ?></strong></span>
-                    <span class="severity-bar-mini"><span class="severity-bar-fill" style="width:<?= $barPct ?>%;background:<?= $avgZone['color'] ?>"></span></span>
-                    <span class="severity-avg">Max: <strong style="color:<?= getSeverityZone($maxSev)['color'] ?>"><?= $maxSev ?></strong></span>
+                    <span class="severity-avg" title="Average criminality score across all threats (scale: 1–1,000)">Avg: <strong style="color:<?= $avgZone['color'] ?>"><?= $avgSev ?></strong> (<?= $avgZone['label'] ?>)</span>
+                    <span class="severity-bar-mini" title="Visual: average severity on 1–1,000 scale"><span class="severity-bar-fill" style="width:<?= $barPct ?>%;background:<?= $avgZone['color'] ?>"></span></span>
+                    <span class="severity-avg" title="Highest single threat score for this official">Max: <strong style="color:<?= getSeverityZone($maxSev)['color'] ?>"><?= $maxSev ?></strong> (<?= getSeverityZone($maxSev)['label'] ?>)</span>
                 </span>
             </div>
 
