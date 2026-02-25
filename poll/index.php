@@ -450,7 +450,7 @@ extract($navVars);
                 </div>
                 <?php endif; ?>
 
-                <div class="poll-title"><?= htmlspecialchars($tp['title']) ?></div>
+                <div class="poll-title"><a href="/usa/executive.php#threat-<?= $tp['threat_id'] ?>" style="color:#d4af37;text-decoration:underline;" title="View full threat detail"><?= htmlspecialchars($tp['title']) ?></a></div>
                 <div class="poll-prompt"><?= $question ?></div>
 
                 <?php if ($canVote): ?>
