@@ -679,6 +679,30 @@ function sortThreats(sortBy) {
         cards.forEach(function(card) { grid.appendChild(card); });
     }
 }
+
+// Auto-expand and scroll to threat when arriving via #threat-{id} hash
+(function() {
+    var hash = window.location.hash;
+    if (!hash || !hash.startsWith('#threat-')) return;
+    var target = document.getElementById(hash.substring(1));
+    if (!target) return;
+    // Expand the parent threats-list
+    var list = target.closest('.threats-list');
+    if (list && !list.classList.contains('open')) {
+        list.classList.add('open');
+        var card = list.closest('.person-card');
+        if (card) {
+            var arrow = card.querySelector('.expand-arrow');
+            if (arrow) arrow.classList.add('open');
+        }
+    }
+    // Scroll after a brief delay to let layout settle
+    setTimeout(function() {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.style.outline = '2px solid #d4af37';
+        setTimeout(function() { target.style.outline = ''; }, 3000);
+    }, 300);
+})();
 </script>
 
 <?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>
