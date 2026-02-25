@@ -237,7 +237,7 @@ extract($navVars);
         <?php else: ?>
             <!-- 50-state intro -->
             <div class="intro-box">
-                <p>Every state below shows how many citizens have voted on executive threats scored 300+ on the <a href="/usa/executive/">criminality scale</a>. Click a state to see how it voted on each threat compared to the national average. Not yet voted? <a href="/poll/">Cast yours</a>.</p>
+                <p>Every state below shows how many citizens have voted on executive threats scored 300+ on the <strong style="color:#d4af37">criminality scale</strong>. Click a state to see how it voted on each threat compared to the national average. Not yet voted? <a href="/poll/">Cast yours</a>.</p>
             </div>
             <!-- 50-state landing -->
             <table class="state-table">
