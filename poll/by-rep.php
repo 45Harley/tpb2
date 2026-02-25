@@ -330,7 +330,7 @@ extract($navVars);
                 ?>
                     <tr>
                         <td><span class="severity-badge" style="background:<?= $zone['color'] ?>"><?= $r['severity_score'] ?></span></td>
-                        <td><?= htmlspecialchars(mb_strimwidth($r['title'], 0, 80, '...')) ?></td>
+                        <td><a href="/usa/executive.php#threat-<?= $r['threat_id'] ?>" style="color:#e0e0e0;text-decoration:none;border-bottom:1px dotted #666;" title="View full threat detail"><?= htmlspecialchars(mb_strimwidth($r['title'], 0, 80, '...')) ?></a></td>
                         <td>
                             <?php if ($r['rep_position'] === 'yea'): ?>
                                 <span class="position-yea">Yea</span>

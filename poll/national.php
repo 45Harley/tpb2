@@ -186,7 +186,7 @@ extract($navVars);
             <div class="threat-row" data-severity="<?= $t['severity_score'] ?>" data-date="<?= $t['threat_date'] ?>" data-votes="<?= $total ?>">
                 <div class="threat-row-header">
                     <span class="severity-badge" style="background: <?= $zone['color'] ?>"><?= $t['severity_score'] ?> &mdash; <?= $zone['label'] ?></span>
-                    <span class="threat-title"><?= htmlspecialchars($t['title']) ?></span>
+                    <span class="threat-title"><a href="/usa/executive.php#threat-<?= $t['threat_id'] ?>" style="color:inherit;text-decoration:none;border-bottom:1px dotted #666;" title="View full threat detail"><?= htmlspecialchars($t['title']) ?></a></span>
                     <?php if ($t['official_name']): ?>
                         <span class="official-name"><?= htmlspecialchars($t['official_name']) ?></span>
                     <?php endif; ?>
