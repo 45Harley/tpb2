@@ -255,10 +255,15 @@ extract($navVars);
         .intro-box p { margin: 0 0 0.5rem; }
         .intro-box ul { margin: 0 0 0.75rem 1.25rem; padding: 0; }
         .intro-box li { margin-bottom: 0.25rem; }
-        .scale-legend { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .scale-legend { margin-top: 0.5rem; }
+        .scale-row { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
         .scale-chip {
             display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px;
             font-size: 0.7rem; font-weight: 700; color: #fff;
+        }
+        .scale-muted {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px;
+            font-size: 0.7rem; font-weight: 600;
         }
 
         /* Magic link prompt */
@@ -338,9 +343,20 @@ extract($navVars);
             <p>Each threat lists one primary executive official, but most acts involve additional conspirators &mdash; aides, appointees, or agencies that carried out or enabled the action. The score rates the act itself, not any single person.</p>
             <p>After you vote, see how the country responded in <a href="/poll/national/" style="color:#d4af37">National</a>, how your state compares in <a href="/poll/by-state/" style="color:#d4af37">By State</a>, and whether your representatives are listening in <a href="/poll/by-rep/" style="color:#d4af37">By Rep</a>.</p>
             <div class="scale-legend">
-                <span class="scale-chip" style="background:#f44336">300&ndash;500 High Crime</span>
-                <span class="scale-chip" style="background:#d32f2f">501&ndash;700 Atrocity</span>
-                <span class="scale-chip" style="background:#b71c1c">701&ndash;900 Crime Against Humanity</span>
+                <div class="scale-row">
+                    <span class="scale-muted" style="color:#4caf50; border:1px solid #4caf50">0 Clean</span>
+                    <span class="scale-muted" style="color:#8bc34a; border:1px solid #8bc34a">1&ndash;10 Questionable</span>
+                    <span class="scale-muted" style="color:#cddc39; border:1px solid #cddc39">11&ndash;30 Misconduct</span>
+                    <span class="scale-muted" style="color:#ffeb3b; border:1px solid #ffeb3b">31&ndash;70 Misdemeanor</span>
+                    <span class="scale-muted" style="color:#ff9800; border:1px solid #ff9800">71&ndash;150 Felony</span>
+                    <span class="scale-muted" style="color:#ff5722; border:1px solid #ff5722">151&ndash;300 Serious Felony</span>
+                </div>
+                <div class="scale-row">
+                    <span class="scale-chip" style="background:#f44336">301&ndash;500 High Crime</span>
+                    <span class="scale-chip" style="background:#d32f2f">501&ndash;700 Atrocity</span>
+                    <span class="scale-chip" style="background:#b71c1c">701&ndash;900 Crime Against Humanity</span>
+                    <span class="scale-chip" style="background:#4a0000; border:1px solid #888">901&ndash;1000 Genocide</span>
+                </div>
             </div>
         </div>
 
