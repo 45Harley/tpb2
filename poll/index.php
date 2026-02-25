@@ -237,27 +237,6 @@ extract($navVars);
         .vote-btn.abstain-btn { border-color: #888; color: #888; }
         .vote-btn.abstain-btn:hover, .vote-btn.abstain-btn.selected { background: #888; color: #fff; }
 
-        /* Results bar */
-        .results-bar {
-            height: 24px; background: #2a2a3e; border-radius: 12px;
-            overflow: hidden; display: flex; margin-bottom: 0.4rem;
-        }
-        .results-yea {
-            background: #4caf50; height: 100%; display: flex; align-items: center;
-            justify-content: center; color: #fff; font-weight: 600; font-size: 0.75rem;
-            min-width: fit-content; padding: 0 0.4rem;
-        }
-        .results-nay {
-            background: #f44336; height: 100%; display: flex; align-items: center;
-            justify-content: center; color: #fff; font-weight: 600; font-size: 0.75rem;
-            min-width: fit-content; padding: 0 0.4rem;
-        }
-        .results-abstain-seg {
-            background: #666; height: 100%; display: flex; align-items: center;
-            justify-content: center; color: #fff; font-weight: 600; font-size: 0.75rem;
-            min-width: fit-content; padding: 0 0.4rem;
-        }
-        .results-text { font-size: 0.8rem; color: #888; }
         .your-vote { font-size: 0.85rem; color: #d4af37; font-weight: 500; margin-top: 0.4rem; }
 
         /* Alerts */
@@ -266,6 +245,21 @@ extract($navVars);
         .alert-error { background: rgba(244,67,54,0.2); color: #f44336; border: 1px solid #f44336; }
         .alert-warning { background: rgba(255,152,0,0.2); color: #ff9800; border: 1px solid #ff9800; }
         .alert a { color: #d4af37; }
+
+        /* Intro explainer */
+        .intro-box {
+            background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
+            padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; color: #ccc;
+            font-size: 0.9rem; line-height: 1.6;
+        }
+        .intro-box p { margin: 0 0 0.5rem; }
+        .intro-box ul { margin: 0 0 0.75rem 1.25rem; padding: 0; }
+        .intro-box li { margin-bottom: 0.25rem; }
+        .scale-legend { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .scale-chip {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px;
+            font-size: 0.7rem; font-weight: 700; color: #fff;
+        }
 
         /* Magic link prompt */
         .magic-link-box {
@@ -333,6 +327,22 @@ extract($navVars);
             <a href="/poll/by-rep/">By Rep</a>
         </div>
 
+        <!-- Intro explainer -->
+        <div class="intro-box">
+            <p>Every executive action scoring <strong>300 or higher</strong> on the <a href="/usa/executive/" style="color:#d4af37">criminality scale</a> becomes a poll question here. These are documented threats to constitutional order &mdash; court orders defied, civil rights violated, public institutions dismantled.</p>
+            <p><strong>Two audiences, two questions:</strong></p>
+            <ul>
+                <li><strong>Citizens:</strong> &ldquo;Is this acceptable?&rdquo; &mdash; your moral judgment on the act</li>
+                <li><strong>Congress Members:</strong> &ldquo;Will you act on this?&rdquo; &mdash; their commitment, on the record</li>
+            </ul>
+            <p>After you vote, see how the country responded in <a href="/poll/national/" style="color:#d4af37">National</a>, how your state compares in <a href="/poll/by-state/" style="color:#d4af37">By State</a>, and whether your representatives are listening in <a href="/poll/by-rep/" style="color:#d4af37">By Rep</a>.</p>
+            <div class="scale-legend">
+                <span class="scale-chip" style="background:#f44336">300&ndash;500 High Crime</span>
+                <span class="scale-chip" style="background:#d32f2f">501&ndash;700 Atrocity</span>
+                <span class="scale-chip" style="background:#b71c1c">701&ndash;900 Crime Against Humanity</span>
+            </div>
+        </div>
+
         <?php if ($voteMessage): ?>
             <div class="alert alert-success"><?= htmlspecialchars($voteMessage) ?></div>
         <?php endif; ?>
@@ -398,15 +408,11 @@ extract($navVars);
         <div id="pollList">
         <?php foreach ($threatPolls as $tp):
             $zone = getSeverityZone($tp['severity_score']);
-            $total = (int)$tp['total_votes'];
-            $yeaPct = $total > 0 ? round($tp['yea_votes'] / $total * 100, 1) : 0;
-            $nayPct = $total > 0 ? round($tp['nay_votes'] / $total * 100, 1) : 0;
-            $abstainPct = $total > 0 ? round($tp['abstain_votes'] / $total * 100, 1) : 0;
             $userVote = $userVotes[$tp['poll_id']] ?? null;
             $tags = $threatTags[$tp['threat_id']] ?? [];
             $tagNames = array_map(function($t) { return $t['tag_name']; }, $tags);
         ?>
-            <div class="poll-card" data-severity="<?= $tp['severity_score'] ?>" data-date="<?= $tp['threat_date'] ?>" data-votes="<?= $total ?>" data-tags="<?= htmlspecialchars(implode(',', $tagNames)) ?>">
+            <div class="poll-card" data-severity="<?= $tp['severity_score'] ?>" data-date="<?= $tp['threat_date'] ?>" data-votes="<?= (int)$tp['total_votes'] ?>" data-tags="<?= htmlspecialchars(implode(',', $tagNames)) ?>">
                 <div class="poll-card-header">
                     <span class="severity-badge" style="background: <?= $zone['color'] ?>">
                         <?= $tp['severity_score'] ?> &mdash; <?= $zone['label'] ?>
@@ -440,22 +446,8 @@ extract($navVars);
                     </form>
                 <?php endif; ?>
 
-                <?php if ($userVote || !$canVote): ?>
-                    <div class="results-bar">
-                        <?php if ($total > 0): ?>
-                            <?php if ($yeaPct > 0): ?><div class="results-yea" style="width: <?= $yeaPct ?>%"><?= $yeaPct ?>%</div><?php endif; ?>
-                            <?php if ($nayPct > 0): ?><div class="results-nay" style="width: <?= $nayPct ?>%"><?= $nayPct ?>%</div><?php endif; ?>
-                            <?php if ($abstainPct > 0): ?><div class="results-abstain-seg" style="width: <?= $abstainPct ?>%"><?= $abstainPct ?>%</div><?php endif; ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="results-text">
-                        <?= $total ?> vote<?= $total != 1 ? 's' : '' ?>
-                        (<?= $tp['yea_votes'] ?: 0 ?> yea, <?= $tp['nay_votes'] ?: 0 ?> nay, <?= $tp['abstain_votes'] ?: 0 ?> abstain)
-                    </div>
-                <?php endif; ?>
-
                 <?php if ($userVote): ?>
-                    <div class="your-vote">You voted: <?= ucfirst($userVote) ?> <span style="color:#666;font-weight:normal">(click to change)</span></div>
+                    <div class="your-vote">You voted: <?= ucfirst($userVote) ?> <span style="color:#666;font-weight:normal">(click a button to change)</span></div>
                 <?php endif; ?>
             </div>
         <?php endforeach; ?>

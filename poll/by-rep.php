@@ -1,8 +1,9 @@
 <?php
 /**
- * TPB Poll — By Rep View
- * ======================
- * Landing: all reps with vote record summary, silence rate.
+ * TPB Poll — By Rep View (State-Centric)
+ * =======================================
+ * Landing: your state's delegation (senators + house reps) with roll call summary.
+ * State switcher to view other states.
  * Detail: full roll call — every threat with rep position vs state citizen vote.
  */
 
@@ -20,6 +21,9 @@ $dbUser = getUser($pdo);
 $bioguide = trim($_GET['bioguide'] ?? '');
 
 $totalThreatPolls = (int)$pdo->query("SELECT COUNT(*) FROM polls WHERE poll_type = 'threat' AND active = 1")->fetchColumn();
+
+// All states for switcher
+$allStates = $pdo->query("SELECT abbreviation, state_name FROM states ORDER BY state_name")->fetchAll();
 
 // Rep detail mode
 $rep = null;
@@ -75,34 +79,56 @@ if ($rep) {
     $rollCall = $stmt->fetchAll();
 }
 
-// Landing mode: all reps with stats
-$reps = [];
-$stateFilter = strtoupper(trim($_GET['state_filter'] ?? ''));
-$chamberFilter = trim($_GET['chamber'] ?? '');
-$partyFilter = trim($_GET['party'] ?? '');
+// Landing mode: state-centric delegation view
+$stateReps = [];
+$viewState = null;
+$viewStateCode = '';
 
 if (!$rep) {
-    $reps = $pdo->query("
-        SELECT eo.official_id, eo.full_name, eo.title, eo.party, eo.state_code, eo.bioguide_id,
-               u.user_id,
-               COUNT(pv.poll_vote_id) as threats_responded,
-               SUM(CASE WHEN pv.vote_choice = 'yea' THEN 1 ELSE 0 END) as yea_count,
-               SUM(CASE WHEN pv.vote_choice = 'nay' THEN 1 ELSE 0 END) as nay_count,
-               SUM(CASE WHEN pv.vote_choice = 'abstain' THEN 1 ELSE 0 END) as abstain_count
-        FROM elected_officials eo
-        LEFT JOIN users u ON u.official_id = eo.official_id AND u.deleted_at IS NULL
-        LEFT JOIN poll_votes pv ON pv.user_id = u.user_id AND pv.is_rep_vote = 1
-        WHERE eo.is_current = 1
-          AND eo.bioguide_id IS NOT NULL
-        GROUP BY eo.official_id
-        ORDER BY eo.state_code, eo.full_name
-    ")->fetchAll();
+    // Determine which state to show
+    $requestedState = strtoupper(trim($_GET['state_filter'] ?? ''));
 
-    // Get all states for filter
-    $states = $pdo->query("SELECT DISTINCT abbreviation FROM states ORDER BY abbreviation")->fetchAll(PDO::FETCH_COLUMN);
+    if ($requestedState) {
+        $viewStateCode = $requestedState;
+    } elseif ($dbUser && !empty($dbUser['current_state_id'])) {
+        // Default to user's state
+        $stmt = $pdo->prepare("SELECT abbreviation FROM states WHERE state_id = ?");
+        $stmt->execute([$dbUser['current_state_id']]);
+        $viewStateCode = $stmt->fetchColumn() ?: '';
+    }
+
+    if ($viewStateCode) {
+        $stmt = $pdo->prepare("SELECT state_id, abbreviation, state_name FROM states WHERE abbreviation = ?");
+        $stmt->execute([$viewStateCode]);
+        $viewState = $stmt->fetch();
+    }
+
+    if ($viewState) {
+        // Get reps for this state with vote stats
+        $stmt = $pdo->prepare("
+            SELECT eo.official_id, eo.full_name, eo.title, eo.party, eo.state_code, eo.bioguide_id,
+                   u.user_id,
+                   COUNT(pv.poll_vote_id) as threats_responded,
+                   SUM(CASE WHEN pv.vote_choice = 'yea' THEN 1 ELSE 0 END) as yea_count,
+                   SUM(CASE WHEN pv.vote_choice = 'nay' THEN 1 ELSE 0 END) as nay_count,
+                   SUM(CASE WHEN pv.vote_choice = 'abstain' THEN 1 ELSE 0 END) as abstain_count
+            FROM elected_officials eo
+            LEFT JOIN users u ON u.official_id = eo.official_id AND u.deleted_at IS NULL
+            LEFT JOIN poll_votes pv ON pv.user_id = u.user_id AND pv.is_rep_vote = 1
+            WHERE eo.is_current = 1
+              AND eo.state_code = ?
+              AND eo.bioguide_id IS NOT NULL
+            GROUP BY eo.official_id
+            ORDER BY eo.title DESC, eo.full_name
+        ");
+        $stmt->execute([$viewState['abbreviation']]);
+        $stateReps = $stmt->fetchAll();
+    }
 }
 
-$pageTitle = $rep ? "{$rep['full_name']} — Roll Call" : 'Results By Rep — Polls';
+$pageTitle = $rep
+    ? "{$rep['full_name']} — Roll Call"
+    : ($viewState ? "{$viewState['state_name']} Delegation — Polls" : 'Your Representatives — Polls');
 $currentPage = 'poll';
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
@@ -126,43 +152,57 @@ extract($navVars);
         .view-links a:hover { border-color: #d4af37; color: #d4af37; }
         .view-links a.active { background: #d4af37; color: #000; border-color: #d4af37; }
 
-        /* Rep info card */
-        .rep-card {
+        .intro-box {
             background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
-            padding: 1.25rem; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+            padding: 1rem 1.25rem; margin-bottom: 1.5rem; color: #ccc;
+            font-size: 0.9rem; line-height: 1.6;
         }
-        .rep-card .rep-name { font-size: 1.2rem; font-weight: 700; color: #e0e0e0; }
-        .rep-card .rep-details { font-size: 0.9rem; color: #888; }
-        .rep-card .party-badge {
-            display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
-            font-size: 0.75rem; font-weight: 700; color: #fff;
-        }
-        .party-R { background: #c0392b; }
-        .party-D { background: #2980b9; }
-        .party-I { background: #8e44ad; }
-        .rep-stats { display: flex; gap: 1.5rem; flex-wrap: wrap; }
-        .rep-stat { text-align: center; }
-        .rep-stat .num { font-size: 1.3rem; font-weight: 700; color: #d4af37; }
-        .rep-stat .label { font-size: 0.7rem; color: #888; }
+        .intro-box p { margin: 0 0 0.4rem; }
+        .intro-box a { color: #d4af37; }
 
-        /* Filters */
-        .controls { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .controls select {
+        /* State switcher */
+        .state-switcher {
+            display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;
+        }
+        .state-switcher label { color: #888; font-size: 0.85rem; font-weight: 600; }
+        .state-switcher select {
             padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid #444;
             background: #1a1a2e; color: #e0e0e0; font-size: 0.85rem;
         }
 
-        /* Rep table */
-        .rep-table { width: 100%; border-collapse: collapse; }
-        .rep-table th, .rep-table td { padding: 0.5rem 0.6rem; text-align: left; border-bottom: 1px solid #333; font-size: 0.85rem; }
-        .rep-table th { background: #0a0a0f; color: #d4af37; }
-        .rep-table td { color: #e0e0e0; }
-        .rep-table tr:hover td { background: rgba(212,175,55,0.05); }
-        .rep-table a { color: #d4af37; text-decoration: none; font-weight: 600; }
-        .silence-high { color: #f44336; font-weight: 600; }
-        .silence-low { color: #4caf50; }
+        /* Rep card in delegation view */
+        .rep-card {
+            background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
+            padding: 1.25rem; margin-bottom: 1rem; display: flex; gap: 1rem;
+            align-items: center; flex-wrap: wrap; transition: border-color 0.2s;
+        }
+        .rep-card:hover { border-color: #555; }
+        .rep-card .rep-info { flex: 1; min-width: 200px; }
+        .rep-card .rep-name { font-size: 1.1rem; font-weight: 700; color: #e0e0e0; }
+        .rep-card .rep-name a { color: #d4af37; text-decoration: none; }
+        .rep-card .rep-details { font-size: 0.85rem; color: #888; margin-top: 0.2rem; }
+        .party-badge {
+            display: inline-block; padding: 0.15rem 0.45rem; border-radius: 4px;
+            font-size: 0.7rem; font-weight: 700; color: #fff;
+        }
+        .party-R { background: #c0392b; }
+        .party-D { background: #2980b9; }
+        .party-I { background: #8e44ad; }
+        .rep-stats { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+        .rep-stat { text-align: center; }
+        .rep-stat .num { font-size: 1.2rem; font-weight: 700; color: #d4af37; }
+        .rep-stat .label { font-size: 0.7rem; color: #888; }
+        .silence-high { color: #f44336 !important; }
 
-        /* Roll call table */
+        /* Roll call table (detail view) */
+        .rep-detail-card {
+            background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
+            padding: 1.25rem; margin-bottom: 1.5rem; display: flex; gap: 1rem;
+            align-items: center; flex-wrap: wrap;
+        }
+        .rep-detail-card .rep-name { font-size: 1.2rem; font-weight: 700; color: #e0e0e0; }
+        .rep-detail-card .rep-details { font-size: 0.9rem; color: #888; }
+
         .roll-call { width: 100%; border-collapse: collapse; }
         .roll-call th, .roll-call td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #333; font-size: 0.85rem; }
         .roll-call th { background: #0a0a0f; color: #d4af37; }
@@ -180,18 +220,24 @@ extract($navVars);
         .gap-low { color: #4caf50; }
         .gap-neutral { color: #888; }
 
-        /* Results mini bar */
         .mini-bar {
             height: 14px; background: #2a2a3e; border-radius: 7px;
-            overflow: hidden; display: flex; width: 100px; display: inline-flex;
+            overflow: hidden; display: inline-flex; width: 100px;
         }
         .mini-yea { background: #4caf50; height: 100%; }
         .mini-nay { background: #f44336; height: 100%; }
 
+        .no-state-prompt {
+            background: #1a1a2e; border: 1px solid #d4af37; border-radius: 8px;
+            padding: 2rem; text-align: center; color: #ccc;
+        }
+        .no-state-prompt h3 { color: #d4af37; margin-bottom: 0.75rem; }
+
         @media (max-width: 768px) {
-            .rep-table, .roll-call { font-size: 0.75rem; }
-            .rep-table th, .rep-table td, .roll-call th, .roll-call td { padding: 0.4rem; }
-            .rep-card { flex-direction: column; }
+            .roll-call { font-size: 0.75rem; }
+            .roll-call th, .roll-call td { padding: 0.4rem; }
+            .rep-card, .rep-detail-card { flex-direction: column; }
+            .rep-stats { justify-content: flex-start; }
         }
     </style>
 
@@ -202,10 +248,15 @@ extract($navVars);
                 <h1>Roll Call: <?= htmlspecialchars($rep['full_name']) ?></h1>
                 <p class="subtitle">Position on <?= $totalThreatPolls ?> documented executive threats scored 300+</p>
             </div>
+        <?php elseif ($viewState): ?>
+            <div class="page-header">
+                <h1><?= htmlspecialchars($viewState['state_name']) ?> Delegation</h1>
+                <p class="subtitle">How your representatives responded to documented threats.</p>
+            </div>
         <?php else: ?>
             <div class="page-header">
-                <h1>Results By Rep</h1>
-                <p class="subtitle">How each member of Congress responded to documented threats.</p>
+                <h1>Your Representatives</h1>
+                <p class="subtitle">Find your state to see how your delegation responded.</p>
             </div>
         <?php endif; ?>
 
@@ -217,6 +268,11 @@ extract($navVars);
         </div>
 
         <?php if ($rep): ?>
+            <!-- Rep detail intro -->
+            <div class="intro-box">
+                <p>The full roll call for <?= htmlspecialchars($rep['full_name']) ?>. Every executive threat scored 300+ is listed with their position alongside how <?= htmlspecialchars($rep['state_code']) ?> citizens voted on the same threat. The &ldquo;gap&rdquo; column shows where your representative diverges from constituents &mdash; or stays silent.</p>
+            </div>
+
             <!-- Rep detail -->
             <?php
                 $responded = 0; $yeaC = 0; $nayC = 0; $abstainC = 0;
@@ -228,7 +284,7 @@ extract($navVars);
                 }
                 $silenceRate = $totalThreatPolls > 0 ? round(($totalThreatPolls - $responded) / $totalThreatPolls * 100) : 100;
             ?>
-            <div class="rep-card">
+            <div class="rep-detail-card">
                 <div>
                     <div class="rep-name"><?= htmlspecialchars($rep['full_name']) ?></div>
                     <div class="rep-details">
@@ -238,7 +294,7 @@ extract($navVars);
                 </div>
                 <div class="rep-stats">
                     <div class="rep-stat"><div class="num"><?= $responded ?>/<?= $totalThreatPolls ?></div><div class="label">Responded</div></div>
-                    <div class="rep-stat"><div class="num"><?= $silenceRate ?>%</div><div class="label">Silence Rate</div></div>
+                    <div class="rep-stat"><div class="num <?= $silenceRate >= 90 ? 'silence-high' : '' ?>"><?= $silenceRate ?>%</div><div class="label">Silence Rate</div></div>
                     <div class="rep-stat"><div class="num" style="color:#4caf50"><?= $yeaC ?></div><div class="label">Yea</div></div>
                     <div class="rep-stat"><div class="num" style="color:#f44336"><?= $nayC ?></div><div class="label">Nay</div></div>
                     <div class="rep-stat"><div class="num" style="color:#888"><?= $abstainC ?></div><div class="label">Abstain</div></div>
@@ -251,7 +307,7 @@ extract($navVars);
                         <th>Severity</th>
                         <th>Threat</th>
                         <th>Rep Position</th>
-                        <th>State Citizens</th>
+                        <th><?= htmlspecialchars($rep['state_code']) ?> Citizens</th>
                         <th>Gap</th>
                     </tr>
                 </thead>
@@ -261,7 +317,6 @@ extract($navVars);
                     $sTotal = (int)$r['state_votes'];
                     $sNayPct = $sTotal > 0 ? round($r['state_nay'] / $sTotal * 100) : 0;
 
-                    // Gap: if citizens say "nay" (not acceptable) and rep says yea or no response
                     $gap = 0;
                     $gapClass = 'gap-neutral';
                     if ($sTotal > 0 && $r['rep_position'] !== 'nay') {
@@ -312,76 +367,74 @@ extract($navVars);
                 </tbody>
             </table>
 
-        <?php else: ?>
-            <!-- Landing: all reps -->
-            <div class="controls">
-                <select id="stateFilter" onchange="filterReps()">
-                    <option value="">All States</option>
-                    <?php foreach ($states as $s): ?>
-                    <option value="<?= $s ?>" <?= $stateFilter === $s ? 'selected' : '' ?>><?= $s ?></option>
+        <?php elseif ($viewState): ?>
+            <!-- State delegation intro -->
+            <div class="intro-box">
+                <p>Your <?= htmlspecialchars($viewState['state_name']) ?> delegation &mdash; senators and representatives &mdash; and how each responded to <?= $totalThreatPolls ?> documented executive threats. A high silence rate means they haven't weighed in. Click a name to see their full roll call, threat by threat, compared to how <?= htmlspecialchars($viewState['state_name']) ?> citizens voted.</p>
+            </div>
+
+            <!-- State switcher -->
+            <div class="state-switcher">
+                <label for="stateSwitcher">Viewing:</label>
+                <select id="stateSwitcher" onchange="switchState()">
+                    <?php foreach ($allStates as $s): ?>
+                    <option value="<?= $s['abbreviation'] ?>" <?= $viewStateCode === $s['abbreviation'] ? 'selected' : '' ?>><?= htmlspecialchars($s['state_name']) ?></option>
                     <?php endforeach; ?>
-                </select>
-                <select id="chamberFilter" onchange="filterReps()">
-                    <option value="">All Chambers</option>
-                    <option value="Senator" <?= $chamberFilter === 'Senator' ? 'selected' : '' ?>>Senate</option>
-                    <option value="Representative" <?= $chamberFilter === 'Representative' ? 'selected' : '' ?>>House</option>
-                </select>
-                <select id="partyFilter" onchange="filterReps()">
-                    <option value="">All Parties</option>
-                    <option value="R" <?= $partyFilter === 'R' ? 'selected' : '' ?>>Republican</option>
-                    <option value="D" <?= $partyFilter === 'D' ? 'selected' : '' ?>>Democrat</option>
-                    <option value="I" <?= $partyFilter === 'I' ? 'selected' : '' ?>>Independent</option>
                 </select>
             </div>
 
-            <table class="rep-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>State</th>
-                        <th>Party</th>
-                        <th>Chamber</th>
-                        <th>Responded</th>
-                        <th>Silence</th>
-                        <th>Yea</th>
-                        <th>Nay</th>
-                    </tr>
-                </thead>
-                <tbody id="repTableBody">
-                <?php foreach ($reps as $r):
-                    $responded = (int)$r['threats_responded'];
-                    $silence = $totalThreatPolls > 0 ? round(($totalThreatPolls - $responded) / $totalThreatPolls * 100) : 100;
-                    $chamber = (strpos($r['title'], 'Senator') !== false || strpos($r['title'], 'Senate') !== false) ? 'Senator' : 'Representative';
-                ?>
-                    <tr data-state="<?= $r['state_code'] ?>" data-chamber="<?= $chamber ?>" data-party="<?= $r['party'] ?>">
-                        <td><a href="/poll/by-rep/<?= htmlspecialchars($r['bioguide_id']) ?>/"><?= htmlspecialchars($r['full_name']) ?></a></td>
-                        <td><?= $r['state_code'] ?></td>
-                        <td><span class="party-badge party-<?= $r['party'] ?>"><?= $r['party'] ?></span></td>
-                        <td><?= $chamber === 'Senator' ? 'Senate' : 'House' ?></td>
-                        <td><?= $responded ?>/<?= $totalThreatPolls ?></td>
-                        <td class="<?= $silence >= 90 ? 'silence-high' : 'silence-low' ?>"><?= $silence ?>%</td>
-                        <td style="color:#4caf50"><?= $r['yea_count'] ?: 0 ?></td>
-                        <td style="color:#f44336"><?= $r['nay_count'] ?: 0 ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
+            <!-- Delegation cards -->
+            <?php if (empty($stateReps)): ?>
+                <p style="color: #888;">No current representatives found for <?= htmlspecialchars($viewState['state_name']) ?>.</p>
+            <?php endif; ?>
+
+            <?php foreach ($stateReps as $r):
+                $responded = (int)$r['threats_responded'];
+                $silence = $totalThreatPolls > 0 ? round(($totalThreatPolls - $responded) / $totalThreatPolls * 100) : 100;
+                $chamber = (strpos($r['title'], 'Senator') !== false || strpos($r['title'], 'Senate') !== false) ? 'Senate' : 'House';
+            ?>
+                <div class="rep-card">
+                    <div class="rep-info">
+                        <div class="rep-name"><a href="/poll/by-rep/<?= htmlspecialchars($r['bioguide_id']) ?>/"><?= htmlspecialchars($r['full_name']) ?></a></div>
+                        <div class="rep-details">
+                            <?= $chamber ?> &middot;
+                            <span class="party-badge party-<?= $r['party'] ?>"><?= $r['party'] ?></span>
+                        </div>
+                    </div>
+                    <div class="rep-stats">
+                        <div class="rep-stat"><div class="num"><?= $responded ?>/<?= $totalThreatPolls ?></div><div class="label">Responded</div></div>
+                        <div class="rep-stat"><div class="num <?= $silence >= 90 ? 'silence-high' : '' ?>"><?= $silence ?>%</div><div class="label">Silence</div></div>
+                        <div class="rep-stat"><div class="num" style="color:#4caf50"><?= $r['yea_count'] ?: 0 ?></div><div class="label">Yea</div></div>
+                        <div class="rep-stat"><div class="num" style="color:#f44336"><?= $r['nay_count'] ?: 0 ?></div><div class="label">Nay</div></div>
+                        <div class="rep-stat"><div class="num" style="color:#888"><?= $r['abstain_count'] ?: 0 ?></div><div class="label">Abstain</div></div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+
+        <?php else: ?>
+            <!-- No state: show picker -->
+            <div class="intro-box">
+                <p>See how your congressional delegation responded to documented executive threats. Select your state below to view your senators and representatives, their silence rates, and how their positions compare to citizen votes.</p>
+            </div>
+
+            <div class="no-state-prompt">
+                <h3>Select Your State</h3>
+                <select id="stateSwitcher" onchange="switchState()" style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #444; background: #0a0a0f; color: #e0e0e0; font-size: 1rem;">
+                    <option value="">Choose a state...</option>
+                    <?php foreach ($allStates as $s): ?>
+                    <option value="<?= $s['abbreviation'] ?>"><?= htmlspecialchars($s['state_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
         <?php endif; ?>
     </main>
 
     <script>
-    function filterReps() {
-        const state = document.getElementById('stateFilter').value;
-        const chamber = document.getElementById('chamberFilter').value;
-        const party = document.getElementById('partyFilter').value;
-        const rows = document.querySelectorAll('#repTableBody tr');
-
-        rows.forEach(row => {
-            const matchState = !state || row.dataset.state === state;
-            const matchChamber = !chamber || row.dataset.chamber === chamber;
-            const matchParty = !party || row.dataset.party === party;
-            row.style.display = (matchState && matchChamber && matchParty) ? '' : 'none';
-        });
+    function switchState() {
+        const state = document.getElementById('stateSwitcher').value;
+        if (state) {
+            window.location.href = '/poll/by-rep/?state_filter=' + state;
+        }
     }
     </script>
 

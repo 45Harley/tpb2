@@ -101,6 +101,14 @@ extract($navVars);
         .breadcrumb { font-size: 0.85rem; color: #888; margin-bottom: 1rem; }
         .breadcrumb a { color: #d4af37; text-decoration: none; }
 
+        .intro-box {
+            background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
+            padding: 1rem 1.25rem; margin-bottom: 1.5rem; color: #ccc;
+            font-size: 0.9rem; line-height: 1.6;
+        }
+        .intro-box p { margin: 0 0 0.4rem; }
+        .intro-box a { color: #d4af37; }
+
         .view-links { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .view-links a {
             padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
@@ -170,6 +178,10 @@ extract($navVars);
         </div>
 
         <?php if ($state): ?>
+            <!-- State detail intro -->
+            <div class="intro-box">
+                <p>How <?= htmlspecialchars($state['state_name']) ?> citizens voted on each documented threat, side by side with the national average. Where your state diverges from the country, that's the story &mdash; and the pressure point for your <a href="/poll/by-rep/">representatives</a>.</p>
+            </div>
             <!-- State detail view -->
             <?php foreach ($stateThreats as $t):
                 $zone = getSeverityZone($t['severity_score']);
@@ -223,6 +235,10 @@ extract($navVars);
             <?php endif; ?>
 
         <?php else: ?>
+            <!-- 50-state intro -->
+            <div class="intro-box">
+                <p>Every state below shows how many citizens have voted on executive threats scored 300+ on the <a href="/usa/executive/">criminality scale</a>. Click a state to see how it voted on each threat compared to the national average. Not yet voted? <a href="/poll/">Cast yours</a>.</p>
+            </div>
             <!-- 50-state landing -->
             <table class="state-table">
                 <thead>

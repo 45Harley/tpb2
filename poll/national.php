@@ -72,6 +72,14 @@ extract($navVars);
         .page-header h1 { color: #d4af37; margin-bottom: 0.25rem; }
         .page-header .subtitle { color: #888; }
 
+        .intro-box {
+            background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
+            padding: 1rem 1.25rem; margin-bottom: 1.5rem; color: #ccc;
+            font-size: 0.9rem; line-height: 1.6;
+        }
+        .intro-box p { margin: 0 0 0.4rem; }
+        .intro-box a { color: #d4af37; }
+
         .view-links { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .view-links a {
             padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
@@ -132,6 +140,11 @@ extract($navVars);
             <a href="/poll/national/" class="active">National</a>
             <a href="/poll/by-state/">By State</a>
             <a href="/poll/by-rep/">By Rep</a>
+        </div>
+
+        <div class="intro-box">
+            <p>The national pulse. Every bar below shows how citizens across all 50 states responded to a documented executive threat scored 300+ on the <a href="/usa/executive/">criminality scale</a>. Green = &ldquo;acceptable,&rdquo; red = &ldquo;not acceptable.&rdquo; This is the country speaking &mdash; not pundits, not polls of 1,000. Every vote is a verified citizen.</p>
+            <p>Want to cast yours? <a href="/poll/">Vote here</a>. Want to see if your reps are listening? <a href="/poll/by-rep/">By Rep</a>.</p>
         </div>
 
         <div class="summary-bar">
