@@ -62,13 +62,20 @@
 | [plans/2026-02-16-talk-voting-botdetect-impl.md](plans/2026-02-16-talk-voting-botdetect-impl.md) | Complete | Voting + bot detection implementation |
 | [plans/2026-02-18-imagine-stories.md](plans/2026-02-18-imagine-stories.md) | Draft | Group invite funnel story pages |
 | [plans/2026-02-19-standard-groups-scoped.md](plans/2026-02-19-standard-groups-scoped.md) | Complete | Scoped civic groups (town/state/federal) + department mapping |
+| [plans/2026-02-21-usa-map-modes-design.md](plans/2026-02-21-usa-map-modes-design.md) | Complete | Multi-mode USA map (National, Election, Bills, Orders, Courts) |
+| [plans/2026-02-23-usa-map-draft.md](plans/2026-02-23-usa-map-draft.md) | Draft | USA map implementation notes |
+| [plans/2026-02-24-poll-roll-call-design.md](plans/2026-02-24-poll-roll-call-design.md) | Complete | Poll system: citizen/rep voting on executive threats |
+| [plans/2026-02-24-poll-roll-call-plan.md](plans/2026-02-24-poll-roll-call-plan.md) | Complete | Poll roll call implementation plan |
 
 ## Other
 
 | Doc | Description |
 |-----|-------------|
 | [TPB-Volunteer-Task-Workflow.md](TPB-Volunteer-Task-Workflow.md) | Dual-track volunteer progression with mentorship and points |
-| [collect-threats-process.md](collect-threats-process.md) | Process for loading administration threats into election DB |
+| [collect-threats-process.md](collect-threats-process.md) | Process for loading executive threats into election DB |
+| [tpb-education-vision.md](tpb-education-vision.md) | TPB as learning platform across 12+ academic subjects |
+| [tpb-growth-expansions.md](tpb-growth-expansions.md) | Seven independent 1000x growth vectors |
+| [tpb-learning-subjects.md](tpb-learning-subjects.md) | Subject areas and rep targets for student contributions |
 | [the-valentine-fly.html](the-valentine-fly.html) | Fictional story set in Putnam CT, 2036 |
 | [tpb_refactoring_summary.html](tpb_refactoring_summary.html) | Refactoring summary (HTML) |
 | [TPB-PHS-Partnership-Proposal.docx](TPB-PHS-Partnership-Proposal.docx) | PHS partnership proposal (Word doc) |

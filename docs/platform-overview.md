@@ -2,7 +2,32 @@
 
 **The People's Branch** — A civic engagement platform where citizens participate in local and national governance.
 
-Last updated: 2026-02-19
+Last updated: 2026-02-25
+
+---
+
+## Executive Branch Accountability
+
+- **Executive Threat Tracker** (`usa/executive.php`) — 140+ documented executive threats with per-official cards, severity scores, call-to-action scripts, and contact info. Threats are scored on a 1–1,000 criminality scale across 10 zones (Clean → Genocide). Deep-linkable via `#threat-{id}` anchors.
+- **Criminality Scale** — 10 severity zones: Clean (0), Questionable (1–10), Misconduct (11–30), Misdemeanor (31–70), Felony (71–150), Serious Felony (151–300), High Crime (301–500), Atrocity (501–700), Crime Against Humanity (701–900), Genocide (901–1,000). Constitutional impeachment threshold ("High Crimes and Misdemeanors") starts at 31.
+- **Severity engine** (`includes/severity.php`) — Shared PHP helper: `getSeverityZone($score)` returns label + color for any score. Used by executive.php and all poll pages.
+
+---
+
+## Polls — Citizen & Congressional Voting
+
+- **Vote** (`poll/index.php`) — Every executive action scoring 300+ becomes a poll. Citizens answer "Is this acceptable?" Congress members answer "Will you act on this?" Includes full criminality scale legend, category tag filters, and severity sorting.
+- **National Results** (`poll/national.php`) — Aggregate citizen votes across all 50 states with yea/nay/abstain bars per threat.
+- **By State** (`poll/by-state.php`) — 50-state landing table. Click a state to see how it voted on each threat side-by-side with the national average.
+- **By Rep** (`poll/by-rep.php`) — State delegation view showing each rep's silence rate, positions, and gap vs. constituent votes. Full roll call per rep.
+- All threat titles link back to the executive threat tracker (`/usa/executive.php#threat-{id}`) for full detail.
+
+---
+
+## Congressional Digest
+
+- **Congressional Scorecard** (`usa/digest.php`) — Browse 119th Congress: reps, votes, bills, committees, nominations. Filterable by state, party, chamber. Individual rep detail pages with full voting record.
+- Query parameter routing: `?state=CT`, `?rep=441`, `?vote=123`, `?bill=hr-144`, `?committee=1049`, `?nom=650`.
 
 ---
 
@@ -10,7 +35,6 @@ Last updated: 2026-02-19
 
 - **Talk** (`talk/`) — Group deliberation. Post ideas, vote, gather/crystallize into action. Geographic streams (USA/state/town) + user-created and standard civic groups.
 - **Thoughts** (`thought.php`, `read.php`, `voice.php`) — Individual civic positions with voting. Public feed + personal voice.
-- **Polls** (`poll/`) — Direct democratic voting on questions. Admin-created, email verification required.
 - **Aspirations** (`aspirations.php`) — Shared civic goals (database-driven).
 
 ---
@@ -20,14 +44,24 @@ Last updated: 2026-02-19
 - **4-tier identity levels** — anonymous → remembered (email) → verified (phone) → vetted (background check)
 - **Passwordless auth** — magic link login via `login.php` / `join.php`
 - **Parental consent** — minors (13-17) require parent verification
-- **Civic points** — gamified engagement tracking for actions
+- **Civic points** — gamified engagement tracking (55 point actions, 38 wired) via `includes/point-logger.php`
+
+---
+
+## USA Section
+
+- **Interactive map** (`usa/index.php`) — Multi-mode USA map: National (state delegations), Election, Bills, Orders, Courts
+- **Executive** (`usa/executive.php`) — Threat tracker (see above)
+- **Congressional** (`usa/digest.php`) — Scorecard (see above)
+- **Judicial** (`usa/judicial.php`) — Placeholder (coming soon)
+- **Documents** (`usa/docs/`) — Constitution, Declaration of Independence, Gettysburg Address, Federalist Papers, Letter from Birmingham Jail, Oath of Office
+- **Glossary** (`usa/glossary.php`) — 130+ congressional terms, searchable by category
 
 ---
 
 ## Representation & Government
 
 - **Reps** (`reps.php`) — Browse representatives at federal/state/town level, all branches
-- **Constitution** (`constitution/`) — Interactive preamble, articles, amendments
 - **District lookup** — OpenStates integration, lat/lng → districts
 - **Amendment 28** (`28/`) — Petition page for "The People's Amendment"
 
@@ -36,7 +70,7 @@ Last updated: 2026-02-19
 ## Community Building
 
 - **People Power** (`0t/`) — Grassroots referral/signaling system with generation tracking
-- **Interactive map** (`map.php` / `index.php`) — USA map showing active states, onboarding flow
+- **Our Story** (`story.php`) — Landing page with avatar video, mission narrative, scroll-tracked engagement
 - **State/town pages** (`z-states/`) — Local civic landing pages (CT towns live)
 
 ---
