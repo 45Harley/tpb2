@@ -2,6 +2,13 @@
 RewriteEngine On
 RewriteBase /poll/
 
-# Clean URLs
+# Report views
+RewriteRule ^national/?$ national.php [L]
+RewriteRule ^by-state/?$ by-state.php [L]
+RewriteRule ^by-state/([a-z]{2})/?$ by-state.php?state=$1 [L]
+RewriteRule ^by-rep/?$ by-rep.php [L]
+RewriteRule ^by-rep/([A-Za-z0-9]+)/?$ by-rep.php?bioguide=$1 [L]
+
+# Existing
 RewriteRule ^closed/?$ closed.php [L]
 RewriteRule ^admin/?$ admin.php [L]
