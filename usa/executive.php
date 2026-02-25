@@ -127,7 +127,7 @@ if ($dbUser && !empty($dbUser['state_abbrev'])) {
 $pageStyles = <<<'CSS'
 .exec-page { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
 .exec-page h1 { font-size: 28px; margin-bottom: 8px; }
-.exec-subtitle { color: #8892a8; font-size: 15px; margin-bottom: 24px; }
+.exec-subtitle { color: #b0b8cc; font-size: 15px; margin-bottom: 24px; }
 
 /* View toggle */
 .view-toggle { display: flex; gap: 0; margin-bottom: 28px; }
@@ -143,7 +143,7 @@ $pageStyles = <<<'CSS'
 .stat-num { font-size: 2rem; font-weight: bold; }
 .stat-num.gold { color: #d4af37; }
 .stat-num.red { color: #ff4444; }
-.stat-label { font-size: 0.8rem; color: #6b7394; margin-top: 4px; }
+.stat-label { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
 
 /* People cards */
 .people-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
@@ -157,7 +157,7 @@ $pageStyles = <<<'CSS'
 .person-info { flex: 1; min-width: 0; }
 .person-name { font-size: 1.2rem; color: #f0f2f8; font-weight: 600; margin-bottom: 4px; }
 .person-title { color: #d4af37; font-size: 0.9rem; margin-bottom: 4px; }
-.person-dept { color: #6b7394; font-size: 0.85rem; }
+.person-dept { color: #aaa; font-size: 0.85rem; }
 .person-party { display: inline-block; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-top: 6px; }
 .party-r { background: rgba(239,68,68,0.15); color: #ef4444; }
 .party-d { background: rgba(59,130,246,0.15); color: #60a5fa; }
@@ -169,15 +169,15 @@ $pageStyles = <<<'CSS'
 .mob-label.mobster { background: rgba(255,68,68,0.15); color: #ff6b6b; }
 
 .person-contact { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
-.person-contact a { color: #8892a8; font-size: 0.8rem; text-decoration: none; }
+.person-contact a { color: #ccc; font-size: 0.8rem; text-decoration: none; }
 .person-contact a:hover { color: #d4af37; }
 
 .person-stats { display: flex; gap: 16px; padding: 0 24px 12px; }
-.person-stat { font-size: 0.8rem; color: #6b7394; }
+.person-stat { font-size: 0.8rem; color: #aaa; }
 .person-stat strong { color: #e8eaf0; }
 
 /* Threats section on card */
-.threat-toggle { padding: 12px 24px; background: #0d1220; border-top: 1px solid #252d44; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #8892a8; }
+.threat-toggle { padding: 12px 24px; background: #0d1220; border-top: 1px solid #252d44; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #ccc; }
 .threat-toggle:hover { background: #111728; }
 .threat-count-badge { background: #cc0000; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
 .threat-count-badge.gold { background: #d4af37; color: #000; }
@@ -189,18 +189,18 @@ $pageStyles = <<<'CSS'
 
 .threat-item { padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.04); }
 .threat-item:last-child { border-bottom: none; }
-.threat-date { font-size: 0.8rem; color: #6b7394; margin-bottom: 4px; }
+.threat-date { font-size: 0.8rem; color: #aaa; margin-bottom: 4px; }
 .threat-title-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
 .threat-title { font-size: 1rem; color: #e8eaf0; font-weight: 500; }
 .threat-type { font-size: 0.7rem; padding: 2px 8px; border-radius: 3px; text-transform: uppercase; font-weight: 600; }
 .threat-type.strategic { background: #cc0000; color: #fff; }
 .threat-type.tactical { background: #ff9500; color: #000; }
-.threat-desc { color: #a0aec0; font-size: 0.9rem; line-height: 1.6; margin-bottom: 10px; }
-.threat-source a { color: #7ab8e0; text-decoration: none; font-size: 0.85rem; }
+.threat-desc { color: #d0d0d0; font-size: 0.9rem; line-height: 1.6; margin-bottom: 10px; }
+.threat-source a { color: #d4af37; text-decoration: none; font-size: 0.85rem; }
 .threat-source a:hover { text-decoration: underline; }
 
 .call-script { background: #0d1220; border: 1px solid #252d44; border-radius: 6px; padding: 12px; margin: 10px 0; }
-.call-script-label { font-size: 0.8rem; color: #7ab8e0; font-weight: 600; margin-bottom: 6px; }
+.call-script-label { font-size: 0.8rem; color: #d4af37; font-weight: 600; margin-bottom: 6px; }
 .call-script-text { color: #e0e0e0; font-size: 0.9rem; line-height: 1.5; font-style: italic; }
 .copy-btn { margin-top: 8px; padding: 6px 14px; background: #252d44; border: 1px solid #3a4468; color: #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
 .copy-btn:hover { background: #3a4468; }
@@ -214,22 +214,22 @@ $pageStyles = <<<'CSS'
 .action-btn:hover { filter: brightness(1.2); }
 .action-btn.done { opacity: 0.6; }
 .action-btn.done::after { content: ' \2713'; }
-.action-counts { font-size: 0.8rem; color: #6b7394; margin-top: 8px; }
+.action-counts { font-size: 0.8rem; color: #aaa; margin-top: 8px; }
 .action-counts span { margin-right: 12px; }
 
 .rep-select { padding: 6px; background: #252d44; border: 1px solid #3a4468; color: #e0e0e0; border-radius: 4px; font-size: 0.85rem; }
 
 /* Rating */
 .rating-row { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.04); }
-.rating-label { font-size: 0.85rem; color: #8892a8; margin-bottom: 6px; }
+.rating-label { font-size: 0.85rem; color: #ccc; margin-bottom: 6px; }
 .rating-bar { display: flex; align-items: center; gap: 8px; }
-.rating-end { font-size: 0.7rem; color: #6b7394; font-weight: 600; width: 28px; text-align: center; }
+.rating-end { font-size: 0.7rem; color: #bbb; font-weight: 600; width: 28px; text-align: center; }
 .rating-track { flex: 1; height: 20px; background: linear-gradient(to right, #2a5a2a, #444, #8b0000); border-radius: 10px; position: relative; cursor: pointer; }
 .rating-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(255,255,255,0.12); border-radius: 10px 0 0 10px; pointer-events: none; }
 .rating-marker { position: absolute; top: -2px; width: 10px; height: 24px; background: #fff; border-radius: 5px; transform: translateX(-50%); box-shadow: 0 2px 4px rgba(0,0,0,0.3); pointer-events: none; }
 .rating-info { display: flex; justify-content: space-between; margin-top: 4px; font-size: 0.8rem; }
-.your-rating { color: #7ab8e0; }
-.avg-rating { color: #6b7394; }
+.your-rating { color: #d4af37; }
+.avg-rating { color: #aaa; }
 
 /* Jan 6 panel (accountability view) */
 .jan6-panel { background: linear-gradient(135deg, #1a1a2e 0%, #2a1a1a 100%); border: 2px solid #ff6b6b; border-radius: 10px; padding: 24px; margin-bottom: 24px; display: none; }
@@ -238,8 +238,8 @@ $pageStyles = <<<'CSS'
 .jan6-stats { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
 .jan6-stat { text-align: center; }
 .jan6-num { font-size: 2rem; color: #ff6b6b; font-weight: bold; }
-.jan6-label { font-size: 0.8rem; color: #6b7394; }
-.jan6-quote { font-style: italic; color: #8892a8; text-align: center; margin-top: 16px; font-size: 0.9rem; }
+.jan6-label { font-size: 0.8rem; color: #aaa; }
+.jan6-quote { font-style: italic; color: #ccc; text-align: center; margin-top: 16px; font-size: 0.9rem; }
 .jan6-quote cite { color: #ff6b6b; }
 
 /* Severity badge */
@@ -255,17 +255,17 @@ $pageStyles = <<<'CSS'
 /* Filter bar */
 .filter-bar { background: #141929; border: 1px solid #252d44; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; }
 .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.filter-label { font-size: 0.8rem; color: #6b7394; white-space: nowrap; }
+.filter-label { font-size: 0.8rem; color: #bbb; white-space: nowrap; }
 .filter-pills { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
-.filter-pill { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid #3a4468; background: #1a2038; color: #8892a8; transition: all 0.2s; }
+.filter-pill { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid #3a4468; background: #1a2038; color: #ccc; transition: all 0.2s; }
 .filter-pill:hover { border-color: #5a6488; }
 .filter-pill.active { border-color: currentColor; }
 .sort-select { padding: 4px 8px; background: #1a2038; border: 1px solid #3a4468; color: #e0e0e0; border-radius: 4px; font-size: 0.8rem; }
-.filter-count { font-size: 0.75rem; color: #6b7394; margin-left: 8px; }
+.filter-count { font-size: 0.75rem; color: #aaa; margin-left: 8px; }
 
 /* Official severity stats */
 .severity-summary { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.severity-avg { font-size: 0.8rem; color: #8892a8; }
+.severity-avg { font-size: 0.8rem; color: #bbb; }
 .severity-avg strong { font-family: monospace; }
 .severity-bar-mini { width: 80px; height: 6px; background: #252d44; border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
 .severity-bar-fill { height: 100%; border-radius: 3px; }
@@ -440,7 +440,7 @@ require_once dirname(__DIR__) . '/includes/nav.php';
                     </div>
                     <?php endif; ?>
                     <?php if ($t['target']): ?>
-                    <div style="font-size:0.8rem;color:#7ab8e0;margin-bottom:6px;">Target: <?= htmlspecialchars($t['target']) ?></div>
+                    <div style="font-size:0.8rem;color:#d4af37;margin-bottom:6px;">Target: <?= htmlspecialchars($t['target']) ?></div>
                     <?php endif; ?>
                     <div class="threat-desc"><?= nl2br(htmlspecialchars($t['description'])) ?></div>
                     <?php if ($t['source_url']): ?>
