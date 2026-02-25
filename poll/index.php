@@ -334,7 +334,7 @@ extract($navVars);
 
         <!-- Intro explainer -->
         <div class="intro-box">
-            <p>Every executive action scoring <strong>300 or higher</strong> on the <a href="/usa/executive.php" style="color:#d4af37">criminality scale</a> becomes a poll question here. These are documented threats to constitutional order &mdash; court orders defied, civil rights violated, public institutions dismantled. Note how low the bar is for impeachment: the Constitution requires only &ldquo;High Crimes and Misdemeanors&rdquo; &mdash; that&rsquo;s a <strong>31</strong> on this scale.</p>
+            <p>Every executive action scoring <strong>300 or higher</strong> on the <strong style="color:#d4af37">criminality scale</strong> becomes a poll question here. These are documented threats to constitutional order &mdash; court orders defied, civil rights violated, public institutions dismantled. Note how low the bar is for impeachment: the Constitution requires only &ldquo;High Crimes and Misdemeanors&rdquo; &mdash; that&rsquo;s a <strong>31</strong> on this scale.</p>
             <p><strong>Two audiences, two questions:</strong></p>
             <ul>
                 <li><strong>Citizens:</strong> &ldquo;Is this acceptable?&rdquo; &mdash; your moral judgment on the act</li>
