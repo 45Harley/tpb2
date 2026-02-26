@@ -614,7 +614,7 @@ $pageTitle = 'Our Story - The People\'s Branch';
 
     <!-- CIVIC POINTS COUNTER -->
     <div class="civic-counter">
-        <div class="points" id="civicPoints"><?= $sessionPoints ?></div>
+        <div class="points" id="civicPoints"><?= $points ?></div>
         <div class="label">civic points</div>
     </div>
 
@@ -1016,7 +1016,7 @@ HTML;
         document.cookie = 'tpb_civic_session=' + sessionId + '; path=/; max-age=31536000';
 
         // Points tracking
-        let civicPoints = <?= $sessionPoints ?>;
+        let civicPoints = <?= $points ?>;
         
         function updatePoints(newTotal) {
             if (newTotal > civicPoints) {
