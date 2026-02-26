@@ -19,6 +19,7 @@ require_once __DIR__ . '/../includes/severity.php';
 
 $dbUser = getUser($pdo);
 $bioguide = trim($_GET['bioguide'] ?? '');
+$repIdParam = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 $totalThreatPolls = (int)$pdo->query("SELECT COUNT(*) FROM polls WHERE poll_type = 'threat' AND active = 1")->fetchColumn();
 
@@ -37,6 +38,14 @@ if ($bioguide) {
         WHERE eo.bioguide_id = ? AND eo.is_current = 1
     ");
     $stmt->execute([$bioguide]);
+    $rep = $stmt->fetch();
+} elseif ($repIdParam) {
+    $stmt = $pdo->prepare("
+        SELECT eo.official_id, eo.full_name, eo.title, eo.party, eo.state_code, eo.bioguide_id
+        FROM elected_officials eo
+        WHERE eo.official_id = ? AND eo.is_current = 1
+    ");
+    $stmt->execute([$repIdParam]);
     $rep = $stmt->fetch();
 }
 
@@ -330,7 +339,7 @@ extract($navVars);
                 ?>
                     <tr>
                         <td><span class="severity-badge" style="background:<?= $zone['color'] ?>"><?= $r['severity_score'] ?></span></td>
-                        <td><a href="/usa/executive.php#threat-<?= $r['threat_id'] ?>" style="color:#e0e0e0;text-decoration:none;border-bottom:1px dotted #666;" title="View full threat detail"><?= htmlspecialchars(mb_strimwidth($r['title'], 0, 80, '...')) ?></a></td>
+                        <td><a href="/usa/executive.php#threat-<?= $r['threat_id'] ?>" style="color:#d4af37;text-decoration:underline;" title="View full threat detail"><?= htmlspecialchars(mb_strimwidth($r['title'], 0, 80, '...')) ?></a></td>
                         <td>
                             <?php if ($r['rep_position'] === 'yea'): ?>
                                 <span class="position-yea">Yea</span>

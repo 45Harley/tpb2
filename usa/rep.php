@@ -2,7 +2,6 @@
 /**
  * Rep Detail Page — Summary dashboard for a single representative
  * Usage: /usa/rep.php?id=698  (by official_id)
- *        /usa/rep.php?bioguide=B001277  (by bioguide_id)
  *
  * All dynamic from DB. Links out to digest + poll detail pages.
  */
@@ -28,14 +27,10 @@ $secondaryNav = [
 
 $congress = 119;
 
-// Find the rep
+// Find the rep by official_id only
 $repId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$bioguide = trim($_GET['bioguide'] ?? '');
 
-if ($bioguide) {
-    $stmt = $pdo->prepare("SELECT * FROM elected_officials WHERE bioguide_id = ? AND is_current = 1 LIMIT 1");
-    $stmt->execute([$bioguide]);
-} elseif ($repId) {
+if ($repId) {
     $stmt = $pdo->prepare("SELECT * FROM elected_officials WHERE official_id = ? AND is_current = 1 LIMIT 1");
     $stmt->execute([$repId]);
 } else {
@@ -358,7 +353,7 @@ require_once dirname(__DIR__) . '/includes/nav.php';
             </div>
             <?php endif; ?>
         </div>
-        <a class="detail-link" href="/poll/by-rep/?bioguide=<?= htmlspecialchars($bid) ?>">View full threat roll call &rarr;</a>
+        <a class="detail-link" href="/poll/by-rep/?id=<?= $oid ?>">View full threat roll call &rarr;</a>
     </div>
 
     <!-- Scorecard -->
