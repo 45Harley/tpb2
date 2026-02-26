@@ -269,6 +269,12 @@ function processPositions(array $positions, string $token, PDO $pdo, bool $dryRu
 
         $isChief = in_array($posType, ['c-jud', 'c-jus']);
         $isSenior = !empty($pos['date_retirement']) && empty($pos['date_termination']);
+
+        // SCOTUS justices don't take "senior status" — retirement means fully retired
+        if ($courtType === 'supreme' && $isSenior) {
+            $counts['skip']++;
+            continue;
+        }
         $fullName = buildName($person);
         $title = buildTitle($courtType, $isChief, $isSenior, $courtName);
 
