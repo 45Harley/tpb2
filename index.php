@@ -388,9 +388,9 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
         /* Default state styling — party delegation colors */
         .map-container svg .state path,
         .map-container svg .state circle {
-            fill: #1a2035 !important;
-            stroke: #1a2035 !important;
-            stroke-width: 1.5 !important;
+            fill: #1a2035;
+            stroke: #1a2035;
+            stroke-width: 1.5;
             cursor: pointer;
             transition: fill 0.2s, opacity 0.2s;
         }
