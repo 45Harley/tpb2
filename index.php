@@ -430,9 +430,12 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
             opacity: 0.6;
         }
         
-        /* Tooltip */
+        /* Tooltip — fixed center under map title */
         .map-tooltip {
             position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
             background: #1a1a1a;
             border: 1px solid #5080a0;
             color: #e0e0e0;
@@ -2475,8 +2478,6 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
                 
                 path.addEventListener('mousemove', (e) => {
                     const rect = document.getElementById('mapContainer').getBoundingClientRect();
-                    tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
-                    tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
                     lastMousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
                 });
                 
