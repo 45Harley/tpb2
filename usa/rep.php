@@ -105,6 +105,9 @@ $stmt = $pdo->prepare("
     SELECT rv.vote_id, rv.vote_question, rv.vote_date, rv.vote_result,
            mv.vote as member_vote, rv.chamber,
            rv.bill_type as rv_bill_type, rv.bill_number as rv_bill_number, rv.congress as rv_congress,
+           rv.yea_total, rv.nay_total, rv.present_total, rv.not_voting_total,
+           rv.r_yea, rv.r_nay, rv.d_yea, rv.d_nay, rv.i_yea, rv.i_nay,
+           rv.source_url,
            COALESCE(tb.short_title, tb.title) as bill_title
     FROM member_votes mv
     JOIN roll_call_votes rv ON mv.vote_id = rv.vote_id
@@ -338,16 +341,21 @@ $pageStyles = <<<'CSS'
     padding: 0;
     margin: 0;
 }
-.vote-list li {
-    padding: 8px 0;
+.vote-item {
     border-bottom: 1px solid #222;
+}
+.vote-item:last-child { border-bottom: none; }
+.vote-summary {
+    padding: 10px 0;
     font-size: 0.85em;
     color: #ccc;
     display: flex;
     gap: 10px;
     align-items: baseline;
+    cursor: pointer;
+    transition: background 0.15s;
 }
-.vote-list li:last-child { border-bottom: none; }
+.vote-summary:hover { background: rgba(212,175,55,0.05); margin: 0 -8px; padding: 10px 8px; border-radius: 4px; }
 .vote-position {
     font-weight: 700;
     font-size: 0.8em;
@@ -361,6 +369,35 @@ $pageStyles = <<<'CSS'
 .vote-date { color: #666; font-size: 0.85em; white-space: nowrap; }
 .vote-question { flex: 1; }
 .vote-action { display: block; color: #666; font-size: 0.85em; font-style: italic; }
+.vote-expand-icon { color: #555; font-size: 0.8em; transition: transform 0.2s; }
+.vote-item.open .vote-expand-icon { transform: rotate(90deg); }
+
+/* Vote detail panel */
+.vote-detail {
+    display: none;
+    padding: 10px 0 14px 0;
+    font-size: 0.82em;
+    color: #aaa;
+    line-height: 1.6;
+}
+.vote-item.open .vote-detail { display: block; }
+.vote-detail-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.vote-detail-label { color: #888; min-width: 80px; }
+.vote-detail-value { color: #ccc; }
+.vote-party-bar {
+    display: flex; height: 16px; border-radius: 8px; overflow: hidden;
+    background: #2a2a3e; margin: 4px 0 6px; max-width: 300px;
+}
+.vote-party-bar .bar-r { background: #dc2626; height: 100%; }
+.vote-party-bar .bar-d { background: #2563eb; height: 100%; }
+.vote-party-bar .bar-i { background: #7c3aed; height: 100%; }
+.vote-party-breakdown { display: flex; gap: 12px; font-size: 0.9em; }
+.vote-party-breakdown span { white-space: nowrap; }
+.party-r-text { color: #ef4444; }
+.party-d-text { color: #3b82f6; }
+.party-i-text { color: #8b5cf6; }
+.vote-source-link { color: #d4af37; text-decoration: none; font-size: 0.9em; }
+.vote-source-link:hover { text-decoration: underline; }
 
 .empty-note { color: #666; font-style: italic; font-size: 0.9em; }
 
@@ -503,30 +540,80 @@ require_once dirname(__DIR__) . '/includes/nav.php';
     <div class="section-box">
         <h2>Recent Votes</h2>
         <?php if ($recentVotes): ?>
-        <ul class="vote-list">
+        <div class="vote-list">
             <?php foreach ($recentVotes as $v):
                 $pos = strtolower($v['member_vote'] ?? '');
                 $posClass = ($pos === 'yea' || $pos === 'aye') ? 'vote-yea' : (($pos === 'nay' || $pos === 'no') ? 'vote-nay' : 'vote-other');
                 $posLabel = ucfirst($v['member_vote'] ?? 'N/A');
+                $totalYeaNay = (int)$v['yea_total'] + (int)$v['nay_total'];
+                $yeaPct = $totalYeaNay > 0 ? round($v['yea_total'] / $totalYeaNay * 100) : 0;
+                $nayPct = 100 - $yeaPct;
             ?>
-            <li>
-                <span class="vote-date"><?= $v['vote_date'] ?></span>
-                <span class="vote-position <?= $posClass ?>"><?= $posLabel ?></span>
-                <span class="vote-question">
-                    <?php if (!empty($v['bill_title'])): ?>
-                        <?= htmlspecialchars(mb_strimwidth($v['bill_title'], 0, 120, '...')) ?>
-                        <span class="vote-action"><?= htmlspecialchars($v['_action'] ?? $v['vote_question']) ?> &mdash; <?= htmlspecialchars($v['vote_result']) ?></span>
-                    <?php elseif (!empty($v['_bill_ref'])): ?>
-                        <strong><?= htmlspecialchars($v['_bill_ref']) ?></strong>
-                        <span class="vote-action"><?= htmlspecialchars($v['_action'] ?? '') ?> &mdash; <?= htmlspecialchars($v['vote_result']) ?></span>
-                    <?php else: ?>
-                        <?= htmlspecialchars($v['vote_question']) ?>
-                        <span class="vote-action"><?= htmlspecialchars($v['vote_result']) ?></span>
+            <div class="vote-item" onclick="this.classList.toggle('open')">
+                <div class="vote-summary">
+                    <span class="vote-date"><?= $v['vote_date'] ?></span>
+                    <span class="vote-position <?= $posClass ?>"><?= $posLabel ?></span>
+                    <span class="vote-question">
+                        <?php if (!empty($v['bill_title'])): ?>
+                            <?= htmlspecialchars(mb_strimwidth($v['bill_title'], 0, 120, '...')) ?>
+                        <?php elseif (!empty($v['_bill_ref'])): ?>
+                            <strong><?= htmlspecialchars($v['_bill_ref']) ?></strong>
+                            <?php if (!empty($v['_action'])): ?>
+                                <span class="vote-action"><?= htmlspecialchars($v['_action']) ?></span>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <?= htmlspecialchars($v['vote_question']) ?>
+                        <?php endif; ?>
+                    </span>
+                    <span class="vote-expand-icon">&#9654;</span>
+                </div>
+                <div class="vote-detail">
+                    <?php if (!empty($v['bill_title']) && !empty($v['_action'])): ?>
+                        <div class="vote-detail-row">
+                            <span class="vote-detail-label">Action</span>
+                            <span class="vote-detail-value"><?= htmlspecialchars($v['_action'] ?? $v['vote_question']) ?></span>
+                        </div>
+                    <?php elseif (!empty($v['bill_title'])): ?>
+                        <div class="vote-detail-row">
+                            <span class="vote-detail-label">Action</span>
+                            <span class="vote-detail-value"><?= htmlspecialchars($v['vote_question']) ?></span>
+                        </div>
                     <?php endif; ?>
-                </span>
-            </li>
+                    <div class="vote-detail-row">
+                        <span class="vote-detail-label">Result</span>
+                        <span class="vote-detail-value"><?= htmlspecialchars($v['vote_result']) ?></span>
+                    </div>
+                    <div class="vote-detail-row">
+                        <span class="vote-detail-label">Tally</span>
+                        <span class="vote-detail-value"><?= $v['yea_total'] ?> yea, <?= $v['nay_total'] ?> nay<?= $v['not_voting_total'] ? ", {$v['not_voting_total']} not voting" : '' ?></span>
+                    </div>
+                    <?php if ($totalYeaNay > 0): ?>
+                    <div class="vote-party-bar">
+                        <?php if ((int)$v['r_yea'] + (int)$v['r_nay'] > 0): ?>
+                            <div class="bar-r" style="width:<?= round(((int)$v['r_yea'] + (int)$v['r_nay']) / $totalYeaNay * 100) ?>%" title="R: <?= $v['r_yea'] ?> yea, <?= $v['r_nay'] ?> nay"></div>
+                        <?php endif; ?>
+                        <?php if ((int)$v['d_yea'] + (int)$v['d_nay'] > 0): ?>
+                            <div class="bar-d" style="width:<?= round(((int)$v['d_yea'] + (int)$v['d_nay']) / $totalYeaNay * 100) ?>%" title="D: <?= $v['d_yea'] ?> yea, <?= $v['d_nay'] ?> nay"></div>
+                        <?php endif; ?>
+                        <?php if ((int)$v['i_yea'] + (int)$v['i_nay'] > 0): ?>
+                            <div class="bar-i" style="width:<?= round(((int)$v['i_yea'] + (int)$v['i_nay']) / $totalYeaNay * 100) ?>%" title="I: <?= $v['i_yea'] ?> yea, <?= $v['i_nay'] ?> nay"></div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="vote-party-breakdown">
+                        <span class="party-r-text">R: <?= $v['r_yea'] ?>Y / <?= $v['r_nay'] ?>N</span>
+                        <span class="party-d-text">D: <?= $v['d_yea'] ?>Y / <?= $v['d_nay'] ?>N</span>
+                        <?php if ((int)$v['i_yea'] + (int)$v['i_nay'] > 0): ?>
+                            <span class="party-i-text">I: <?= $v['i_yea'] ?>Y / <?= $v['i_nay'] ?>N</span>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($v['source_url']): ?>
+                        <a class="vote-source-link" href="<?= htmlspecialchars($v['source_url']) ?>" target="_blank" rel="noopener">View official record &rarr;</a>
+                    <?php endif; ?>
+                </div>
+            </div>
             <?php endforeach; ?>
-        </ul>
+        </div>
         <a class="detail-link" href="/usa/digest.php?rep=<?= $oid ?>">View full voting record &rarr;</a>
         <?php else: ?>
         <p class="empty-note">No recorded votes yet.</p>
