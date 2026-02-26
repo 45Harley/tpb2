@@ -2478,11 +2478,17 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
                 
                 path.addEventListener('mousemove', (e) => {
                     const rect = document.getElementById('mapContainer').getBoundingClientRect();
+                    tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
+                    tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+                    tooltip.style.transform = 'none';
                     lastMousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
                 });
                 
                 path.addEventListener('mouseleave', () => {
                     tooltip.classList.remove('visible');
+                    tooltip.style.left = '50%';
+                    tooltip.style.top = '8px';
+                    tooltip.style.transform = 'translateX(-50%)';
                     clearHoverTimer();
                 });
                 
