@@ -273,6 +273,13 @@ $pageStyles = <<<'CSS'
 .toast { position: fixed; bottom: 20px; right: 20px; background: #2a5a2a; color: #88c088; padding: 12px 24px; border-radius: 8px; display: none; z-index: 100; font-size: 0.9rem; }
 .toast.show { display: block; }
 
+/* Photo lightbox */
+.person-photo[src] { cursor: pointer; }
+.photo-lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; visibility: hidden; transition: opacity 0.2s; }
+.photo-lightbox.visible { opacity: 1; visibility: visible; }
+.photo-lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+.photo-lightbox-name { position: absolute; bottom: 30px; color: #d4af37; font-size: 1.2em; font-weight: 600; text-align: center; width: 100%; }
+
 @media (max-width: 600px) {
     .exec-page { padding: 24px 16px; }
     .person-header { flex-wrap: wrap; gap: 12px; }
@@ -344,6 +351,12 @@ require_once dirname(__DIR__) . '/includes/nav.php';
             <div class="jan6-stat"><div class="jan6-num">33+</div><div class="jan6-label">Charged with New Crimes</div></div>
         </div>
         <p class="jan6-quote">"A private militia of proven street fighters."<br><cite>&mdash; Rep. Jamie Raskin</cite></p>
+    </div>
+
+    <!-- Photo lightbox -->
+    <div class="photo-lightbox" id="photoLightbox">
+        <img src="" alt="">
+        <div class="photo-lightbox-name"></div>
     </div>
 
     <!-- People Cards -->
@@ -503,6 +516,33 @@ require_once dirname(__DIR__) . '/includes/nav.php';
 <div class="toast" id="toast">Action logged!</div>
 
 <script>
+// Photo lightbox
+(function() {
+    var lb = document.getElementById('photoLightbox');
+    var lbImg = lb.querySelector('img');
+    var lbName = lb.querySelector('.photo-lightbox-name');
+    document.querySelectorAll('.person-photo[src]').forEach(function(img) {
+        img.addEventListener('click', function(e) {
+            e.stopPropagation();
+            lbImg.src = img.src;
+            var card = img.closest('.person-card');
+            var name = card ? card.querySelector('.person-name') : null;
+            lbName.textContent = name ? name.textContent : '';
+            lb.classList.add('visible');
+        });
+    });
+    lb.addEventListener('click', function() {
+        lb.classList.remove('visible');
+        lbImg.src = '';
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && lb.classList.contains('visible')) {
+            lb.classList.remove('visible');
+            lbImg.src = '';
+        }
+    });
+})();
+
 // View toggle
 var currentView = localStorage.getItem('tpb_exec_view') || 'civics';
 setView(currentView, true);
