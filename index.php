@@ -36,6 +36,38 @@ if ($pdo) {
     $activeStates = $stmt->fetchAll(PDO::FETCH_COLUMN);
 }
 
+// Congressional delegation data for map coloring
+$congress = 119;
+$stateData = [];
+if ($pdo) {
+    $reps = $pdo->prepare("
+        SELECT eo.party, eo.state_code, rs.chamber
+        FROM rep_scorecard rs
+        JOIN elected_officials eo ON rs.official_id = eo.official_id
+        WHERE rs.congress = ?
+    ");
+    $reps->execute([$congress]);
+    foreach ($reps->fetchAll(PDO::FETCH_ASSOC) as $rep) {
+        $sc = $rep['state_code'];
+        if (!isset($stateData[$sc])) {
+            $stateData[$sc] = ['dem' => 0, 'rep' => 0, 'ind' => 0];
+        }
+        $p = substr($rep['party'], 0, 1);
+        if ($p === 'D') $stateData[$sc]['dem']++;
+        elseif ($p === 'R') $stateData[$sc]['rep']++;
+        else $stateData[$sc]['ind']++;
+    }
+    $stRows = $pdo->query("SELECT abbreviation, state_name FROM states")->fetchAll(PDO::FETCH_ASSOC);
+    $stateNames = [];
+    foreach ($stRows as $s) $stateNames[$s['abbreviation']] = $s['state_name'];
+    foreach ($stateData as $sc => &$sd) {
+        $sd['total'] = $sd['dem'] + $sd['rep'] + $sd['ind'];
+        $sd['name'] = $stateNames[$sc] ?? $sc;
+    }
+    unset($sd);
+}
+$stateDataJson = json_encode($stateData, JSON_UNESCAPED_UNICODE);
+
 // Get points_log points for this session (even if not logged in user)
 $sessionPoints = 0;
 if ($sessionId && $pdo) {
@@ -353,49 +385,49 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
             display: block;
         }
         
-        /* Default state styling */
-        /* ============================================================
-           CRITICAL: CSS ORDER MATTERS FOR MAP HIGHLIGHTING!
-           active-gold rules MUST come immediately after hover rules,
-           BEFORE the borders rule. If reordered, gold highlighting 
-           breaks on shared state borders (e.g., OK/TX sliver bug).
-           See memory edit #21. Do not reorder without testing.
-           ============================================================ */
-        /* TPB Map Colors — updated 2/1/2026 */
+        /* Default state styling — party delegation colors */
         .map-container svg .state path,
         .map-container svg .state circle {
-            fill: #2a3040 !important;
-            stroke: #2a3040 !important;
+            fill: #1a2035 !important;
+            stroke: #1a2035 !important;
             stroke-width: 1.5 !important;
             cursor: pointer;
-            transition: fill 0.2s;
+            transition: fill 0.2s, opacity 0.2s;
         }
-        
+
         .map-container svg .state path:hover,
         .map-container svg .state circle:hover {
-            fill: #31be27 !important;
+            opacity: 0.85;
+            stroke: #f0f2f8 !important;
+            stroke-width: 1.5 !important;
         }
-        
-        /* Active states with users */
-        .map-container svg .state path.active-gold,
-        .map-container svg .state circle.active-gold {
-            fill: #5080a0 !important;
-            stroke: #5080a0 !important;
-            stroke-width: 2px !important;
-        }
-        
-        .map-container svg .state path.active-gold:hover,
-        .map-container svg .state circle.active-gold:hover {
-            fill: #62a4d0 !important;
-            stroke: #62a4d0 !important;
-        }
-        
-        /* Border lines - light borders for definition */
+
+        /* Border lines */
         .map-container svg .borders path {
             pointer-events: none !important;
             stroke: #d9dde8 !important;
             stroke-width: 1.5 !important;
             fill: none !important;
+        }
+
+        /* State labels */
+        .map-container svg .state-label {
+            font-size: 10px;
+            font-weight: 700;
+            fill: #f0f2f8;
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+            letter-spacing: 0.5px;
+        }
+        .map-container svg .state-label.small-state {
+            font-size: 9px;
+        }
+        .map-container svg .label-line {
+            stroke: #8892a8;
+            stroke-width: 0.7;
+            pointer-events: none;
+            opacity: 0.6;
         }
         
         /* Tooltip */
@@ -979,12 +1011,20 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
             border-radius: 3px;
         }
         
-        .legend-color.active {
-            background: #5080a0;
+        .legend-color.dem {
+            background: #2563eb;
         }
-        
-        .legend-color.coming {
-            background: #2a3040;
+
+        .legend-color.mixed {
+            background: #7c3aed;
+        }
+
+        .legend-color.rep {
+            background: #dc2626;
+        }
+
+        .legend-color.nodata {
+            background: #1a2035;
             border: 1px solid #444;
         }
         
@@ -1324,12 +1364,20 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
         
         <div class="map-legend" id="mapLegend">
             <div class="legend-item">
-                <div class="legend-color active"></div>
-                <span>Active</span>
+                <div class="legend-color dem"></div>
+                <span>All Democrat</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color coming"></div>
-                <span>Click to Join</span>
+                <div class="legend-color mixed"></div>
+                <span>Mixed</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color rep"></div>
+                <span>All Republican</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color nodata"></div>
+                <span>No data</span>
             </div>
         </div>
     </section>
@@ -1371,7 +1419,10 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
         
         // Active states (from database)
         const activeStates = <?= json_encode(array_map('strtoupper', $activeStates)) ?>;
-        
+
+        // Delegation data for map coloring
+        const stateData = <?= $stateDataJson ?>;
+
         // State names
         const stateNames = {
             'al': 'Alabama', 'ak': 'Alaska', 'az': 'Arizona', 'ar': 'Arkansas', 'ca': 'California',
@@ -2234,30 +2285,155 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
         });
         
         // =====================================================
+        // MAP COLORING FUNCTIONS
+        // =====================================================
+        function getStateCode(el) {
+            var classes = el.className.baseVal ? el.className.baseVal.split(/\s+/) : [];
+            for (var i = 0; i < classes.length; i++) {
+                var c = classes[i].toUpperCase();
+                if (c.length === 2 && stateData[c]) return c;
+            }
+            for (var i = 0; i < classes.length; i++) {
+                if (classes[i].length === 2 && /^[a-z]{2}$/.test(classes[i])) return classes[i].toUpperCase();
+            }
+            return null;
+        }
+
+        function colorMap() {
+            var svgEl = document.querySelector('#mapHolder svg');
+            if (!svgEl) return;
+            svgEl.querySelectorAll('.state path, .state circle').forEach(function(el) {
+                var sc = getStateCode(el);
+                if (!sc) return;
+                var sd = stateData[sc];
+                if (!sd || sd.total === 0) {
+                    el.style.fill = '#1a2035';
+                    return;
+                }
+                var total = sd.total;
+                var dPct = sd.dem / total;
+                var rPct = sd.rep / total;
+                if (dPct === 1) el.style.fill = '#2563eb';
+                else if (rPct === 1) el.style.fill = '#dc2626';
+                else {
+                    var r = Math.round(37 + (220 - 37) * rPct);
+                    var g = Math.round(99 - 60 * Math.abs(dPct - rPct));
+                    var b = Math.round(235 - (235 - 38) * rPct);
+                    el.style.fill = 'rgb(' + r + ',' + g + ',' + b + ')';
+                }
+            });
+        }
+
+        function addStateLabels() {
+            var svgEl = document.querySelector('#mapHolder svg');
+            if (!svgEl) return;
+            var ns = 'http://www.w3.org/2000/svg';
+            var smallStates = {
+                CT: { dx: 40, dy: -10 },
+                DE: { dx: 38, dy: 5 },
+                DC: { dx: 42, dy: 18 },
+                MA: { dx: 40, dy: -12 },
+                MD: { dx: 38, dy: 22 },
+                NH: { dx: 36, dy: -18 },
+                NJ: { dx: 36, dy: 8 },
+                RI: { dx: 36, dy: 4 },
+                VT: { dx: 32, dy: -12 }
+            };
+            var nudge = {
+                FL: { dx: 20, dy: 12 },
+                LA: { dx: -10, dy: 5 },
+                MI: { dx: 18, dy: 20 },
+                AK: { dx: 0, dy: 5 },
+                HI: { dx: 0, dy: 5 },
+                CA: { dx: -5, dy: 10 },
+                ID: { dx: 0, dy: 8 },
+                OK: { dx: 10, dy: 0 },
+                TX: { dx: 0, dy: 8 },
+                NY: { dx: 8, dy: 5 },
+                VA: { dx: 5, dy: -3 }
+            };
+            var labelGroup = document.createElementNS(ns, 'g');
+            labelGroup.setAttribute('class', 'state-labels');
+            var statePaths = {};
+            svgEl.querySelectorAll('.state path, .state circle').forEach(function(el) {
+                var sc = getStateCode(el);
+                if (!sc) return;
+                if (!statePaths[sc]) statePaths[sc] = [];
+                statePaths[sc].push(el);
+            });
+            Object.keys(statePaths).forEach(function(sc) {
+                var paths = statePaths[sc];
+                var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                paths.forEach(function(p) {
+                    try {
+                        var bb = p.getBBox();
+                        if (bb.x < minX) minX = bb.x;
+                        if (bb.y < minY) minY = bb.y;
+                        if (bb.x + bb.width > maxX) maxX = bb.x + bb.width;
+                        if (bb.y + bb.height > maxY) maxY = bb.y + bb.height;
+                    } catch(e) {}
+                });
+                if (minX === Infinity) return;
+                var cx = (minX + maxX) / 2;
+                var cy = (minY + maxY) / 2;
+                if (nudge[sc]) { cx += nudge[sc].dx; cy += nudge[sc].dy; }
+                var isSmall = !!smallStates[sc];
+                if (isSmall) {
+                    var off = smallStates[sc];
+                    var lx = cx + off.dx;
+                    var ly = cy + off.dy;
+                    var line = document.createElementNS(ns, 'line');
+                    line.setAttribute('x1', cx);
+                    line.setAttribute('y1', cy);
+                    line.setAttribute('x2', lx);
+                    line.setAttribute('y2', ly);
+                    line.setAttribute('class', 'label-line');
+                    labelGroup.appendChild(line);
+                    var txt = document.createElementNS(ns, 'text');
+                    txt.setAttribute('x', lx);
+                    txt.setAttribute('y', ly);
+                    txt.setAttribute('class', 'state-label small-state');
+                    txt.textContent = sc;
+                    labelGroup.appendChild(txt);
+                } else {
+                    var txt = document.createElementNS(ns, 'text');
+                    txt.setAttribute('x', cx);
+                    txt.setAttribute('y', cy);
+                    txt.setAttribute('class', 'state-label');
+                    txt.textContent = sc;
+                    labelGroup.appendChild(txt);
+                }
+            });
+            svgEl.appendChild(labelGroup);
+        }
+
+        function getTooltipText(sc) {
+            var sd = stateData[sc];
+            if (!sd) return { name: sc, sub: 'No data' };
+            var name = sd.name;
+            var sub = sd.dem + 'D / ' + sd.rep + 'R' + (sd.ind > 0 ? ' / ' + sd.ind + 'I' : '') + ' \u00b7 ' + sd.total + ' members';
+            return { name: name, sub: sub };
+        }
+
+        // =====================================================
         // SVG MAP INITIALIZATION
         // =====================================================
         fetch('usa-map.svg')
             .then(response => response.text())
             .then(svgContent => {
                 document.getElementById('mapHolder').innerHTML = svgContent;
-                
-                const stateGroup = document.querySelector('.state');
-                if (stateGroup) {
-                    activeStates.forEach(abbr => {
-                        const statePath = stateGroup.querySelector('.' + abbr.toLowerCase());
-                        if (statePath) {
-                            statePath.classList.add('active-gold');
-                        }
-                    });
-                }
-                
+
                 // Move borders group to end of SVG so it renders ON TOP of all state fills
                 const svg = document.querySelector('#mapHolder svg');
                 const bordersGroup = svg ? svg.querySelector('.borders') : null;
                 if (svg && bordersGroup) {
                     svg.appendChild(bordersGroup);
                 }
-                
+
+                // Color states by party delegation and add 2-letter labels
+                colorMap();
+                addStateLabels();
+
                 initSvgMap();
             })
             .catch(err => {
@@ -2273,14 +2449,14 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
                 if (!stateClass) return;
                 
                 const stateName = stateNames[stateClass] || stateClass.toUpperCase();
-                const isActive = activeStates.includes(stateClass.toUpperCase());
+                const sc = stateClass.toUpperCase();
+                const tt = getTooltipText(sc);
                 let lastMousePos = { x: 0, y: 0 };
-                
+
                 // Hover → tooltip
                 path.addEventListener('mouseenter', (e) => {
-                    tooltip.querySelector('.state-name').textContent = stateName;
-                    tooltip.querySelector('.state-stats').textContent = isActive ? 'Active — Click to explore' : 'Click to explore';
-                    tooltip.querySelector('.state-stats').classList.toggle('coming-soon', !isActive);
+                    tooltip.querySelector('.state-name').textContent = tt.name;
+                    tooltip.querySelector('.state-stats').textContent = tt.sub;
                     tooltip.classList.add('visible');
                     
                     // Timer for info modal
