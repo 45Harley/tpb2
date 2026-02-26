@@ -104,6 +104,7 @@ $bills = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $pdo->prepare("
     SELECT rv.vote_id, rv.vote_question, rv.vote_date, rv.vote_result,
            mv.vote as member_vote, rv.chamber,
+           rv.bill_type as rv_bill_type, rv.bill_number as rv_bill_number, rv.congress as rv_congress,
            COALESCE(tb.short_title, tb.title) as bill_title
     FROM member_votes mv
     JOIN roll_call_votes rv ON mv.vote_id = rv.vote_id
@@ -115,6 +116,72 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$oid]);
 $recentVotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Parse bill refs from vote_question for Senate votes missing bill_type
+// Map display prefixes → tracked_bills bill_type codes
+$billPrefixMap = [
+    'H.R.'       => 'hr',     'S.'         => 's',
+    'H.J.Res.'   => 'hjres',  'S.J.Res.'   => 'sjres',
+    'H.Res.'     => 'hres',   'S.Res.'     => 'sres',
+    'H.Con.Res.' => 'hconres','S.Con.Res.' => 'sconres',
+];
+// Sorted longest-first so "S.J.Res." matches before "S."
+$prefixPattern = implode('|', array_map('preg_quote', array_keys($billPrefixMap)));
+
+$parsedLookups = []; // index => [bill_type, bill_number]
+foreach ($recentVotes as $i => &$v) {
+    // Already matched via JOIN
+    if (!empty($v['bill_title'])) continue;
+
+    $q = $v['vote_question'];
+
+    // Parse procedural action + bill ref
+    if (preg_match('/^On (?:the )?(.+?)\s+(?:(' . $prefixPattern . ')\s*(\d+))/', $q, $m)) {
+        $v['_action'] = trim($m[1]);
+        $v['_bill_ref'] = $m[2] . ' ' . $m[3];
+        $bt = $billPrefixMap[$m[2]] ?? null;
+        $bn = (int)$m[3];
+        if ($bt) $parsedLookups[$i] = [$bt, $bn];
+    } elseif (preg_match('/^On (?:the )?(.+?)\s+PN(\d+)/', $q, $m)) {
+        $v['_action'] = trim($m[1]);
+        $v['_bill_ref'] = 'PN' . $m[2];
+    } elseif (preg_match('/\((.+?(' . $prefixPattern . ')\s*(\d+).*?)\)/', $q, $m2)) {
+        // Parenthetical ref: "On the Motion (Motion to Concur in the House Amendment to S. 1071)"
+        $v['_bill_ref'] = $m2[2] . ' ' . $m2[3];
+        $bt = $billPrefixMap[$m2[2]] ?? null;
+        $bn = (int)$m2[3];
+        if ($bt) $parsedLookups[$i] = [$bt, $bn];
+        // Use the parenthetical content (minus bill ref) as action
+        $v['_action'] = trim(preg_replace('/\s*' . preg_quote($m2[2]) . '\s*' . $m2[3] . '/', '', $m2[1]));
+    }
+}
+unset($v);
+
+// Batch-lookup parsed bill refs in tracked_bills
+if ($parsedLookups) {
+    $conditions = [];
+    $params = [];
+    foreach ($parsedLookups as $pair) {
+        $conditions[] = "(bill_type = ? AND bill_number = ? AND congress = ?)";
+        $params[] = $pair[0];
+        $params[] = $pair[1];
+        $params[] = $congress;
+    }
+    $sql = "SELECT bill_type, bill_number, COALESCE(short_title, title) as bill_title FROM tracked_bills WHERE " . implode(' OR ', $conditions);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $titleMap = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $titleMap[$row['bill_type'] . ':' . $row['bill_number']] = $row['bill_title'];
+    }
+
+    foreach ($parsedLookups as $i => $pair) {
+        $key = $pair[0] . ':' . $pair[1];
+        if (isset($titleMap[$key])) {
+            $recentVotes[$i]['bill_title'] = $titleMap[$key];
+        }
+    }
+}
 
 $pageTitle = htmlspecialchars($rep['full_name']) . ' — The People\'s Branch';
 
@@ -446,11 +513,15 @@ require_once dirname(__DIR__) . '/includes/nav.php';
                 <span class="vote-date"><?= $v['vote_date'] ?></span>
                 <span class="vote-position <?= $posClass ?>"><?= $posLabel ?></span>
                 <span class="vote-question">
-                    <?php if ($v['bill_title']): ?>
+                    <?php if (!empty($v['bill_title'])): ?>
                         <?= htmlspecialchars(mb_strimwidth($v['bill_title'], 0, 120, '...')) ?>
-                        <span class="vote-action"><?= htmlspecialchars($v['vote_question']) ?></span>
+                        <span class="vote-action"><?= htmlspecialchars($v['_action'] ?? $v['vote_question']) ?> &mdash; <?= htmlspecialchars($v['vote_result']) ?></span>
+                    <?php elseif (!empty($v['_bill_ref'])): ?>
+                        <strong><?= htmlspecialchars($v['_bill_ref']) ?></strong>
+                        <span class="vote-action"><?= htmlspecialchars($v['_action'] ?? '') ?> &mdash; <?= htmlspecialchars($v['vote_result']) ?></span>
                     <?php else: ?>
-                        <?= htmlspecialchars(mb_strimwidth($v['vote_question'], 0, 120, '...')) ?>
+                        <?= htmlspecialchars($v['vote_question']) ?>
+                        <span class="vote-action"><?= htmlspecialchars($v['vote_result']) ?></span>
                     <?php endif; ?>
                 </span>
             </li>
