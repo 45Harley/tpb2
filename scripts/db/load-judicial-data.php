@@ -398,15 +398,28 @@ if ($step === 'all' || $step === 'scotus') {
     foreach ($counts as $k => $v) $totals[$k] += $v;
 }
 
+// ─── Helper: fetch positions by jurisdiction + specific position types ───
+
+function fetchByJurisdiction(string $baseUrl, string $token, string $jurisdiction, array $posTypes): array {
+    $all = [];
+    foreach ($posTypes as $pt) {
+        $url = "$baseUrl/positions/?court__jurisdiction=$jurisdiction&position_type=$pt&format=json";
+        echo "    Fetching position_type=$pt ...\n";
+        $batch = clGetAll($url, $token);
+        $all = array_merge($all, $batch);
+        echo "    Got " . count($batch) . " ($pt)\n";
+    }
+    return $all;
+}
+
 // ══════════════════════════════════════════════════
 // STEP 2: Circuit Courts
 // ══════════════════════════════════════════════════
 if ($step === 'all' || $step === 'circuits') {
     echo "── Step 2: Circuit Courts ──\n";
 
-    $url = "$baseUrl/positions/?court__jurisdiction=F&format=json";
-    echo "  Fetching circuit court positions (filtering active in PHP)...\n";
-    $positions = clGetAll($url, $token);
+    $judgeTypes = ['jud', 'c-jud', 'ret-senior-jud'];
+    $positions = fetchByJurisdiction($baseUrl, $token, 'F', $judgeTypes);
 
     // Filter out SCOTUS (jurisdiction F includes scotus)
     $positions = array_filter($positions, function($pos) {
@@ -415,7 +428,7 @@ if ($step === 'all' || $step === 'circuits') {
         return true;
     });
     $positions = array_values($positions);
-    echo "  Got " . count($positions) . " circuit positions (excluding SCOTUS)\n";
+    echo "  Total: " . count($positions) . " circuit positions (excluding SCOTUS)\n";
 
     $counts = processPositions($positions, $token, $pdo, $dryRun, 'CIRCUIT');
     echo "  Circuits: {$counts['insert']} inserted, {$counts['update']} updated, {$counts['skip']} skipped\n\n";
@@ -428,10 +441,9 @@ if ($step === 'all' || $step === 'circuits') {
 if ($step === 'all' || $step === 'districts') {
     echo "── Step 3: District Courts ──\n";
 
-    $url = "$baseUrl/positions/?court__jurisdiction=FD&format=json";
-    echo "  Fetching district court positions (filtering active in PHP)...\n";
-    $positions = clGetAll($url, $token);
-    echo "  Got " . count($positions) . " district positions\n";
+    $judgeTypes = ['jud', 'c-jud', 'ret-senior-jud'];
+    $positions = fetchByJurisdiction($baseUrl, $token, 'FD', $judgeTypes);
+    echo "  Total: " . count($positions) . " district positions\n";
 
     $counts = processPositions($positions, $token, $pdo, $dryRun, 'DISTRICT');
     echo "  Districts: {$counts['insert']} inserted, {$counts['update']} updated, {$counts['skip']} skipped\n\n";
