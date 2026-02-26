@@ -255,7 +255,7 @@ extract($navVars);
             <div class="breadcrumb"><a href="/poll/by-rep/">By Rep</a> &rsaquo; <?= htmlspecialchars($rep['full_name']) ?></div>
             <div class="page-header">
                 <h1>Roll Call: <?= htmlspecialchars($rep['full_name']) ?></h1>
-                <p class="subtitle">Position on <?= $totalThreatPolls ?> documented executive threats scored 300+</p>
+                <p class="subtitle">Position on <?= $totalThreatPolls ?> documented threats scored 300+</p>
             </div>
         <?php elseif ($viewState): ?>
             <div class="page-header">
@@ -279,7 +279,7 @@ extract($navVars);
         <?php if ($rep): ?>
             <!-- Rep detail intro -->
             <div class="intro-box">
-                <p>The full roll call for <?= htmlspecialchars($rep['full_name']) ?>. Every executive threat scored 300+ is listed with their position alongside how <?= htmlspecialchars($rep['state_code']) ?> citizens voted on the same threat. The &ldquo;gap&rdquo; column shows where your representative diverges from constituents &mdash; or stays silent.</p>
+                <p>The full roll call for <?= htmlspecialchars($rep['full_name']) ?>. Every threat scored 300+ is listed with their position alongside how <?= htmlspecialchars($rep['state_code']) ?> citizens voted on the same threat. The &ldquo;gap&rdquo; column shows where your representative diverges from constituents &mdash; or stays silent.</p>
             </div>
 
             <!-- Rep detail -->
@@ -379,7 +379,7 @@ extract($navVars);
         <?php elseif ($viewState): ?>
             <!-- State delegation intro -->
             <div class="intro-box">
-                <p>Your <?= htmlspecialchars($viewState['state_name']) ?> delegation &mdash; senators and representatives &mdash; and how each responded to <?= $totalThreatPolls ?> documented executive threats. A high silence rate means they haven't weighed in. Click a name to see their full roll call, threat by threat, compared to how <?= htmlspecialchars($viewState['state_name']) ?> citizens voted.</p>
+                <p>Your <?= htmlspecialchars($viewState['state_name']) ?> delegation &mdash; senators and representatives &mdash; and how each responded to <?= $totalThreatPolls ?> documented threats. A high silence rate means they haven't weighed in. Click a name to see their full roll call, threat by threat, compared to how <?= htmlspecialchars($viewState['state_name']) ?> citizens voted.</p>
             </div>
 
             <!-- State switcher -->
@@ -423,7 +423,7 @@ extract($navVars);
         <?php else: ?>
             <!-- No state: show picker -->
             <div class="intro-box">
-                <p>See how your congressional delegation responded to documented executive threats. Select your state below to view your senators and representatives, their silence rates, and how their positions compare to citizen votes.</p>
+                <p>See how your congressional delegation responded to documented threats. Select your state below to view your senators and representatives, their silence rates, and how their positions compare to citizen votes.</p>
             </div>
 
             <div class="no-state-prompt">

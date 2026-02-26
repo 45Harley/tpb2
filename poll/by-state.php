@@ -199,7 +199,7 @@ extract($navVars);
                 <div class="threat-row">
                     <div class="threat-row-header">
                         <span class="severity-badge" style="background: <?= $zone['color'] ?>"><?= $t['severity_score'] ?> &mdash; <?= $zone['label'] ?></span>
-                        <span class="threat-title"><a href="/usa/executive.php#threat-<?= $t['threat_id'] ?>" style="color:inherit;text-decoration:none;border-bottom:1px dotted #666;" title="View full threat detail"><?= htmlspecialchars($t['title']) ?></a></span>
+                        <span class="threat-title"><a href="/usa/executive.php#threat-<?= $t['threat_id'] ?>" style="color:#d4af37;text-decoration:underline;" title="View full threat detail"><?= htmlspecialchars($t['title']) ?></a></span>
                     </div>
                     <div class="comparison">
                         <div class="comparison-col">
@@ -237,7 +237,7 @@ extract($navVars);
         <?php else: ?>
             <!-- 50-state intro -->
             <div class="intro-box">
-                <p>Every state below shows how many citizens have voted on executive threats scored 300+ on the <strong style="color:#d4af37">criminality scale</strong>. Click a state to see how it voted on each threat compared to the national average. Not yet voted? <a href="/poll/">Cast yours</a>.</p>
+                <p>Every state below shows how many citizens have voted on executive, legislative, and judicial threats scored 300+ on the <strong style="color:#d4af37">criminality scale</strong>. Click a state to see how it voted on each threat compared to the national average. Not yet voted? <a href="/poll/">Cast yours</a>.</p>
             </div>
             <!-- 50-state landing -->
             <table class="state-table">

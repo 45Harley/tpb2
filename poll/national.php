@@ -143,7 +143,7 @@ extract($navVars);
         </div>
 
         <div class="intro-box">
-            <p>The national pulse. Every bar below shows how citizens across all 50 states responded to a documented executive threat scored 300+ on the <strong style="color:#d4af37">criminality scale</strong>. Green = &ldquo;acceptable,&rdquo; red = &ldquo;not acceptable.&rdquo; This is the country speaking &mdash; not pundits, not polls of 1,000. Every vote is a verified citizen.</p>
+            <p>The national pulse. Every bar below shows how citizens across all 50 states responded to a documented executive, legislative, or judicial threat scored 300+ on the <strong style="color:#d4af37">criminality scale</strong>. Green = &ldquo;acceptable,&rdquo; red = &ldquo;not acceptable.&rdquo; This is the country speaking &mdash; not pundits, not polls of 1,000. Every vote is a verified citizen.</p>
             <p>Want to cast yours? <a href="/poll/">Vote here</a>. Want to see if your reps are listening? <a href="/poll/by-rep/">By Rep</a>.</p>
         </div>
 
@@ -186,7 +186,7 @@ extract($navVars);
             <div class="threat-row" data-severity="<?= $t['severity_score'] ?>" data-date="<?= $t['threat_date'] ?>" data-votes="<?= $total ?>">
                 <div class="threat-row-header">
                     <span class="severity-badge" style="background: <?= $zone['color'] ?>"><?= $t['severity_score'] ?> &mdash; <?= $zone['label'] ?></span>
-                    <span class="threat-title"><a href="/usa/executive.php#threat-<?= $t['threat_id'] ?>" style="color:inherit;text-decoration:none;border-bottom:1px dotted #666;" title="View full threat detail"><?= htmlspecialchars($t['title']) ?></a></span>
+                    <span class="threat-title"><a href="/usa/executive.php#threat-<?= $t['threat_id'] ?>" style="color:#d4af37;text-decoration:underline;" title="View full threat detail"><?= htmlspecialchars($t['title']) ?></a></span>
                     <?php if ($t['official_name']): ?>
                         <span class="official-name"><?= htmlspecialchars($t['official_name']) ?></span>
                     <?php endif; ?>
