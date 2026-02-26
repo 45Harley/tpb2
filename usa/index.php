@@ -91,51 +91,6 @@ $pageStyles = <<<'CSS'
 }
 .usa-title:hover { color: #62a4d0; }
 
-/* Mode bar */
-.mode-bar {
-    padding: 12px 32px;
-    background: #0d1220;
-    border-bottom: 1px solid #252d44;
-    display: flex;
-    gap: 24px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-.mode-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.mode-group-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #6b7394;
-    margin-right: 4px;
-}
-.mode-btn {
-    padding: 6px 16px;
-    font-size: 13px;
-    font-weight: 500;
-    border-radius: 6px;
-    border: 1px solid #5a4a1a;
-    background: transparent;
-    color: #d4af37;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.mode-btn:hover { color: #f5d76e; border-color: #d4af37; }
-.mode-btn.active {
-    background: rgba(212,175,55,0.15);
-    color: #f5d76e;
-    border-color: #d4af37;
-}
-.mode-btn:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-}
-.mode-btn:disabled:hover { color: #d4af37; border-color: #5a4a1a; }
-
 /* Map container */
 .map-wrap {
     position: relative;
@@ -378,15 +333,6 @@ $pageStyles = <<<'CSS'
 .map-footer a { color: #4a9eff; text-decoration: none; }
 .map-footer strong { color: #f0b429; }
 
-/* Coming soon badge */
-.coming-soon {
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #6b7394;
-    margin-left: 4px;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
     .mode-bar { padding: 10px 16px; gap: 12px; }
@@ -404,21 +350,6 @@ require_once dirname(__DIR__) . '/includes/nav.php';
 <div class="map-page">
 
 <h2 class="usa-title" id="usaTitle">United States of America</h2>
-
-<!-- Mode bar -->
-<div class="mode-bar">
-    <div class="mode-group">
-        <span class="mode-group-label">Who & Where</span>
-        <button class="mode-btn active" data-mode="national">National</button>
-        <button class="mode-btn" data-mode="election" disabled>Election <span class="coming-soon">soon</span></button>
-    </div>
-    <div class="mode-group">
-        <span class="mode-group-label">What & Why</span>
-        <button class="mode-btn" data-mode="bills" disabled>Bills <span class="coming-soon">soon</span></button>
-        <button class="mode-btn" data-mode="orders" disabled>Orders <span class="coming-soon">soon</span></button>
-        <button class="mode-btn" data-mode="courts" disabled>Courts <span class="coming-soon">soon</span></button>
-    </div>
-</div>
 
 <!-- Map -->
 <div class="map-wrap" id="mapWrap">
@@ -930,18 +861,6 @@ require_once dirname(__DIR__) . '/includes/nav.php';
         });
     })();
 
-    // ── Mode switching (for future modes) ──
-    document.querySelectorAll('.mode-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            if (this.disabled) return;
-            document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
-            this.classList.add('active');
-            currentMode = this.dataset.mode;
-            localStorage.setItem('tpb_map_mode', currentMode);
-            hidePopup();
-            colorMap();
-        });
-    });
 })();
 </script>
 
