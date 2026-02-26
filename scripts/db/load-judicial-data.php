@@ -321,7 +321,7 @@ function processPositions(array $positions, string $token, PDO $pdo, bool $dryRu
         // State code for district judges
         $stateCode = null;
         if ($courtType === 'district') {
-            $stateCode = $pos['location_state'] ?? stateFromCourtId($courtId);
+            $stateCode = !empty($pos['location_state']) ? $pos['location_state'] : stateFromCourtId($courtId);
         }
 
         // Check if this is an existing SCOTUS justice we should update by official_id
