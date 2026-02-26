@@ -499,18 +499,7 @@ $electionSite = 'https://tpb.sandgems.net';
                 </div>
                 <a href="<?= htmlspecialchars($talkUrl) ?>" <?= $currentPage === 'talk' ? 'class="active"' : '' ?>>USA Talk</a>
 
-                <!-- USA Dropdown -->
-                <div class="nav-dropdown">
-                    <span class="nav-dropdown-toggle <?= in_array($currentPage, ['government', 'usa']) ? 'active' : '' ?>">USA</span>
-                    <div class="nav-dropdown-menu">
-                        <a href="/usa/">Our Nation</a>
-                        <a href="/usa/digest.php">Congressional</a>
-                        <a href="/usa/executive.php">Executive</a>
-                        <a href="/usa/judicial.php">Judicial</a>
-                        <a href="/usa/docs/">Documents</a>
-                        <a href="/aspirations.php">Our Aspirations</a>
-                    </div>
-                </div>
+                <a href="/usa/" <?= in_array($currentPage, ['government', 'usa']) ? 'class="active"' : '' ?>>USA</a>
                 
                 <?php else: ?>
                 <div class="nav-dropdown">
