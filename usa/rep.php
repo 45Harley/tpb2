@@ -108,7 +108,8 @@ $stmt = $pdo->prepare("
            rv.yea_total, rv.nay_total, rv.present_total, rv.not_voting_total,
            rv.r_yea, rv.r_nay, rv.d_yea, rv.d_nay, rv.i_yea, rv.i_nay,
            rv.source_url,
-           COALESCE(NULLIF(tb.short_title, ''), tb.title) as bill_title
+           COALESCE(NULLIF(tb.short_title, ''), tb.title) as bill_title,
+           tb.congress_url
     FROM member_votes mv
     JOIN roll_call_votes rv ON mv.vote_id = rv.vote_id
     LEFT JOIN tracked_bills tb ON rv.bill_type = tb.bill_type
@@ -144,7 +145,7 @@ foreach ($recentVotes as $i => &$v) {
         $v['_bill_ref'] = $m[2] . ' ' . $m[3];
         $bt = $billPrefixMap[$m[2]] ?? null;
         $bn = (int)$m[3];
-        if ($bt) $parsedLookups[$i] = [$bt, $bn];
+        if ($bt) { $parsedLookups[$i] = [$bt, $bn]; $v['_bt'] = $bt; $v['_bn'] = $bn; }
     } elseif (preg_match('/^On (?:the )?(.+?)\s+PN(\d+)/', $q, $m)) {
         $v['_action'] = trim($m[1]);
         $v['_bill_ref'] = 'PN' . $m[2];
@@ -153,7 +154,7 @@ foreach ($recentVotes as $i => &$v) {
         $v['_bill_ref'] = $m2[2] . ' ' . $m2[3];
         $bt = $billPrefixMap[$m2[2]] ?? null;
         $bn = (int)$m2[3];
-        if ($bt) $parsedLookups[$i] = [$bt, $bn];
+        if ($bt) { $parsedLookups[$i] = [$bt, $bn]; $v['_bt'] = $bt; $v['_bn'] = $bn; }
         // Use the parenthetical content (minus bill ref) as action
         $v['_action'] = trim(preg_replace('/\s*' . preg_quote($m2[2]) . '\s*' . $m2[3] . '/', '', $m2[1]));
     }
@@ -170,21 +171,45 @@ if ($parsedLookups) {
         $params[] = $pair[1];
         $params[] = $congress;
     }
-    $sql = "SELECT bill_type, bill_number, COALESCE(NULLIF(short_title, ''), title) as bill_title FROM tracked_bills WHERE " . implode(' OR ', $conditions);
+    $sql = "SELECT bill_type, bill_number, COALESCE(NULLIF(short_title, ''), title) as bill_title, congress_url FROM tracked_bills WHERE " . implode(' OR ', $conditions);
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $titleMap = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $titleMap[$row['bill_type'] . ':' . $row['bill_number']] = $row['bill_title'];
+        $titleMap[$row['bill_type'] . ':' . $row['bill_number']] = [
+            'title' => $row['bill_title'],
+            'url' => $row['congress_url'],
+        ];
     }
 
     foreach ($parsedLookups as $i => $pair) {
         $key = $pair[0] . ':' . $pair[1];
         if (isset($titleMap[$key])) {
-            $recentVotes[$i]['bill_title'] = $titleMap[$key];
+            $recentVotes[$i]['bill_title'] = $titleMap[$key]['title'];
+            if (!empty($titleMap[$key]['url'])) {
+                $recentVotes[$i]['congress_url'] = $titleMap[$key]['url'];
+            }
         }
     }
 }
+
+// Construct congress.gov URLs for votes that don't have one yet
+$congressUrlSlugs = [
+    'hr' => 'house-bill', 's' => 'senate-bill',
+    'hjres' => 'house-joint-resolution', 'sjres' => 'senate-joint-resolution',
+    'hres' => 'house-resolution', 'sres' => 'senate-resolution',
+    'hconres' => 'house-concurrent-resolution', 'sconres' => 'senate-concurrent-resolution',
+];
+$congressOrd = $congress . 'th';
+foreach ($recentVotes as &$v) {
+    if (!empty($v['congress_url'])) continue;
+    $bt = $v['_bt'] ?? ($v['rv_bill_type'] ?: null);
+    $bn = $v['_bn'] ?? ($v['rv_bill_number'] ?: null);
+    if ($bt && $bn && isset($congressUrlSlugs[$bt])) {
+        $v['congress_url'] = "https://www.congress.gov/bill/{$congressOrd}-congress/{$congressUrlSlugs[$bt]}/{$bn}";
+    }
+}
+unset($v);
 
 $pageTitle = htmlspecialchars($rep['full_name']) . ' — The People\'s Branch';
 
@@ -396,8 +421,10 @@ $pageStyles = <<<'CSS'
 .party-r-text { color: #ef4444; }
 .party-d-text { color: #3b82f6; }
 .party-i-text { color: #8b5cf6; }
-.vote-source-link { color: #d4af37; text-decoration: none; font-size: 0.9em; }
+.vote-source-link { color: #d4af37; text-decoration: none; font-size: 0.9em; margin-right: 1rem; }
 .vote-source-link:hover { text-decoration: underline; }
+.bill-link { color: #ccc; text-decoration: underline dotted rgba(212,175,55,0.5); text-underline-offset: 2px; }
+.bill-link:hover { color: #d4af37; text-decoration: underline solid #d4af37; }
 
 .empty-note { color: #666; font-style: italic; font-size: 0.9em; }
 
@@ -555,9 +582,17 @@ require_once dirname(__DIR__) . '/includes/nav.php';
                     <span class="vote-position <?= $posClass ?>"><?= $posLabel ?></span>
                     <span class="vote-question">
                         <?php if (!empty($v['bill_title'])): ?>
-                            <?= htmlspecialchars($v['bill_title']) ?>
+                            <?php if (!empty($v['congress_url'])): ?>
+                                <a class="bill-link" href="<?= htmlspecialchars($v['congress_url']) ?>" target="_blank" rel="noopener" onclick="event.stopPropagation()"><?= htmlspecialchars($v['bill_title']) ?></a>
+                            <?php else: ?>
+                                <?= htmlspecialchars($v['bill_title']) ?>
+                            <?php endif; ?>
                         <?php elseif (!empty($v['_bill_ref'])): ?>
-                            <strong><?= htmlspecialchars($v['_bill_ref']) ?></strong>
+                            <?php if (!empty($v['congress_url'])): ?>
+                                <a class="bill-link" href="<?= htmlspecialchars($v['congress_url']) ?>" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:#d4af37;font-weight:700"><?= htmlspecialchars($v['_bill_ref']) ?></a>
+                            <?php else: ?>
+                                <strong><?= htmlspecialchars($v['_bill_ref']) ?></strong>
+                            <?php endif; ?>
                             <?php if (!empty($v['_action'])): ?>
                                 <span class="vote-action"><?= htmlspecialchars($v['_action']) ?></span>
                             <?php endif; ?>
@@ -607,8 +642,11 @@ require_once dirname(__DIR__) . '/includes/nav.php';
                         <?php endif; ?>
                     </div>
                     <?php endif; ?>
+                    <?php if (!empty($v['congress_url'])): ?>
+                        <a class="vote-source-link" href="<?= htmlspecialchars($v['congress_url']) ?>" target="_blank" rel="noopener">View bill on Congress.gov &rarr;</a>
+                    <?php endif; ?>
                     <?php if ($v['source_url']): ?>
-                        <a class="vote-source-link" href="<?= htmlspecialchars($v['source_url']) ?>" target="_blank" rel="noopener">View official record &rarr;</a>
+                        <a class="vote-source-link" href="<?= htmlspecialchars($v['source_url']) ?>" target="_blank" rel="noopener">View vote record &rarr;</a>
                     <?php endif; ?>
                 </div>
             </div>
