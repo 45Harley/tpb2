@@ -42,16 +42,35 @@ echo "  Dry run:  " . ($dryRun ? 'YES (no DB writes)' : 'no') . "\n\n";
 // ─── API helpers ───
 
 function clGet(string $url, string $token): ?array {
-    $ctx = stream_context_create(['http' => [
-        'timeout' => 30,
-        'header' => "Authorization: Token $token\r\nUser-Agent: TPB-Civic-Platform\r\nAccept: application/json\r\n",
-    ]]);
-    $resp = @file_get_contents($url, false, $ctx);
-    if ($resp === false) {
-        echo "    [WARN] API request failed: $url\n";
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Token ' . $token,
+        'User-Agent: TPB-Civic-Platform',
+        'Accept: application/json',
+    ]);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    $resp = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $err = curl_error($ch);
+    curl_close($ch);
+    if ($resp === false || $code >= 400) {
+        echo "    [WARN] API request failed (HTTP $code): $url\n";
+        if ($err) echo "    [WARN] curl error: $err\n";
+        if ($resp && $code >= 400) echo "    [WARN] " . substr($resp, 0, 200) . "\n";
         return null;
     }
     return json_decode($resp, true);
+}
+
+// Judicial position types we care about (active federal judges)
+function isJudicialPosition(string $posType): bool {
+    static $types = [
+        'jud', 'jus', 'c-jud', 'c-jus', 'ass-jus', 'ass-jud', 'ass-c-jud',
+        'act-jud', 'act-jus', 'pres-jud', 'pres-jus',
+        'ret-senior-jud', 'ret-c-jud', 'ret-act-jus', 'ret-ass-jud', 'ret-jus',
+    ];
+    return in_array($posType, $types);
 }
 
 function clGetAll(string $url, string $token, int $maxPages = 200): array {
@@ -63,8 +82,7 @@ function clGetAll(string $url, string $token, int $maxPages = 200): array {
         $all = array_merge($all, $data['results']);
         $url = $data['next'] ?? null;
         $page++;
-        $total = $data['count'] ?? '?';
-        echo "    Fetched " . count($all) . " / $total\r";
+        echo "    Fetched " . count($all) . " (page $page)\r";
         usleep(750000); // 750ms between requests (stays under 5k/hour)
     }
     echo PHP_EOL;
@@ -196,6 +214,20 @@ function processPositions(array $positions, string $token, PDO $pdo, bool $dryRu
     $seen = []; // track courtlistener_id to avoid dupes within batch
 
     foreach ($positions as $i => $pos) {
+        $posType = $pos['position_type'] ?? '';
+
+        // Skip non-judicial positions (clerks, staff attorneys, etc.)
+        if ($posType && !isJudicialPosition($posType)) {
+            $counts['skip']++;
+            continue;
+        }
+
+        // Skip terminated positions (no longer active)
+        if (!empty($pos['date_termination'])) {
+            $counts['skip']++;
+            continue;
+        }
+
         // Position data — may be nested or URL
         $person = $pos['person'] ?? null;
         $court = $pos['court'] ?? null;
@@ -231,7 +263,7 @@ function processPositions(array $positions, string $token, PDO $pdo, bool $dryRu
             continue;
         }
 
-        $isChief = ($pos['position_type'] ?? '') === 'c-jud';
+        $isChief = in_array($posType, ['c-jud', 'c-jus']);
         $isSenior = !empty($pos['date_retirement']) && empty($pos['date_termination']);
         $fullName = buildName($person);
         $title = buildTitle($courtType, $isChief, $isSenior, $courtName);
@@ -346,8 +378,8 @@ if ($step === 'all' || $step === 'scotus') {
     $existingScotus = matchExistingScotus($pdo);
     echo "  Found " . count($existingScotus) . " existing SCOTUS justices to match\n";
 
-    $url = "$baseUrl/positions/?court__id=scotus&date_termination__isnull=true&format=json";
-    echo "  Fetching active SCOTUS positions...\n";
+    $url = "$baseUrl/positions/?court__id=scotus&format=json";
+    echo "  Fetching SCOTUS positions (filtering active in PHP)...\n";
     $positions = clGetAll($url, $token);
     echo "  Got " . count($positions) . " positions\n";
 
@@ -362,8 +394,8 @@ if ($step === 'all' || $step === 'scotus') {
 if ($step === 'all' || $step === 'circuits') {
     echo "── Step 2: Circuit Courts ──\n";
 
-    $url = "$baseUrl/positions/?court__jurisdiction=F&date_termination__isnull=true&format=json";
-    echo "  Fetching active circuit court positions...\n";
+    $url = "$baseUrl/positions/?court__jurisdiction=F&format=json";
+    echo "  Fetching circuit court positions (filtering active in PHP)...\n";
     $positions = clGetAll($url, $token);
 
     // Filter out SCOTUS (jurisdiction F includes scotus)
@@ -386,8 +418,8 @@ if ($step === 'all' || $step === 'circuits') {
 if ($step === 'all' || $step === 'districts') {
     echo "── Step 3: District Courts ──\n";
 
-    $url = "$baseUrl/positions/?court__jurisdiction=FD&date_termination__isnull=true&format=json";
-    echo "  Fetching active district court positions...\n";
+    $url = "$baseUrl/positions/?court__jurisdiction=FD&format=json";
+    echo "  Fetching district court positions (filtering active in PHP)...\n";
     $positions = clGetAll($url, $token);
     echo "  Got " . count($positions) . " district positions\n";
 
