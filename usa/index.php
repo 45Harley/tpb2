@@ -27,7 +27,7 @@ $pageTitle = 'USA — The People\'s Branch';
 $secondaryNavBrand = 'USA';
 $secondaryNav = [
     ['label' => 'Map', 'url' => '/usa/'],
-    ['label' => 'Congressional', 'url' => '/usa/digest.php'],
+    ['label' => 'Congressional', 'url' => '/usa/congressional-overview.php'],
     ['label' => 'Executive', 'url' => '/usa/executive-overview.php'],
     ['label' => 'Judicial', 'url' => '/usa/judicial.php'],
     ['label' => 'Documents', 'url' => '/usa/docs/'],
@@ -375,7 +375,7 @@ require_once dirname(__DIR__) . '/includes/nav.php';
 <!-- Footer -->
 <div class="map-footer">
     119th Congress &middot; <strong>The People's Branch</strong>
-    &middot; <a href="/usa/digest.php">Congressional Digest</a>
+    &middot; <a href="/usa/congressional-overview.php">Congressional Overview</a>
     &middot; <a href="/usa/glossary.php">Glossary</a>
 </div>
 
@@ -718,7 +718,7 @@ require_once dirname(__DIR__) . '/includes/nav.php';
         }
 
         // View delegation link
-        html += '<a class="popup-link" href="/usa/digest.php?state=' + sc + '">View Delegation &rarr;</a>';
+        html += '<a class="popup-link" href="/usa/congressional-overview.php?state=' + sc + '">View Delegation &rarr;</a>';
 
         popup.innerHTML = html;
         positionPopup(x, y);
@@ -792,7 +792,7 @@ require_once dirname(__DIR__) . '/includes/nav.php';
 
             // Click: go to full delegation page
             el.addEventListener('click', function() {
-                window.location.href = '/usa/digest.php?state=' + sc;
+                window.location.href = '/usa/congressional-overview.php?state=' + sc;
             });
         });
 

@@ -18,7 +18,7 @@ $pageTitle = 'Executive Branch — The People\'s Branch';
 $secondaryNavBrand = 'USA';
 $secondaryNav = [
     ['label' => 'Map', 'url' => '/usa/'],
-    ['label' => 'Congressional', 'url' => '/usa/digest.php'],
+    ['label' => 'Congressional', 'url' => '/usa/congressional-overview.php'],
     ['label' => 'Executive', 'url' => '/usa/executive-overview.php'],
     ['label' => 'Judicial', 'url' => '/usa/judicial.php'],
     ['label' => 'Documents', 'url' => '/usa/docs/'],
