@@ -28,7 +28,7 @@ $secondaryNavBrand = 'USA';
 $secondaryNav = [
     ['label' => 'Map', 'url' => '/usa/'],
     ['label' => 'Congressional', 'url' => '/usa/digest.php'],
-    ['label' => 'Executive', 'url' => '/usa/executive.php'],
+    ['label' => 'Executive', 'url' => '/usa/executive-overview.php'],
     ['label' => 'Judicial', 'url' => '/usa/judicial.php'],
     ['label' => 'Documents', 'url' => '/usa/docs/'],
     ['label' => 'Glossary', 'url' => '/usa/glossary.php'],
@@ -419,7 +419,7 @@ require_once dirname(__DIR__) . '/includes/nav.php';
 
     usaTitleEl.addEventListener('click', function() {
         if (usaTitleTimer) { clearTimeout(usaTitleTimer); usaTitleTimer = null; }
-        window.location.href = '/usa/executive.php';
+        window.location.href = '/usa/executive-overview.php';
     });
 
     function hideTooltip() {

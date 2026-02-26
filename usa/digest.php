@@ -24,7 +24,7 @@ $secondaryNavBrand = 'USA';
 $secondaryNav = [
     ['label' => 'Map', 'url' => '/usa/'],
     ['label' => 'Congressional', 'url' => '/usa/digest.php'],
-    ['label' => 'Executive', 'url' => '/usa/executive.php'],
+    ['label' => 'Executive', 'url' => '/usa/executive-overview.php'],
     ['label' => 'Judicial', 'url' => '/usa/judicial.php'],
     ['label' => 'Documents', 'url' => '/usa/docs/'],
     ['label' => 'Glossary', 'url' => '/usa/glossary.php'],
