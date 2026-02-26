@@ -186,6 +186,15 @@ $pageStyles = <<<'CSS'
     color: #555;
     font-size: 2em;
 }
+
+/* SCOTUS hero section — bigger cards & photos */
+.scotus-section .cards-grid { gap: 20px; }
+.scotus-section .judge-card { width: 170px; padding: 18px 12px; }
+.scotus-section .judge-card.boss-card { width: 190px; }
+.scotus-section .card-photo,
+.scotus-section .card-photo-placeholder { width: 120px; height: 120px; }
+.scotus-section .card-name { font-size: 0.95em; }
+.scotus-section .card-title { font-size: 0.75em; }
 .card-name {
     color: #e0e0e0;
     font-weight: 700;
@@ -272,10 +281,16 @@ $pageStyles = <<<'CSS'
     .judge-card { width: calc(33.33% - 12px); min-width: 110px; }
     .judge-card.boss-card { width: calc(33.33% - 12px); min-width: 110px; }
     .card-photo, .card-photo-placeholder { width: 80px; height: 80px; }
+    .scotus-section .judge-card { width: calc(33.33% - 14px); min-width: 120px; }
+    .scotus-section .judge-card.boss-card { width: calc(33.33% - 14px); min-width: 120px; }
+    .scotus-section .card-photo,
+    .scotus-section .card-photo-placeholder { width: 100px; height: 100px; }
 }
 @media (max-width: 480px) {
     .judge-card { width: calc(50% - 10px); }
     .judge-card.boss-card { width: calc(50% - 10px); }
+    .scotus-section .judge-card,
+    .scotus-section .judge-card.boss-card { width: calc(50% - 10px); }
     .judicial-stats { gap: 1rem; }
 }
 CSS;
@@ -322,6 +337,18 @@ function renderJudgeCard($j, $isBoss = false) {
     <h2>Judicial Branch</h2>
     <p class="judicial-subtitle">Federal judges across three tiers of the court system</p>
 
+    <?php if ($scotusCount > 0): ?>
+    <!-- ═══ SUPREME COURT ═══ -->
+    <div class="court-section scotus-section">
+        <h3>Supreme Court of the United States</h3>
+        <div class="cards-grid">
+            <?php foreach ($scotus as $j): ?>
+                <?php renderJudgeCard($j, (int)($j['chief_judge'] ?? 0)); ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="judicial-stats">
         <div class="judicial-stat">
             <div class="num"><?= $scotusCount ?></div>
@@ -340,18 +367,6 @@ function renderJudgeCard($j, $isBoss = false) {
             <div class="label">Total Federal Judges</div>
         </div>
     </div>
-
-    <?php if ($scotusCount > 0): ?>
-    <!-- ═══ SUPREME COURT ═══ -->
-    <div class="court-section">
-        <h3>Supreme Court of the United States</h3>
-        <div class="cards-grid">
-            <?php foreach ($scotus as $j): ?>
-                <?php renderJudgeCard($j, (int)($j['chief_judge'] ?? 0)); ?>
-            <?php endforeach; ?>
-        </div>
-    </div>
-    <?php endif; ?>
 
     <?php if ($circuitCount > 0): ?>
     <!-- ═══ CIRCUIT COURTS ═══ -->
