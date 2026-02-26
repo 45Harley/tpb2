@@ -276,6 +276,8 @@ extract($navVars);
             <a href="/poll/by-rep/" class="active">By Rep</a>
         </div>
 
+        <?php require_once __DIR__ . '/../includes/criminality-scale.php'; ?>
+
         <?php if ($rep): ?>
             <!-- Rep detail intro -->
             <div class="intro-box">

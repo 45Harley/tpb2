@@ -142,6 +142,8 @@ extract($navVars);
             <a href="/poll/by-rep/">By Rep</a>
         </div>
 
+        <?php require_once __DIR__ . '/../includes/criminality-scale.php'; ?>
+
         <div class="intro-box">
             <p>The national pulse. Every bar below shows how citizens across all 50 states responded to a documented executive, legislative, or judicial threat scored 300+ on the <strong style="color:#d4af37">criminality scale</strong>. Green = &ldquo;acceptable,&rdquo; red = &ldquo;not acceptable.&rdquo; This is the country speaking &mdash; not pundits, not polls of 1,000. Every vote is a verified citizen.</p>
             <p>Want to cast yours? <a href="/poll/">Vote here</a>. Want to see if your reps are listening? <a href="/poll/by-rep/">By Rep</a>.</p>
