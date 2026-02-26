@@ -108,7 +108,7 @@ $stmt = $pdo->prepare("
            rv.yea_total, rv.nay_total, rv.present_total, rv.not_voting_total,
            rv.r_yea, rv.r_nay, rv.d_yea, rv.d_nay, rv.i_yea, rv.i_nay,
            rv.source_url,
-           COALESCE(tb.short_title, tb.title) as bill_title
+           COALESCE(NULLIF(tb.short_title, ''), tb.title) as bill_title
     FROM member_votes mv
     JOIN roll_call_votes rv ON mv.vote_id = rv.vote_id
     LEFT JOIN tracked_bills tb ON rv.bill_type = tb.bill_type
@@ -170,7 +170,7 @@ if ($parsedLookups) {
         $params[] = $pair[1];
         $params[] = $congress;
     }
-    $sql = "SELECT bill_type, bill_number, COALESCE(short_title, title) as bill_title FROM tracked_bills WHERE " . implode(' OR ', $conditions);
+    $sql = "SELECT bill_type, bill_number, COALESCE(NULLIF(short_title, ''), title) as bill_title FROM tracked_bills WHERE " . implode(' OR ', $conditions);
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $titleMap = [];
@@ -367,7 +367,7 @@ $pageStyles = <<<'CSS'
 .vote-nay { background: #3a1a1a; color: #f44336; }
 .vote-other { background: #2a2a2a; color: #888; }
 .vote-date { color: #666; font-size: 0.85em; white-space: nowrap; }
-.vote-question { flex: 1; }
+.vote-question { flex: 1; min-width: 0; }
 .vote-action { display: block; color: #666; font-size: 0.85em; font-style: italic; }
 .vote-expand-icon { color: #555; font-size: 0.8em; transition: transform 0.2s; }
 .vote-item.open .vote-expand-icon { transform: rotate(90deg); }
@@ -555,7 +555,7 @@ require_once dirname(__DIR__) . '/includes/nav.php';
                     <span class="vote-position <?= $posClass ?>"><?= $posLabel ?></span>
                     <span class="vote-question">
                         <?php if (!empty($v['bill_title'])): ?>
-                            <?= htmlspecialchars(mb_strimwidth($v['bill_title'], 0, 120, '...')) ?>
+                            <?= htmlspecialchars($v['bill_title']) ?>
                         <?php elseif (!empty($v['_bill_ref'])): ?>
                             <strong><?= htmlspecialchars($v['_bill_ref']) ?></strong>
                             <?php if (!empty($v['_action'])): ?>
