@@ -5,7 +5,7 @@
  * State dropdown for anonymous users, auto-scroll for logged-in.
  */
 $c = require dirname(__DIR__) . '/config.php';
-$pdo = new PDO('mysql:host='.$c['host'].';dbname='.$c['database'], $c['username'], $c['password']);
+$pdo = new PDO('mysql:host='.$c['host'].';dbname='.$c['database'].';charset=utf8mb4', $c['username'], $c['password']);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 require_once dirname(__DIR__) . '/includes/get-user.php';
@@ -63,6 +63,11 @@ $stateNames = [];
 foreach ($allStates as $s) {
     $stateNames[$s['abbreviation']] = $s['state_name'];
 }
+
+// Sort byState by state name (not code)
+uksort($byState, function($a, $b) use ($stateNames) {
+    return strcmp($stateNames[$a] ?? $a, $stateNames[$b] ?? $b);
+});
 
 $pageStyles = <<<'CSS'
 .congress-overview {
