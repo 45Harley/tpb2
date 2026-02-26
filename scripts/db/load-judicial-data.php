@@ -19,9 +19,16 @@
  */
 
 set_time_limit(0);
-$opts = getopt('', ['step:', 'dry-run']);
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+// Flush output immediately for progress tracking
+ob_implicit_flush(true);
+if (ob_get_level()) ob_end_flush();
+
+$opts = getopt('', ['step:', 'dry-run', 'skip-appointer']);
 $step = $opts['step'] ?? 'all';
 $dryRun = isset($opts['dry-run']);
+$skipAppointer = isset($opts['skip-appointer']);
 
 $c = require dirname(__DIR__, 2) . '/config.php';
 $pdo = new PDO('mysql:host='.$c['host'].';dbname='.$c['database'], $c['username'], $c['password']);
@@ -37,7 +44,8 @@ echo "╔═══════════════════════�
 echo "║   Load Federal Judge Data — CourtListener    ║\n";
 echo "╚══════════════════════════════════════════════╝\n";
 echo "  Step:     $step\n";
-echo "  Dry run:  " . ($dryRun ? 'YES (no DB writes)' : 'no') . "\n\n";
+echo "  Dry run:  " . ($dryRun ? 'YES (no DB writes)' : 'no') . "\n";
+echo "  Appointer: " . ($skipAppointer ? 'SKIP (faster)' : 'resolve') . "\n\n";
 
 // ─── API helpers ───
 
@@ -213,9 +221,8 @@ function matchExistingScotus(PDO $pdo): array {
 
 // ─── Process a batch of positions into judge records ───
 
-function processPositions(array $positions, string $token, PDO $pdo, bool $dryRun, string $label, array $existingScotus = []): array {
+function processPositions(array $positions, string $token, PDO $pdo, bool $dryRun, string $label, array $existingScotus = [], array &$seen = [], bool $skipAppointer = false): array {
     $counts = ['insert' => 0, 'update' => 0, 'skip' => 0];
-    $seen = []; // track courtlistener_id to avoid dupes within batch
 
     foreach ($positions as $i => $pos) {
         $posType = $pos['position_type'] ?? '';
@@ -278,19 +285,21 @@ function processPositions(array $positions, string $token, PDO $pdo, bool $dryRu
         $fullName = buildName($person);
         $title = buildTitle($courtType, $isChief, $isSenior, $courtName);
 
-        // Appointer name
+        // Appointer name (skip if --skip-appointer for speed)
         $appointerName = null;
-        $appointer = $pos['appointer'] ?? null;
-        if (is_string($appointer)) {
-            $appointer = resolveResource($appointer, $token);
-        }
-        if ($appointer) {
-            $aPerson = $appointer['person'] ?? null;
-            if (is_string($aPerson)) {
-                $aPerson = resolveResource($aPerson, $token);
+        if (!$skipAppointer) {
+            $appointer = $pos['appointer'] ?? null;
+            if (is_string($appointer)) {
+                $appointer = resolveResource($appointer, $token);
             }
-            if ($aPerson) {
-                $appointerName = trim(($aPerson['name_first'] ?? '') . ' ' . ($aPerson['name_last'] ?? ''));
+            if (is_array($appointer)) {
+                $aPerson = $appointer['person'] ?? null;
+                if (is_string($aPerson)) {
+                    $aPerson = resolveResource($aPerson, $token);
+                }
+                if (is_array($aPerson)) {
+                    $appointerName = trim(($aPerson['name_first'] ?? '') . ' ' . ($aPerson['name_last'] ?? ''));
+                }
             }
         }
 
@@ -412,6 +421,53 @@ function fetchByJurisdiction(string $baseUrl, string $token, string $jurisdictio
     return $all;
 }
 
+// ─── Streaming helper: fetch + process page by page (memory efficient) ───
+
+function fetchAndProcessByJurisdiction(
+    string $baseUrl, string $token, string $jurisdiction, array $posTypes,
+    PDO $pdo, bool $dryRun, string $label, callable $preFilter = null, bool $skipAppointer = false
+): array {
+    $totals = ['insert' => 0, 'update' => 0, 'skip' => 0];
+    $seen = [];
+    $totalFetched = 0;
+    $totalProcessed = 0;
+
+    foreach ($posTypes as $pt) {
+        $url = "$baseUrl/positions/?court__jurisdiction=$jurisdiction&position_type=$pt&format=json";
+        echo "    Fetching position_type=$pt ...\n";
+        $page = 0;
+
+        while ($url && $page < 200) {
+            $data = clGet($url, $token);
+            if (!$data || !isset($data['results'])) break;
+
+            $results = $data['results'];
+            $totalFetched += count($results);
+            $url = $data['next'] ?? null;
+            $page++;
+            echo "    Fetched $totalFetched (page $page)\r";
+            usleep(750000);
+
+            // Apply pre-filter (e.g., exclude scotus from circuit results)
+            if ($preFilter) {
+                $results = array_filter($results, $preFilter);
+            }
+
+            // Process this page's results immediately
+            $counts = processPositions($results, $token, $pdo, $dryRun, $label, [], $seen, $skipAppointer);
+            foreach ($counts as $k => $v) $totals[$k] += $v;
+
+            $totalProcessed += count($results);
+
+            // Free memory
+            unset($results, $data);
+        }
+        echo "\n    Got $totalFetched total after $pt pages\n";
+    }
+
+    return $totals;
+}
+
 // ══════════════════════════════════════════════════
 // STEP 2: Circuit Courts
 // ══════════════════════════════════════════════════
@@ -419,18 +475,12 @@ if ($step === 'all' || $step === 'circuits') {
     echo "── Step 2: Circuit Courts ──\n";
 
     $judgeTypes = ['jud', 'c-jud', 'ret-senior-jud'];
-    $positions = fetchByJurisdiction($baseUrl, $token, 'F', $judgeTypes);
-
-    // Filter out SCOTUS (jurisdiction F includes scotus)
-    $positions = array_filter($positions, function($pos) {
+    $notScotus = function($pos) {
         $court = $pos['court'] ?? null;
         if (is_array($court) && ($court['id'] ?? '') === 'scotus') return false;
         return true;
-    });
-    $positions = array_values($positions);
-    echo "  Total: " . count($positions) . " circuit positions (excluding SCOTUS)\n";
-
-    $counts = processPositions($positions, $token, $pdo, $dryRun, 'CIRCUIT');
+    };
+    $counts = fetchAndProcessByJurisdiction($baseUrl, $token, 'F', $judgeTypes, $pdo, $dryRun, 'CIRCUIT', $notScotus, $skipAppointer);
     echo "  Circuits: {$counts['insert']} inserted, {$counts['update']} updated, {$counts['skip']} skipped\n\n";
     foreach ($counts as $k => $v) $totals[$k] += $v;
 }
@@ -442,10 +492,7 @@ if ($step === 'all' || $step === 'districts') {
     echo "── Step 3: District Courts ──\n";
 
     $judgeTypes = ['jud', 'c-jud', 'ret-senior-jud'];
-    $positions = fetchByJurisdiction($baseUrl, $token, 'FD', $judgeTypes);
-    echo "  Total: " . count($positions) . " district positions\n";
-
-    $counts = processPositions($positions, $token, $pdo, $dryRun, 'DISTRICT');
+    $counts = fetchAndProcessByJurisdiction($baseUrl, $token, 'FD', $judgeTypes, $pdo, $dryRun, 'DISTRICT', null, $skipAppointer);
     echo "  Districts: {$counts['insert']} inserted, {$counts['update']} updated, {$counts['skip']} skipped\n\n";
     foreach ($counts as $k => $v) $totals[$k] += $v;
 }
