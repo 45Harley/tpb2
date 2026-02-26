@@ -103,11 +103,19 @@ function upsertJudge(PDO $pdo, array $fields, bool $dryRun): string {
     $clId = $fields['courtlistener_id'];
 
     // Check if exists by courtlistener_id
-    $stmt = $pdo->prepare("SELECT official_id FROM elected_officials WHERE courtlistener_id = ?");
+    $stmt = $pdo->prepare("SELECT official_id, court_type FROM elected_officials WHERE courtlistener_id = ?");
     $stmt->execute([$clId]);
-    $existing = $stmt->fetchColumn();
+    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($existing) {
+        // Don't downgrade court_type (supreme > circuit > district)
+        $tierOrder = ['supreme' => 1, 'circuit' => 2, 'district' => 3, 'special' => 4];
+        $existingTier = $tierOrder[$existing['court_type'] ?? ''] ?? 99;
+        $newTier = $tierOrder[$fields['court_type'] ?? ''] ?? 99;
+        if ($newTier > $existingTier) {
+            return 'skip'; // Would downgrade — skip
+        }
+
         if ($dryRun) return 'update';
         $sets = [];
         $params = [];
