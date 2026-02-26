@@ -680,10 +680,33 @@ function sortThreats(sortBy) {
     }
 }
 
-// Auto-expand and scroll to threat when arriving via #threat-{id} hash
+// Auto-expand and scroll to threat or official when arriving via hash
 (function() {
     var hash = window.location.hash;
-    if (!hash || !hash.startsWith('#threat-')) return;
+    if (!hash) return;
+
+    // #official-{id} — scroll to person card
+    if (hash.startsWith('#official-')) {
+        var oid = hash.replace('#official-', '');
+        var card = document.querySelector('.person-card[data-oid="' + oid + '"]');
+        if (!card) return;
+        // Expand threats list
+        var list = card.querySelector('.threats-list');
+        if (list && !list.classList.contains('open')) {
+            list.classList.add('open');
+            var arrow = card.querySelector('.expand-arrow');
+            if (arrow) arrow.classList.add('open');
+        }
+        setTimeout(function() {
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            card.style.outline = '2px solid #d4af37';
+            setTimeout(function() { card.style.outline = ''; }, 3000);
+        }, 300);
+        return;
+    }
+
+    // #threat-{id} — scroll to specific threat
+    if (!hash.startsWith('#threat-')) return;
     var target = document.getElementById(hash.substring(1));
     if (!target) return;
     // Expand the parent threats-list
