@@ -137,7 +137,11 @@ function buildName(array $person): string {
 function resolveResource(?string $url, string $token): ?array {
     if (!$url) return null;
     // CourtListener v4 returns URLs for related objects; fetch them
-    return clGet($url . '?format=json', $token);
+    // Avoid doubling ?format=json if already present
+    if (strpos($url, 'format=json') === false) {
+        $url .= (strpos($url, '?') !== false ? '&' : '?') . 'format=json';
+    }
+    return clGet($url, $token);
 }
 
 // ─── Court type mapper ───
@@ -216,8 +220,8 @@ function processPositions(array $positions, string $token, PDO $pdo, bool $dryRu
     foreach ($positions as $i => $pos) {
         $posType = $pos['position_type'] ?? '';
 
-        // Skip non-judicial positions (clerks, staff attorneys, etc.)
-        if ($posType && !isJudicialPosition($posType)) {
+        // Skip non-judicial positions (clerks, staff attorneys, blanks, etc.)
+        if (!$posType || !isJudicialPosition($posType)) {
             $counts['skip']++;
             continue;
         }
