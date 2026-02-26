@@ -143,6 +143,9 @@ $pageStyles = <<<'CSS'
     background: #1a1a1a;
     border: 2px solid #2a2a2a;
     transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
 }
 .rep-card:hover {
     transform: translateY(-3px);
@@ -285,7 +288,7 @@ function partyInitial($party) {
                 $silenceRate = $totalThreatPolls > 0 ? round(($totalThreatPolls - $responded) / $totalThreatPolls * 100) : 100;
                 $silenceClass = $silenceRate >= 80 ? 'silence-high' : ($silenceRate >= 40 ? 'silence-med' : 'silence-low');
             ?>
-            <div class="rep-card party-<?= $p ?>">
+            <a class="rep-card party-<?= $p ?>" href="/usa/rep.php?id=<?= $m['official_id'] ?>">
                 <?php if ($photoUrl): ?>
                     <img class="rep-photo" src="<?= htmlspecialchars($photoUrl) ?>" alt="<?= htmlspecialchars($m['full_name']) ?>" loading="lazy">
                 <?php else: ?>
@@ -298,7 +301,7 @@ function partyInitial($party) {
                     <div class="responded"><?= $responded ?>/<?= $totalThreatPolls ?> responded</div>
                     <div class="silence <?= $silenceClass ?>"><?= $silenceRate ?>% silent</div>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
     </div>
