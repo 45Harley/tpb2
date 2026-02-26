@@ -100,8 +100,19 @@ $stmt = $pdo->prepare("SELECT bill_type, bill_number, short_title, title, last_a
 $stmt->execute([$bid, $congress]);
 $bills = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// ── Recent votes (last 10) ──
-$stmt = $pdo->prepare("SELECT rv.vote_id, rv.vote_question, rv.vote_date, rv.vote_result, mv.vote as member_vote, rv.chamber FROM member_votes mv JOIN roll_call_votes rv ON mv.vote_id = rv.vote_id WHERE mv.official_id = ? ORDER BY rv.vote_date DESC, rv.roll_call_number DESC LIMIT 10");
+// ── Recent votes (last 10) — join tracked_bills for readable titles ──
+$stmt = $pdo->prepare("
+    SELECT rv.vote_id, rv.vote_question, rv.vote_date, rv.vote_result,
+           mv.vote as member_vote, rv.chamber,
+           COALESCE(tb.short_title, tb.title) as bill_title
+    FROM member_votes mv
+    JOIN roll_call_votes rv ON mv.vote_id = rv.vote_id
+    LEFT JOIN tracked_bills tb ON rv.bill_type = tb.bill_type
+        AND rv.bill_number = tb.bill_number AND rv.congress = tb.congress
+    WHERE mv.official_id = ?
+    ORDER BY rv.vote_date DESC, rv.roll_call_number DESC
+    LIMIT 10
+");
 $stmt->execute([$oid]);
 $recentVotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -282,6 +293,7 @@ $pageStyles = <<<'CSS'
 .vote-other { background: #2a2a2a; color: #888; }
 .vote-date { color: #666; font-size: 0.85em; white-space: nowrap; }
 .vote-question { flex: 1; }
+.vote-action { display: block; color: #666; font-size: 0.85em; font-style: italic; }
 
 .empty-note { color: #666; font-style: italic; font-size: 0.9em; }
 
@@ -433,7 +445,14 @@ require_once dirname(__DIR__) . '/includes/nav.php';
             <li>
                 <span class="vote-date"><?= $v['vote_date'] ?></span>
                 <span class="vote-position <?= $posClass ?>"><?= $posLabel ?></span>
-                <span class="vote-question"><?= htmlspecialchars(mb_strimwidth($v['vote_question'], 0, 120, '...')) ?></span>
+                <span class="vote-question">
+                    <?php if ($v['bill_title']): ?>
+                        <?= htmlspecialchars(mb_strimwidth($v['bill_title'], 0, 120, '...')) ?>
+                        <span class="vote-action"><?= htmlspecialchars($v['vote_question']) ?></span>
+                    <?php else: ?>
+                        <?= htmlspecialchars(mb_strimwidth($v['vote_question'], 0, 120, '...')) ?>
+                    <?php endif; ?>
+                </span>
             </li>
             <?php endforeach; ?>
         </ul>
