@@ -311,11 +311,18 @@ function processPositions(array $positions, string $token, PDO $pdo, bool $dryRu
             }
         }
 
-        // Photo URL
+        // Photo URL — portraits.free.law uses lastname-firstname-dob slug format
         $photoUrl = null;
         $clSlug = $person['slug'] ?? null;
-        if (!empty($person['has_photo']) && $clSlug) {
-            $photoUrl = "https://portraits.free.law/v2/256/$clSlug.jpeg";
+        if (!empty($person['has_photo'])) {
+            $pFirst = strtolower($person['name_first'] ?? '');
+            $pLast = strtolower($person['name_last'] ?? '');
+            $pDob = $person['date_dob'] ?? '';
+            if ($pFirst && $pLast) {
+                $portraitSlug = "$pLast-$pFirst-$pDob";
+                // Try full DOB first, fallback to year-only
+                $photoUrl = "https://portraits.free.law/v2/256/$portraitSlug.jpeg";
+            }
         }
 
         // State code for district judges
