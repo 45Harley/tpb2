@@ -115,7 +115,7 @@ $stmt->execute([$userId]);
 $loginAttempts = $stmt->fetchAll();
 
 // Poll votes
-$stmt = $pdo->prepare("SELECT * FROM poll_votes WHERE user_id = ? ORDER BY created_at DESC LIMIT 20");
+$stmt = $pdo->prepare("SELECT * FROM poll_votes WHERE user_id = ? ORDER BY voted_at DESC LIMIT 20");
 $stmt->execute([$userId]);
 $pollVotes = $stmt->fetchAll();
 
