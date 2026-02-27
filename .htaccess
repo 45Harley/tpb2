@@ -31,11 +31,10 @@ RewriteCond %{HTTP_USER_AGENT} Shodan [NC,OR]
 RewriteCond %{HTTP_USER_AGENT} Nmap [NC,OR]
 RewriteCond %{HTTP_USER_AGENT} masscan [NC,OR]
 RewriteCond %{HTTP_USER_AGENT} ZmEu [NC,OR]
-RewriteCond %{HTTP_USER_AGENT} nikto [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} nikto [NC]
 
-# --- Facebook Crawlers ---
-RewriteCond %{HTTP_USER_AGENT} facebookexternalhit [NC,OR]
-RewriteCond %{HTTP_USER_AGENT} meta-externalagent [NC]
+# --- Social Media Crawlers — ALLOWED (needed for share link previews) ---
+# facebookexternalhit, meta-externalagent, LinkedInBot, Twitterbot, Bluesky
 
 # Block them - 403 with no PHP process spawned
 RewriteRule ^ - [F,L]
