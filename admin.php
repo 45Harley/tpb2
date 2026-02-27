@@ -804,6 +804,22 @@ $adminActions = $pdo->query("
             color: #9c27b0;
             font-size: 0.8em;
         }
+
+        .user-id-link {
+            color: #d4af37 !important;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .user-id-link:hover {
+            text-decoration: underline;
+            color: #ffd700 !important;
+        }
+
+        .user-id-link:visited {
+            color: #d4af37 !important;
+        }
     </style>
 </head>
 <body>
@@ -1169,7 +1185,7 @@ $adminActions = $pdo->query("
                 <tbody>
                     <?php foreach ($users as $user): ?>
                         <tr<?= $user['deleted_at'] ? ' style="opacity: 0.5;"' : '' ?>>
-                            <td><?= $user['user_id'] ?></td>
+                            <td><a href="admin-user-detail.php?id=<?= $user['user_id'] ?>" class="user-id-link" title="View full profile"><?= $user['user_id'] ?></a></td>
                             <td><?= htmlspecialchars($user['email'] ?? '-') ?></td>
                             <td><?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?: '-') ?></td>
                             <td>
