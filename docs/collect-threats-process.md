@@ -25,7 +25,7 @@ Each branch has a different backlog. The first collection for each branch must l
 | Branch | Gathering Start Date | Caught Up Through | Status |
 |--------|---------------------|-------------------|--------|
 | **Executive** | Jan 20, 2025 (inauguration) | Feb 26, 2026 | Active — 236 threats collected |
-| **Congressional** | Jan 20, 2025 (118th/119th Congress session) | — | Not started — first collection must cover Jan 2025 – present |
+| **Congressional** | Jan 20, 2025 (118th/119th Congress session) | Feb 26, 2026 | Active — 11 threats collected (oversight blocking, enabling, corruption) |
 | **Judicial** | Jan 2024 (ProPublica/ethics revelations) | Feb 26, 2026 | Active — 15 threats collected (SCOTUS ethics + Cannon) |
 
 **Why different start dates:**
@@ -534,11 +534,11 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 
 | Metric | Count |
 |--------|-------|
-| **Total threats** | 251 |
-| Active | 250 |
+| **Total threats** | 262 |
+| Active | 261 |
 | Resolved | 1 |
-| Tactical (specific actions) | 107 |
-| Strategic (systemic/institutional) | 144 |
+| Tactical (specific actions) | 114 |
+| Strategic (systemic/institutional) | 148 |
 | Date range | Dec 24, 2012 – Feb 26, 2026 |
 
 ### By Branch
@@ -546,7 +546,7 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 | Branch | Threats | Notes |
 |--------|---------|-------|
 | **Executive** | 236 | Caught up through Feb 26, 2026 |
-| Congressional | 0 | Pending first collection |
+| **Congressional** | 11 | First collection: oversight blocking, nominee confirmations, Big Beautiful Bill, DOGE legislation, insider trading |
 | **Judicial** | 15 | First collection: Thomas, Alito, Kavanaugh, Roberts, Cannon (Apr 2024 – Feb 2026) |
 
 ### Severity Distribution
@@ -561,8 +561,8 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 | Atrocity | 501-700 | 12 | 5% |
 | Crime Against Humanity | 701-900 | 5 | 2% |
 
-- **161 threats score 300+** (polled) — 64% of all threats
-- **90 threats score below 300** (not polled)
+- **171 threats score 300+** (polled) — 65% of all threats
+- **91 threats score below 300** (not polled)
 - Severity range: 15 – 800
 - Average severity: **325** (all) / **416** (polled only)
 
@@ -609,7 +609,7 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 
 | Metric | Count |
 |--------|-------|
-| Active threat polls | 160 |
+| Active threat polls | 170 |
 | Citizen votes cast | 4 |
 | Rep votes cast | 0 |
 | Civic actions (called/emailed/shared) | 0 |
@@ -629,6 +629,7 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 | 2026-02-26 | — | 0 | 227 | Added `branch` column. All 227 existing threats tagged `executive`. Ready for congressional + judicial collections |
 | 2026-02-26 | Executive | 9 | 236 | Feb 25-26: State of the Union aftermath. Medicaid freeze, Epstein file suppression, FBI retaliation firings, Gabbard whistleblower block, Hegseth vs Sen Kelly, bank citizenship EO, NJ ICE suit, courthouse DOGE cuts, Tommy Robinson |
 | 2026-02-26 | Judicial | 15 | 251 | First judicial collection. Thomas (4): gifts, recusal, special counsel roadmap, tariff dissent. Alito (4): flags, godliness recording, Singer conflict, tariff dissent. Kavanaugh (1): tariff dissent. Roberts/SCOTUS (4): immunity ruling, shadow docket, universal injunctions, toothless ethics code. Cannon (2): dismissed docs case, blocked Smith report |
+| 2026-02-26 | Congressional | 11 | 262 | First congressional collection. Comer (2): blocked Musk subpoena, agency abolition bill. Thune/Senate (4): confirmed Hegseth, RFK Jr, Gabbard; blocked intel oversight. Johnson/House (4): Big Beautiful Bill, DOGE cuts, DHS oversight gutted, lockstep voting. Bresnahan (1): Medicaid insider trading |
 
 ---
 
