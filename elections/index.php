@@ -135,6 +135,14 @@ $pageStyles = <<<'CSS'
 .email-status.success { color: #38a169; }
 .email-status.error { color: #c53030; }
 
+.view-links { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.view-links a {
+    padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+    text-decoration: none; border: 1px solid #444; color: #aaa; transition: all 0.2s;
+}
+.view-links a:hover { border-color: #d4af37; color: #d4af37; }
+.view-links a.active { background: #d4af37; color: #000; border-color: #d4af37; }
+
 @media (max-width: 600px) {
     .el-hero h1 { font-size: 1.8em; }
     .el-stats { gap: 1rem; }
@@ -147,6 +155,12 @@ require_once dirname(__DIR__) . '/includes/nav.php';
 ?>
 
 <main class="el-container">
+
+    <div class="view-links">
+        <a href="/elections/" class="active">Elections</a>
+        <a href="/elections/the-fight.php">The Fight</a>
+        <a href="/elections/the-amendment.php">The War</a>
+    </div>
 
     <!-- Hero -->
     <section class="el-hero">

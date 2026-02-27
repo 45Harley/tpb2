@@ -149,6 +149,14 @@ $pageStyles = <<<'CSS'
     .war-hero .number { font-size: 3.5rem; }
     .trigger-paths { grid-template-columns: 1fr; }
 }
+
+.view-links { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.view-links a {
+    padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+    text-decoration: none; border: 1px solid #444; color: #aaa; transition: all 0.2s;
+}
+.view-links a:hover { border-color: #d4af37; color: #d4af37; }
+.view-links a.active { background: #d4af37; color: #000; border-color: #d4af37; }
 CSS;
 
 require_once dirname(__DIR__) . '/includes/header.php';
@@ -158,6 +166,12 @@ $siteUrl = $c['base_url'] ?? 'https://tpb2.sandgems.net';
 ?>
 
 <main class="war-container">
+
+    <div class="view-links">
+        <a href="/elections/">Elections</a>
+        <a href="/elections/the-fight.php">The Fight</a>
+        <a href="/elections/the-amendment.php" class="active">The War</a>
+    </div>
 
     <section class="war-hero">
         <h1>Winning the War</h1>

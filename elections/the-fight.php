@@ -190,6 +190,14 @@ $pageStyles = <<<'CSS'
     .action-row label { font-size: 0.75rem; }
     .stats-row { grid-template-columns: 1fr; }
 }
+
+.view-links { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.view-links a {
+    padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+    text-decoration: none; border: 1px solid #444; color: #aaa; transition: all 0.2s;
+}
+.view-links a:hover { border-color: #d4af37; color: #d4af37; }
+.view-links a.active { background: #d4af37; color: #000; border-color: #d4af37; }
 CSS;
 
 require_once dirname(__DIR__) . '/includes/header.php';
@@ -197,6 +205,12 @@ require_once dirname(__DIR__) . '/includes/nav.php';
 ?>
 
 <main class="fight-container">
+    <div class="view-links">
+        <a href="/elections/">Elections</a>
+        <a href="/elections/the-fight.php" class="active">The Fight</a>
+        <a href="/elections/the-amendment.php">The War</a>
+    </div>
+
     <div class="fight-header">
         <h1>The Fight</h1>
         <div class="tagline">If you want action, you must act first.</div>
