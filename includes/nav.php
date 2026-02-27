@@ -512,6 +512,7 @@ $electionSite = 'https://tpb.sandgems.net';
                 <?php endif; ?>
                 
                 <a href="/poll/" <?= $currentPage === 'poll' ? 'class="active"' : '' ?>>Polls</a>
+                <a href="/elections/" <?= $currentPage === 'elections' ? 'class="active"' : '' ?>>Elections</a>
                 <a href="/story.php" <?= $currentPage === 'story' ? 'class="active"' : '' ?>>Our Story</a>
                 <a href="#" onclick="handleVolunteerClick(); return false;" <?= $currentPage === 'volunteer' ? 'class="active"' : '' ?>>Volunteer</a>
             </div>
