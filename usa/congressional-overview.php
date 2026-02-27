@@ -69,6 +69,11 @@ uksort($byState, function($a, $b) use ($stateNames) {
     return strcmp($stateNames[$a] ?? $a, $stateNames[$b] ?? $b);
 });
 
+// Threat counts per congressional member
+$congThreatCounts = [];
+$r = $pdo->query("SELECT official_id, COUNT(*) cnt FROM executive_threats WHERE branch = 'congressional' AND is_active = 1 GROUP BY official_id");
+while ($row = $r->fetch(PDO::FETCH_ASSOC)) $congThreatCounts[(int)$row['official_id']] = (int)$row['cnt'];
+
 $pageStyles = <<<'CSS'
 .congress-overview {
     max-width: 1200px;
@@ -219,6 +224,15 @@ $pageStyles = <<<'CSS'
 .silence-high { color: #f44336; }
 .silence-med { color: #ff9800; }
 .silence-low { color: #4caf50; }
+.rep-threats {
+    color: #dc2626;
+    font-weight: 700;
+    font-size: 0.75em;
+    margin-top: 4px;
+}
+.rep-card.has-threats {
+    border-bottom: 3px solid #dc2626;
+}
 
 .highlight-state {
     animation: stateGlow 3s ease-out;
@@ -287,8 +301,9 @@ function partyInitial($party) {
                 $responded = (int)$m['threats_responded'];
                 $silenceRate = $totalThreatPolls > 0 ? round(($totalThreatPolls - $responded) / $totalThreatPolls * 100) : 100;
                 $silenceClass = $silenceRate >= 80 ? 'silence-high' : ($silenceRate >= 40 ? 'silence-med' : 'silence-low');
+                $repThreatCount = $congThreatCounts[$m['official_id']] ?? 0;
             ?>
-            <a class="rep-card party-<?= $p ?>" href="/usa/rep.php?id=<?= $m['official_id'] ?>">
+            <a class="rep-card party-<?= $p ?><?= $repThreatCount > 0 ? ' has-threats' : '' ?>" href="/usa/rep.php?id=<?= $m['official_id'] ?>">
                 <?php if ($photoUrl): ?>
                     <img class="rep-photo" src="<?= htmlspecialchars($photoUrl) ?>" alt="<?= htmlspecialchars($m['full_name']) ?>" loading="lazy">
                 <?php else: ?>
@@ -300,6 +315,9 @@ function partyInitial($party) {
                 <div class="rep-stats">
                     <div class="responded"><?= $responded ?>/<?= $totalThreatPolls ?> responded</div>
                     <div class="silence <?= $silenceClass ?>"><?= $silenceRate ?>% silent</div>
+                    <?php if ($repThreatCount > 0): ?>
+                    <div class="rep-threats">&#9888; <?= $repThreatCount ?> threat<?= $repThreatCount !== 1 ? 's' : '' ?></div>
+                    <?php endif; ?>
                 </div>
             </a>
             <?php endforeach; ?>

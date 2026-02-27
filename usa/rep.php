@@ -90,6 +90,33 @@ if ($repUserId) {
 }
 $silenceRate = $totalThreatPolls > 0 ? round(($totalThreatPolls - $threatsResponded) / $totalThreatPolls * 100) : 100;
 
+// ── Threats attributed to this rep ──
+require_once dirname(__DIR__) . '/includes/severity.php';
+$stmt = $pdo->prepare("SELECT * FROM executive_threats WHERE official_id = ? AND is_active = 1 ORDER BY threat_date DESC");
+$stmt->execute([$oid]);
+$repThreats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$repThreatTags = [];
+if ($repThreats) {
+    $allTags = $pdo->query("SELECT * FROM threat_tags WHERE is_active = 1 ORDER BY sort_order")->fetchAll(PDO::FETCH_ASSOC);
+    $tagsById = [];
+    foreach ($allTags as $tag) $tagsById[$tag['tag_id']] = $tag;
+
+    $tids = array_column($repThreats, 'threat_id');
+    $ph = implode(',', array_fill(0, count($tids), '?'));
+    $stmt = $pdo->prepare("SELECT tm.threat_id, tm.tag_id FROM threat_tag_map tm JOIN threat_tags t ON tm.tag_id = t.tag_id WHERE t.is_active = 1 AND tm.threat_id IN ($ph)");
+    $stmt->execute($tids);
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $repThreatTags[$row['threat_id']][] = $tagsById[$row['tag_id']] ?? null;
+    }
+    $repThreatTags = array_map(fn($arr) => array_filter($arr), $repThreatTags);
+}
+
+$repScores = array_filter(array_map(fn($t) => $t['severity_score'], $repThreats), fn($s) => $s !== null);
+$repScores = array_map('intval', $repScores);
+$repAvgSev = $repScores ? round(array_sum($repScores) / count($repScores)) : 0;
+$repMaxSev = $repScores ? max($repScores) : 0;
+
 // ── Committees (parent only) ──
 $stmt = $pdo->prepare("SELECT c.committee_id, c.name, cm.role FROM committee_memberships cm JOIN committees c ON cm.committee_id = c.committee_id WHERE cm.official_id = ? AND c.parent_id IS NULL ORDER BY cm.role DESC, c.name");
 $stmt->execute([$oid]);
@@ -428,12 +455,36 @@ $pageStyles = <<<'CSS'
 
 .empty-note { color: #666; font-style: italic; font-size: 0.9em; }
 
+/* Threat items */
+.threat-item { padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.threat-item:last-child { border-bottom: none; }
+.threat-date { font-size: 0.8rem; color: #aaa; margin-bottom: 4px; }
+.threat-title-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.threat-title { font-size: 0.95rem; color: #e8eaf0; font-weight: 500; flex: 1; min-width: 200px; }
+.severity-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; min-width: 32px; text-align: center; flex-shrink: 0; }
+.threat-type { font-size: 0.7rem; padding: 2px 8px; border-radius: 3px; text-transform: uppercase; font-weight: 600; flex-shrink: 0; }
+.threat-type.strategic { background: #cc0000; color: #fff; }
+.threat-type.tactical { background: #ff9500; color: #000; }
+.tag-pills { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
+.tag-pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; border: 1px solid transparent; }
+.threat-desc { color: #d0d0d0; font-size: 0.9rem; line-height: 1.6; margin-bottom: 10px; }
+.threat-source a { color: #d4af37; text-decoration: none; font-size: 0.85rem; }
+.threat-source a:hover { text-decoration: underline; }
+.call-script { background: #0d0d1a; border: 1px solid #333; border-radius: 6px; padding: 12px; margin: 10px 0; }
+.call-script-label { font-size: 0.8rem; color: #d4af37; font-weight: 600; margin-bottom: 6px; }
+.call-script-text { color: #e0e0e0; font-size: 0.9rem; line-height: 1.5; font-style: italic; }
+.severity-summary { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 0.85rem; color: #bbb; margin-bottom: 16px; }
+.severity-summary strong { font-family: monospace; }
+.severity-bar-mini { width: 80px; height: 6px; background: #252d44; border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
+.severity-bar-fill { height: 100%; border-radius: 3px; }
+
 /* Responsive */
 @media (max-width: 600px) {
     .rep-identity { flex-direction: column; align-items: center; text-align: center; }
     .rep-identity .photo { width: 120px; height: 120px; }
     .stats-grid { flex-direction: column; }
     .vote-list li { flex-direction: column; gap: 4px; }
+    .threat-title-row { flex-direction: column; align-items: flex-start; gap: 4px; }
 }
 CSS;
 
@@ -498,6 +549,65 @@ require_once dirname(__DIR__) . '/includes/nav.php';
         </div>
         <a class="detail-link" href="/poll/by-rep/?id=<?= $oid ?>">View full threat roll call &rarr;</a>
     </div>
+
+    <!-- Accountability Record -->
+    <?php if ($repThreats): ?>
+    <div class="section-box">
+        <h2>Accountability Record</h2>
+        <div class="stats-grid" style="margin-bottom:16px">
+            <div class="stat-card">
+                <div class="num" style="color:#dc2626"><?= count($repThreats) ?></div>
+                <div class="label">Active Threat<?= count($repThreats) !== 1 ? 's' : '' ?></div>
+            </div>
+            <?php $avgZone = getSeverityZone($repAvgSev); ?>
+            <div class="stat-card">
+                <div class="num" style="color:<?= $avgZone['color'] ?>"><?= $repAvgSev ?></div>
+                <div class="label">Avg Severity (<?= $avgZone['label'] ?>)</div>
+            </div>
+            <?php $maxZone = getSeverityZone($repMaxSev); ?>
+            <div class="stat-card">
+                <div class="num" style="color:<?= $maxZone['color'] ?>"><?= $repMaxSev ?></div>
+                <div class="label">Max Severity (<?= $maxZone['label'] ?>)</div>
+            </div>
+        </div>
+
+        <?php foreach ($repThreats as $t):
+            $tid = $t['threat_id'];
+            $zone = getSeverityZone($t['severity_score']);
+        ?>
+        <div class="threat-item">
+            <div class="threat-date"><?= date('F j, Y', strtotime($t['threat_date'])) ?></div>
+            <div class="threat-title-row">
+                <span class="severity-badge" style="background:<?= $zone['color'] ?>;color:<?= ($t['severity_score'] ?? 0) > 500 ? '#fff' : '#000' ?>">
+                    <?= (int)$t['severity_score'] ?>
+                </span>
+                <span class="threat-title"><?= htmlspecialchars($t['title']) ?></span>
+                <span class="threat-type <?= $t['threat_type'] ?>"><?= $t['threat_type'] ?></span>
+            </div>
+            <?php if (!empty($repThreatTags[$tid])): ?>
+            <div class="tag-pills">
+                <?php foreach ($repThreatTags[$tid] as $tg): ?>
+                <span class="tag-pill" style="background:<?= $tg['color'] ?>22;color:<?= $tg['color'] ?>;border-color:<?= $tg['color'] ?>44"><?= htmlspecialchars($tg['tag_label']) ?></span>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+            <?php if ($t['target']): ?>
+            <div style="font-size:0.8rem;color:#d4af37;margin-bottom:6px;">Target: <?= htmlspecialchars($t['target']) ?></div>
+            <?php endif; ?>
+            <div class="threat-desc"><?= nl2br(htmlspecialchars($t['description'])) ?></div>
+            <?php if ($t['source_url']): ?>
+            <div class="threat-source"><a href="<?= htmlspecialchars($t['source_url']) ?>" target="_blank">&#128240; Source</a></div>
+            <?php endif; ?>
+            <?php if ($t['action_script']): ?>
+            <div class="call-script">
+                <div class="call-script-label">&#128222; What You Can Do</div>
+                <div class="call-script-text"><?= htmlspecialchars($t['action_script']) ?></div>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
 
     <!-- Scorecard -->
     <?php if ($scorecard): ?>

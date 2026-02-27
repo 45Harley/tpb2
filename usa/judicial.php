@@ -81,6 +81,22 @@ $scotusCount = count($scotus);
 $circuitCount = count($circuits);
 $districtCount = count($districts);
 
+// Threat counts per judge
+$allJudgeIds = array_merge(
+    array_column($scotus, 'official_id'),
+    array_column($circuits, 'official_id'),
+    array_column($districts, 'official_id')
+);
+$threatCounts = [];
+if ($allJudgeIds) {
+    $ph = implode(',', array_fill(0, count($allJudgeIds), '?'));
+    $stmt = $pdo->prepare("SELECT official_id, COUNT(*) cnt FROM executive_threats WHERE official_id IN ($ph) AND is_active = 1 GROUP BY official_id");
+    $stmt->execute($allJudgeIds);
+    while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) $threatCounts[(int)$r['official_id']] = (int)$r['cnt'];
+}
+$maxJudgeThreats = $threatCounts ? max($threatCounts) : 1;
+$totalJudicialThreats = array_sum($threatCounts);
+
 $pageStyles = <<<'CSS'
 .judicial-overview {
     max-width: 1200px;
@@ -219,6 +235,19 @@ $pageStyles = <<<'CSS'
     font-size: 0.65em;
     font-style: italic;
 }
+.card-threats {
+    color: #dc2626;
+    font-weight: 700;
+    font-size: 0.75em;
+    margin-top: 4px;
+}
+.judge-card.has-threats {
+    border-color: var(--threat-color);
+    box-shadow: 0 0 8px var(--threat-glow);
+}
+.judge-card.has-threats:hover {
+    box-shadow: 0 0 16px var(--threat-glow), 0 6px 20px rgba(0,0,0,0.5);
+}
 
 /* Circuit / state sections */
 .circuit-section, .state-section {
@@ -299,7 +328,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
 require_once dirname(__DIR__) . '/includes/nav.php';
 
 // ── Card renderer ──
-function renderJudgeCard($j, $isBoss = false) {
+function renderJudgeCard($j, $isBoss = false, $threatCount = 0, $maxThreats = 1) {
     $oid = $j['official_id'];
     $name = htmlspecialchars($j['full_name']);
     $title = htmlspecialchars($j['title']);
@@ -307,11 +336,21 @@ function renderJudgeCard($j, $isBoss = false) {
     $appointer = $j['appointer_name'] ? htmlspecialchars($j['appointer_name']) : '';
     $isSenior = (int)($j['senior_status'] ?? 0);
 
+    // Threat border color: scale red intensity with count
+    $intensity = $maxThreats > 0 ? $threatCount / $maxThreats : 0;
+    $r = 220; $g = (int)(38 + (1 - $intensity) * 40); $b = $g;
+    $alpha = 0.3 + $intensity * 0.5;
+    $threatColor = "rgb($r,$g,$b)";
+    $threatGlow = "rgba($r,$g,$b,$alpha)";
+
     $classes = 'judge-card';
     if ($isBoss) $classes .= ' boss-card';
     if ($isSenior) $classes .= ' senior-card';
+    if ($threatCount > 0) $classes .= ' has-threats';
 
-    echo "<a class=\"$classes\" href=\"/usa/judge.php?id=$oid\">";
+    $style = $threatCount > 0 ? " style=\"--threat-color:$threatColor;--threat-glow:$threatGlow\"" : '';
+
+    echo "<a class=\"$classes\" href=\"/usa/judge.php?id=$oid\"$style>";
 
     if ($photo) {
         echo "<img class=\"card-photo\" src=\"" . htmlspecialchars($photo) . "\" alt=\"$name\" loading=\"lazy\">";
@@ -328,6 +367,9 @@ function renderJudgeCard($j, $isBoss = false) {
     if ($isSenior) {
         echo "<div class=\"card-senior\">Senior Status</div>";
     }
+    if ($threatCount > 0) {
+        echo "<div class=\"card-threats\">&#9888; $threatCount threat" . ($threatCount !== 1 ? 's' : '') . "</div>";
+    }
 
     echo "</a>\n";
 }
@@ -343,7 +385,7 @@ function renderJudgeCard($j, $isBoss = false) {
         <h3>Supreme Court of the United States</h3>
         <div class="cards-grid">
             <?php foreach ($scotus as $j): ?>
-                <?php renderJudgeCard($j, (int)($j['chief_judge'] ?? 0)); ?>
+                <?php renderJudgeCard($j, (int)($j['chief_judge'] ?? 0), $threatCounts[$j['official_id']] ?? 0, $maxJudgeThreats); ?>
             <?php endforeach; ?>
         </div>
     </div>
@@ -366,6 +408,12 @@ function renderJudgeCard($j, $isBoss = false) {
             <div class="num"><?= $scotusCount + $circuitCount + $districtCount ?></div>
             <div class="label">Total Federal Judges</div>
         </div>
+        <?php if ($totalJudicialThreats > 0): ?>
+        <div class="judicial-stat" style="border-color:#dc2626">
+            <div class="num" style="color:#dc2626"><?= $totalJudicialThreats ?></div>
+            <div class="label">Active Threats</div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <?php if ($circuitCount > 0): ?>
@@ -400,7 +448,7 @@ function renderJudgeCard($j, $isBoss = false) {
             </div>
             <div class="cards-grid">
                 <?php foreach ($judges as $j): ?>
-                    <?php renderJudgeCard($j, (int)($j['chief_judge'] ?? 0)); ?>
+                    <?php renderJudgeCard($j, (int)($j['chief_judge'] ?? 0), $threatCounts[$j['official_id']] ?? 0, $maxJudgeThreats); ?>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -433,7 +481,7 @@ function renderJudgeCard($j, $isBoss = false) {
             </div>
             <div class="cards-grid">
                 <?php foreach ($judges as $j): ?>
-                    <?php renderJudgeCard($j, (int)($j['chief_judge'] ?? 0)); ?>
+                    <?php renderJudgeCard($j, (int)($j['chief_judge'] ?? 0), $threatCounts[$j['official_id']] ?? 0, $maxJudgeThreats); ?>
                 <?php endforeach; ?>
             </div>
         </div>
