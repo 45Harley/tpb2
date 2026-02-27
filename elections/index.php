@@ -17,6 +17,8 @@ $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'elections';
 $pageTitle = 'Elections 2026 — The People\'s Branch';
+$ogTitle = 'Elections 2026 — The People\'s Branch';
+$ogDescription = 'Track threats to democracy, take the pledge, and fight for the 28th Amendment. No Kings. Only Citizens.';
 
 $isLoggedIn = (bool)$dbUser;
 

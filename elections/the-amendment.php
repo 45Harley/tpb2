@@ -16,6 +16,8 @@ $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'elections';
 $pageTitle = 'Winning the War — The People\'s Branch';
+$ogTitle = 'The 28th Amendment — 70% Recall Power';
+$ogDescription = 'If 70% of Americans agree you must go, YOU MUST GO. The People\'s Accountability Amendment gives citizens the power to recall any federal official.';
 
 $pageStyles = <<<'CSS'
 .war-container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }

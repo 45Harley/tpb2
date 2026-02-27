@@ -17,6 +17,8 @@ $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'elections';
 $pageTitle = 'The Fight — Elections 2026';
+$ogTitle = 'The Fight — Take the Pledge for Democracy';
+$ogDescription = '14 pledges. 14 knockouts. Track your civic actions and hold power accountable in Election 2026.';
 
 $isLoggedIn = (bool)$dbUser;
 $userId = $dbUser ? $dbUser['user_id'] : null;

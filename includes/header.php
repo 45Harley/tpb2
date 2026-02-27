@@ -8,7 +8,10 @@
  *   $pageTitle - string, page title
  * 
  * Optional variables:
- *   $pageStyles - string, additional CSS
+ *   $pageStyles      - string, additional CSS
+ *   $ogTitle         - string, Open Graph title (defaults to $pageTitle)
+ *   $ogDescription   - string, Open Graph description
+ *   $ogImage         - string, Open Graph image URL
  */
 
 $pageTitle = isset($pageTitle) ? $pageTitle : 'The People\'s Branch';
@@ -19,6 +22,22 @@ $pageTitle = isset($pageTitle) ? $pageTitle : 'The People\'s Branch';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
+<?php
+    $ogTitle = isset($ogTitle) ? $ogTitle : $pageTitle;
+    $ogDesc  = isset($ogDescription) ? $ogDescription : 'The People\'s Branch — No Kings. Only Citizens.';
+    $_baseUrl = isset($c) ? ($c['base_url'] ?? 'https://4tpb.org') : 'https://4tpb.org';
+    $ogImage = isset($ogImage) ? $ogImage : ($_baseUrl . '/0media/PeoplesBranch.png');
+    $ogUrl   = isset($ogUrl) ? $ogUrl : ((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '4tpb.org') . ($_SERVER['REQUEST_URI'] ?? '/'));
+?>
+    <meta property="og:title" content="<?= htmlspecialchars($ogTitle) ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($ogDesc) ?>">
+    <meta property="og:image" content="<?= htmlspecialchars($ogImage) ?>">
+    <meta property="og:url" content="<?= htmlspecialchars($ogUrl) ?>">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= htmlspecialchars($ogTitle) ?>">
+    <meta name="twitter:description" content="<?= htmlspecialchars($ogDesc) ?>">
+    <meta name="twitter:image" content="<?= htmlspecialchars($ogImage) ?>">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
