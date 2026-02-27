@@ -99,9 +99,9 @@ $thoughts = $stmt->fetchAll();
 
 // Points log
 $stmt = $pdo->prepare("
-    SELECT pl.*, ca.action_name, ca.description as action_desc
+    SELECT pl.*, pa.action_name, pa.description as action_desc
     FROM points_log pl
-    JOIN civic_actions ca ON pl.action_id = ca.action_id
+    JOIN point_actions pa ON pl.action_id = pa.action_id
     WHERE pl.user_id = ?
     ORDER BY pl.earned_at DESC
     LIMIT 50
