@@ -363,6 +363,17 @@ extract($navVars);
             </div>
         </div>
 
+        <div style="background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; color: #ccc; font-size: 0.9rem; line-height: 1.6;">
+            <p style="margin: 0 0 0.5rem;">Every executive, legislative, and judicial action scoring <strong>300 or higher</strong> on the <strong style="color:#d4af37">criminality scale</strong> becomes a poll question here. These are documented threats to constitutional order &mdash; court orders defied, civil rights violated, public institutions dismantled. Note how low the bar is for impeachment: the Constitution requires only &ldquo;High Crimes and Misdemeanors&rdquo; &mdash; that&rsquo;s a <strong>31</strong> on this scale.</p>
+            <p style="margin: 0 0 0.5rem;"><strong>Two audiences, two questions:</strong></p>
+            <ul style="margin: 0 0 0.75rem 1.25rem; padding: 0;">
+                <li style="margin-bottom: 0.25rem;"><strong>Citizens:</strong> &ldquo;Is this acceptable?&rdquo; &mdash; your moral judgment on the act</li>
+                <li style="margin-bottom: 0.25rem;"><strong>Congress Members:</strong> &ldquo;Will you act on this?&rdquo; &mdash; their commitment, on the record</li>
+            </ul>
+            <p style="margin: 0 0 0.5rem;">Each threat lists one primary executive official, but most acts involve additional conspirators &mdash; aides, appointees, or agencies that carried out or enabled the action. The score rates the act itself, not any single person.</p>
+            <p style="margin: 0;">After you vote, see how the country responded in <a href="/poll/national/" style="color: #d4af37;">National</a>, how your state compares in <a href="/poll/by-state/" style="color: #d4af37;">By State</a>, and whether your representatives are listening in <a href="/poll/by-rep/" style="color: #d4af37;">By Rep</a>.</p>
+        </div>
+
         <?php if ($voteMessage): ?>
             <div class="alert alert-success"><?= htmlspecialchars($voteMessage) ?></div>
         <?php endif; ?>
