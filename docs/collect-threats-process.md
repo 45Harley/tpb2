@@ -26,7 +26,7 @@ Each branch has a different backlog. The first collection for each branch must l
 |--------|---------------------|-------------------|--------|
 | **Executive** | Jan 20, 2025 (inauguration) | Feb 26, 2026 | Active — 236 threats collected |
 | **Congressional** | Jan 20, 2025 (118th/119th Congress session) | — | Not started — first collection must cover Jan 2025 – present |
-| **Judicial** | Jan 2024 (ProPublica/ethics revelations) | — | Not started — first collection must cover Jan 2024 – present |
+| **Judicial** | Jan 2024 (ProPublica/ethics revelations) | Feb 26, 2026 | Active — 15 threats collected (SCOTUS ethics + Cannon) |
 
 **Why different start dates:**
 - **Executive** starts at inauguration — that's when this administration's actions began
@@ -534,20 +534,20 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 
 | Metric | Count |
 |--------|-------|
-| **Total threats** | 236 |
-| Active | 235 |
+| **Total threats** | 251 |
+| Active | 250 |
 | Resolved | 1 |
-| Tactical (specific actions) | 100 |
-| Strategic (systemic/institutional) | 136 |
+| Tactical (specific actions) | 107 |
+| Strategic (systemic/institutional) | 144 |
 | Date range | Dec 24, 2012 – Feb 26, 2026 |
 
 ### By Branch
 
 | Branch | Threats | Notes |
 |--------|---------|-------|
-| **Executive** | 236 | All current threats — congressional and judicial not yet collected |
+| **Executive** | 236 | Caught up through Feb 26, 2026 |
 | Congressional | 0 | Pending first collection |
-| Judicial | 0 | Pending first collection |
+| **Judicial** | 15 | First collection: Thomas, Alito, Kavanaugh, Roberts, Cannon (Apr 2024 – Feb 2026) |
 
 ### Severity Distribution
 
@@ -561,7 +561,7 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 | Atrocity | 501-700 | 12 | 5% |
 | Crime Against Humanity | 701-900 | 5 | 2% |
 
-- **146 threats score 300+** (polled) — 62% of all threats
+- **161 threats score 300+** (polled) — 64% of all threats
 - **90 threats score below 300** (not polled)
 - Severity range: 15 – 800
 - Average severity: **325** (all) / **416** (polled only)
@@ -609,7 +609,7 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 
 | Metric | Count |
 |--------|-------|
-| Active threat polls | 145 |
+| Active threat polls | 160 |
 | Citizen votes cast | 4 |
 | Rep votes cast | 0 |
 | Civic actions (called/emailed/shared) | 0 |
@@ -628,6 +628,7 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 | 2026-02-24 | Executive | 88 | 227 | Batch 1 (59): Feb 12-24 + Miller historical. Batch 2 (29): Epstein, deportation prisons, Noem jets, intl threats |
 | 2026-02-26 | — | 0 | 227 | Added `branch` column. All 227 existing threats tagged `executive`. Ready for congressional + judicial collections |
 | 2026-02-26 | Executive | 9 | 236 | Feb 25-26: State of the Union aftermath. Medicaid freeze, Epstein file suppression, FBI retaliation firings, Gabbard whistleblower block, Hegseth vs Sen Kelly, bank citizenship EO, NJ ICE suit, courthouse DOGE cuts, Tommy Robinson |
+| 2026-02-26 | Judicial | 15 | 251 | First judicial collection. Thomas (4): gifts, recusal, special counsel roadmap, tariff dissent. Alito (4): flags, godliness recording, Singer conflict, tariff dissent. Kavanaugh (1): tariff dissent. Roberts/SCOTUS (4): immunity ruling, shadow docket, universal injunctions, toothless ethics code. Cannon (2): dismissed docs case, blocked Smith report |
 
 ---
 
