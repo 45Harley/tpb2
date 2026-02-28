@@ -268,6 +268,7 @@ require dirname(__DIR__) . '/includes/nav.php';
         <a href="/elections/the-fight.php">The Fight</a>
         <a href="/elections/the-amendment.php">The War</a>
         <a href="/elections/threats.php" class="active">Threats</a>
+        <a href="/elections/races.php">Races</a>
     </div>
 
     <?php require_once dirname(__DIR__) . '/includes/criminality-scale.php'; ?>
