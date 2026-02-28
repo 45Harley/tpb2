@@ -24,6 +24,18 @@ try {
     die("Database connection failed");
 }
 
+// Election DB (for FEC race data)
+try {
+    $pdoElection = new PDO(
+        "mysql:host={$config['host']};dbname=sandge5_election;charset={$config['charset']}",
+        $config['username'],
+        $config['password'],
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+    );
+} catch (PDOException $e) {
+    $pdoElection = null;
+}
+
 require_once __DIR__ . '/includes/get-user.php';
 
 // --- CSRF ---
@@ -334,8 +346,122 @@ if (isset($_POST['save_settings'])) {
         'value' => $bulletinEnabled
     ]);
 
+    if (isset($_POST['fec_sync_enabled'])) {
+        $fecSyncEnabled = !empty($_POST['fec_sync_enabled']) ? '1' : '0';
+        setSiteSetting($pdo, 'fec_sync_enabled', $fecSyncEnabled, $adminUserId);
+        logAdminAction($pdo, $adminUserId, 'update_setting', 'site_setting', null, [
+            'key' => 'fec_sync_enabled',
+            'value' => $fecSyncEnabled
+        ]);
+    }
+
     $message = "Settings saved";
     $messageType = 'success';
+}
+
+// Add a tracked FEC race
+if (isset($_POST['add_race'])) {
+    validateCsrf();
+    if (!$pdoElection) {
+        $message = "Election database not available";
+        $messageType = 'error';
+    } else {
+        $office = $_POST['office'] ?? '';
+        $state = strtoupper(trim($_POST['state'] ?? ''));
+        $district = trim($_POST['district'] ?? '');
+        $rating = $_POST['rating'] ?? 'Toss-Up';
+        $cycle = (int)($_POST['cycle'] ?? 2026);
+
+        // Validate office
+        if (!in_array($office, ['H', 'S'])) {
+            $message = "Invalid office type";
+            $messageType = 'error';
+        }
+        // Validate state (2-char uppercase)
+        elseif (!preg_match('/^[A-Z]{2}$/', $state)) {
+            $message = "State must be a 2-character uppercase abbreviation";
+            $messageType = 'error';
+        }
+        // Validate district for House races (2-char zero-padded)
+        elseif ($office === 'H' && !preg_match('/^\d{2}$/', $district)) {
+            $message = "District must be a 2-digit zero-padded number for House races (e.g., 01, 12)";
+            $messageType = 'error';
+        } else {
+            // Senate races have no district
+            if ($office === 'S') $district = null;
+
+            try {
+                $stmt = $pdoElection->prepare("
+                    INSERT INTO fec_races (office, state, district, rating, cycle)
+                    VALUES (?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([$office, $state, $district, $rating, $cycle]);
+                logAdminAction($pdo, $adminUserId, 'add_race', 'fec_race', $pdoElection->lastInsertId(), [
+                    'office' => $office, 'state' => $state, 'district' => $district, 'rating' => $rating, 'cycle' => $cycle
+                ]);
+                $message = "Race added: $state" . ($district ? "-$district" : '') . " ($office)";
+                $messageType = 'success';
+            } catch (PDOException $e) {
+                if ($e->getCode() == 23000) {
+                    $message = "Race already exists: $state" . ($district ? "-$district" : '') . " ($office)";
+                } else {
+                    $message = "Failed to add race: " . $e->getMessage();
+                }
+                $messageType = 'error';
+            }
+        }
+    }
+}
+
+// Toggle race active/inactive
+if (isset($_POST['toggle_race'])) {
+    validateCsrf();
+    if (!$pdoElection) {
+        $message = "Election database not available";
+        $messageType = 'error';
+    } else {
+        $raceId = (int)($_POST['race_id'] ?? 0);
+        $newStatus = (int)($_POST['new_status'] ?? 0);
+        $stmt = $pdoElection->prepare("UPDATE fec_races SET is_active = ? WHERE race_id = ?");
+        $stmt->execute([$newStatus, $raceId]);
+        logAdminAction($pdo, $adminUserId, 'toggle_race', 'fec_race', $raceId, [
+            'new_status' => $newStatus ? 'active' : 'inactive'
+        ]);
+        $message = "Race " . ($newStatus ? 'activated' : 'deactivated');
+        $messageType = 'success';
+    }
+}
+
+// Delete race and associated data
+if (isset($_POST['delete_race'])) {
+    validateCsrf();
+    if (!$pdoElection) {
+        $message = "Election database not available";
+        $messageType = 'error';
+    } else {
+        $raceId = (int)($_POST['race_id'] ?? 0);
+        try {
+            $pdoElection->beginTransaction();
+            // Delete contributors linked through candidates
+            $pdoElection->prepare("
+                DELETE fc FROM fec_contributors fc
+                INNER JOIN fec_candidates c ON fc.candidate_id = c.candidate_id
+                WHERE c.race_id = ?
+            ")->execute([$raceId]);
+            // Delete candidates
+            $pdoElection->prepare("DELETE FROM fec_candidates WHERE race_id = ?")->execute([$raceId]);
+            // Delete the race
+            $pdoElection->prepare("DELETE FROM fec_races WHERE race_id = ?")->execute([$raceId]);
+            $pdoElection->commit();
+            logAdminAction($pdo, $adminUserId, 'delete_race', 'fec_race', $raceId, []);
+            $message = "Race and associated data deleted";
+            $messageType = 'success';
+        } catch (PDOException $e) {
+            $pdoElection->rollBack();
+            $message = "Failed to delete race: " . $e->getMessage();
+            $messageType = 'error';
+        }
+    }
 }
 
 // =====================================================
@@ -412,6 +538,22 @@ try {
         LIMIT 50
     ")->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {}
+
+// FEC Race data (for Races tab)
+$fecRaces = [];
+if ($pdoElection) {
+    try {
+        $fecRaces = $pdoElection->query("
+            SELECT r.*,
+                   (SELECT COUNT(*) FROM fec_candidates c WHERE c.race_id = r.race_id) as candidate_count,
+                   (SELECT MAX(c.last_synced_at) FROM fec_candidates c WHERE c.race_id = r.race_id) as last_synced
+            FROM fec_races r
+            ORDER BY r.state, r.district
+        ")->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $fecRaces = [];
+    }
+}
 
 // --- Tab data ---
 $tab = $_GET['tab'] ?? 'dashboard';
@@ -861,6 +1003,7 @@ $adminActions = $pdo->query("
         <a href="?tab=activity" class="<?= $tab === 'activity' ? 'active' : '' ?>">Activity</a>
         <a href="?tab=bot" class="<?= $tab === 'bot' ? 'active' : '' ?>">Bot <?= $botStats['attempts_24h'] > 0 ? '<span style="background:#ef5350;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.8em;margin-left:5px;">'.$botStats['attempts_24h'].'</span>' : '' ?></a>
         <a href="?tab=docs" class="<?= $tab === 'docs' ? 'active' : '' ?>">Docs</a>
+        <a href="?tab=races" class="<?= $tab === 'races' ? 'active' : '' ?>">Races</a>
         <a href="?tab=settings" class="<?= $tab === 'settings' ? 'active' : '' ?>">Settings</a>
     </div>
 
@@ -1541,6 +1684,159 @@ $adminActions = $pdo->query("
                 <?php if (empty($allDocs)): ?>
                     <p style="color:#888;text-align:center;padding:20px;">No docs match your filter.</p>
                 <?php endif; ?>
+            <?php endif; ?>
+
+        <?php elseif ($tab === 'races'): ?>
+            <!-- RACES TAB -->
+            <h2 class="section-title">FEC Race Tracking</h2>
+
+            <?php if (!$pdoElection): ?>
+                <div style="background:#1a1a1a;border:1px solid #ef5350;border-radius:8px;padding:20px;color:#ef5350;">
+                    Election database (sandge5_election) is not available. Check database credentials.
+                </div>
+            <?php else: ?>
+
+            <!-- Add Race Form -->
+            <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                <h3 style="color:#d4af37;margin:0 0 15px;">Add Race</h3>
+                <form method="POST" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+                    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                    <input type="hidden" name="add_race" value="1">
+
+                    <div>
+                        <label style="display:block;color:#888;font-size:0.8em;margin-bottom:4px;">Office</label>
+                        <select name="office" required style="background:#252525;color:#e0e0e0;border:1px solid #444;padding:8px 12px;border-radius:4px;">
+                            <option value="H">House</option>
+                            <option value="S">Senate</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display:block;color:#888;font-size:0.8em;margin-bottom:4px;">State</label>
+                        <input type="text" name="state" maxlength="2" placeholder="CT" required
+                            style="background:#252525;color:#e0e0e0;border:1px solid #444;padding:8px 12px;border-radius:4px;width:60px;text-transform:uppercase;">
+                    </div>
+
+                    <div>
+                        <label style="display:block;color:#888;font-size:0.8em;margin-bottom:4px;">District (House only)</label>
+                        <input type="text" name="district" maxlength="2" placeholder="01"
+                            style="background:#252525;color:#e0e0e0;border:1px solid #444;padding:8px 12px;border-radius:4px;width:60px;">
+                    </div>
+
+                    <div>
+                        <label style="display:block;color:#888;font-size:0.8em;margin-bottom:4px;">Rating</label>
+                        <select name="rating" style="background:#252525;color:#e0e0e0;border:1px solid #444;padding:8px 12px;border-radius:4px;">
+                            <option value="Toss-Up">Toss-Up</option>
+                            <option value="Lean D">Lean D</option>
+                            <option value="Lean R">Lean R</option>
+                            <option value="Likely D">Likely D</option>
+                            <option value="Likely R">Likely R</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display:block;color:#888;font-size:0.8em;margin-bottom:4px;">Cycle</label>
+                        <input type="number" name="cycle" value="2026" min="2024" max="2030"
+                            style="background:#252525;color:#e0e0e0;border:1px solid #444;padding:8px 12px;border-radius:4px;width:80px;">
+                    </div>
+
+                    <button type="submit" style="background:#d4af37;color:#000;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-weight:600;">Add Race</button>
+                </form>
+            </div>
+
+            <!-- Race List -->
+            <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                <h3 style="color:#d4af37;margin:0 0 15px;">Tracked Races (<?= count($fecRaces) ?>)</h3>
+
+                <?php if (empty($fecRaces)): ?>
+                    <p style="color:#888;text-align:center;padding:20px;">No races tracked yet. Add one above.</p>
+                <?php else: ?>
+                    <div class="table-wrap"><table style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr style="border-bottom:2px solid #333;">
+                                <th style="padding:10px 8px;text-align:left;color:#d4af37;font-size:0.85em;">State</th>
+                                <th style="padding:10px 8px;text-align:left;color:#d4af37;font-size:0.85em;">District</th>
+                                <th style="padding:10px 8px;text-align:left;color:#d4af37;font-size:0.85em;">Office</th>
+                                <th style="padding:10px 8px;text-align:left;color:#d4af37;font-size:0.85em;">Rating</th>
+                                <th style="padding:10px 8px;text-align:center;color:#d4af37;font-size:0.85em;">Candidates</th>
+                                <th style="padding:10px 8px;text-align:left;color:#d4af37;font-size:0.85em;">Last Sync</th>
+                                <th style="padding:10px 8px;text-align:center;color:#d4af37;font-size:0.85em;">Status</th>
+                                <th style="padding:10px 8px;text-align:center;color:#d4af37;font-size:0.85em;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($fecRaces as $race):
+                                $ratingColors = [
+                                    'Toss-Up' => '#9c27b0',
+                                    'Lean D' => '#42a5f5',
+                                    'Lean R' => '#ef5350',
+                                    'Likely D' => '#1565c0',
+                                    'Likely R' => '#c62828',
+                                ];
+                                $badgeColor = $ratingColors[$race['rating']] ?? '#666';
+                            ?>
+                                <tr style="border-bottom:1px solid #333;">
+                                    <td style="padding:8px;color:#e0e0e0;font-weight:600;"><?= htmlspecialchars($race['state']) ?></td>
+                                    <td style="padding:8px;color:#ccc;"><?= $race['district'] ? htmlspecialchars($race['district']) : '-' ?></td>
+                                    <td style="padding:8px;color:#ccc;"><?= $race['office'] === 'H' ? 'House' : 'Senate' ?></td>
+                                    <td style="padding:8px;">
+                                        <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.8em;font-weight:600;background:<?= $badgeColor ?>;color:#fff;">
+                                            <?= htmlspecialchars($race['rating']) ?>
+                                        </span>
+                                    </td>
+                                    <td style="padding:8px;text-align:center;color:#ccc;"><?= (int)$race['candidate_count'] ?></td>
+                                    <td style="padding:8px;color:#888;font-size:0.85em;"><?= $race['last_synced'] ? date('M j, g:ia', strtotime($race['last_synced'])) : 'Never' ?></td>
+                                    <td style="padding:8px;text-align:center;">
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="toggle_race" value="1">
+                                            <input type="hidden" name="race_id" value="<?= $race['race_id'] ?>">
+                                            <input type="hidden" name="new_status" value="<?= $race['is_active'] ? '0' : '1' ?>">
+                                            <button type="submit" style="background:none;border:1px solid <?= $race['is_active'] ? '#4caf50' : '#ef5350' ?>;color:<?= $race['is_active'] ? '#4caf50' : '#ef5350' ?>;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:0.8em;">
+                                                <?= $race['is_active'] ? 'Active' : 'Inactive' ?>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td style="padding:8px;text-align:center;">
+                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this race and all associated candidates/contributors?')">
+                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="delete_race" value="1">
+                                            <input type="hidden" name="race_id" value="<?= $race['race_id'] ?>">
+                                            <button type="submit" style="background:none;border:1px solid #ef5350;color:#ef5350;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:0.8em;">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table></div>
+                <?php endif; ?>
+            </div>
+
+            <!-- FEC Sync Settings -->
+            <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                <h3 style="color:#d4af37;margin:0 0 15px;">FEC Sync Settings</h3>
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                    <input type="hidden" name="save_settings" value="1">
+                    <input type="hidden" name="fec_sync_enabled" value="0">
+
+                    <?php $fecSyncEnabled = getSiteSetting($pdo, 'fec_sync_enabled', '0'); ?>
+
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
+                        <input type="checkbox" name="fec_sync_enabled" value="1" <?= $fecSyncEnabled === '1' ? 'checked' : '' ?>
+                            style="width:18px;height:18px;accent-color:#d4af37;">
+                        <span style="color:#e0e0e0;font-size:1.05em;">Enable FEC data sync</span>
+                    </label>
+
+                    <div style="display:flex;gap:20px;color:#888;font-size:0.9em;margin-bottom:15px;">
+                        <span>Status: <strong style="color:<?= $fecSyncEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $fecSyncEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
+                        <span>Schedule: <strong style="color:#ccc;">Daily at 2:00 AM ET</strong></span>
+                    </div>
+
+                    <button type="submit" style="background:#d4af37;color:#000;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-weight:600;">Save</button>
+                </form>
+            </div>
+
             <?php endif; ?>
 
         <?php elseif ($tab === 'settings'): ?>
