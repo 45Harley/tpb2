@@ -471,6 +471,7 @@ $electionSite = 'https://tpb.sandgems.net';
                 <div class="nav-dropdown">
                     <span class="nav-dropdown-toggle <?= $currentPage === 'help' ? 'active' : '' ?>">Help</span>
                     <div class="nav-dropdown-menu">
+                        <a href="/help/">📚 User Guides</a>
                         <a href="/help/tpb-getting-started-tutorial.html">🎓 Getting Started</a>
                         <a href="/help/icons.php">🎨 Modal Icons</a>
                     </div>
