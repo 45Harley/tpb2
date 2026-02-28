@@ -1,0 +1,51 @@
+{
+  "id": "onboarding",
+  "title": "Getting Started",
+  "subtitle": "Join, verify your email, set your town, and find your representatives.",
+  "generated": "2026-02-28T23:13:09.212Z",
+  "stepCount": 6,
+  "steps": [
+    {
+      "number": 1,
+      "title": "Visit The People's Branch",
+      "description": "Go to the home page. You'll see an interactive map of the United States and links to get involved in your community.",
+      "alt": "The People's Branch home page with interactive USA map",
+      "screenshot": "onboarding-01-home.png"
+    },
+    {
+      "number": 2,
+      "title": "Click \"Join\"",
+      "description": "In the top navigation, find the \"Join\" link and click it. You can also click \"Join\" from the home page. This takes you to the sign-up page.",
+      "alt": "The Join page with email sign-up form",
+      "screenshot": "onboarding-02-join.png"
+    },
+    {
+      "number": 3,
+      "title": "Enter your information",
+      "description": "Type your email address. You can also add your first name, last name, and age range — these are optional but help us serve you better. Then click \"Continue with Email.\"",
+      "alt": "Join form filled in with email and name fields",
+      "screenshot": "onboarding-03-fill-form.png"
+    },
+    {
+      "number": 4,
+      "title": "Check your email",
+      "description": "We'll send you a verification link to the email you entered. Open your email and click the link. This confirms your identity — one email equals one citizen. The link works on any device.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 5,
+      "title": "Set your town",
+      "description": "After verifying your email, visit your Profile page. Select your state, then type your town name to set your location. This connects you to your local civic community and lets you see local representatives.",
+      "alt": "Profile page with state and town selection fields",
+      "screenshot": "onboarding-05-profile.png"
+    },
+    {
+      "number": 6,
+      "title": "Find your representatives",
+      "description": "Click \"My Reps\" in the navigation menu to see your federal, state, and local representatives. Know who speaks for you — from Congress all the way to your town hall.",
+      "alt": "Representatives page showing federal and state officials",
+      "screenshot": "onboarding-06-reps.png"
+    }
+  ]
+}

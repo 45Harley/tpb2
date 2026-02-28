@@ -109,7 +109,8 @@ async function generateGuides() {
     const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({
         viewport: { width: 1280, height: 800 },
-        deviceScaleFactor: 2  // retina-quality screenshots
+        deviceScaleFactor: 2,  // retina-quality screenshots
+        baseURL: BASE_URL
     });
 
     for (const flow of flows) {
