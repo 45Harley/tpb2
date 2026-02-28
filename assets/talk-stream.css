@@ -5,6 +5,28 @@
  * Extracted from talk/index.php and namespaced.
  */
 
+/* ── Wrapper ───────────────────────────────────────────────────── */
+
+.talk-stream {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
+}
+
+.talk-stream .stream-title {
+    color: #d4af37;
+    font-size: 1.3rem;
+    text-align: center;
+    margin-bottom: 0.25rem;
+}
+
+.talk-stream .stream-subtitle {
+    color: #888;
+    font-size: 0.85rem;
+    text-align: center;
+    margin-bottom: 1.25rem;
+}
+
 /* ── Input Area ─────────────────────────────────────────────────── */
 
 .talk-stream .input-area {
