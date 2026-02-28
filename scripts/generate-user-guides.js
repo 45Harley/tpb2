@@ -45,7 +45,7 @@ const flows = [
             },
             {
                 title: 'Click "Join"',
-                description: 'In the top navigation, find the "Join" link and click it. You can also click "Join" from the home page. This takes you to the sign-up page.',
+                description: 'In the top navigation bar, find the "Join" link and click it. This takes you to the sign-up page where you can create your account.',
                 alt: 'The Join page with email sign-up form',
                 slug: 'join',
                 action: async (page) => {
