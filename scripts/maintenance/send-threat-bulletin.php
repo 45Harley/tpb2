@@ -149,6 +149,29 @@ ROW;
     </td>
   </tr>
 
+  <!-- Criminality Scale -->
+  <tr>
+    <td style="padding:4px 24px 12px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e0e0e0;border-radius:6px;overflow:hidden;font-size:11px;">
+        <tr>
+          <td colspan="10" style="background:#f5f5f5;padding:6px 10px;font-weight:bold;color:#555;font-size:12px;">Criminality Scale (0&ndash;1000) &mdash; rates the act, not the actor</td>
+        </tr>
+        <tr style="text-align:center;">
+          <td style="background:#4caf50;color:#fff;padding:4px 2px;">0<br>Clean</td>
+          <td style="background:#8bc34a;color:#fff;padding:4px 2px;">1&ndash;10<br>Question&shy;able</td>
+          <td style="background:#cddc39;color:#333;padding:4px 2px;">11&ndash;30<br>Mis&shy;conduct</td>
+          <td style="background:#ffeb3b;color:#333;padding:4px 2px;">31&ndash;70<br>Misde&shy;meanor</td>
+          <td style="background:#ff9800;color:#fff;padding:4px 2px;">71&ndash;150<br>Felony</td>
+          <td style="background:#ff5722;color:#fff;padding:4px 2px;">151&ndash;300<br>Serious Felony</td>
+          <td style="background:#f44336;color:#fff;padding:4px 2px;">301&ndash;500<br>High Crime</td>
+          <td style="background:#d32f2f;color:#fff;padding:4px 2px;">501&ndash;700<br>Atrocity</td>
+          <td style="background:#b71c1c;color:#fff;padding:4px 2px;">701&ndash;900<br>Crime v. Humanity</td>
+          <td style="background:#000;color:#fff;padding:4px 2px;">901+<br>Genocide</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
   <!-- Threat rows -->
   <tr>
     <td style="padding:0 12px;">
