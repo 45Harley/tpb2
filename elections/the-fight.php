@@ -22,6 +22,8 @@ $ogDescription = '14 pledges. 14 knockouts. Track your civic actions and hold po
 
 $isLoggedIn = (bool)$dbUser;
 $userId = $dbUser ? $dbUser['user_id'] : null;
+$siteUrl = $c['base_url'] ?? 'https://tpb2.sandgems.net';
+$shareText = "14 pledges. 14 knockouts. Track threats to democracy. Hold power accountable. Join The Fight.";
 
 // Get all active pledges with their primary knockout
 $pledges = $pdo->query("
@@ -178,6 +180,20 @@ $pageStyles = <<<'CSS'
 }
 .battle-cry p { font-size: 1.3em; font-weight: 700; color: #ff4444; font-style: italic; margin: 0; }
 
+.share-section { text-align: center; margin-top: 1.5rem; }
+.share-section p { color: #888; font-size: 0.85rem; margin-bottom: 0.5rem; }
+.share-row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.share-btn {
+    padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none;
+    font-weight: 600; font-size: 0.85rem; transition: transform 0.2s, opacity 0.2s;
+    display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;
+}
+.share-btn:hover { transform: translateY(-1px); opacity: 0.9; }
+.share-btn.x { background: #000; color: #fff; border: 1px solid #333; }
+.share-btn.bsky { background: #0085ff; color: #fff; }
+.share-btn.fb { background: #1877f2; color: #fff; }
+.share-btn.email { background: #38a169; color: #fff; }
+
 .points-flash {
     position: fixed; top: 20px; right: 20px; background: #d4af37; color: #000;
     padding: 0.5rem 1rem; border-radius: 6px; font-weight: 700; font-size: 0.9rem;
@@ -322,6 +338,16 @@ require_once dirname(__DIR__) . '/includes/nav.php';
 
     <div class="battle-cry">
         <p>"Hey diddle diddle, up the middle."</p>
+    </div>
+
+    <div class="share-section">
+        <p>Every share recruits another citizen.</p>
+        <div class="share-row">
+            <a href="https://twitter.com/intent/tweet?text=<?= urlencode($shareText) ?>&url=<?= urlencode("$siteUrl/elections/the-fight.php") ?>" target="_blank" class="share-btn x">Share on X</a>
+            <a href="https://bsky.app/intent/compose?text=<?= urlencode($shareText . " $siteUrl/elections/the-fight.php") ?>" target="_blank" class="share-btn bsky">Bluesky</a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=<?= urlencode("$siteUrl/elections/the-fight.php") ?>" target="_blank" class="share-btn fb">Facebook</a>
+            <a href="mailto:?subject=<?= urlencode('Join The Fight — The People\'s Branch') ?>&body=<?= urlencode($shareText . "\n\n$siteUrl/elections/the-fight.php") ?>" class="share-btn email">Email</a>
+        </div>
     </div>
 </main>
 
