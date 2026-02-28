@@ -366,7 +366,20 @@ require_once dirname(__DIR__) . '/includes/nav.php';
     </div>
 
     <?php
-    $talkStreamPlaceholder = 'What does the Golden Rule demand right now?';
+    $talkStreamConfig = [
+        'group'               => 'The Fight',
+        'scope'               => 'federal',
+        'title'               => 'Community Stream',
+        'subtitle'            => 'Evidence. Ideas. Action. A debate where everyone wins.',
+        'placeholder'         => 'What does the Golden Rule demand right now?',
+        'show_group_selector' => false,
+        'show_filters'        => false,
+        'show_categories'     => false,
+        'show_ai_toggle'      => true,
+        'show_mic'            => true,
+        'show_admin_tools'    => false,
+        'limit'               => 30,
+    ];
     require dirname(__DIR__) . '/includes/talk-stream.php';
     ?>
 
