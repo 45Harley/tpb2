@@ -443,10 +443,10 @@ window.TalkStream = (function() {
             if (data.public_access !== undefined) this.publicAccess = data.public_access;
             this.updateFooter();
 
-            // Hide input area for non-member public viewers
+            // Hide input area for non-member public viewers (but keep for logged-in users who can post)
             var inputArea = this.stream.parentNode.querySelector('.input-area');
             if (inputArea && this.config.groupId) {
-                inputArea.style.display = (!this.userRole && this.publicAccess) ? 'none' : '';
+                inputArea.style.display = (!this.userRole && this.publicAccess && !this.config.canPost) ? 'none' : '';
             }
 
             if (!before) {
