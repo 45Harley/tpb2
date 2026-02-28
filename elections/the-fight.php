@@ -211,6 +211,7 @@ require_once dirname(__DIR__) . '/includes/nav.php';
         <a href="/elections/">Elections</a>
         <a href="/elections/the-fight.php" class="active">The Fight</a>
         <a href="/elections/the-amendment.php">The War</a>
+        <a href="/elections/threats.php">Threats</a>
     </div>
 
     <div class="fight-header">
