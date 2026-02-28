@@ -72,11 +72,16 @@ if ($_tsGroupId) {
     $_tsPrefix = 'ts0';
 }
 
-// ── Load shared CSS & JS once per page ──────────────────────────────────
+// ── Load shared assets once per page ─────────────────────────────────────
+// CSS should be loaded in <head> by calling page via $headLinks (set before header.php).
+// JS loaded here in body (needs to be before the init script below).
 if (!defined('TALK_STREAM_ASSETS_LOADED')) {
     define('TALK_STREAM_ASSETS_LOADED', true);
     $tsAssetVer = filemtime(dirname(__DIR__) . '/assets/talk-stream.css');
-    echo '<link rel="stylesheet" href="/assets/talk-stream.css?v=' . $tsAssetVer . '">' . "\n";
+    // Fallback: load CSS here if calling page didn't set $headLinks
+    if (empty($headLinks)) {
+        echo '<link rel="stylesheet" href="/assets/talk-stream.css?v=' . $tsAssetVer . '">' . "\n";
+    }
     echo '<script src="/assets/talk-stream.js?v=' . $tsAssetVer . '"></script>' . "\n";
 }
 ?>

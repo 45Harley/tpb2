@@ -38,6 +38,7 @@ $pageTitle = isset($pageTitle) ? $pageTitle : 'The People\'s Branch';
     <meta name="twitter:title" content="<?= htmlspecialchars($ogTitle) ?>">
     <meta name="twitter:description" content="<?= htmlspecialchars($ogDesc) ?>">
     <meta name="twitter:image" content="<?= htmlspecialchars($ogImage) ?>">
+<?php if (!empty($headLinks)) echo $headLinks; ?>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {

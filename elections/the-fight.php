@@ -86,6 +86,10 @@ if ($isLoggedIn) {
     $pollVoteCount = $stmt->fetchColumn();
 }
 
+// Pre-load talk-stream CSS in <head> via header.php
+$_tsCssVer = filemtime(dirname(__DIR__) . '/assets/talk-stream.css');
+$headLinks = '    <link rel="stylesheet" href="/assets/talk-stream.css?v=' . $_tsCssVer . '">' . "\n";
+
 $pageStyles = <<<'CSS'
 .fight-container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
 

@@ -54,6 +54,10 @@ $secondaryNav = [
     ['label' => 'Help',    'url' => '/talk/help.php'],
 ];
 
+// Pre-load talk-stream CSS in <head> via header.php
+$_tsCssVer = filemtime(__DIR__ . '/../assets/talk-stream.css');
+$headLinks = '    <link rel="stylesheet" href="/assets/talk-stream.css?v=' . $_tsCssVer . '">' . "\n";
+
 $pageStyles = <<<'CSS'
         body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
