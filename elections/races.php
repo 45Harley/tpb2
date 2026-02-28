@@ -314,7 +314,7 @@ require dirname(__DIR__) . '/includes/nav.php';
 
             // Build race label: e.g. "NY-19 House" or "GA Senate"
             $district = $race['district'] ?? '';
-            $chamber = $race['chamber'] ?? 'House';
+            $chamber = $race['office'] === 'S' ? 'Senate' : 'House';
             if ($chamber === 'Senate' || empty($district)) {
                 $raceLabel = $race['state'] . ' ' . $chamber;
             } else {
@@ -344,13 +344,11 @@ require dirname(__DIR__) . '/includes/nav.php';
                 <?php else: ?>
                     <?php foreach ($raceCandidates as $cand):
                         $candId = $cand['fec_candidate_id'];
-                        $party = strtoupper($cand['party'] ?? '');
-                        $partyClass = match($party) {
-                            'DEM', 'D' => 'dem',
-                            'REP', 'R' => 'rep',
-                            default => 'other',
-                        };
-                        $isIncumbent = !empty($cand['is_incumbent']);
+                        $partyRaw = strtoupper($cand['party'] ?? '');
+                        // FEC returns full names like "REPUBLICAN PARTY" or abbreviations like "REP"
+                        $partyClass = (str_contains($partyRaw, 'DEM') ? 'dem' : (str_contains($partyRaw, 'REP') ? 'rep' : 'other'));
+                        $party = $partyClass === 'dem' ? 'DEM' : ($partyClass === 'rep' ? 'REP' : ($partyRaw ?: '?'));
+                        $isIncumbent = ($cand['incumbent_challenge'] ?? '') === 'I';
                         $totalReceipts = (float)($cand['total_receipts'] ?? 0);
                         $totalDisbursements = (float)($cand['total_disbursements'] ?? 0);
                         $cashOnHand = (float)($cand['cash_on_hand'] ?? 0);
@@ -374,7 +372,7 @@ require dirname(__DIR__) . '/includes/nav.php';
                     ?>
                     <div class="candidate-row">
                         <div class="candidate-info">
-                            <div class="candidate-name"><?= htmlspecialchars($cand['candidate_name'] ?? 'Unknown') ?></div>
+                            <div class="candidate-name"><?= htmlspecialchars($cand['name'] ?? 'Unknown') ?></div>
                             <div>
                                 <span class="party-badge <?= $partyClass ?>"><?= htmlspecialchars($party ?: '?') ?></span>
                                 <?php if ($isIncumbent): ?>

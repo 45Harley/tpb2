@@ -124,7 +124,7 @@ foreach ($races as $race) {
             $race['race_id'],
             $cand['candidate_pcc_id'] ?? null,
             $cand['candidate_name'] ?? 'Unknown',
-            $cand['party'] ?? null,
+            $cand['party_full'] ?? $cand['party'] ?? null,
             isset($cand['incumbent_challenge_full']) ? substr($cand['incumbent_challenge_full'], 0, 1) : null,
             $cand['total_receipts'] ?? 0,
             $cand['total_disbursements'] ?? 0,
