@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS fec_candidates (
   official_id INT DEFAULT NULL,
   committee_id VARCHAR(12) DEFAULT NULL,
   name VARCHAR(150) NOT NULL,
-  party VARCHAR(10) DEFAULT NULL,
+  party VARCHAR(50) DEFAULT NULL,
   incumbent_challenge CHAR(1) DEFAULT NULL,
   total_receipts DECIMAL(14,2) DEFAULT 0,
   total_disbursements DECIMAL(14,2) DEFAULT 0,
