@@ -5,7 +5,9 @@
  * Pulls candidate and contributor data from OpenFEC API
  * into local cache tables for the race dashboard.
  *
- * Run via cPanel cron: 0 2 * * * (2:00 AM EST — cPanel clock is EST)
+ * Cron: every 6 hours (0 0,6,12,18 * * *) — cPanel clock is EST.
+ * With DEMO_KEY: syncs 1 race per run (least recently synced first).
+ * With real key (1000 req/hr): syncs all races in one run.
  *
  * Requirements:
  *   - site_settings.fec_sync_enabled = '1'
@@ -47,12 +49,21 @@ $pdo = new PDO(
 $apiKey = $config['fec_api_key'] ?? 'DEMO_KEY';
 $apiBase = 'https://api.open.fec.gov/v1';
 
-// Get active races
+// Get active races — rotate: pick the one least recently synced
+// With DEMO_KEY (30 req/hr), we can only handle ~1 race per run.
+// With a real key (1000 req/hr), set MAX_RACES_PER_RUN higher.
+$maxRaces = ($apiKey !== 'DEMO_KEY') ? 999 : 1;
+
 $races = $pdo->query("
-    SELECT race_id, cycle, office, state, district
-    FROM fec_races
-    WHERE is_active = 1
-    ORDER BY state, district
+    SELECT r.race_id, r.cycle, r.office, r.state, r.district
+    FROM fec_races r
+    LEFT JOIN (
+        SELECT race_id, MAX(last_synced_at) as last_sync
+        FROM fec_candidates GROUP BY race_id
+    ) c ON r.race_id = c.race_id
+    WHERE r.is_active = 1
+    ORDER BY c.last_sync ASC, r.race_id ASC
+    LIMIT {$maxRaces}
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 if (empty($races)) {
