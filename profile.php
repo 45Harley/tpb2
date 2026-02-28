@@ -563,12 +563,26 @@ require 'includes/nav.php';
                         ?>
                     </p>
                 </div>
-                
+
+                <!-- Notification Preferences -->
+                <div class="form-group" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #333;">
+                    <label style="color: #d4af37;">Notifications</label>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="notifyThreatBulletin" <?= ($dbUser && !empty($dbUser['notify_threat_bulletin'])) ? 'checked' : '' ?> <?= (!$dbUser || ($dbUser['identity_level_id'] ?? 0) < 2) ? 'disabled' : '' ?>>
+                            <span>Daily threat bulletin email (8 AM ET)</span>
+                        </label>
+                        <?php if (!$dbUser || ($dbUser['identity_level_id'] ?? 0) < 2): ?>
+                        <p style="color: #666; font-size: 0.8rem; font-style: italic;">Verify your email to enable threat alerts</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary">Save Changes</button>
                 <div id="identityStatus"></div>
             </form>
         </div>
-        
+
         <!-- Verification -->
         <div class="card" id="email">
             <h2>✓ Verification</h2>
@@ -868,6 +882,8 @@ require 'includes/nav.php';
                         show_first_name: document.getElementById('showFirstName').checked ? 1 : 0,
                         show_last_name: document.getElementById('showLastName').checked ? 1 : 0,
                         show_age_bracket: document.getElementById('showAgeBracket').checked ? 1 : 0,
+                        // Notification preferences
+                        notify_threat_bulletin: document.getElementById('notifyThreatBulletin').checked ? 1 : 0,
                         // Bot detection
                         website_url: document.getElementById('website_url').value,
                         _form_load_time: document.getElementById('_form_load_time').value

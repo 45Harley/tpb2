@@ -11,6 +11,7 @@ session_start();
 
 $config = require __DIR__ . '/config.php';
 require_once __DIR__ . '/includes/smtp-mail.php';
+require_once __DIR__ . '/includes/site-settings.php';
 
 try {
     $pdo = new PDO(
@@ -320,6 +321,21 @@ if (isset($_POST['reject_volunteer'])) {
         header('Location: admin.php?tab=volunteers');
         exit;
     }
+}
+
+// Save site settings
+if (isset($_POST['save_settings'])) {
+    validateCsrf();
+
+    $bulletinEnabled = !empty($_POST['threat_bulletin_enabled']) ? '1' : '0';
+    setSiteSetting($pdo, 'threat_bulletin_enabled', $bulletinEnabled, $adminUserId);
+    logAdminAction($pdo, $adminUserId, 'update_setting', 'site_setting', null, [
+        'key' => 'threat_bulletin_enabled',
+        'value' => $bulletinEnabled
+    ]);
+
+    $message = "Settings saved";
+    $messageType = 'success';
 }
 
 // =====================================================
@@ -845,6 +861,7 @@ $adminActions = $pdo->query("
         <a href="?tab=activity" class="<?= $tab === 'activity' ? 'active' : '' ?>">Activity</a>
         <a href="?tab=bot" class="<?= $tab === 'bot' ? 'active' : '' ?>">Bot <?= $botStats['attempts_24h'] > 0 ? '<span style="background:#ef5350;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.8em;margin-left:5px;">'.$botStats['attempts_24h'].'</span>' : '' ?></a>
         <a href="?tab=docs" class="<?= $tab === 'docs' ? 'active' : '' ?>">Docs</a>
+        <a href="?tab=settings" class="<?= $tab === 'settings' ? 'active' : '' ?>">Settings</a>
     </div>
 
     <div class="container">
@@ -1525,6 +1542,44 @@ $adminActions = $pdo->query("
                     <p style="color:#888;text-align:center;padding:20px;">No docs match your filter.</p>
                 <?php endif; ?>
             <?php endif; ?>
+
+        <?php elseif ($tab === 'settings'): ?>
+            <!-- SETTINGS TAB -->
+            <h2 class="section-title">Site Settings</h2>
+
+            <?php
+            $bulletinEnabled = getSiteSetting($pdo, 'threat_bulletin_enabled', '0');
+            $subscriberCount = (int)$pdo->query("
+                SELECT COUNT(*) FROM users
+                WHERE notify_threat_bulletin = 1
+                  AND identity_level_id >= 2
+                  AND deleted_at IS NULL
+                  AND email NOT LIKE '%@anonymous.tpb'
+            ")->fetchColumn();
+            ?>
+
+            <form method="POST" style="max-width:600px;">
+                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                <input type="hidden" name="save_settings" value="1">
+
+                <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                    <h3 style="color:#d4af37;margin:0 0 15px;">Threat Bulletin Emails</h3>
+                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Daily email digest of new threats (last 48 hours) sent at 8:00 AM ET to subscribed users.</p>
+
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
+                        <input type="checkbox" name="threat_bulletin_enabled" value="1" <?= $bulletinEnabled === '1' ? 'checked' : '' ?>
+                            style="width:18px;height:18px;accent-color:#d4af37;">
+                        <span style="color:#e0e0e0;font-size:1.05em;">Enable daily threat bulletin</span>
+                    </label>
+
+                    <div style="display:flex;gap:20px;color:#888;font-size:0.9em;">
+                        <span>Subscribers: <strong style="color:#d4af37;"><?= $subscriberCount ?></strong></span>
+                        <span>Status: <strong style="color:<?= $bulletinEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $bulletinEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
+                    </div>
+                </div>
+
+                <button type="submit" style="background:#d4af37;color:#000;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-weight:600;">Save Settings</button>
+            </form>
 
         <?php elseif ($tab === 'help'): ?>
             <!-- HELP TAB -->

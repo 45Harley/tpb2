@@ -97,6 +97,30 @@ $pageStyles = <<<'CSS'
     50% { opacity: 0.7; text-shadow: 0 0 20px currentColor; }
 }
 
+/* Subscribe bar */
+.subscribe-bar {
+    display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+    padding: 0.75rem 1rem; margin-bottom: 1rem;
+    background: #0a0a0f; border: 1px solid #333; border-radius: 8px;
+}
+.subscribe-bar .sub-label { color: #aaa; font-size: 0.9rem; }
+.subscribe-bar .sub-hint { color: #666; font-size: 0.8rem; font-style: italic; }
+.subscribe-bar .sub-status { color: #4caf50; font-size: 0.8rem; display: none; }
+.toggle-switch {
+    position: relative; width: 44px; height: 24px; cursor: pointer;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: #333; border-radius: 24px; transition: 0.3s;
+}
+.toggle-slider:before {
+    content: ''; position: absolute; width: 18px; height: 18px;
+    left: 3px; bottom: 3px; background: #888; border-radius: 50%; transition: 0.3s;
+}
+.toggle-switch input:checked + .toggle-slider { background: #4caf50; }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); background: #fff; }
+
 /* Filter controls */
 .filter-bar {
     display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
@@ -268,6 +292,20 @@ require dirname(__DIR__) . '/includes/nav.php';
         </div>
     </div>
 
+    <!-- Subscribe to daily alerts -->
+    <div class="subscribe-bar">
+    <?php if ($dbUser && ($dbUser['identity_level_id'] ?? 0) >= 2): ?>
+        <span class="sub-label">Daily threat alerts by email</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="bulletinToggle" <?= !empty($dbUser['notify_threat_bulletin']) ? 'checked' : '' ?> onchange="toggleBulletin(this.checked)">
+            <span class="toggle-slider"></span>
+        </label>
+        <span class="sub-status" id="bulletinStatus"></span>
+    <?php else: ?>
+        <span class="sub-hint">Sign in and verify your email to get daily threat alerts</span>
+    <?php endif; ?>
+    </div>
+
     <!-- Filters -->
     <div class="filter-bar">
         <label>Filter:</label>
@@ -401,6 +439,29 @@ function sortThreats(sortBy) {
     });
 
     cards.forEach(card => stream.appendChild(card));
+}
+
+function toggleBulletin(checked) {
+    const status = document.getElementById('bulletinStatus');
+    fetch('/api/save-profile.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ notify_threat_bulletin: checked ? 1 : 0 })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'success') {
+            status.textContent = checked ? 'Subscribed!' : 'Unsubscribed';
+            status.style.color = checked ? '#4caf50' : '#888';
+            status.style.display = 'inline';
+            setTimeout(() => { status.style.display = 'none'; }, 3000);
+        }
+    })
+    .catch(() => {
+        status.textContent = 'Error saving';
+        status.style.color = '#f44336';
+        status.style.display = 'inline';
+    });
 }
 
 function openEmailModal() { document.getElementById('emailModal').classList.add('open'); }

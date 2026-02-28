@@ -207,6 +207,12 @@ try {
         $params[] = $input['age_bracket'];
     }
 
+    // Threat bulletin subscription
+    if (array_key_exists('notify_threat_bulletin', $input)) {
+        $updates[] = "notify_threat_bulletin = ?";
+        $params[] = $input['notify_threat_bulletin'] ? 1 : 0;
+    }
+
     // Email - if changed, clear email_verified
     $emailChanged = false;
     if (!empty($input['email'])) {
