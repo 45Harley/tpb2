@@ -3,7 +3,7 @@
  * Daily Threat Bulletin Email
  *
  * Sends an HTML digest of threats from the last 2 days to subscribed users.
- * Run via cPanel cron: 0 13 * * * (8:00 AM ET = 1:00 PM UTC)
+ * Run via cPanel cron: 0 8 * * * (8:00 AM EST — cPanel clock is EST)
  *
  * Requirements:
  *   - site_settings.threat_bulletin_enabled = '1'

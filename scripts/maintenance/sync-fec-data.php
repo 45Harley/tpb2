@@ -5,7 +5,7 @@
  * Pulls candidate and contributor data from OpenFEC API
  * into local cache tables for the race dashboard.
  *
- * Run via cPanel cron: 0 7 * * * (2:00 AM ET = 7:00 AM UTC)
+ * Run via cPanel cron: 0 2 * * * (2:00 AM EST — cPanel clock is EST)
  *
  * Requirements:
  *   - site_settings.fec_sync_enabled = '1'
