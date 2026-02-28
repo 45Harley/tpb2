@@ -2,7 +2,7 @@
 
 **Development, staging, and production — the complete picture.**
 
-Last updated: 2026-02-19
+Last updated: 2026-02-27
 
 ---
 
@@ -81,9 +81,15 @@ Last updated: 2026-02-19
 
 **Web server hardening (.htaccess):**
 - Bot/scanner blocking: AhrefsBot, SemrushBot, GPTBot, ClaudeBot, Shodan, Nmap, python-requests, etc.
+- **Social media crawlers ALLOWED**: facebookexternalhit, meta-externalagent, LinkedInBot, Twitterbot, Bluesky — required for share link preview cards (Open Graph)
 - Sensitive file protection: `.env`, `.git/`, `config.php`, `config-claude.php`, `.sql`, `.bak`
 - Directory protection: `/tests/`, `/scripts/`, `/docs/` (except public volunteer docs)
 - WordPress probe blocking: wp-login.php, wp-admin, xmlrpc.php
+
+**Open Graph meta tags (header.php):**
+- All pages automatically emit `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `twitter:card`
+- Pages can override defaults by setting `$ogTitle`, `$ogDescription`, `$ogImage` before including header.php
+- Default image: `0media/PeoplesBranch.png`
 
 **Application security:**
 - CSRF tokens on all POST forms

@@ -29,6 +29,14 @@
 | [talk-phase3-seeds.md](talk-phase3-seeds.md) | Pre-brainstorm notes (archived vision doc) |
 | [talk-csps-article-draft.md](talk-csps-article-draft.md) | Draft article: civic infrastructure on spiritual ground |
 
+## Elections
+
+| Doc | Description |
+|-----|-------------|
+| See [platform-overview.md](platform-overview.md) | Elections 2026: landing page, The Fight (pledges/knockouts), The War (28th Amendment) |
+
+Key files: `elections/index.php`, `elections/the-fight.php`, `elections/the-amendment.php`, `api/pledge-action.php`, `api/knockout-action.php`, `api/email-recruit.php`
+
 ## Builder Kits
 
 ### State Builder (`state-builder/`)

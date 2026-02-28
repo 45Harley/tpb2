@@ -50,6 +50,7 @@ In state building:
 - `includes/` — shared components (nav, footer, get-user, point-logger, smtp-mail)
 - `assets/` — JS, CSS, frontend files
 - `z-states/` — state/town pages (e.g., `z-states/ct/putnam/`)
+- `elections/` — elections section (landing, The Fight pledges/knockouts, The War amendment)
 - `poll/` — poll system
 - `volunteer/` — volunteer system
 - `constitution/` — constitution section

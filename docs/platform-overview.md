@@ -2,7 +2,7 @@
 
 **The People's Branch** — A civic engagement platform where citizens participate in local and national governance.
 
-Last updated: 2026-02-25
+Last updated: 2026-02-27
 
 ---
 
@@ -31,6 +31,18 @@ Last updated: 2026-02-25
 
 ---
 
+## Elections 2026
+
+- **Landing page** (`elections/index.php`) — Election overview with live stats (threat count, citizen count, poll votes), feature cards linking to The Fight/The War/Polls, share buttons (X, Bluesky, Facebook) scattered throughout, email-a-friend modal.
+- **The Fight** (`elections/the-fight.php`) — 14 pledges + 14 knockouts action tracker. Logged-in users check off pledges (+5 civic points) and knockouts (+25 civic points). Progress bar, auto-tracked activity feed.
+- **The War** (`elections/the-amendment.php`) — 28th Amendment strategy page: 70% recall power, 6 numbered sections with expandable details (full amendment text, ratification path, objection rebuttals). Share buttons + email recruit modal.
+- **Sub-nav** — All three pages share view-links: Elections | The Fight | The War
+- **APIs**: `api/pledge-action.php`, `api/knockout-action.php` (toggle pledges/knockouts with civic points), `api/email-recruit.php` (send amendment recruitment email)
+- **DB tables**: `pledges`, `knockouts`, `pledge_knockouts`, `user_pledges`, `user_knockouts`
+- **Point actions**: `pledge_made` (id 60, 5 pts), `knockout_achieved` (id 61, 25 pts)
+
+---
+
 ## Core Civic Participation
 
 - **Talk** (`talk/`) — Group deliberation. Post ideas, vote, gather/crystallize into action. Geographic streams (USA/state/town) + user-created and standard civic groups.
@@ -44,7 +56,7 @@ Last updated: 2026-02-25
 - **4-tier identity levels** — anonymous → remembered (email) → verified (phone) → vetted (background check)
 - **Passwordless auth** — magic link login via `login.php` / `join.php`
 - **Parental consent** — minors (13-17) require parent verification
-- **Civic points** — gamified engagement tracking (55 point actions, 38 wired) via `includes/point-logger.php`
+- **Civic points** — gamified engagement tracking (57 point actions, 40 wired) via `includes/point-logger.php`
 
 ---
 
@@ -63,7 +75,7 @@ Last updated: 2026-02-25
 
 - **Reps** (`reps.php`) — Browse representatives at federal/state/town level, all branches
 - **District lookup** — OpenStates integration, lat/lng → districts
-- **Amendment 28** (`28/`) — Petition page for "The People's Amendment"
+- **Amendment 28** (`28/`) — Petition page for "The People's Amendment" (see also Elections → The War)
 
 ---
 
@@ -96,6 +108,7 @@ Last updated: 2026-02-25
 - **Admin dashboard** (`admin.php`) — User management, moderation, volunteer approvals, audit logs
 - **Modal system** (`api/modal/`) — Page-specific help modals with analytics
 - **39 platform roles** — Independent from volunteer system
+- **Open Graph** — All pages emit `og:title`, `og:description`, `og:image`, `twitter:card` via `includes/header.php` (set optional `$ogTitle`, `$ogDescription`, `$ogImage` before include)
 - **SMTP email** — All mail via `sendSmtpMail()`, not PHP `mail()`
 - **Soft deletes** — Users never hard-deleted, `deleted_at` timestamp
 - **CSRF protection** — All admin POST forms validated
