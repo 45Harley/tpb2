@@ -2,7 +2,7 @@
   "id": "onboarding",
   "title": "Getting Started",
   "subtitle": "Join, verify your email, set your town, and find your representatives.",
-  "generated": "2026-02-28T23:43:13.159Z",
+  "generated": "2026-02-28T23:48:50.158Z",
   "stepCount": 6,
   "steps": [
     {
@@ -14,8 +14,8 @@
     },
     {
       "number": 2,
-      "title": "Click \"Join\"",
-      "description": "In the top navigation bar, find the \"Join\" link and click it. This takes you to the sign-up page where you can create your account.",
+      "title": "Click \"Login\" then \"New User\"",
+      "description": "In the top-right corner of the navigation bar, click \"Login\" to open the dropdown, then click \"New User.\" This takes you to the sign-up page where you can create your account.",
       "alt": "The Join page with email sign-up form",
       "screenshot": "onboarding-02-join.png"
     },

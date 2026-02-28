@@ -44,8 +44,8 @@ const flows = [
                 screenshot: { fullPage: false }
             },
             {
-                title: 'Click "Join"',
-                description: 'In the top navigation bar, find the "Join" link and click it. This takes you to the sign-up page where you can create your account.',
+                title: 'Click "Login" then "New User"',
+                description: 'In the top-right corner of the navigation bar, click "Login" to open the dropdown, then click "New User." This takes you to the sign-up page where you can create your account.',
                 alt: 'The Join page with email sign-up form',
                 slug: 'join',
                 action: async (page) => {
