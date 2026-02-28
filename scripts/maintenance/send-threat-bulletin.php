@@ -88,7 +88,7 @@ foreach ($subscribers as $sub) {
         $failed++;
         error_log("Threat bulletin failed for user {$sub['user_id']}: {$sub['email']}");
     }
-    usleep(100000); // 100ms throttle
+    usleep(1000000); // 1s throttle between sends
 }
 
 $elapsed = round(microtime(true) - $startTime, 2);
