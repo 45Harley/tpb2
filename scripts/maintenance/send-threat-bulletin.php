@@ -57,8 +57,6 @@ $baseUrl = rtrim($config['base_url'] ?? 'https://4tpb.org', '/');
 $today = date('M j');
 $subject = "TPB Threat Alert: {$threatCount} new threat" . ($threatCount !== 1 ? 's' : '') . " ({$today})";
 
-$body = buildEmailHtml($threats, $baseUrl, $threatCount);
-
 // Get subscribers
 $subscribers = $pdo->query("
     SELECT user_id, email, first_name
@@ -76,11 +74,27 @@ if (empty($subscribers)) {
     exit(0);
 }
 
-// Send to each subscriber
+// Clean up expired tokens
+$pdo->exec("DELETE FROM bulletin_tokens WHERE expires_at < NOW()");
+
+// Prepare token insert
+$tokenStmt = $pdo->prepare("
+    INSERT INTO bulletin_tokens (user_id, token, expires_at)
+    VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))
+");
+
+// Send to each subscriber with personalized auth token
 $sent = 0;
 $failed = 0;
 
 foreach ($subscribers as $sub) {
+    // Generate per-subscriber auth token
+    $token = bin2hex(random_bytes(16));
+    $tokenStmt->execute([$sub['user_id'], $token]);
+
+    // Build personalized email (links route through auth handler)
+    $body = buildEmailHtml($threats, $baseUrl, $threatCount, $token);
+
     $ok = sendSmtpMail($config, $sub['email'], $subject, $body, null, true);
     if ($ok) {
         $sent++;
@@ -98,7 +112,12 @@ echo "Threat bulletin sent. Threats: {$threatCount}, Subscribers: " . count($sub
 /**
  * Build the HTML email body
  */
-function buildEmailHtml($threats, $baseUrl, $threatCount) {
+function buildEmailHtml($threats, $baseUrl, $threatCount, $token) {
+    // Auth handler URL — all links route through this for auto-login
+    $authBase = "{$baseUrl}/api/verify-bulletin-token.php?bt={$token}";
+    $threatsLink = $authBase . '&dest=/elections/threats.php';
+    $fightLink = $authBase . '&dest=/elections/the-fight.php';
+
     $rows = '';
     foreach ($threats as $t) {
         $zone = getSeverityZone($t['severity_score']);
@@ -115,7 +134,7 @@ function buildEmailHtml($threats, $baseUrl, $threatCount) {
             <span style="display:inline-block;background:{$color};color:#fff;font-weight:bold;font-size:13px;padding:3px 8px;border-radius:4px;text-align:center;min-width:36px;">{$score}</span>
           </td>
           <td style="padding:8px 12px;font-size:15px;line-height:1.4;">
-            <a href="{$baseUrl}/elections/threats.php" style="color:#1a1a2e;text-decoration:none;font-weight:600;">{$title}</a>
+            <a href="{$threatsLink}" style="color:#1a1a2e;text-decoration:none;font-weight:600;">{$title}</a>
             <br><span style="color:#666;font-size:13px;">{$official} &middot; {$branch} &middot; {$date}</span>
           </td>
         </tr>
@@ -184,9 +203,9 @@ ROW;
   <!-- CTAs -->
   <tr>
     <td style="padding:20px 24px;">
-      <a href="{$baseUrl}/elections/threats.php" style="display:inline-block;background:#f44336;color:#fff;padding:10px 20px;border-radius:5px;text-decoration:none;font-weight:bold;font-size:14px;">View All Threats</a>
+      <a href="{$threatsLink}" style="display:inline-block;background:#f44336;color:#fff;padding:10px 20px;border-radius:5px;text-decoration:none;font-weight:bold;font-size:14px;">View All Threats</a>
       &nbsp;&nbsp;
-      <a href="{$baseUrl}/elections/the-fight.php" style="display:inline-block;background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:5px;text-decoration:none;font-weight:bold;font-size:14px;">Take Action</a>
+      <a href="{$fightLink}" style="display:inline-block;background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:5px;text-decoration:none;font-weight:bold;font-size:14px;">Take Action</a>
     </td>
   </tr>
 
@@ -195,7 +214,7 @@ ROW;
     <td style="background:#f9f9f9;padding:16px 24px;border-top:1px solid #eee;">
       <p style="margin:0;font-size:12px;color:#999;line-height:1.5;">
         You subscribed to TPB Threat Alerts.<br>
-        To unsubscribe, visit <a href="{$baseUrl}/elections/threats.php" style="color:#666;">the threat stream</a> and toggle off.<br>
+        To unsubscribe, visit <a href="{$threatsLink}" style="color:#666;">the threat stream</a> and toggle off.<br>
         <strong>The People's Branch</strong> &mdash; No Kings. Only Citizens.
       </p>
     </td>
