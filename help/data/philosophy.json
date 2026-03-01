@@ -3,7 +3,7 @@
   "title": "Our Philosophy",
   "subtitle": "Why The People's Branch exists — from the Golden Rule to Liquid Democracy to Pure Democracy.",
   "generated": "2026-03-01T12:00:00.000Z",
-  "stepCount": 7,
+  "stepCount": 8,
   "steps": [
     {
       "number": 1,
@@ -42,13 +42,20 @@
     },
     {
       "number": 6,
+      "title": "Justice: Alignment with Principle",
+      "description": "What is justice? At its core, justice is acknowledgement of and obedience to Principle — the universal law that governs right action. When individuals and institutions align with this law, the result is justice. When they depart from it, the result is injustice.\n\nInjustice operates on a scale of three grades:\n\n1. Ignorance — A failure to know or understand the law. This is the least culpable, but still carries consequences. In TPB's threat system, this maps to the misconduct range — actions born of negligence rather than intent.\n\n2. Disobedience — Knowing the law and choosing to violate it. This is the realm of corruption, self-dealing, and institutional betrayal. It maps to the felony-to-high-crime range in our criminality scale.\n\n3. Malicious Intent — Deliberately weaponizing power to harm others. This is the most severe departure from Principle — actions designed to oppress, exploit, or destroy. It maps to atrocity and crimes against humanity.\n\nDivine Principle is Love expressed. It is the law. When governance aligns with Love — protecting the vulnerable, serving the common good, treating every citizen as you would want to be treated — that is justice made visible.\n\nAs Mary Baker Eddy wrote: \"The belief in sin punishes itself so long as the belief lasts.\" Systems built on corruption, bribery, and malicious intent carry within them the seeds of their own collapse. TPB's threat stream exists to illuminate these departures from Principle, making the invisible visible so that citizens can hold power accountable.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 7,
       "title": "Common Questions",
       "description": "Won't experts just take over, becoming a new kind of elite?\nNo — delegation is instantly revocable. If a delegate betrays the trust, their power evaporates immediately.\n\nWon't people just delegate their vote and never participate?\nLiquid Democracy gives people two valuable options: vote directly on the handful of issues they truly care about, or delegate their vote on complex issues to a trusted expert. This increases overall engagement by making participation meaningful and flexible.\n\nHow do you prevent identity fraud?\nThe system relies on a Secure Digital ID tied to verified government records and decentralized ledger technology for transparent, tamper-proof record-keeping.",
       "alt": null,
       "screenshot": null
     },
     {
-      "number": 7,
+      "number": 8,
       "title": "Implementation: Decentralized Trust",
       "description": "The implementation relies on a robust, auditable, and decentralized architecture. All delegation chains and final votes are recorded on a decentralized ledger (DLT/Blockchain), providing transparency, immutability, and auditability.\n\nEvery participant requires a Secure Digital ID tied to validated voter registration records, ensuring one citizen, one vote.\n\nThe system can evolve to use AI models for delegate discovery (recommending specialized experts) and informed synthesis (aggregating delegate votes to display consensus of expertise), along with a reputation score system and micro-incentives to foster high-quality engagement.",
       "alt": null,
