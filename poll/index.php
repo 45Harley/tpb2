@@ -239,6 +239,17 @@ extract($navVars);
 
         .your-vote { font-size: 0.85rem; color: #d4af37; font-weight: 500; margin-top: 0.4rem; }
 
+        /* Tally */
+        .poll-tally {
+            display: flex; gap: 1rem; margin-top: 0.6rem; padding-top: 0.6rem;
+            border-top: 1px solid #333; font-size: 0.8rem; align-items: center;
+        }
+        .tally-item { font-weight: 600; }
+        .tally-yea { color: #4caf50; }
+        .tally-nay { color: #f44336; }
+        .tally-abstain { color: #888; }
+        .tally-threat { color: #555; margin-left: auto; font-size: 0.75rem; }
+
         /* Alerts */
         .alert { padding: 1rem; border-radius: 6px; margin-bottom: 1rem; }
         .alert-success { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid #4caf50; }
@@ -423,6 +434,13 @@ extract($navVars);
                 <?php if ($userVote): ?>
                     <div class="your-vote">You voted: <?= ucfirst($userVote) ?> <span style="color:#666;font-weight:normal">(click a button to change)</span></div>
                 <?php endif; ?>
+
+                <div class="poll-tally">
+                    <span class="tally-item tally-yea">Yea: <?= (int)$tp['yea_votes'] ?></span>
+                    <span class="tally-item tally-nay">Nay: <?= (int)$tp['nay_votes'] ?></span>
+                    <span class="tally-item tally-abstain">Abstain: <?= (int)$tp['abstain_votes'] ?></span>
+                    <span class="tally-threat">Threat #<?= (int)$tp['threat_id'] ?></span>
+                </div>
             </div>
         <?php endforeach; ?>
         </div>
