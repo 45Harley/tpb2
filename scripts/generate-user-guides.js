@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 const BASE_URL = process.env.SITE_URL || 'http://localhost';
+const AUTH_USER_ID = process.env.AUTH_USER_ID || '';  // set to log in as this user
 const SCREENSHOT_DIR = path.join(__dirname, '..', 'help', 'screenshots');
 const DATA_DIR = path.join(__dirname, '..', 'help', 'data');
 
@@ -546,6 +547,15 @@ async function generateGuides() {
         deviceScaleFactor: 2,  // retina-quality screenshots
         baseURL: BASE_URL
     });
+
+    // Set auth cookie so screenshots show logged-in views
+    if (AUTH_USER_ID) {
+        const domain = new URL(BASE_URL).hostname;
+        await context.addCookies([
+            { name: 'tpb_user_id', value: AUTH_USER_ID, domain: domain, path: '/' }
+        ]);
+        console.log(`Authenticated as user_id=${AUTH_USER_ID} on ${domain}`);
+    }
 
     for (const flow of flows) {
         console.log(`\nGenerating flow: ${flow.title}`);
