@@ -1,0 +1,58 @@
+{
+  "id": "philosophy",
+  "title": "Our Philosophy",
+  "subtitle": "Why The People's Branch exists — from the Golden Rule to Liquid Democracy to Pure Democracy.",
+  "generated": "2026-03-01T12:00:00.000Z",
+  "stepCount": 7,
+  "steps": [
+    {
+      "number": 1,
+      "title": "The Golden Rule: Our Ethical Foundation",
+      "description": "The core principles of our governance model are founded on a universal ethical command: The Golden Rule. Across all major world philosophies and religions — Christianity, Judaism, Islam, Buddhism, Hinduism, and Confucianism — there is one common ethical command.\n\nWhether stated as \"Do to others what you would have them do to you\" or \"Hurt not others in ways that you yourself would find hurtful,\" this principle establishes the required standard for a self-governing people.\n\nThe application of this Golden Rule to governance ensures that the system itself is structured to be the best offense and defense against corruption, inequality, and bad faith.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 2,
+      "title": "Representative Government: A Necessary Past",
+      "description": "The representative system, while revolutionary for its time, was a practical necessity born of the limits of distance and communication. It was the only way to govern vast, geographically spread populations in a pre-digital age.\n\nToday, this system has become a bottleneck to progress. Representatives are often beholden to special interests or rigid party lines, rather than the true will of their diverse constituents. They are tasked with making decisions on hundreds of complex issues — from nuclear energy to healthcare — lacking true expertise in most, and are only held directly accountable every few years.\n\nIn the 21st century, with instant information and ubiquitous connectivity, relying on a handful of individuals to speak for millions is not true democracy; it is an obsolete mechanism. We must evolve the structure of governance to match our technological capability for widespread, informed participation.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 3,
+      "title": "Liquid Democracy: The Mechanism of Change",
+      "description": "Liquid Democracy is the essential evolutionary bridge from our obsolete representative system to the ideal of Pure Democracy.\n\nThis modern hybrid system uses technology to embody the Golden Rule in civic action and is built on four core principles. It gives every citizen a choice: vote directly on any issue, or delegate your vote to someone you trust — and take it back at any time.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 4,
+      "title": "The Four Principles of Liquid Democracy",
+      "description": "1. Direct Voting (Liquidity) — Every citizen retains the default right to vote directly on every single issue, bill, or proposal. Your vote is always available to you.\n\n2. Delegated Authority (Fluidity) — For issues you don't have time or expertise for, you can delegate your vote to any other participating citizen. This creates a meritocracy where influence is earned through trust and demonstrated knowledge.\n\n3. Instant Revocability (Accountability) — Delegation is not permanent. You can instantly revoke their authority and take your vote back at any time. This is the core difference from the current system.\n\n4. Transitivity (Scalability) — Delegates can, in turn, delegate the votes they have received to someone else, forming a chain of delegation. This allows specialized experts to quickly gain significant influence on highly technical matters.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 5,
+      "title": "Pure Democracy: The Ideal",
+      "description": "Pure Democracy is the ultimate goal: a system where every citizen is a fully informed, active, and responsible participant in governance. It is not simply a voting mechanism, but a societal structure built on trust, transparency, and universal participation, achieved through iterative progress.\n\nThe goal is to build the capacity for pure self-governance from the ground up by fostering deep civic participation, local leadership identification, and volunteer mobilization.\n\nThis creates a reliable source of engaged citizens willing to dedicate time and resources to community action, effectively replacing the need for external political management.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 6,
+      "title": "Common Questions",
+      "description": "Won't experts just take over, becoming a new kind of elite?\nNo — delegation is instantly revocable. If a delegate betrays the trust, their power evaporates immediately.\n\nWon't people just delegate their vote and never participate?\nLiquid Democracy gives people two valuable options: vote directly on the handful of issues they truly care about, or delegate their vote on complex issues to a trusted expert. This increases overall engagement by making participation meaningful and flexible.\n\nHow do you prevent identity fraud?\nThe system relies on a Secure Digital ID tied to verified government records and decentralized ledger technology for transparent, tamper-proof record-keeping.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 7,
+      "title": "Implementation: Decentralized Trust",
+      "description": "The implementation relies on a robust, auditable, and decentralized architecture. All delegation chains and final votes are recorded on a decentralized ledger (DLT/Blockchain), providing transparency, immutability, and auditability.\n\nEvery participant requires a Secure Digital ID tied to validated voter registration records, ensuring one citizen, one vote.\n\nThe system can evolve to use AI models for delegate discovery (recommending specialized experts) and informed synthesis (aggregating delegate votes to display consensus of expertise), along with a reputation score system and micro-incentives to foster high-quality engagement.",
+      "alt": null,
+      "screenshot": null
+    }
+  ]
+}

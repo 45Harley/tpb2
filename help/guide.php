@@ -60,8 +60,10 @@ $pageStyles = <<<'CSS'
 .guide-header {
     text-align: center;
     margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid #333;
+    padding: 1.5rem;
+    background: #2a1d12;
+    border: 1px solid #4a3525;
+    border-radius: 8px;
 }
 .guide-header h1 {
     color: #d4af37;
@@ -69,12 +71,12 @@ $pageStyles = <<<'CSS'
     margin-bottom: 0.5rem;
 }
 .guide-header .guide-subtitle {
-    color: #888;
+    color: #ccc;
     font-size: 1rem;
     margin-bottom: 0.75rem;
 }
 .guide-header .guide-meta {
-    color: #555;
+    color: #aaa;
     font-size: 0.75rem;
 }
 .guide-steps {
@@ -137,8 +139,8 @@ $pageStyles = <<<'CSS'
 
 /* No-screenshot step: info card */
 .step-info-card {
-    background: #1a1a2e;
-    border: 1px solid #333;
+    background: #2a1d12;
+    border: 1px solid #4a3525;
     border-radius: 8px;
     padding: 1rem 1.25rem;
     margin-top: 0.5rem;
@@ -173,7 +175,11 @@ require dirname(__DIR__) . '/includes/nav.php';
             <div class="step-number"><?= $step['number'] ?></div>
             <div class="step-content">
                 <h3><?= htmlspecialchars($step['title']) ?></h3>
+<?php if (empty($step['screenshot']) && empty($step['link'])): ?>
+                <div class="step-info-card"><?= nl2br(htmlspecialchars($step['description'])) ?></div>
+<?php else: ?>
                 <p><?= htmlspecialchars($step['description']) ?></p>
+<?php endif; ?>
 <?php if ($step['screenshot']): ?>
                 <img src="/help/screenshots/<?= htmlspecialchars($step['screenshot']) ?>"
                      alt="<?= htmlspecialchars($step['alt'] ?? $step['title']) ?>"

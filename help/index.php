@@ -41,6 +41,7 @@ $guideIcons = [
     'polls'      => '&#x1F4CA;',
     'volunteer'     => '&#x1F91D;',
     'civic-points'  => '&#x2B50;',
+    'philosophy'    => '&#x2696;',
 ];
 
 $pageStyles = <<<'CSS'
