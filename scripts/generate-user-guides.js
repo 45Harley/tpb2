@@ -530,6 +530,71 @@ const flows = [
                 screenshot: null
             }
         ]
+    },
+
+    // ── Civic Points ──────────────────────────────────────────────
+    {
+        id: 'civic-points',
+        title: 'Civic Points',
+        subtitle: 'How you earn recognition for every civic action — from your first visit to verified volunteer.',
+        steps: [
+            {
+                title: 'What are civic points?',
+                description: 'Civic points are how The People\'s Branch recognizes your participation. Every action you take — visiting a state page, posting an idea, voting on a threat, verifying your email — earns points. Your running total appears in the gold badge at the top-right of every page. Points are not currency and cannot be spent. They are a measure of your civic engagement — proof that you showed up.',
+                alt: null,
+                slug: 'what',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Your points in the nav bar',
+                description: 'Look at the top-right corner of any page. Next to your display name, you\'ll see a gold number like "550 pts." That\'s your civic point total. It updates instantly — when you vote, post, or take action, the badge pulses gold to show your new total. No page refresh needed.',
+                alt: 'Navigation bar showing gold civic points badge next to user name',
+                slug: 'nav-badge',
+                action: async (page) => { await page.goto('/'); await page.waitForLoadState('networkidle'); },
+                screenshot: { clip: { x: 800, y: 0, width: 480, height: 60 } }
+            },
+            {
+                title: 'Your points on your profile',
+                description: 'Open your Profile page to see your full civic points total displayed prominently. It\'s the large gold number under your Trust Journey — a snapshot of everything you\'ve contributed since joining.',
+                alt: 'Profile page showing large civic points total in gold',
+                slug: 'profile',
+                action: async (page) => { await page.goto('/profile.php'); await page.waitForLoadState('networkidle'); },
+                screenshot: { fullPage: true }
+            },
+            {
+                title: 'How you earn points',
+                description: 'There are over 50 ways to earn points. Here are the main categories:\n\n• Identity & Security — Verify your email (+50), verify your phone (+50), set a password (+10)\n• Profile — Complete your name, town, and state (+25)\n• Content — Post a civic thought, vote on ideas, brainstorm with AI\n• Elections — Take a pledge (+5), land a knockout (+25), rate a threat\n• Polls — Vote on threat polls\n• Volunteering — Apply to volunteer (+50), claim a task (+10)\n• Browsing — Visit state pages (+3, up to 5/day), visit town pages (+3, up to 10/day), look up districts (+5)\n• Daily — Log in each day to earn your daily login bonus',
+                alt: null,
+                slug: 'how-earn',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Points before you have an account',
+                description: 'You don\'t need an account to start earning. When you browse state pages, click on resources, or explore the map, your points are tracked by your browser session. The moment you create an account or log in, all those session points transfer to your profile automatically. Nothing is lost.',
+                alt: null,
+                slug: 'session-transfer',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Cooldowns and daily limits',
+                description: 'To keep things fair, some actions have cooldowns or daily limits. For example, you can earn points for visiting up to 5 state pages and 10 town pages per day — but the 11th town visit won\'t earn extra. Daily login points can only be earned once per day. This prevents point farming and keeps the system honest.',
+                alt: null,
+                slug: 'limits',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Why points matter',
+                description: 'Civic points serve three purposes:\n\n1. Recognition — Your total reflects real engagement, not just a number. Every point came from a civic action.\n2. Motivation — The gold badge is a reminder that your participation counts. Small actions add up.\n3. Trust — Higher engagement often correlates with higher trust levels. Active citizens build stronger communities.\n\nPoints are never used to restrict access or rank citizens against each other. Everyone starts at zero and earns at their own pace.',
+                alt: null,
+                slug: 'why-matter',
+                action: null,
+                screenshot: null
+            }
+        ]
     }
 ];
 
