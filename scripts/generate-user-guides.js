@@ -344,59 +344,83 @@ const flows = [
         steps: [
             {
                 title: 'Open your Profile',
-                description: 'After logging in, click "My TPB" in the navigation bar, then click "My Profile." This is your civic identity — who you are, where you live, and your trust level.',
-                alt: 'Profile page showing the Trust Journey progress bar',
+                description: 'After logging in, click "My TPB" in the navigation bar, then click "My Profile." This is your civic identity — who you are, where you live, your trust level, and your civic points. The nav bar shows your town, point total, and current trust level at a glance.',
+                alt: 'Profile page showing the Trust Journey progress bar and all profile sections',
                 slug: 'overview',
                 action: async (page) => {
                     await page.goto('/profile.php', { waitUntil: 'networkidle' });
                     await page.waitForTimeout(500);
                 },
-                screenshot: { fullPage: false }
+                screenshot: { fullPage: true }
             },
             {
                 title: 'Your Trust Journey',
-                description: 'At the top of your profile, you\'ll see your Trust Journey — a row of steps showing your progress. Each step you complete raises your trust level and unlocks more features. The steps are: Email, Location, Name, Email Verified, Phone 2FA.',
-                alt: 'Trust Journey showing completed and pending steps',
+                description: 'At the top of your profile, a progress bar shows your Trust Journey. Each step you complete earns civic points and raises your trust level. The steps are: Arrived (+1), Location (+50), Name (+50), Email Verified (+50), and Phone 2FA (+50). Your total civic points appear on the right. As you complete steps, the icons light up in gold.',
+                alt: null,
                 slug: 'journey',
                 action: null,
                 screenshot: null
             },
             {
                 title: 'Set your location',
-                description: 'Click "Set My Location" and enter your zip code or pick your state and town. Your location connects you to your local civic community — you\'ll see local representatives, local Talk conversations, and town-specific information.',
-                alt: 'Location section with state and town selector',
+                description: 'In the Location section, select your state and type your town name. Once set, your profile shows your town, zip code, and congressional districts (e.g., "CT-2 • Senate 29 • House 51"). You can also add a street address (optional) and click "Go to My Town" to visit your town\'s civic page.',
+                alt: null,
                 slug: 'location',
                 action: null,
                 screenshot: null
             },
             {
+                title: 'Fill in your identity',
+                description: 'In the Identity section, enter your first name, last name, and age range. A green check mark appears next to each completed field. These are required for volunteering and help the community know who they\'re talking to.',
+                alt: null,
+                slug: 'identity',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Set your privacy preferences',
+                description: 'The Privacy Settings section lets you choose what others see when you post in Talk or vote. Toggle checkboxes for first name, last name, and age bracket. A live preview shows exactly how your name will appear to other citizens — for example, "har Goodwin (55-64)" or just your first name.',
+                alt: null,
+                slug: 'privacy',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Turn on notifications',
+                description: 'In the Notifications section, check "Daily threat bulletin email (8 AM ET)" to receive a daily email summarizing new threats. Click "Save Changes" to apply your privacy and notification preferences.',
+                alt: null,
+                slug: 'notifications',
+                action: null,
+                screenshot: null
+            },
+            {
                 title: 'Verify your email',
-                description: 'In the Verification section, click "Send Verification Link." Check your email and click the link. Once verified, your trust level rises to Level 2 (Remembered) — you can now post ideas in Talk and vote on threats.',
-                alt: 'Email verification section with send link button',
+                description: 'In the Verification section, your email address is shown. If not yet verified, click "Send Verification Link," check your email, and click the link. Once verified, a green "✓ Verified" badge appears and your trust level rises to Level 2 (Remembered). You can now post ideas in Talk and vote on threats.',
+                alt: null,
                 slug: 'verify-email',
                 action: null,
                 screenshot: null
             },
             {
-                title: 'Set a password',
-                description: 'After verifying your email, you can set a password. This is optional — you can always log in via email link — but a password lets you log in faster from any browser. Choose at least 8 characters.',
-                alt: 'Password section with create password fields',
-                slug: 'password',
-                action: null,
-                screenshot: null
-            },
-            {
-                title: 'Add phone for 2FA',
-                description: 'Enter your phone number and click "Verify." You\'ll receive a text message with a verification link. Once confirmed, your trust level rises to Level 3 (Verified) — the highest standard trust level. Two-factor authentication protects your account.',
-                alt: 'Phone 2FA verification section',
+                title: 'Verify your phone for 2FA',
+                description: 'Below email verification, enter your phone number and click "Verify." You\'ll receive a text message with a verification link. Once confirmed, a green "✓ Verified" badge appears next to your phone number and your trust level rises to Level 3 (Verified) — the highest standard trust level. Two-factor authentication protects your account and unlocks the Volunteer section.',
+                alt: null,
                 slug: 'phone-2fa',
                 action: null,
                 screenshot: null
             },
             {
-                title: 'Volunteer (optional)',
-                description: 'Once fully verified, a Volunteer section appears at the bottom of your profile. Apply to help build The People\'s Branch — pick your skills (technical, content, design, etc.) and join the team. Your application is reviewed by a project manager.',
-                alt: 'Volunteer application section with skill checkboxes',
+                title: 'Set a password',
+                description: 'In the Password section, you can create or change your password. This is optional — you can always log in via email link — but a password lets you log in faster. Enter your current password (if changing), then your new password (at least 8 characters), confirm it, and click "Change Password." A green "✓ Set" badge confirms it\'s active.',
+                alt: null,
+                slug: 'password',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Volunteer section',
+                description: 'Once fully verified (Level 3), a Volunteer section appears at the bottom of your profile. If approved, it shows "✓ Approved Volunteer — You\'re part of the team!" Below that, select your skills from a grid of 15 areas (Technical, Content, Designer, Project Management, etc.), pick a primary skill, and write a short bio. Click "Save Volunteer Info" and then "Go to Volunteer Workspace" to start contributing.',
+                alt: null,
                 slug: 'volunteer',
                 action: null,
                 screenshot: null
