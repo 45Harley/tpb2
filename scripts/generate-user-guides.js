@@ -238,6 +238,74 @@ const flows = [
                 screenshot: { fullPage: false }
             }
         ]
+    },
+
+    // ── Profile & Trust Journey Flow ─────────────────────────────────
+    {
+        id: 'profile',
+        title: 'Your Profile & Trust Journey',
+        subtitle: 'Build your civic identity step by step — from new user to fully verified citizen.',
+        steps: [
+            {
+                title: 'Open your Profile',
+                description: 'After logging in, click "My TPB" in the navigation bar, then click "My Profile." This is your civic identity — who you are, where you live, and your trust level.',
+                alt: 'Profile page showing the Trust Journey progress bar',
+                slug: 'overview',
+                action: async (page) => {
+                    await page.goto('/profile.php', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Your Trust Journey',
+                description: 'At the top of your profile, you\'ll see your Trust Journey — a row of steps showing your progress. Each step you complete raises your trust level and unlocks more features. The steps are: Email, Location, Name, Email Verified, Phone 2FA.',
+                alt: 'Trust Journey showing completed and pending steps',
+                slug: 'journey',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Set your location',
+                description: 'Click "Set My Location" and enter your zip code or pick your state and town. Your location connects you to your local civic community — you\'ll see local representatives, local Talk conversations, and town-specific information.',
+                alt: 'Location section with state and town selector',
+                slug: 'location',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Verify your email',
+                description: 'In the Verification section, click "Send Verification Link." Check your email and click the link. Once verified, your trust level rises to Level 2 (Remembered) — you can now post ideas in Talk and vote on threats.',
+                alt: 'Email verification section with send link button',
+                slug: 'verify-email',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Set a password',
+                description: 'After verifying your email, you can set a password. This is optional — you can always log in via email link — but a password lets you log in faster from any browser. Choose at least 8 characters.',
+                alt: 'Password section with create password fields',
+                slug: 'password',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Add phone for 2FA',
+                description: 'Enter your phone number and click "Verify." You\'ll receive a text message with a verification link. Once confirmed, your trust level rises to Level 3 (Verified) — the highest standard trust level. Two-factor authentication protects your account.',
+                alt: 'Phone 2FA verification section',
+                slug: 'phone-2fa',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Volunteer (optional)',
+                description: 'Once fully verified, a Volunteer section appears at the bottom of your profile. Apply to help build The People\'s Branch — pick your skills (technical, content, design, etc.) and join the team. Your application is reviewed by a project manager.',
+                alt: 'Volunteer application section with skill checkboxes',
+                slug: 'volunteer',
+                action: null,
+                screenshot: null
+            }
+        ]
     }
 ];
 
