@@ -5,8 +5,8 @@
  * Pulls candidate and contributor data from OpenFEC API
  * into local cache tables for the race dashboard.
  *
- * Cron: every 6 hours (0 0,6,12,18 * * *) — cPanel clock is EST.
- * With DEMO_KEY: syncs 1 race per run (least recently synced first).
+ * Cron: every 2 hours (0 0,2,4,...,22 * * *) — cPanel clock is EST.
+ * With DEMO_KEY: syncs 1 race per run (rotates by fec_races.last_synced_at).
  * With real key (1000 req/hr): syncs all races in one run.
  *
  * Requirements:
@@ -57,12 +57,8 @@ $maxRaces = ($apiKey !== 'DEMO_KEY') ? 999 : 1;
 $races = $pdo->query("
     SELECT r.race_id, r.cycle, r.office, r.state, r.district
     FROM fec_races r
-    LEFT JOIN (
-        SELECT race_id, MAX(last_synced_at) as last_sync
-        FROM fec_candidates GROUP BY race_id
-    ) c ON r.race_id = c.race_id
     WHERE r.is_active = 1
-    ORDER BY c.last_sync ASC, r.race_id ASC
+    ORDER BY r.last_synced_at ASC, r.race_id ASC
     LIMIT {$maxRaces}
 ")->fetchAll(PDO::FETCH_ASSOC);
 
@@ -94,6 +90,8 @@ $insertContributor = $pdo->prepare("
     INSERT INTO fec_top_contributors (fec_candidate_id, contributor_name, contributor_type, total_amount, employer, last_synced_at)
     VALUES (?, ?, ?, ?, ?, NOW())
 ");
+
+$updateRaceSync = $pdo->prepare("UPDATE fec_races SET last_synced_at = NOW() WHERE race_id = ?");
 
 $totalCandidates = 0;
 $totalContributors = 0;
@@ -178,6 +176,10 @@ foreach ($races as $race) {
             }
         }
     }
+
+    // Mark this race as synced (even if 0 candidates returned)
+    // so we rotate to the next race on the next cron run
+    $updateRaceSync->execute([$race['race_id']]);
 }
 
 $elapsed = round(microtime(true) - $startTime, 2);
