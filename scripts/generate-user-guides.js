@@ -433,31 +433,51 @@ const flows = [
     {
         id: 'volunteer',
         title: 'Becoming a Volunteer',
-        subtitle: 'Complete your profile, apply, get approved, and start building The People\'s Branch.',
+        subtitle: 'From the bottom of your profile to an approved volunteer — the complete journey.',
         steps: [
             {
-                title: 'Complete your extended profile',
-                description: 'Before you can volunteer, your profile must be fully complete. That means: first name, last name, email (verified), state, town, and phone number (2FA verified). Open your profile page and fill in every section. This is the same trust standard we hold everyone to — because trust matters.',
-                alt: 'Profile page showing all required fields for volunteer eligibility',
-                slug: 'profile',
+                title: 'The Volunteer section on your profile',
+                description: 'Once you reach Trust Level 3 (phone verified), a Volunteer section appears at the bottom of your profile page. It shows your approval status, a grid of 15 skill areas you can select (Technical, Content, Designer, Project Management, etc.), a primary skill dropdown, and a bio text area. If you haven\'t applied yet, you\'ll see an "Apply to Volunteer" button.',
+                alt: 'Profile page scrolled to the Volunteer section at the bottom',
+                slug: 'profile-section',
                 action: async (page) => {
                     await page.goto('/profile.php', { waitUntil: 'networkidle' });
                     await page.waitForTimeout(500);
+                    // Scroll to volunteer section
+                    await page.evaluate(() => {
+                        var el = document.querySelector('h2');
+                        var headings = document.querySelectorAll('h2');
+                        for (var h of headings) {
+                            if (h.textContent.includes('Volunteer')) {
+                                h.scrollIntoView({ behavior: 'instant', block: 'start' });
+                                break;
+                            }
+                        }
+                    });
+                    await page.waitForTimeout(300);
                 },
                 screenshot: { fullPage: false }
             },
             {
-                title: 'The Volunteer section on your profile',
-                description: 'Once you reach Trust Level 3 (phone verified), a Volunteer section appears at the bottom of your profile. You\'ll see a button that says "Apply to Volunteer." You can also select skill areas (Technical, Content, Design, etc.), pick a primary skill, and write a short bio about yourself.',
+                title: 'Profile requirements',
+                description: 'Before you can apply, your profile must be fully complete: first name, last name, email (verified), state, town, and phone number (2FA verified). If anything is missing, the application page will tell you exactly what to fill in. This is the same trust standard we hold everyone to — because trust matters.',
                 alt: null,
-                slug: 'volunteer-section',
+                slug: 'requirements',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Log in with a magic link',
+                description: 'If you\'re not logged in, you can get a magic link sent to your email. Enter your email address, click "Send Verification Link," and check your inbox. Click the link in the email — it logs you in instantly, no password needed. The link works on any device and brings you right back to where you were.',
+                alt: null,
+                slug: 'magic-link',
                 action: null,
                 screenshot: null
             },
             {
                 title: 'Open the volunteer application',
-                description: 'Click "Apply to Volunteer" on your profile, or go directly to the Volunteer section in the navigation bar and click "Apply." The application page will show your verified profile info at the top — name, email, location, phone — confirming you meet the trust requirements.',
-                alt: 'Volunteer application page showing verified profile info and application form',
+                description: 'Click "Apply to Volunteer" on your profile, or go to the Volunteer section in the navigation bar and click "Apply." The application page shows your verified profile info at the top — name, email, location, phone — confirming you meet the trust requirements.',
+                alt: 'Volunteer application page showing verified profile info and the application form',
                 slug: 'apply',
                 action: async (page) => {
                     await page.goto('/volunteer/apply.php', { waitUntil: 'networkidle' });
@@ -467,24 +487,32 @@ const flows = [
             },
             {
                 title: 'Fill out your application',
-                description: 'Tell us your age range, what skills you can contribute, why you want to help build TPB, a bit about your background, and how much time you can give. You can also add verification links (LinkedIn, GitHub, personal website) or name someone who can vouch for you. Finally, check the two agreement boxes and submit.',
-                alt: 'Application form with motivation, skills, availability, and verification fields',
+                description: 'Tell us your age range, what skills you can contribute, why you want to help build TPB, a bit about your background, and how much time you can give. If you\'re under 18, you\'ll need a parent or guardian\'s name and email. You can also add verification links (LinkedIn, GitHub, personal website) or name someone who can vouch for you. Check the two agreement boxes and click "Submit Application."',
+                alt: null,
                 slug: 'fill-form',
                 action: null,
                 screenshot: null
             },
             {
-                title: 'Wait for review',
-                description: 'After you submit, your application status shows "Pending." A project manager reviews your application — they read your story, check verification links, and make sure you\'re a good fit for the team. You\'ll get an email when you\'re approved.',
+                title: 'Application submitted',
+                description: 'After you submit, you\'ll see a confirmation page: "Application Submitted!" with a summary of what happens next. You earn 50 civic points for applying. If you visit the apply page again while pending, it shows "Application Pending" with the date you applied.',
                 alt: null,
-                slug: 'pending',
+                slug: 'submitted',
                 action: null,
                 screenshot: null
             },
             {
-                title: 'Get approved and enter the workspace',
-                description: 'Once approved, your profile shows "Approved Volunteer" and you get access to the Volunteer Workspace. Click "Volunteer" in the navigation bar or the "Go to Volunteer Workspace" link on your profile. The workspace shows the task board — available tasks, your claimed work, and completed tasks.',
-                alt: 'Volunteer workspace showing the task board with available and claimed tasks',
+                title: 'Wait for approval',
+                description: 'A project manager receives an email with your full application — your profile, motivation, experience, availability, and any verification links. They review it and decide. You\'ll get an email notification when you\'re approved.',
+                alt: null,
+                slug: 'review',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'You\'re approved — enter the workspace',
+                description: 'Once approved, your profile shows "✓ Approved Volunteer — You\'re part of the team!" and you get access to the Volunteer Workspace. Click "Volunteer" in the navigation bar or "Go to Volunteer Workspace" on your profile. The workspace shows a task board with tabs: My Work, Available, Completed, and PM (for project managers).',
+                alt: 'Volunteer workspace showing the task board with tabs and available tasks',
                 slug: 'workspace',
                 action: async (page) => {
                     await page.goto('/volunteer/', { waitUntil: 'networkidle' });
@@ -494,7 +522,7 @@ const flows = [
             },
             {
                 title: 'Claim and complete tasks',
-                description: 'Browse "Available" tasks to find work that matches your skills. Click a task to see details, then claim it. Once claimed, it moves to "My Work." When you finish, submit it for review. A project manager reviews your work and marks it complete. Every completed task earns civic points.',
+                description: 'Browse "Available" tasks to find work that matches your skills. Click a task to see details, then claim it. Once claimed, it moves to "My Work." When you finish, submit it for completion review. A project manager reviews your work and marks it complete. Every completed task earns civic points and helps build the platform.',
                 alt: null,
                 slug: 'tasks',
                 action: null,
