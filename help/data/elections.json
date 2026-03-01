@@ -1,0 +1,51 @@
+{
+  "id": "elections",
+  "title": "Elections & The Fight",
+  "subtitle": "Take pledges, land knockouts, rate threats, and hold power accountable.",
+  "generated": "2026-03-01T00:06:08.752Z",
+  "stepCount": 6,
+  "steps": [
+    {
+      "number": 1,
+      "title": "Open Elections",
+      "description": "Click \"Elections\" in the main navigation bar. This is the Elections 2026 hub — tracking threats to democracy, citizen pledges, and races that matter.",
+      "alt": "Elections 2026 landing page with threat count and citizen stats",
+      "screenshot": "elections-01-landing.png"
+    },
+    {
+      "number": 2,
+      "title": "Go to The Fight",
+      "description": "Click \"The Fight\" in the sub-navigation. This is where citizens take pledges and land knockouts — concrete civic actions you commit to before Election Day.",
+      "alt": "The Fight page showing pledges on the left and knockouts on the right",
+      "screenshot": "elections-02-the-fight.png"
+    },
+    {
+      "number": 3,
+      "title": "Take a pledge",
+      "description": "On the left column, check the boxes next to pledges you commit to — like \"I will vote in Nov 2026\" or \"I will register voters.\" Each pledge you take earns civic points and lights up an arrow.",
+      "alt": "Pledge checkboxes with green checks and lit arrows",
+      "screenshot": null
+    },
+    {
+      "number": 4,
+      "title": "Land a knockout",
+      "description": "On the right column, check off knockouts as you achieve them — like \"Registered someone else to vote\" or \"Rep changed position publicly.\" These are real-world results that prove your pledge.",
+      "alt": "Knockout checkboxes on the right side of the grid",
+      "screenshot": null
+    },
+    {
+      "number": 5,
+      "title": "Rate threats",
+      "description": "Click \"Threats\" in the sub-navigation to see executive threats to democracy ranked by severity. Rate each threat and share it so others can see what's happening.",
+      "alt": "Threats page showing severity-ranked executive threats",
+      "screenshot": "elections-05-threats.png"
+    },
+    {
+      "number": 6,
+      "title": "Join the community stream",
+      "description": "Scroll down on The Fight page to find the Community Stream. Post ideas, share evidence, and discuss what the Golden Rule demands right now. This is where citizens think together.",
+      "alt": "Community Stream section on The Fight page with input area",
+      "screenshot": "elections-06-stream.png"
+    }
+  ]
+}

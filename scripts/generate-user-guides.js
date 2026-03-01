@@ -95,6 +95,149 @@ const flows = [
                 screenshot: { fullPage: false }
             }
         ]
+    },
+
+    // ── Talk Flow ─────────────────────────────────────────────────────
+    {
+        id: 'talk',
+        title: 'Using Talk',
+        subtitle: 'Share ideas, vote, reply, and brainstorm with your community.',
+        steps: [
+            {
+                title: 'Open USA Talk',
+                description: 'Click "USA Talk" in the main navigation bar. This is the national civic brainstorming stream where citizens share ideas, ask questions, and propose solutions.',
+                alt: 'The Talk stream page showing ideas from citizens across the USA',
+                slug: 'stream',
+                action: async (page) => {
+                    await page.goto('/talk/', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(1000);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Write your idea',
+                description: 'If you\'re verified, you\'ll see a text box at the top. Type your thought, question, or idea. You can write up to 2,000 characters. Press Enter or click the send arrow to post.',
+                alt: 'The Talk input area with text box and send button',
+                slug: 'input',
+                action: async (page) => {
+                    var input = page.locator('#ts0-input');
+                    if (await input.count() > 0) {
+                        await input.fill('What if every town had a public civic calendar?');
+                    }
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Use AI Brainstorm',
+                description: 'Click the "AI" button next to the text box to toggle AI brainstorm mode. When enabled, after you post your idea, an AI assistant will respond with analysis and suggestions to help refine your thinking.',
+                alt: 'The AI toggle button highlighted next to the text input',
+                slug: 'ai-toggle',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Vote on ideas',
+                description: 'Every idea has thumbs-up and thumbs-down buttons. Vote to signal agreement or disagreement. Your vote helps the community see which ideas have support.',
+                alt: 'An idea card showing vote buttons',
+                slug: 'vote',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Filter by status',
+                description: 'Use the filter buttons at the top of the stream — All, Raw, Refining, Distilled, Actionable. Ideas mature as the community discusses and refines them.',
+                alt: 'Filter bar showing status options: All, Raw, Refining, Distilled, Actionable',
+                slug: 'filters',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Browse by location',
+                description: 'Talk works at three levels: USA (national), your state, and your town. Visit your state or town page to see local conversations. The breadcrumb at the top shows where you are: USA > State > Town.',
+                alt: 'Talk page showing geographic breadcrumb navigation',
+                slug: 'geo',
+                action: async (page) => {
+                    await page.goto('/talk/?state=7', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            }
+        ]
+    },
+
+    // ── Elections / The Fight Flow ────────────────────────────────────
+    {
+        id: 'elections',
+        title: 'Elections & The Fight',
+        subtitle: 'Take pledges, land knockouts, rate threats, and hold power accountable.',
+        steps: [
+            {
+                title: 'Open Elections',
+                description: 'Click "Elections" in the main navigation bar. This is the Elections 2026 hub — tracking threats to democracy, citizen pledges, and races that matter.',
+                alt: 'Elections 2026 landing page with threat count and citizen stats',
+                slug: 'landing',
+                action: async (page) => {
+                    await page.goto('/elections/', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Go to The Fight',
+                description: 'Click "The Fight" in the sub-navigation. This is where citizens take pledges and land knockouts — concrete civic actions you commit to before Election Day.',
+                alt: 'The Fight page showing pledges on the left and knockouts on the right',
+                slug: 'the-fight',
+                action: async (page) => {
+                    await page.goto('/elections/the-fight.php', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Take a pledge',
+                description: 'On the left column, check the boxes next to pledges you commit to — like "I will vote in Nov 2026" or "I will register voters." Each pledge you take earns civic points and lights up an arrow.',
+                alt: 'Pledge checkboxes with green checks and lit arrows',
+                slug: 'pledge',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Land a knockout',
+                description: 'On the right column, check off knockouts as you achieve them — like "Registered someone else to vote" or "Rep changed position publicly." These are real-world results that prove your pledge.',
+                alt: 'Knockout checkboxes on the right side of the grid',
+                slug: 'knockout',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Rate threats',
+                description: 'Click "Threats" in the sub-navigation to see executive threats to democracy ranked by severity. Rate each threat and share it so others can see what\'s happening.',
+                alt: 'Threats page showing severity-ranked executive threats',
+                slug: 'threats',
+                action: async (page) => {
+                    await page.goto('/elections/threats.php', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Join the community stream',
+                description: 'Scroll down on The Fight page to find the Community Stream. Post ideas, share evidence, and discuss what the Golden Rule demands right now. This is where citizens think together.',
+                alt: 'Community Stream section on The Fight page with input area',
+                slug: 'stream',
+                action: async (page) => {
+                    await page.goto('/elections/the-fight.php', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                    // Scroll to the talk stream section
+                    await page.evaluate(() => {
+                        var el = document.querySelector('.talk-stream');
+                        if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+                    });
+                    await page.waitForTimeout(300);
+                },
+                screenshot: { fullPage: false }
+            }
+        ]
     }
 ];
 
