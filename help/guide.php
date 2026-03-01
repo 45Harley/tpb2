@@ -178,9 +178,10 @@ require dirname(__DIR__) . '/includes/nav.php';
                 <img src="/help/screenshots/<?= htmlspecialchars($step['screenshot']) ?>"
                      alt="<?= htmlspecialchars($step['alt'] ?? $step['title']) ?>"
                      loading="lazy">
-<?php elseif (!$step['screenshot']): ?>
+<?php endif; ?>
+<?php if (!empty($step['link'])): ?>
                 <div class="step-info-card">
-                    This step happens outside the website (in your email inbox).
+                    <a href="<?= htmlspecialchars($step['link']['url']) ?>" style="color:#d4af37;text-decoration:none;font-weight:600;"><?= htmlspecialchars($step['link']['label']) ?> &rarr;</a>
                 </div>
 <?php endif; ?>
             </div>

@@ -423,7 +423,8 @@ const flows = [
                 alt: null,
                 slug: 'volunteer',
                 action: null,
-                screenshot: null
+                screenshot: null,
+                link: { url: '/help/guide.php?flow=volunteer', label: 'Read the full Becoming a Volunteer guide' }
             }
         ]
     },
@@ -554,13 +555,15 @@ async function generateGuides() {
                 console.log(' (no screenshot)');
             }
 
-            manifestSteps.push({
+            const entry = {
                 number: i + 1,
                 title: step.title,
                 description: step.description,
                 alt: step.alt,
                 screenshot: screenshotFile
-            });
+            };
+            if (step.link) entry.link = step.link;
+            manifestSteps.push(entry);
         }
 
         // Write JSON manifest
