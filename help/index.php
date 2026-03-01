@@ -38,6 +38,7 @@ $guideIcons = [
     'onboarding' => '&#x1F680;',
     'talk'       => '&#x1F4AC;',
     'elections'  => '&#x1F5F3;',
+    'polls'      => '&#x1F4CA;',
     'volunteer'  => '&#x1F91D;',
 ];
 

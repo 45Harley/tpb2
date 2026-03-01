@@ -240,6 +240,102 @@ const flows = [
         ]
     },
 
+    // ── Polls / Threat Roll Call Flow ──────────────────────────────────
+    {
+        id: 'polls',
+        title: 'Polls — Threat Roll Call',
+        subtitle: 'Vote on executive threats scored 300+. Citizens ask "Is this acceptable?" — reps answer "Will you act?"',
+        steps: [
+            {
+                title: 'Where poll questions come from',
+                description: 'Poll questions are not written by hand — they come directly from the Threats system. Editors track real executive actions (executive orders, firings, policy changes) and score each one on a 0-1000 criminality scale. Every threat that reaches a severity score of 300 or higher ("High Crime" zone) automatically becomes a poll question. This means the most serious threats to democracy are put directly to the people for a vote.',
+                alt: null,
+                slug: 'source',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'See the Threat Stream',
+                description: 'Click "Threats" under Elections to see the full Threat Stream — a live, reverse-chronological feed of all tracked threats. Each card shows the severity score, the official responsible, category tags, and an action script (what you can do). Threats scored 300+ are the ones that appear as poll questions.',
+                alt: 'Threat Stream page showing threat cards with severity badges and action scripts',
+                slug: 'threat-stream',
+                action: async (page) => {
+                    await page.goto('/elections/threats.php', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Open Polls',
+                description: 'Click "Polls" in the main navigation bar (under Elections). You\'ll see a list of active threat polls, each showing a severity badge with a color-coded score, the threat title, and voting buttons.',
+                alt: 'Polls page showing threat cards with severity badges and vote buttons',
+                slug: 'landing',
+                action: async (page) => {
+                    await page.goto('/poll/', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Understand the severity scale',
+                description: 'At the top of the page, a color bar shows the criminality scale — from Clean (0) through Misdemeanor, Felony, High Crime, all the way to Genocide (901-1000). Threats scored 300+ fall in the "High Crime" zone and above. The scale helps you understand how serious each threat is.',
+                alt: 'Criminality scale color bar with severity zones from Clean to Genocide',
+                slug: 'scale',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Vote on a threat',
+                description: 'Each threat card asks one question: "Is this acceptable?" You have three choices: Yea (acceptable), Nay (not acceptable), or Abstain. Click a button to cast your vote. You can change your vote at any time by clicking a different button. You must be a verified citizen (email verified) to vote.',
+                alt: 'A threat poll card with Yea, Nay, and Abstain vote buttons',
+                slug: 'vote',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Sort and filter threats',
+                description: 'Use the controls above the poll cards to sort by severity (highest first), date (newest first), or most votes. You can also filter by category tags — like "Immigration," "Justice," or "Military." Click any tag pill on a threat card to filter by that category.',
+                alt: 'Sort and filter controls showing severity, date, and tag options',
+                slug: 'controls',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'View national results',
+                description: 'Click "National" in the view links at the top to see how all citizens across the country voted on each threat. Each threat shows a results bar — green for Yea, red for Nay, gray for Abstain — so you can see the national consensus at a glance.',
+                alt: 'National results page showing aggregate vote bars per threat',
+                slug: 'national',
+                action: async (page) => {
+                    await page.goto('/poll/national/', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'View results by state',
+                description: 'Click "By State" to see how citizens in each state voted. Select your state from the dropdown to see your state\'s position on each threat. This shows whether your state agrees with the national consensus or stands apart.',
+                alt: 'By State results page with state selector and vote breakdown',
+                slug: 'by-state',
+                action: async (page) => {
+                    await page.goto('/poll/by-state/', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'View results by representative',
+                description: 'Click "By Rep" to see how elected officials voted. Representatives and senators can verify their identity and cast official votes. This is accountability in action — you can compare your rep\'s votes to the citizens they serve.',
+                alt: 'By Rep results page showing official votes alongside citizen votes',
+                slug: 'by-rep',
+                action: async (page) => {
+                    await page.goto('/poll/by-rep/', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            }
+        ]
+    },
+
     // ── Profile & Trust Journey Flow ─────────────────────────────────
     {
         id: 'profile',
