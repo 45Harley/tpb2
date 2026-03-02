@@ -498,6 +498,7 @@ $electionSite = 'https://tpb.sandgems.net';
                         <a href="/profile.php#points">My Points</a>
                     </div>
                 </div>
+                <a href="/invite/" <?= $currentPage === 'invite' ? 'class="active"' : '' ?>>Invite</a>
                 <a href="<?= htmlspecialchars($talkUrl) ?>" <?= $currentPage === 'talk' ? 'class="active"' : '' ?>>USA Talk</a>
 
                 <a href="/usa/" <?= in_array($currentPage, ['government', 'usa']) ? 'class="active"' : '' ?>>USA</a>
