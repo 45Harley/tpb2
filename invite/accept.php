@@ -325,7 +325,11 @@ include dirname(__DIR__) . '/includes/nav.php';
 <div class="welcome-hero">
     <h1>Welcome to The People's Branch</h1>
     <p class="invited-by">Invited by <strong><?= $invitorEmailDisplay ?></strong></p>
-    <div class="points-earned">&#x2B50; You've already earned <?= (int)$dbUser['civic_points'] ?> Civic Points just by joining</div>
+    <?php if ((int)$dbUser['civic_points'] > 0): ?>
+        <div class="points-earned">&#x2B50; You've already earned <?= (int)$dbUser['civic_points'] ?> Civic Points just by joining</div>
+    <?php else: ?>
+        <div class="points-earned">&#x2B50; Start earning Civic Points — explore below</div>
+    <?php endif; ?>
 </div>
 
 <!-- Explore: What's yours now -->
