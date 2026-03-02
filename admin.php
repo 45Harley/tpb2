@@ -275,10 +275,14 @@ if (isset($_POST['delete_user'])) {
         $stmt->execute([$userId]);
         if ($n = $stmt->rowCount()) $cascade[] = "$n volunteer app(s) withdrawn";
 
-        // 9. Remove civic skill interests
-        $stmt = $pdo->prepare("DELETE FROM civic_skill_interests WHERE user_id = ?");
-        $stmt->execute([$userId]);
-        if ($n = $stmt->rowCount()) $cascade[] = "$n skill interest(s) removed";
+        // 9. Remove civic skill interests (skip if view/table doesn't exist)
+        try {
+            $stmt = $pdo->prepare("DELETE FROM civic_skill_interests WHERE user_id = ?");
+            $stmt->execute([$userId]);
+            if ($n = $stmt->rowCount()) $cascade[] = "$n skill interest(s) removed";
+        } catch (PDOException $e) {
+            // civic_skill_interests may be a view or not yet created — safe to skip
+        }
 
         // Historical data preserved: points_log, poll_votes, invitations,
         // idea_log, threat_responses, threat_ratings, admin_actions
@@ -1435,7 +1439,7 @@ $adminActions = $pdo->query("
                                         <button type="submit" name="restore_user" class="btn btn-success">Restore</button>
                                     </form>
                                 <?php else: ?>
-                                    <form method="POST" style="display: inline;" onsubmit="return confirm('CASCADE DELETE user #<?= $user['user_id'] ?>?\n\nThis will:\n• Deactivate all devices/sessions\n• Hide published thoughts\n• Remove platform roles (admin, moderator, etc.)\n• Invalidate email/magic-link tokens\n• Remove from deliberation groups\n• Cancel pending group invites\n• Withdraw pending volunteer applications\n• Remove civic skill interests\n\nHistorical data (points, votes, ratings) is preserved.\nUser can be restored but roles/memberships need manual re-assignment.');">
+                                    <form method="POST" style="display: inline;" onsubmit="return confirm('CASCADE DELETE user #<?= $user['user_id'] ?>?\n\nThis will:\n• Deactivate all devices/sessions\n• Hide published thoughts\n• Remove platform roles (admin, moderator, etc.)\n• Invalidate email/magic-link tokens\n• Remove from deliberation groups\n• Cancel pending group invites\n• Withdraw pending volunteer applications\n\nHistorical data (points, votes, ratings) is preserved.\nUser can be restored but roles/memberships need manual re-assignment.');">
                                         <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                                         <input type="hidden" name="user_id" value="<?= $user['user_id'] ?>">
                                         <button type="submit" name="delete_user" class="btn btn-danger">Delete</button>
