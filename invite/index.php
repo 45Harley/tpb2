@@ -253,6 +253,12 @@ $pageStyles = <<<'CSS'
 .history-table .date-col { color: #888; }
 .history-table .status-pending { color: #ff9800; }
 .history-table .status-joined { color: #4caf50; font-weight: 600; }
+.history-table .status-failed { color: #c62828; }
+.history-table .btn-delete {
+    background: none; border: 1px solid #555; color: #888; padding: 3px 8px;
+    border-radius: 4px; cursor: pointer; font-size: 0.75rem;
+}
+.history-table .btn-delete:hover { border-color: #c62828; color: #c62828; }
 .history-table .points-col { color: #f5c842; font-weight: 600; }
 .history-table .points-col.none { color: #333; font-weight: normal; }
 
@@ -385,15 +391,18 @@ include dirname(__DIR__) . '/includes/nav.php';
             </thead>
             <tbody>
                 <?php foreach ($history as $row): ?>
-                <tr>
+                <tr id="invite-row-<?= $row['id'] ?>">
                     <td class="email-col"><?= htmlspecialchars($row['invitee_email']) ?></td>
                     <td class="date-col"><?= date('M j', strtotime($row['created_at'])) ?></td>
                     <?php if ($row['status'] === 'joined'): ?>
                         <td class="status-joined">Joined!</td>
                         <td class="points-col">+100 pts</td>
+                    <?php elseif ($row['status'] === 'failed'): ?>
+                        <td class="status-failed">Failed</td>
+                        <td><button class="btn-delete" onclick="deleteInvite(<?= $row['id'] ?>)">Remove</button></td>
                     <?php else: ?>
                         <td class="status-pending">Pending</td>
-                        <td class="points-col none">&mdash;</td>
+                        <td><button class="btn-delete" onclick="deleteInvite(<?= $row['id'] ?>)">Remove</button></td>
                     <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
@@ -527,6 +536,25 @@ function togglePreview() {
     } else {
         preview.style.display = 'none';
         btn.innerHTML = '<span class="arrow">&#x25BC;</span> Preview what your friend will receive';
+    }
+}
+
+async function deleteInvite(id) {
+    if (!confirm('Remove this invitation?')) return;
+    try {
+        const resp = await fetch('/api/delete-invite.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        const data = await resp.json();
+        if (data.deleted) {
+            document.getElementById('invite-row-' + id).remove();
+        } else {
+            alert('Could not remove — it may have already been accepted.');
+        }
+    } catch (err) {
+        alert('Something went wrong.');
     }
 }
 </script>

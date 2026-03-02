@@ -72,6 +72,10 @@ foreach ($emails as $email) {
     // Send to invitee
     $ok = sendSmtpMail($config, $email, $subject, $body, null, true);
 
+    if (!$ok) {
+        $pdo->prepare("UPDATE invitations SET status='failed' WHERE token=?")->execute([$token]);
+    }
+
     $results[] = ['email' => $email, 'status' => $ok ? 'sent' : 'failed'];
 
     usleep(1000000); // 1s throttle

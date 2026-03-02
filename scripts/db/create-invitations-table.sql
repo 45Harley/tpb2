@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS invitations (
     invitor_user_id INT NOT NULL,
     invitee_email VARCHAR(255) NOT NULL,
     token VARCHAR(64) NOT NULL UNIQUE,
-    status ENUM('sent','joined') DEFAULT 'sent',
+    status ENUM('sent','joined','failed') DEFAULT 'sent',
     invitee_user_id INT NULL,
     points_awarded TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
