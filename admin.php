@@ -951,6 +951,36 @@ $adminActions = $pdo->query("
             -webkit-overflow-scrolling: touch;
         }
 
+        /* Sticky ID + Email columns in users table */
+        .table-wrap table .sticky-id,
+        .table-wrap table .sticky-email {
+            position: sticky;
+            z-index: 2;
+            background: inherit;
+        }
+        .table-wrap table .sticky-id {
+            left: 0;
+            min-width: 50px;
+        }
+        .table-wrap table .sticky-email {
+            left: 50px;
+            min-width: 180px;
+            border-right: 2px solid #444;
+        }
+        .table-wrap table thead .sticky-id,
+        .table-wrap table thead .sticky-email {
+            background: #252525;
+            z-index: 3;
+        }
+        .table-wrap table tbody tr .sticky-id,
+        .table-wrap table tbody tr .sticky-email {
+            background: #1a1a1a;
+        }
+        .table-wrap table tbody tr:hover .sticky-id,
+        .table-wrap table tbody tr:hover .sticky-email {
+            background: #202020;
+        }
+
         .thought-content {
             max-width: 400px;
             overflow: hidden;
@@ -1382,8 +1412,8 @@ $adminActions = $pdo->query("
             <div class="table-wrap"><table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Email</th>
+                        <th class="sticky-id">ID</th>
+                        <th class="sticky-email">Email</th>
                         <th>Name</th>
                         <th>Location</th>
                         <th>Identity</th>
@@ -1400,8 +1430,8 @@ $adminActions = $pdo->query("
                 <tbody>
                     <?php foreach ($users as $user): ?>
                         <tr<?= $user['deleted_at'] ? ' style="opacity: 0.5;"' : '' ?>>
-                            <td><a href="admin-user-detail.php?id=<?= $user['user_id'] ?>" class="user-id-link" title="View full profile"><?= $user['user_id'] ?></a></td>
-                            <td><?= htmlspecialchars($user['email'] ?? '-') ?></td>
+                            <td class="sticky-id"><a href="admin-user-detail.php?id=<?= $user['user_id'] ?>" class="user-id-link" title="View full profile"><?= $user['user_id'] ?></a></td>
+                            <td class="sticky-email"><?= htmlspecialchars($user['email'] ?? '-') ?></td>
                             <td><?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?: '-') ?></td>
                             <td>
                                 <?= htmlspecialchars($user['town_name'] ?? '') ?>
