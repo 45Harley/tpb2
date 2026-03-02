@@ -34,7 +34,7 @@ $pageTitle = 'Invite a Friend | The People\'s Branch';
 
 // Load invite history
 $historyStmt = $pdo->prepare("
-    SELECT invitee_email, status, points_awarded, created_at, joined_at
+    SELECT id, invitee_email, status, points_awarded, created_at, joined_at
     FROM invitations WHERE invitor_user_id = ? ORDER BY created_at DESC
 ");
 $historyStmt->execute([$dbUser['user_id']]);
