@@ -239,28 +239,28 @@ include __DIR__ . '/includes/nav.php';
 <!-- Explore: What's yours now -->
 <div class="section-container">
     <h2 class="section-title">Here's what's yours now</h2>
-    <p class="section-subtitle">Click any card to explore. Come back here anytime from the nav menu.</p>
+    <p class="section-subtitle">Click any card to explore<?= $fromInvite ? ' in a new tab' : '' ?>. Come back here anytime from My TPB in the nav.</p>
 
     <div class="feature-grid">
-        <a class="feature-card" href="/talk/">
+        <a class="feature-card" href="/talk/"<?= $fromInvite ? ' target="_blank"' : '' ?>>
             <div class="card-icon">&#x1F4AC;</div>
             <h3>USA Talk</h3>
             <p>Citizens brainstorming solutions together. Real ideas, real debate, real consensus.</p>
             <span class="card-cta">See what people are saying &rarr;</span>
         </a>
-        <a class="feature-card" href="/elections/">
+        <a class="feature-card" href="/elections/"<?= $fromInvite ? ' target="_blank"' : '' ?>>
             <div class="card-icon">&#x1F6A8;</div>
             <h3>Threat Stream</h3>
             <p>A live scorecard of government actions rated on a criminality scale. Transparent accountability.</p>
             <span class="card-cta">See the threats &rarr;</span>
         </a>
-        <a class="feature-card" href="/poll/">
+        <a class="feature-card" href="/poll/"<?= $fromInvite ? ' target="_blank"' : '' ?>>
             <div class="card-icon">&#x1F5F3;</div>
             <h3>Polls</h3>
             <p>Vote yea, nay, or abstain on active threats and policy. Your opinion is tallied publicly.</p>
             <span class="card-cta">Cast your first vote &rarr;</span>
         </a>
-        <a class="feature-card" href="/usa/">
+        <a class="feature-card" href="/usa/"<?= $fromInvite ? ' target="_blank"' : '' ?>>
             <div class="card-icon">&#x1F5FA;</div>
             <h3>Your Country</h3>
             <p>Interactive map of every state and town. Find your community, see your representatives.</p>
