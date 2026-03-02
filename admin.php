@@ -227,25 +227,76 @@ if (isset($_POST['restore_thought'])) {
     $messageType = 'success';
 }
 
-// Soft-delete user (mark as deleted, deactivate devices)
+// Soft-delete user — cascade across all user-related tables
 if (isset($_POST['delete_user'])) {
     validateCsrf();
     $userId = (int)$_POST['user_id'];
-    $pdo->prepare("UPDATE users SET deleted_at = NOW() WHERE user_id = ? AND deleted_at IS NULL")->execute([$userId]);
-    $pdo->prepare("UPDATE user_devices SET is_active = 0 WHERE user_id = ?")->execute([$userId]);
-    $pdo->prepare("UPDATE user_thoughts SET status = 'draft' WHERE user_id = ? AND status = 'published'")->execute([$userId]);
-    logAdminAction($pdo, $adminUserId, 'soft_delete_user', 'user', $userId);
-    $message = "User #$userId marked as deleted (devices deactivated, thoughts hidden)";
-    $messageType = 'success';
+    $cascade = [];
+
+    // 1. Mark user deleted
+    $stmt = $pdo->prepare("UPDATE users SET deleted_at = NOW() WHERE user_id = ? AND deleted_at IS NULL");
+    $stmt->execute([$userId]);
+    if (!$stmt->rowCount()) {
+        $message = "User #$userId not found or already deleted";
+        $messageType = 'warning';
+    } else {
+        // 2. Deactivate all devices/sessions (prevents login)
+        $stmt = $pdo->prepare("UPDATE user_devices SET is_active = 0 WHERE user_id = ? AND is_active = 1");
+        $stmt->execute([$userId]);
+        if ($n = $stmt->rowCount()) $cascade[] = "$n device(s) deactivated";
+
+        // 3. Hide published thoughts
+        $stmt = $pdo->prepare("UPDATE user_thoughts SET status = 'draft' WHERE user_id = ? AND status = 'published'");
+        $stmt->execute([$userId]);
+        if ($n = $stmt->rowCount()) $cascade[] = "$n thought(s) hidden";
+
+        // 4. Remove platform roles (prevents admin/moderator access)
+        $stmt = $pdo->prepare("DELETE FROM user_role_membership WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        if ($n = $stmt->rowCount()) $cascade[] = "$n role(s) removed";
+
+        // 5. Invalidate pending email/magic-link tokens
+        $stmt = $pdo->prepare("DELETE FROM bulletin_tokens WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        if ($n = $stmt->rowCount()) $cascade[] = "$n token(s) invalidated";
+
+        // 6. Remove from deliberation groups
+        $stmt = $pdo->prepare("DELETE FROM idea_group_members WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        if ($n = $stmt->rowCount()) $cascade[] = "$n group membership(s) removed";
+
+        // 7. Cancel pending group invites
+        $stmt = $pdo->prepare("DELETE FROM group_invites WHERE user_id = ? AND status = 'pending'");
+        $stmt->execute([$userId]);
+        if ($n = $stmt->rowCount()) $cascade[] = "$n group invite(s) cancelled";
+
+        // 8. Withdraw pending volunteer applications
+        $stmt = $pdo->prepare("UPDATE volunteer_applications SET status = 'withdrawn' WHERE user_id = ? AND status = 'pending'");
+        $stmt->execute([$userId]);
+        if ($n = $stmt->rowCount()) $cascade[] = "$n volunteer app(s) withdrawn";
+
+        // 9. Remove civic skill interests
+        $stmt = $pdo->prepare("DELETE FROM civic_skill_interests WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        if ($n = $stmt->rowCount()) $cascade[] = "$n skill interest(s) removed";
+
+        // Historical data preserved: points_log, poll_votes, invitations,
+        // idea_log, threat_responses, threat_ratings, admin_actions
+
+        logAdminAction($pdo, $adminUserId, 'soft_delete_user', 'user', $userId);
+        $details = $cascade ? ' — ' . implode(', ', $cascade) : '';
+        $message = "User #$userId deleted{$details}";
+        $messageType = 'success';
+    }
 }
 
-// Restore soft-deleted user
+// Restore soft-deleted user (account only — roles/memberships need manual re-assignment)
 if (isset($_POST['restore_user'])) {
     validateCsrf();
     $userId = (int)$_POST['user_id'];
     $pdo->prepare("UPDATE users SET deleted_at = NULL WHERE user_id = ?")->execute([$userId]);
     logAdminAction($pdo, $adminUserId, 'restore_user', 'user', $userId);
-    $message = "User #$userId restored";
+    $message = "User #$userId restored — note: roles, group memberships, and tokens were removed on delete and need manual re-assignment";
     $messageType = 'success';
 }
 
@@ -1384,7 +1435,7 @@ $adminActions = $pdo->query("
                                         <button type="submit" name="restore_user" class="btn btn-success">Restore</button>
                                     </form>
                                 <?php else: ?>
-                                    <form method="POST" style="display: inline;" onsubmit="return confirm('Mark this user as deleted? Their devices will be deactivated and thoughts hidden.');">
+                                    <form method="POST" style="display: inline;" onsubmit="return confirm('CASCADE DELETE user #<?= $user['user_id'] ?>?\n\nThis will:\n• Deactivate all devices/sessions\n• Hide published thoughts\n• Remove platform roles (admin, moderator, etc.)\n• Invalidate email/magic-link tokens\n• Remove from deliberation groups\n• Cancel pending group invites\n• Withdraw pending volunteer applications\n• Remove civic skill interests\n\nHistorical data (points, votes, ratings) is preserved.\nUser can be restored but roles/memberships need manual re-assignment.');">
                                         <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                                         <input type="hidden" name="user_id" value="<?= $user['user_id'] ?>">
                                         <button type="submit" name="delete_user" class="btn btn-danger">Delete</button>

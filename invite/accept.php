@@ -62,25 +62,36 @@ if ($invitation['status'] === 'joined') {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Check if invitee email already exists as active user
+// 3. Check if invitee email already exists
 // ---------------------------------------------------------------------------
-$existing = $pdo->prepare("SELECT user_id FROM users WHERE email = ? AND deleted_at IS NULL LIMIT 1");
-$existing->execute([$invitation['invitee_email']]);
-if ($existing->fetch()) {
+$email = $invitation['invitee_email'];
+$existing = $pdo->prepare("SELECT user_id, deleted_at FROM users WHERE email = ? LIMIT 1");
+$existing->execute([$email]);
+$existingUser = $existing->fetch();
+
+if ($existingUser && !$existingUser['deleted_at']) {
+    // Active user — just redirect to login
     header('Location: /login.php');
     exit;
 }
 
 // ---------------------------------------------------------------------------
-// 4. Create user account
+// 4. Create or restore user account
 // ---------------------------------------------------------------------------
-$email = $invitation['invitee_email'];
-$username = explode('@', $email)[0] . '_' . substr(md5($email), 0, 6);
 $sessionId = 'civic_' . bin2hex(random_bytes(16));
 
-$stmt = $pdo->prepare("INSERT INTO users (username, email, identity_level_id, civic_points) VALUES (?, ?, 2, 0)");
-$stmt->execute([$username, $email]);
-$newUserId = $pdo->lastInsertId();
+if ($existingUser && $existingUser['deleted_at']) {
+    // Restore soft-deleted user instead of creating a duplicate
+    $newUserId = (int)$existingUser['user_id'];
+    $pdo->prepare("UPDATE users SET deleted_at = NULL, identity_level_id = GREATEST(identity_level_id, 2) WHERE user_id = ?")
+        ->execute([$newUserId]);
+} else {
+    // Brand new user
+    $username = explode('@', $email)[0] . '_' . substr(md5($email), 0, 6);
+    $stmt = $pdo->prepare("INSERT INTO users (username, email, identity_level_id, civic_points) VALUES (?, ?, 2, 0)");
+    $stmt->execute([$username, $email]);
+    $newUserId = $pdo->lastInsertId();
+}
 
 // ---------------------------------------------------------------------------
 // 5. Set up device/session
