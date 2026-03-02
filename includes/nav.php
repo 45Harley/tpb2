@@ -481,6 +481,7 @@ $electionSite = 'https://tpb.sandgems.net';
                 <div class="nav-dropdown">
                     <span class="nav-dropdown-toggle <?= in_array($currentPage, ['profile','town','power']) ? 'active' : '' ?>">My TPB</span>
                     <div class="nav-dropdown-menu">
+                        <a href="/welcome.php">Getting Started</a>
                         <a href="/profile.php">My Profile</a>
                         <?php if ($hasTown): ?>
                         <a href="/z-states/<?= htmlspecialchars($userStateAbbr) ?>/<?= htmlspecialchars($userTownSlug) ?>/">My Town</a>
