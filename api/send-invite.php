@@ -46,6 +46,13 @@ foreach ($emails as $email) {
         continue;
     }
 
+    // Verify domain has mail servers
+    $domain = substr($email, strrpos($email, '@') + 1);
+    if (!checkdnsrr($domain, 'MX') && !checkdnsrr($domain, 'A')) {
+        $results[] = ['email' => $email, 'status' => 'invalid_domain'];
+        continue;
+    }
+
     // Check if already a member
     $checkUser->execute([$email]);
     if ($checkUser->fetch()) {
