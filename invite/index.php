@@ -207,17 +207,30 @@ $pageStyles = <<<'CSS'
 .preview-toggle:hover { color: #d4af37; }
 .preview-toggle .arrow { font-size: 0.7rem; }
 .preview-frame {
-    border: 1px solid #444;
+    border: 1px solid rgba(212,175,55,0.4);
     border-radius: 8px;
     overflow: hidden;
-    max-height: 500px;
+    max-height: 560px;
     overflow-y: auto;
-    background: #f5f5f5;
+    background: #1a1a2e;
+    padding: 2px;
+}
+.preview-frame-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #888;
+    text-align: center;
+    padding: 8px 0 6px;
+    background: #1a1a2e;
+    border-bottom: 1px solid rgba(212,175,55,0.2);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 .preview-frame iframe {
     width: 100%;
     min-height: 600px;
     border: none;
+    border-radius: 0 0 6px 6px;
 }
 
 /* History section */
@@ -334,6 +347,7 @@ include dirname(__DIR__) . '/includes/nav.php';
                 <span class="arrow">&#x25BC;</span> Preview what your friend will receive
             </button>
             <div id="email-preview" class="preview-frame" style="display:none;">
+                <span class="preview-frame-label">Preview of email your friend will receive</span>
                 <iframe srcdoc="<?= htmlspecialchars($previewHtml) ?>"></iframe>
             </div>
         </div>
