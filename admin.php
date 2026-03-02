@@ -908,8 +908,6 @@ $adminActions = $pdo->query("
             border-collapse: separate;
             border-spacing: 0;
             background: #1a1a1a;
-            border-radius: 10px;
-            overflow: hidden;
         }
 
         th, td {
@@ -951,6 +949,7 @@ $adminActions = $pdo->query("
             max-width: calc(100vw - 60px);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            border-radius: 10px;
         }
 
         /* Sticky ID + Email columns in users table */
