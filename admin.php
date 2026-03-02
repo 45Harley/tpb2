@@ -745,7 +745,7 @@ $adminActions = $pdo->query("
 
         html, body {
             min-height: 100%;
-            overflow-x: auto;
+            overflow-x: hidden;
             overflow-y: auto;
         }
 
@@ -820,6 +820,7 @@ $adminActions = $pdo->query("
             max-width: 1400px;
             margin: 0 auto;
             padding: 30px;
+            overflow: hidden;
         }
 
         .message {
@@ -947,7 +948,7 @@ $adminActions = $pdo->query("
         .btn-success:hover { background: #1b5e20; }
 
         .table-wrap {
-            width: 100%;
+            max-width: calc(100vw - 60px);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
