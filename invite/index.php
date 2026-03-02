@@ -207,30 +207,17 @@ $pageStyles = <<<'CSS'
 .preview-toggle:hover { color: #d4af37; }
 .preview-toggle .arrow { font-size: 0.7rem; }
 .preview-frame {
-    border: 1px solid rgba(212,175,55,0.4);
+    border: 1px solid #444;
     border-radius: 8px;
     overflow: hidden;
-    max-height: 560px;
+    max-height: 400px;
     overflow-y: auto;
-    background: #1a1a2e;
-    padding: 2px;
+    background: #f5f5f5;
 }
-.preview-frame-label {
-    display: block;
-    font-size: 0.75rem;
-    color: #888;
-    text-align: center;
-    padding: 8px 0 6px;
-    background: #1a1a2e;
-    border-bottom: 1px solid rgba(212,175,55,0.2);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-.preview-frame iframe {
-    width: 100%;
-    min-height: 600px;
-    border: none;
-    border-radius: 0 0 6px 6px;
+.preview-frame .preview-email {
+    transform: scale(0.85);
+    transform-origin: top left;
+    width: 117.6%; /* 1/0.85 to compensate for scale */
 }
 
 /* History section */
@@ -347,8 +334,35 @@ include dirname(__DIR__) . '/includes/nav.php';
                 <span class="arrow">&#x25BC;</span> Preview what your friend will receive
             </button>
             <div id="email-preview" class="preview-frame" style="display:none;">
-                <span class="preview-frame-label">Preview of email your friend will receive</span>
-                <iframe srcdoc="<?= htmlspecialchars($previewHtml) ?>"></iframe>
+                <div class="preview-email" style="padding:20px;font-family:-apple-system,sans-serif;">
+                    <div style="max-width:600px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="background:#1a1a2e;padding:16px 20px;">
+                            <span style="color:#c8a415;font-size:16px;font-weight:bold;">The People&#8217;s Branch</span>
+                            <span style="color:#aaa;font-size:12px;float:right;padding-top:2px;">You&#8217;re Invited</span>
+                        </div>
+                        <div style="padding:16px 20px;">
+                            <h3 style="font-size:16px;color:#1a1a2e;margin:0 0 10px;">Your friend <span style="color:#c8a415;"><?= htmlspecialchars($dbUser['email']) ?></span> thinks you should be part of this.</h3>
+                            <p style="font-size:13px;color:#444;line-height:1.6;margin:0 0 8px;">The People&#8217;s Branch is a civic platform built on one idea: <strong>government should serve the people, not the other way around.</strong></p>
+                            <p style="font-size:13px;color:#444;line-height:1.6;margin:0 0 12px;">Founded on the <span style="color:#c8a415;">Golden Rule</span> &mdash; the one ethical command shared by every major world philosophy...</p>
+                            <p style="font-size:13px;color:#333;line-height:1.6;margin:0 0 8px;"><strong style="color:#c8a415;">Just imagine&hellip;</strong> you can be heard &mdash; by your community, your town hall, your State, and your elected officials in D.C.</p>
+                            <p style="font-size:13px;color:#333;line-height:1.6;margin:0 0 8px;"><strong style="color:#c8a415;">Just imagine&hellip;</strong> you can sign up to receive daily threats to democracy, and vote 24/7...</p>
+                            <p style="font-size:13px;color:#333;line-height:1.6;margin:0 0 8px;"><strong style="color:#c8a415;">Just imagine&hellip;</strong> you can dictate your thoughts with the help of an AI civic clerk...</p>
+                            <p style="font-size:13px;color:#333;line-height:1.6;margin:0 0 8px;"><strong style="color:#c8a415;">Just imagine&hellip;</strong> you can volunteer your skills to help build TPB in your Town and State.</p>
+                            <p style="font-size:13px;color:#333;line-height:1.6;margin:0 0 12px;">&hellip;and all of this is <strong>free</strong> and <strong>ad-free</strong>. Just We The People.</p>
+                            <p style="font-size:13px;color:#1a1a2e;line-height:1.6;margin:0 0 16px;font-weight:600;">Be among the first 1,000 members. Become one of the first <span style="color:#c8a415;">Founding Volunteers</span>.</p>
+                            <div style="text-align:center;margin:16px 0;">
+                                <span style="display:inline-block;background:#c8a415;color:#fff;padding:10px 28px;border-radius:6px;font-weight:bold;font-size:14px;">Accept Invitation &rarr;</span>
+                            </div>
+                            <div style="background:#faf6e8;border:1px solid #e8ddb5;border-radius:6px;padding:12px 16px;margin-top:12px;">
+                                <p style="font-size:12px;font-weight:bold;color:#1a1a2e;margin:0 0 4px;">&#x2B50; How Invitations Work</p>
+                                <p style="font-size:11px;color:#555;margin:0;line-height:1.5;">When you join, your friend <?= htmlspecialchars($dbUser['email']) ?> earns <strong style="color:#c8a415;">100 Civic Points</strong> &mdash; our way of rewarding citizens who grow the movement.</p>
+                            </div>
+                        </div>
+                        <div style="background:#f9f9f9;padding:12px 20px;border-top:1px solid #eee;">
+                            <p style="font-size:10px;color:#999;margin:0;line-height:1.4;">Invited by <?= htmlspecialchars($dbUser['email']) ?> via The People&#8217;s Branch. &bull; No Kings. Only Citizens.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
