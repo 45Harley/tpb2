@@ -904,7 +904,8 @@ $adminActions = $pdo->query("
         /* Tables */
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             background: #1a1a1a;
             border-radius: 10px;
             overflow: hidden;
