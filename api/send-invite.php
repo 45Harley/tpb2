@@ -65,9 +65,6 @@ foreach ($emails as $email) {
     // Send to invitee
     $ok = sendSmtpMail($config, $email, $subject, $body, null, true);
 
-    // Send copy to contacts@4tpb.org
-    sendSmtpMail($config, 'contacts@4tpb.org', "[Invite Copy] {$subject}", $body, null, true);
-
     $results[] = ['email' => $email, 'status' => $ok ? 'sent' : 'failed'];
 
     usleep(1000000); // 1s throttle
