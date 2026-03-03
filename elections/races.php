@@ -485,7 +485,7 @@ require dirname(__DIR__) . '/includes/nav.php';
     <!-- Recent Shifts -->
     <?php if (!empty($recentShifts)): ?>
     <div class="recent-shifts">
-        <h3>Recent Shifts <span style="font-size:0.7em;color:#888;font-weight:400;">(Example)</span></h3>
+        <h3>Recent Shifts</h3>
         <?php foreach ($recentShifts as $shift):
             $sLabel = $shift['state'];
             if ($shift['office'] === 'H' && !empty($shift['district'])) $sLabel .= '-' . $shift['district'];
