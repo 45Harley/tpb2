@@ -32,6 +32,14 @@ if (is_dir($dataDir)) {
         }
     }
 }
+// Pin "purpose" and "philosophy" to top, rest alphabetical by title
+usort($guides, function($a, $b) {
+    $pinOrder = ['purpose' => 0, 'philosophy' => 1];
+    $aPin = $pinOrder[$a['id']] ?? 99;
+    $bPin = $pinOrder[$b['id']] ?? 99;
+    if ($aPin !== $bPin) return $aPin - $bPin;
+    return strcasecmp($a['title'], $b['title']);
+});
 
 // Icons per guide ID (extend as new guides are added)
 $guideIcons = [
