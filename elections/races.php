@@ -134,7 +134,7 @@ $pageStyles = <<<'CSS'
 .view-links { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
 .view-links a {
     padding: 0.4rem 1rem; border: 1px solid #333; border-radius: 6px;
-    color: #888; text-decoration: none; font-size: 0.9rem; transition: all 0.2s;
+    color: #b0b0b0; text-decoration: none; font-size: 0.9rem; transition: all 0.2s;
 }
 .view-links a:hover { color: #e0e0e0; border-color: #555; }
 .view-links a.active { color: #d4af37; border-color: #d4af37; background: rgba(212,175,55,0.1); }
@@ -155,7 +155,7 @@ $pageStyles = <<<'CSS'
     margin-bottom: 0.25rem;
 }
 .races-hero .race-count-label {
-    font-size: 0.85rem; color: #888; text-transform: uppercase;
+    font-size: 0.85rem; color: #b0b0b0; text-transform: uppercase;
     letter-spacing: 1px; margin-bottom: 1rem;
 }
 .races-hero .tagline {
@@ -182,14 +182,14 @@ $pageStyles = <<<'CSS'
     font-family: 'Courier New', monospace;
 }
 .race-candidate-count {
-    font-size: 0.8rem; color: #888;
+    font-size: 0.8rem; color: #b0b0b0;
 }
 .rating-badge {
     padding: 3px 10px; border-radius: 4px; font-weight: 700;
     font-size: 0.8rem; white-space: nowrap; margin-left: auto;
 }
 .race-expand-icon {
-    color: #555; font-size: 0.9rem; transition: transform 0.3s;
+    color: #b0b0b0; font-size: 0.9rem; transition: transform 0.3s;
 }
 .race-card.open .race-expand-icon { transform: rotate(180deg); }
 
@@ -229,7 +229,7 @@ $pageStyles = <<<'CSS'
     margin-bottom: 0.4rem;
 }
 .bar-label {
-    width: 50px; font-size: 0.75rem; color: #888; text-align: right;
+    width: 50px; font-size: 0.75rem; color: #b0b0b0; text-align: right;
     flex-shrink: 0;
 }
 .bar-track {
@@ -251,7 +251,7 @@ $pageStyles = <<<'CSS'
 
 /* Donors section */
 .donors-toggle {
-    background: none; border: 1px solid #444; color: #888;
+    background: none; border: 1px solid #444; color: #b0b0b0;
     padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.75rem;
     cursor: pointer; margin-top: 0.5rem; transition: all 0.2s;
 }
@@ -271,12 +271,12 @@ $pageStyles = <<<'CSS'
 .donor-row:last-child { border-bottom: none; }
 .donor-name { color: #ccc; }
 .donor-type {
-    font-size: 0.65rem; color: #888; padding: 1px 5px;
+    font-size: 0.65rem; color: #b0b0b0; padding: 1px 5px;
     border: 1px solid #333; border-radius: 3px; margin-left: 0.4rem;
     text-transform: uppercase;
 }
 .donor-amount { color: #d4af37; font-weight: 600; font-family: 'Courier New', monospace; }
-.no-donors { color: #555; font-size: 0.8rem; font-style: italic; padding: 0.5rem 0; }
+.no-donors { color: #b0b0b0; font-size: 0.8rem; font-style: italic; padding: 0.5rem 0; }
 
 /* Share section */
 .races-cta {
@@ -300,7 +300,7 @@ $pageStyles = <<<'CSS'
 
 /* No races fallback */
 .no-races {
-    text-align: center; padding: 3rem 1rem; color: #888;
+    text-align: center; padding: 3rem 1rem; color: #b0b0b0;
     font-size: 1.1rem;
 }
 
@@ -319,7 +319,7 @@ $pageStyles = <<<'CSS'
     font-weight: 600; color: #fff;
 }
 .rating-legend-note {
-    color: #888; font-size: 0.7rem; font-style: italic; margin-left: 0.25rem;
+    color: #b0b0b0; font-size: 0.7rem; font-style: italic; margin-left: 0.25rem;
 }
 
 /* Recent shifts */
@@ -338,7 +338,7 @@ $pageStyles = <<<'CSS'
 .shift-date { color: #aaa; min-width: 50px; }
 .shift-race { color: #fff; font-weight: 600; min-width: 110px; }
 .shift-arrow { color: #d4af37; }
-.shift-source { color: #888; font-size: 0.7rem; margin-left: auto; }
+.shift-source { color: #b0b0b0; font-size: 0.7rem; margin-left: auto; }
 
 /* Shift tracker */
 .shift-tracker {
@@ -376,7 +376,7 @@ $pageStyles = <<<'CSS'
     border: 1px solid #333; font-family: 'Courier New', monospace;
 }
 .shift-section-label {
-    font-size: 0.75rem; color: #888; margin: 0.75rem 0 0.35rem;
+    font-size: 0.75rem; color: #b0b0b0; margin: 0.75rem 0 0.35rem;
     text-transform: uppercase; letter-spacing: 0.5px;
 }
 
@@ -475,7 +475,7 @@ require dirname(__DIR__) . '/includes/nav.php';
         <ul class="shift-list">
             <?php foreach ($shiftData['open'] as $s): ?>
             <li><?= htmlspecialchars($s['label']) ?>
-                <span style="font-size:0.65rem;color:#888;margin-left:4px;">(was <?= $s['held_by'] ?>)</span>
+                <span style="font-size:0.65rem;color:#b0b0b0;margin-left:4px;">(was <?= $s['held_by'] ?>)</span>
             </li>
             <?php endforeach; ?>
         </ul>
