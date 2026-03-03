@@ -244,6 +244,7 @@ require_once dirname(__DIR__) . '/includes/nav.php';
         <a href="/elections/the-amendment.php">The War</a>
         <a href="/elections/threats.php">Threats</a>
         <a href="/elections/races.php">Races</a>
+        <a href="/elections/impeachment-vote.php">Trump Impeachment Vote #1</a>
     </div>
 
     <div class="fight-header">
