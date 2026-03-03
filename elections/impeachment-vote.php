@@ -117,10 +117,52 @@ $pageStyles = <<<'CSS'
 .iv-back { color: #d4af37; text-decoration: none; font-size: 0.9rem; }
 .iv-back:hover { text-decoration: underline; }
 
+/* Rep popover */
+.rep-popover {
+    display: none; position: absolute; z-index: 100;
+    background: #1a1a2e; border: 1px solid #d4af37; border-radius: 10px;
+    padding: 1rem; min-width: 260px; max-width: 320px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    pointer-events: auto;
+}
+.rep-popover.show { display: block; }
+.rep-popover .pop-header {
+    display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;
+}
+.rep-popover .pop-photo {
+    width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
+    border: 2px solid #d4af37; flex-shrink: 0; background: #333;
+}
+.rep-popover .pop-name { color: #fff; font-size: 1rem; font-weight: 600; }
+.rep-popover .pop-office { color: #888; font-size: 0.8rem; }
+.rep-popover .pop-party-d { color: #5dade2; }
+.rep-popover .pop-party-r { color: #e74c3c; }
+.rep-popover .pop-links {
+    display: flex; flex-direction: column; gap: 0.4rem;
+}
+.rep-popover .pop-link {
+    display: flex; align-items: center; gap: 0.5rem;
+    color: #ccc; text-decoration: none; font-size: 0.85rem;
+    padding: 0.3rem 0.5rem; border-radius: 4px;
+    transition: background 0.2s;
+}
+.rep-popover .pop-link:hover { background: rgba(212,175,55,0.15); color: #fff; }
+.rep-popover .pop-link .pop-icon { width: 18px; text-align: center; flex-shrink: 0; }
+.rep-popover .pop-detail {
+    display: block; margin-top: 0.5rem; text-align: center;
+    color: #d4af37; font-size: 0.8rem; text-decoration: none;
+    padding: 0.3rem; border-top: 1px solid #333;
+}
+.rep-popover .pop-detail:hover { text-decoration: underline; }
+.rep-popover .pop-loading { color: #888; font-size: 0.85rem; text-align: center; padding: 1rem 0; }
+
+.iv-table tr { position: relative; cursor: pointer; }
+
 @media (max-width: 600px) {
     .iv-hero h1 { font-size: 1.3rem; }
     .iv-tally-box .num { font-size: 1.3rem; }
     .iv-filters { flex-direction: column; }
+    .rep-popover { min-width: 220px; max-width: 280px; }
 }
 CSS;
 
@@ -184,7 +226,7 @@ include dirname(__DIR__) . '/includes/nav.php';
                     $partyClass = $v['party'] === 'Democrat' ? 'party-d' : ($v['party'] === 'Republican' ? 'party-r' : '');
                     $state = explode('-', $v['district'])[0];
                 ?>
-                <tr data-state="<?= $state ?>" data-party="<?= htmlspecialchars($v['party']) ?>" data-vote="<?= $voteClass ?>">
+                <tr data-state="<?= $state ?>" data-party="<?= htmlspecialchars($v['party']) ?>" data-vote="<?= $voteClass ?>" data-district="<?= htmlspecialchars($v['district']) ?>">
                     <td><?= htmlspecialchars($v['first'] . ' ' . $v['last']) ?></td>
                     <td><?= htmlspecialchars($v['district']) ?></td>
                     <td class="<?= $partyClass ?>"><?= htmlspecialchars($v['party']) ?></td>
@@ -194,6 +236,9 @@ include dirname(__DIR__) . '/includes/nav.php';
             </tbody>
         </table>
     </div>
+
+    <!-- Rep contact popover (positioned dynamically by JS) -->
+    <div class="rep-popover" id="repPopover"></div>
 
     <div class="iv-footnotes">
         <p>* Voted to abstain from the vote by voting "present."</p>
@@ -261,6 +306,99 @@ include dirname(__DIR__) . '/includes/nav.php';
             rows.forEach(function(r) { tbody.appendChild(r); });
         });
     });
+
+    // ---- Rep contact popover on hover ----
+    var popover = document.getElementById('repPopover');
+    var popCache = {};
+    var popTimer = null;
+    var hideTimer = null;
+    var activeRow = null;
+
+    function showPopover(row) {
+        var district = row.dataset.district;
+        if (!district || district === '') return;
+
+        clearTimeout(hideTimer);
+        activeRow = row;
+
+        // Position popover near the row
+        var rect = row.getBoundingClientRect();
+        var scrollY = window.scrollY || document.documentElement.scrollTop;
+        var scrollX = window.scrollX || document.documentElement.scrollLeft;
+        popover.style.top = (rect.bottom + scrollY + 4) + 'px';
+        popover.style.left = Math.min(rect.left + scrollX, window.innerWidth - 340) + 'px';
+
+        if (popCache[district]) {
+            renderPopover(popCache[district]);
+            return;
+        }
+
+        popover.innerHTML = '<div class="pop-loading">Loading rep info...</div>';
+        popover.classList.add('show');
+
+        fetch('/api/get-rep-by-district.php?district=' + encodeURIComponent(district))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                popCache[district] = data;
+                if (activeRow === row) renderPopover(data);
+            })
+            .catch(function() {
+                popover.innerHTML = '<div class="pop-loading">Could not load rep info</div>';
+            });
+    }
+
+    function renderPopover(data) {
+        if (!data.found) {
+            popover.innerHTML = '<div class="pop-loading">Vacant seat</div>';
+            popover.classList.add('show');
+            return;
+        }
+
+        var partyClass = data.party === 'Democratic' ? 'pop-party-d' : (data.party === 'Republican' ? 'pop-party-r' : '');
+        var html = '<div class="pop-header">';
+        if (data.photo) {
+            html += '<img class="pop-photo" src="' + data.photo + '" alt="" onerror="this.style.display=\'none\'">';
+        }
+        html += '<div><div class="pop-name">' + data.name + '</div>';
+        html += '<div class="pop-office ' + partyClass + '">' + data.office + '</div></div></div>';
+        html += '<div class="pop-links">';
+        if (data.phone) {
+            html += '<a class="pop-link" href="tel:' + data.phone + '"><span class="pop-icon">&#x1F4DE;</span> ' + data.phone + '</a>';
+        }
+        if (data.website) {
+            html += '<a class="pop-link" href="' + data.website + '" target="_blank"><span class="pop-icon">&#x1F310;</span> ' + data.website.replace('https://', '') + '</a>';
+        }
+        html += '</div>';
+        if (data.detail_url) {
+            html += '<a class="pop-detail" href="' + data.detail_url + '">View full profile &rarr;</a>';
+        }
+
+        popover.innerHTML = html;
+        popover.classList.add('show');
+    }
+
+    function hidePopover() {
+        hideTimer = setTimeout(function() {
+            popover.classList.remove('show');
+            activeRow = null;
+        }, 200);
+    }
+
+    // Hover events on table rows
+    rows.forEach(function(row) {
+        row.addEventListener('mouseenter', function() {
+            clearTimeout(hideTimer);
+            popTimer = setTimeout(function() { showPopover(row); }, 300);
+        });
+        row.addEventListener('mouseleave', function() {
+            clearTimeout(popTimer);
+            hidePopover();
+        });
+    });
+
+    // Keep popover visible when hovering over it
+    popover.addEventListener('mouseenter', function() { clearTimeout(hideTimer); });
+    popover.addEventListener('mouseleave', function() { hidePopover(); });
 })();
 </script>
 
