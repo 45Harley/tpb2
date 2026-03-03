@@ -410,6 +410,13 @@ if (isset($_POST['save_settings'])) {
         ]);
     }
 
+    $collectEnabled = !empty($_POST['threat_collect_enabled']) ? '1' : '0';
+    setSiteSetting($pdo, 'threat_collect_enabled', $collectEnabled, $adminUserId);
+    logAdminAction($pdo, $adminUserId, 'update_setting', 'site_setting', null, [
+        'key' => 'threat_collect_enabled',
+        'value' => $collectEnabled
+    ]);
+
     $message = "Settings saved";
     $messageType = 'success';
 }
@@ -1927,10 +1934,12 @@ $adminActions = $pdo->query("
 
         <?php elseif ($tab === 'settings'): ?>
             <!-- SETTINGS TAB -->
-            <h2 class="section-title">Site Settings</h2>
+            <h2 class="section-title">Cron Jobs</h2>
 
             <?php
             $bulletinEnabled = getSiteSetting($pdo, 'threat_bulletin_enabled', '0');
+            $collectEnabled = getSiteSetting($pdo, 'threat_collect_enabled', '0');
+            $fecSyncEnabled = getSiteSetting($pdo, 'fec_sync_enabled', '0');
             $subscriberCount = (int)$pdo->query("
                 SELECT COUNT(*) FROM users
                 WHERE notify_threat_bulletin = 1
@@ -1938,12 +1947,34 @@ $adminActions = $pdo->query("
                   AND deleted_at IS NULL
                   AND email NOT LIKE '%@anonymous.tpb'
             ")->fetchColumn();
+            $threatCount = (int)$pdo->query("SELECT COUNT(*) FROM executive_threats")->fetchColumn();
+            $pollCount = (int)$pdo->query("SELECT COUNT(*) FROM polls WHERE poll_type = 'threat'")->fetchColumn();
             ?>
 
             <form method="POST" style="max-width:600px;">
                 <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                 <input type="hidden" name="save_settings" value="1">
 
+                <!-- Threat Collection -->
+                <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                    <h3 style="color:#d4af37;margin:0 0 15px;">Threat Collection</h3>
+                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">AI-powered daily collection of new threats via Claude API + web search. Runs at 7:00 PM ET.</p>
+
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
+                        <input type="checkbox" name="threat_collect_enabled" value="1" <?= $collectEnabled === '1' ? 'checked' : '' ?>
+                            style="width:18px;height:18px;accent-color:#d4af37;">
+                        <span style="color:#e0e0e0;font-size:1.05em;">Enable daily threat collection</span>
+                    </label>
+
+                    <div style="display:flex;gap:20px;color:#888;font-size:0.9em;">
+                        <span>Threats: <strong style="color:#d4af37;"><?= $threatCount ?></strong></span>
+                        <span>Polls: <strong style="color:#d4af37;"><?= $pollCount ?></strong></span>
+                        <span>Status: <strong style="color:<?= $collectEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $collectEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
+                        <span>Cost: <strong style="color:#ccc;">~$1/day</strong></span>
+                    </div>
+                </div>
+
+                <!-- Threat Bulletin -->
                 <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
                     <h3 style="color:#d4af37;margin:0 0 15px;">Threat Bulletin Emails</h3>
                     <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Daily email digest of new threats (last 48 hours) sent at 8:00 AM ET to subscribed users.</p>
@@ -1957,6 +1988,24 @@ $adminActions = $pdo->query("
                     <div style="display:flex;gap:20px;color:#888;font-size:0.9em;">
                         <span>Subscribers: <strong style="color:#d4af37;"><?= $subscriberCount ?></strong></span>
                         <span>Status: <strong style="color:<?= $bulletinEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $bulletinEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
+                    </div>
+                </div>
+
+                <!-- FEC Sync -->
+                <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                    <h3 style="color:#d4af37;margin:0 0 15px;">FEC Data Sync</h3>
+                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Pulls candidate and contributor data from OpenFEC API every 2 hours.</p>
+
+                    <input type="hidden" name="fec_sync_enabled" value="0">
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
+                        <input type="checkbox" name="fec_sync_enabled" value="1" <?= $fecSyncEnabled === '1' ? 'checked' : '' ?>
+                            style="width:18px;height:18px;accent-color:#d4af37;">
+                        <span style="color:#e0e0e0;font-size:1.05em;">Enable FEC data sync</span>
+                    </label>
+
+                    <div style="display:flex;gap:20px;color:#888;font-size:0.9em;">
+                        <span>Status: <strong style="color:<?= $fecSyncEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $fecSyncEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
+                        <span>Schedule: <strong style="color:#ccc;">Every 2 hours</strong></span>
                     </div>
                 </div>
 
