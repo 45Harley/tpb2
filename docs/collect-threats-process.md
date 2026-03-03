@@ -24,7 +24,7 @@ Each branch has a different backlog. The first collection for each branch must l
 
 | Branch | Gathering Start Date | Caught Up Through | Status |
 |--------|---------------------|-------------------|--------|
-| **Executive** | Jan 20, 2025 (inauguration) | Feb 26, 2026 | Active — 236 threats collected |
+| **Executive** | Jan 20, 2025 (inauguration) | Mar 3, 2026 | Active — 252 threats collected |
 | **Congressional** | Jan 20, 2025 (118th/119th Congress session) | Feb 26, 2026 | Active — 11 threats collected (oversight blocking, enabling, corruption) |
 | **Judicial** | Jan 2024 (ProPublica/ethics revelations) | Feb 26, 2026 | Active — 15 threats collected (SCOTUS ethics + Cannon) |
 
@@ -157,7 +157,7 @@ Query the database before researching to avoid duplicates:
 ssh sandge5@ecngx308.inmotionhosting.com -p 2222 "cat > /tmp/q.php << 'SCRIPT'
 <?php
 \$c = require '/home/sandge5/tpb2.sandgems.net/config.php';
-\$p = new PDO('mysql:host='.\$c['host'].';dbname=sandge5_tpb2', \$c['username'], \$c['password']);
+\$p = new PDO('mysql:host='.\$c['host'].';dbname=sandge5_tpb2;charset=utf8mb4', \$c['username'], \$c['password']);
 \$r = \$p->query('SELECT threat_id, threat_date, title, target, official_id, branch FROM executive_threats ORDER BY threat_date DESC');
 while(\$row=\$r->fetch(PDO::FETCH_ASSOC)) echo implode(' | ', \$row).PHP_EOL;
 SCRIPT
@@ -313,7 +313,7 @@ scp -P 2222 scripts/db/threats-YYYY-MM-DD.sql \
 ssh sandge5@ecngx308.inmotionhosting.com -p 2222 "cat > /tmp/load.php << 'SCRIPT'
 <?php
 \$c = require '/home/sandge5/tpb2.sandgems.net/config.php';
-\$pdo = new PDO('mysql:host='.\$c['host'].';dbname=sandge5_tpb2', \$c['username'], \$c['password']);
+\$pdo = new PDO('mysql:host='.\$c['host'].';dbname=sandge5_tpb2;charset=utf8mb4', \$c['username'], \$c['password']);
 \$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 \$before = \$pdo->query('SELECT COUNT(*) FROM executive_threats')->fetchColumn();
 \$sql = file_get_contents('/tmp/threats.sql');
@@ -528,24 +528,22 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 
 ---
 
-## Current Statistics (as of Feb 26, 2026)
+## Current Statistics (as of Mar 3, 2026)
 
 ### Totals
 
 | Metric | Count |
 |--------|-------|
-| **Total threats** | 262 |
-| Active | 261 |
+| **Total threats** | 278 |
+| Active | 277 |
 | Resolved | 1 |
-| Tactical (specific actions) | 114 |
-| Strategic (systemic/institutional) | 148 |
-| Date range | Dec 24, 2012 – Feb 26, 2026 |
+| Date range | Dec 24, 2012 – Mar 3, 2026 |
 
 ### By Branch
 
 | Branch | Threats | Notes |
 |--------|---------|-------|
-| **Executive** | 236 | Caught up through Feb 26, 2026 |
+| **Executive** | 252 | Caught up through Mar 3, 2026 |
 | **Congressional** | 11 | First collection: oversight blocking, nominee confirmations, Big Beautiful Bill, DOGE legislation, insider trading |
 | **Judicial** | 15 | First collection: Thomas, Alito, Kavanaugh, Roberts, Cannon (Apr 2024 – Feb 2026) |
 
@@ -609,7 +607,7 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 
 | Metric | Count |
 |--------|-------|
-| Active threat polls | 170 |
+| Active threat polls | 183 |
 | Citizen votes cast | 4 |
 | Rep votes cast | 0 |
 | Civic actions (called/emailed/shared) | 0 |
@@ -630,6 +628,8 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 | 2026-02-26 | Executive | 9 | 236 | Feb 25-26: State of the Union aftermath. Medicaid freeze, Epstein file suppression, FBI retaliation firings, Gabbard whistleblower block, Hegseth vs Sen Kelly, bank citizenship EO, NJ ICE suit, courthouse DOGE cuts, Tommy Robinson |
 | 2026-02-26 | Judicial | 15 | 251 | First judicial collection. Thomas (4): gifts, recusal, special counsel roadmap, tariff dissent. Alito (4): flags, godliness recording, Singer conflict, tariff dissent. Kavanaugh (1): tariff dissent. Roberts/SCOTUS (4): immunity ruling, shadow docket, universal injunctions, toothless ethics code. Cannon (2): dismissed docs case, blocked Smith report |
 | 2026-02-26 | Congressional | 11 | 262 | First congressional collection. Comer (2): blocked Musk subpoena, agency abolition bill. Thune/Senate (4): confirmed Hegseth, RFK Jr, Gabbard; blocked intel oversight. Johnson/House (4): Big Beautiful Bill, DOGE cuts, DHS oversight gutted, lockstep voting. Bresnahan (1): Medicaid insider trading |
+| 2026-02-28 | Executive | 12 | 274 | Feb 26-Mar 1: Iran Operation Epic Fury (800), election EO draft (400), ICE arrests at church (400), DOJ fires immigration judges (350), IRS-ICE data sharing (400), CENTCOM Iran options (350), ICE court order defiance (500), mail-in voting ban EO (400), Cuba takeover (300), OpenAI Pentagon (25), Kennedy Center (50), federal funding bribery (150) |
+| 2026-03-03 | Executive | 4 | 278 | Mar 2-3: War Powers vote demanded after Iran strikes (500), tariff refund delay rejected (300), DOJ drops law firm order appeals (350), Noem ICE oversight blocked again (450) |
 
 ---
 
