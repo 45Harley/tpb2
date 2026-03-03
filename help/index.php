@@ -41,6 +41,7 @@ $guideIcons = [
     'polls'      => '&#x1F4CA;',
     'volunteer'     => '&#x1F91D;',
     'civic-points'  => '&#x2B50;',
+    'purpose'       => '&#x1F3AF;',
     'philosophy'    => '&#x2696;',
 ];
 
@@ -60,7 +61,7 @@ $pageStyles = <<<'CSS'
     margin-bottom: 0.5rem;
 }
 .help-header p {
-    color: #888;
+    color: #b0b0b0;
     font-size: 1rem;
 }
 
@@ -102,13 +103,13 @@ $pageStyles = <<<'CSS'
     margin-bottom: 0.4rem;
 }
 .help-card p {
-    color: #888;
+    color: #b0b0b0;
     font-size: 0.9rem;
     line-height: 1.5;
     margin-bottom: 0.75rem;
 }
 .help-card .card-meta {
-    color: #555;
+    color: #b0b0b0;
     font-size: 0.75rem;
 }
 
@@ -135,7 +136,7 @@ $pageStyles = <<<'CSS'
     border-color: #90caf9;
 }
 .help-links .link-desc {
-    color: #666;
+    color: #b0b0b0;
     font-size: 0.8rem;
     margin-top: 2px;
 }
