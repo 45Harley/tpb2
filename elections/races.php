@@ -295,6 +295,24 @@ $pageStyles = <<<'CSS'
     font-size: 1.1rem;
 }
 
+/* Rating legend */
+.rating-legend {
+    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    padding: 0.75rem 1rem; margin-bottom: 1rem;
+    background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
+}
+.rating-legend-label {
+    color: #d4af37; font-size: 0.8rem; font-weight: 600;
+    font-family: 'Courier New', monospace; margin-right: 0.25rem;
+}
+.rating-pill {
+    padding: 2px 10px; border-radius: 12px; font-size: 0.75rem;
+    font-weight: 600; color: #fff;
+}
+.rating-legend-note {
+    color: #555; font-size: 0.7rem; font-style: italic; margin-left: 0.25rem;
+}
+
 /* Shift tracker */
 .shift-tracker {
     background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
@@ -372,6 +390,17 @@ require dirname(__DIR__) . '/includes/nav.php';
         <div class="race-count-label">Competitive Races Tracked</div>
         <p class="tagline">Who's funding the people who want power over you?</p>
     </section>
+
+    <!-- Rating Scale Legend -->
+    <div class="rating-legend">
+        <span class="rating-legend-label">Race Ratings:</span>
+        <span class="rating-pill" style="background:#c62828;">Likely R</span>
+        <span class="rating-pill" style="background:#ef5350;">Lean R</span>
+        <span class="rating-pill" style="background:#9c27b0;">Toss-Up</span>
+        <span class="rating-pill" style="background:#42a5f5;">Lean D</span>
+        <span class="rating-pill" style="background:#1565c0;">Likely D</span>
+        <span class="rating-legend-note">Safe seats not tracked</span>
+    </div>
 
     <!-- Party Shift Tracker -->
     <?php if ($totalShift > 0): ?>
