@@ -287,7 +287,79 @@ if (empty($threats)) {
     exit(0);
 }
 
-logMsg("Found " . count($threats) . " new threats. Inserting...");
+logMsg("Found " . count($threats) . " candidate threats. Running programmatic dedup...");
+
+// ─── Step 6b: Programmatic dedup (title similarity + source URL) ─────────
+// Claude's prompt-level dedup isn't reliable enough — double-check here
+$existingTitles = $pdo->query("SELECT threat_id, title, source_url FROM executive_threats")->fetchAll();
+
+function normalizeTitle($title) {
+    // Lowercase, strip punctuation, collapse whitespace
+    $t = strtolower($title);
+    $t = preg_replace('/[^a-z0-9\s]/', '', $t);
+    return preg_replace('/\s+/', ' ', trim($t));
+}
+
+function titleSimilarity($a, $b) {
+    $wordsA = explode(' ', normalizeTitle($a));
+    $wordsB = explode(' ', normalizeTitle($b));
+    // Remove common stop words
+    $stop = ['the', 'a', 'an', 'of', 'to', 'in', 'for', 'and', 'on', 'is', 'at', 'by', 'as', 'after', 'from', 'with'];
+    $wordsA = array_diff($wordsA, $stop);
+    $wordsB = array_diff($wordsB, $stop);
+    if (empty($wordsA) || empty($wordsB)) return 0;
+    $overlap = count(array_intersect($wordsA, $wordsB));
+    $maxLen = max(count($wordsA), count($wordsB));
+    return $overlap / $maxLen;
+}
+
+$existingUrls = [];
+foreach ($existingTitles as $et) {
+    if ($et['source_url']) $existingUrls[] = strtolower(trim($et['source_url']));
+}
+
+$dedupedThreats = [];
+$skippedCount = 0;
+foreach ($threats as $threat) {
+    $newTitle = $threat['title'] ?? '';
+    $newUrl = strtolower(trim($threat['source_url'] ?? ''));
+
+    // Check source URL match
+    if ($newUrl && in_array($newUrl, $existingUrls)) {
+        logMsg("DEDUP SKIP (same URL): " . substr($newTitle, 0, 80));
+        $skippedCount++;
+        continue;
+    }
+
+    // Check title similarity (>60% word overlap = likely duplicate)
+    $isDuplicate = false;
+    foreach ($existingTitles as $et) {
+        $sim = titleSimilarity($newTitle, $et['title']);
+        if ($sim > 0.6) {
+            $pct = round($sim * 100);
+            logMsg("DEDUP SKIP (title {$pct}% similar to #{$et['threat_id']}): " . substr($newTitle, 0, 80));
+            $isDuplicate = true;
+            $skippedCount++;
+            break;
+        }
+    }
+
+    if (!$isDuplicate) {
+        $dedupedThreats[] = $threat;
+    }
+}
+
+$threats = $dedupedThreats;
+logMsg("After dedup: " . count($threats) . " new threats ({$skippedCount} duplicates skipped)");
+
+if (empty($threats)) {
+    logMsg("All threats were duplicates. Nothing new to insert.");
+    $elapsed = round(microtime(true) - $startTime, 1);
+    logMsg("Elapsed: {$elapsed}s");
+    exit(0);
+}
+
+logMsg("Inserting " . count($threats) . " new threats...");
 
 // ─── Step 7: Build tag lookup ────────────────────────────────────────────
 $tagLookup = [];
