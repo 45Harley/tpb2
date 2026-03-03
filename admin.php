@@ -417,6 +417,13 @@ if (isset($_POST['save_settings'])) {
         'value' => $collectEnabled
     ]);
 
+    $ratingCheckEnabled = !empty($_POST['rating_check_enabled']) ? '1' : '0';
+    setSiteSetting($pdo, 'rating_check_enabled', $ratingCheckEnabled, $adminUserId);
+    logAdminAction($pdo, $adminUserId, 'update_setting', 'site_setting', null, [
+        'key' => 'rating_check_enabled',
+        'value' => $ratingCheckEnabled
+    ]);
+
     $message = "Settings saved";
     $messageType = 'success';
 }
@@ -2097,6 +2104,46 @@ $adminActions = $pdo->query("
                         <span>Status: <strong style="color:<?= $fecSyncEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $fecSyncEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
                         <span>Schedule: <strong style="color:#ccc;">Every 2 hours</strong></span>
                     </div>
+                </div>
+
+                <!-- Rating Checker -->
+                <?php
+                $ratingCheckEnabled = getSiteSetting($pdo, 'rating_check_enabled', '0');
+                $ratingLastResult = getSiteSetting($pdo, 'rating_check_last_result', '');
+                $ratingLastRun = $ratingLastResult ? json_decode($ratingLastResult, true) : null;
+                ?>
+                <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                    <h3 style="color:#d4af37;margin:0 0 15px;">Race Rating Checker</h3>
+                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">AI-powered weekly check of Cook/Sabato race ratings via Claude API + web search. Runs Sunday 10:00 AM ET.</p>
+
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
+                        <input type="checkbox" name="rating_check_enabled" value="1" <?= $ratingCheckEnabled === '1' ? 'checked' : '' ?>
+                            style="width:18px;height:18px;accent-color:#d4af37;">
+                        <span style="color:#e0e0e0;font-size:1.05em;">Enable weekly rating check</span>
+                    </label>
+
+                    <div style="display:flex;flex-wrap:wrap;gap:20px;color:#888;font-size:0.9em;margin-bottom:10px;">
+                        <span>Races: <strong style="color:#d4af37;"><?= count($fecRaces ?? []) ?></strong></span>
+                        <span>Status: <strong style="color:<?= $ratingCheckEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $ratingCheckEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
+                        <span>Cost: <strong style="color:#ccc;">~$1/week</strong></span>
+                    </div>
+
+                    <?php if ($ratingLastRun): ?>
+                    <div style="background:#111;border:1px solid #222;border-radius:6px;padding:12px;font-size:0.85em;color:#888;margin-top:10px;">
+                        <strong style="color:#ccc;">Last run:</strong>
+                        <?= $ratingLastRun['timestamp'] ?? 'unknown' ?>
+                        &mdash;
+                        <?php if (($ratingLastRun['status'] ?? '') === 'success'): ?>
+                            <span style="color:#4caf50;">OK</span>
+                            &mdash; <?= $ratingLastRun['races_checked'] ?? 0 ?> checked, <?= $ratingLastRun['changes_applied'] ?? 0 ?> changed
+                            &mdash; <?= number_format($ratingLastRun['input_tokens'] ?? 0) ?> in / <?= number_format($ratingLastRun['output_tokens'] ?? 0) ?> out
+                            &mdash; <?= $ratingLastRun['elapsed'] ?? '?' ?>s
+                        <?php else: ?>
+                            <span style="color:#ef5350;">FAILED</span>
+                            &mdash; <?= htmlspecialchars($ratingLastRun['error'] ?? 'Unknown error') ?>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <button type="submit" style="background:#d4af37;color:#000;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-weight:600;">Save Settings</button>
