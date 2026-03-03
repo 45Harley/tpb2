@@ -43,9 +43,9 @@ foreach ($votes as $v) {
 }
 
 $pageStyles = <<<'CSS'
-.iv-container { max-width: 1000px; margin: 0 auto; padding: 1.5rem 1rem; }
+.iv-container { max-width: 1000px; margin: 0 auto; padding: 0.75rem 1rem; }
 
-.view-links { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.view-links { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
 .view-links a {
     padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
     text-decoration: none; border: 1px solid #444; color: #aaa; transition: all 0.2s;
@@ -54,7 +54,7 @@ $pageStyles = <<<'CSS'
 .view-links a.active { background: #d4af37; color: #000; border-color: #d4af37; }
 
 .iv-hero {
-    text-align: center; padding: 2rem 1rem 1.5rem;
+    text-align: center; padding: 1rem 1rem 1rem;
     border-bottom: 2px solid #ff4444; margin-bottom: 1.5rem;
 }
 .iv-hero h1 { color: #ff4444; font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem; }
