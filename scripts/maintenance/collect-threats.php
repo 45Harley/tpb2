@@ -55,6 +55,53 @@ if (getSiteSetting($pdo, 'threat_collect_enabled', '0') !== '1') {
     exit(0);
 }
 
+// Load SMTP for failure notifications
+require_once __DIR__ . '/../../includes/smtp-mail.php';
+
+// ─── Adaptive date window ─────────────────────────────────────────────────
+// Default: 1 day. If last success was >1 day ago, widen to cover the gap.
+$lastSuccess = getSiteSetting($pdo, 'threat_collect_last_success', '');
+if ($lastSuccess) {
+    $daysSinceSuccess = (int)((time() - strtotime($lastSuccess)) / 86400);
+    $lookbackDays = max(1, $daysSinceSuccess);
+    if ($lookbackDays > 1) {
+        logMsg("Last success was {$daysSinceSuccess} days ago ({$lastSuccess}). Widening window to {$lookbackDays} days.");
+    }
+} else {
+    $lookbackDays = 2; // First run ever — look back 2 days
+    logMsg("No previous success recorded. Using default 2-day window.");
+}
+// Cap at 7 days to avoid overwhelming the API
+if ($lookbackDays > 7) {
+    logMsg("WARNING: Last success was {$daysSinceSuccess} days ago. Capping lookback at 7 days.");
+    $lookbackDays = 7;
+}
+
+// Helper to record result and exit on failure
+function failAndNotify($pdo, $config, $errorMsg, $startTime) {
+    $elapsed = round(microtime(true) - $startTime, 1);
+    $result = json_encode([
+        'status' => 'error',
+        'error' => $errorMsg,
+        'timestamp' => date('Y-m-d H:i:s'),
+        'elapsed' => $elapsed
+    ]);
+    setSiteSetting($pdo, 'threat_collect_last_result', $result);
+    logMsg("Saving failure result to site_settings.");
+
+    // Email notification
+    $adminEmail = $config['admin_email'] ?? null;
+    if ($adminEmail) {
+        sendSmtpMail($config, $adminEmail,
+            'TPB Threat Collection FAILED — ' . date('M j'),
+            "<p>The automated threat collection cron failed at " . date('g:i A') . ".</p>"
+            . "<p><strong>Error:</strong> " . htmlspecialchars($errorMsg) . "</p>"
+            . "<p>Check the log: <code>scripts/maintenance/logs/collect-threats.log</code></p>"
+        );
+        logMsg("Failure notification sent to {$adminEmail}.");
+    }
+}
+
 // ─── Step 1: Get existing threats for dedup context ───────────────────────
 logMsg("Step 1: Loading existing threats for dedup...");
 
@@ -93,12 +140,13 @@ OFF;
 
 // ─── Step 4: Build the system prompt ─────────────────────────────────────
 $today = date('Y-m-d');
-$yesterday = date('Y-m-d', strtotime('-1 day'));
+$windowStart = date('Y-m-d', strtotime("-{$lookbackDays} day"));
+logMsg("Search window: {$windowStart} to {$today} ({$lookbackDays} day" . ($lookbackDays > 1 ? 's' : '') . ")");
 
 $systemPrompt = <<<PROMPT
 You are a constitutional accountability researcher for The People's Branch (TPB).
 
-Your job: Search the news for NEW threats to constitutional order from the last 2 days ({$yesterday} to {$today}) that are NOT already in our database.
+Your job: Search the news for NEW threats to constitutional order from {$windowStart} to {$today} that are NOT already in our database.
 
 ## What Counts as a Threat
 Actions by government officials that:
@@ -182,7 +230,7 @@ logMsg("Step 5: Calling Claude API with web search...");
 $messages = [
     [
         'role' => 'user',
-        'content' => "Search the news for threats to constitutional order from {$yesterday} to {$today}. Find new developments NOT in our existing database. Check AP, Reuters, NPR, PBS, major outlets. Return structured JSON."
+        'content' => "Search the news for threats to constitutional order from {$windowStart} to {$today}. Find new developments NOT in our existing database. Check AP, Reuters, NPR, PBS, major outlets. Return structured JSON."
     ]
 ];
 
@@ -230,6 +278,7 @@ curl_close($ch);
 
 if ($curlError) {
     logMsg("ERROR: curl failed — {$curlError}");
+    failAndNotify($pdo, $config, "curl failed: {$curlError}", $startTime);
     exit(1);
 }
 
@@ -237,6 +286,7 @@ if ($httpCode !== 200) {
     $error = json_decode($response, true);
     $errMsg = $error['error']['message'] ?? "HTTP {$httpCode}";
     logMsg("ERROR: API returned {$httpCode} — {$errMsg}");
+    failAndNotify($pdo, $config, "API {$httpCode}: {$errMsg}", $startTime);
     exit(1);
 }
 
@@ -275,6 +325,7 @@ $parsed = json_decode($jsonStr, true);
 if (!$parsed || !isset($parsed['threats'])) {
     logMsg("ERROR: Could not parse JSON from response. Raw text saved to log.");
     logMsg("RAW: " . substr($textContent, 0, 2000));
+    failAndNotify($pdo, $config, "Failed to parse JSON from API response", $startTime);
     exit(1);
 }
 
@@ -284,6 +335,14 @@ logMsg("Search summary: {$searchSummary}");
 
 if (empty($threats)) {
     logMsg("No new threats found. Collection complete.");
+    setSiteSetting($pdo, 'threat_collect_last_success', date('Y-m-d H:i:s'));
+    setSiteSetting($pdo, 'threat_collect_last_result', json_encode([
+        'status' => 'success', 'timestamp' => date('Y-m-d H:i:s'),
+        'inserted' => 0, 'note' => 'No new threats found',
+        'window_days' => $lookbackDays,
+        'input_tokens' => $usage['input_tokens'] ?? 0,
+        'output_tokens' => $usage['output_tokens'] ?? 0
+    ]));
     exit(0);
 }
 
@@ -356,6 +415,14 @@ if (empty($threats)) {
     logMsg("All threats were duplicates. Nothing new to insert.");
     $elapsed = round(microtime(true) - $startTime, 1);
     logMsg("Elapsed: {$elapsed}s");
+    setSiteSetting($pdo, 'threat_collect_last_success', date('Y-m-d H:i:s'));
+    setSiteSetting($pdo, 'threat_collect_last_result', json_encode([
+        'status' => 'success', 'timestamp' => date('Y-m-d H:i:s'),
+        'inserted' => 0, 'skipped' => $skippedCount, 'note' => 'All duplicates',
+        'window_days' => $lookbackDays, 'elapsed' => $elapsed,
+        'input_tokens' => $usage['input_tokens'] ?? 0,
+        'output_tokens' => $usage['output_tokens'] ?? 0
+    ]));
     exit(0);
 }
 
@@ -476,7 +543,7 @@ if ($inserted > 0) {
     logMsg("Audit SQL saved to scripts/db/threats-{$today}-auto.sql");
 }
 
-// ─── Summary ─────────────────────────────────────────────────────────────
+// ─── Summary & Success Tracking ──────────────────────────────────────────
 $elapsed = round(microtime(true) - $startTime, 1);
 $totalThreats = $pdo->query("SELECT COUNT(*) FROM executive_threats")->fetchColumn();
 $totalPolls = $pdo->query("SELECT COUNT(*) FROM polls WHERE poll_type = 'threat'")->fetchColumn();
@@ -489,3 +556,22 @@ logMsg("Total threats in DB: {$totalThreats}");
 logMsg("Total threat polls: {$totalPolls}");
 logMsg("Elapsed: {$elapsed}s");
 logMsg("===============================");
+
+// Record success
+setSiteSetting($pdo, 'threat_collect_last_success', date('Y-m-d H:i:s'));
+$result = json_encode([
+    'status' => 'success',
+    'timestamp' => date('Y-m-d H:i:s'),
+    'inserted' => $inserted,
+    'skipped' => $skippedCount ?? 0,
+    'polls_created' => $pollCount,
+    'tags_applied' => $tagged,
+    'total_threats' => (int)$totalThreats,
+    'total_polls' => (int)$totalPolls,
+    'window_days' => $lookbackDays,
+    'elapsed' => $elapsed,
+    'input_tokens' => $usage['input_tokens'] ?? 0,
+    'output_tokens' => $usage['output_tokens'] ?? 0
+]);
+setSiteSetting($pdo, 'threat_collect_last_result', $result);
+logMsg("Success recorded to site_settings.");

@@ -1956,6 +1956,11 @@ $adminActions = $pdo->query("
                 <input type="hidden" name="save_settings" value="1">
 
                 <!-- Threat Collection -->
+                <?php
+                $lastResult = getSiteSetting($pdo, 'threat_collect_last_result', '');
+                $lastRun = $lastResult ? json_decode($lastResult, true) : null;
+                $lastSuccess = getSiteSetting($pdo, 'threat_collect_last_success', '');
+                ?>
                 <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
                     <h3 style="color:#d4af37;margin:0 0 15px;">Threat Collection</h3>
                     <p style="color:#888;font-size:0.9em;margin:0 0 15px;">AI-powered daily collection of new threats via Claude API + web search. Runs at 7:00 PM ET.</p>
@@ -1966,12 +1971,33 @@ $adminActions = $pdo->query("
                         <span style="color:#e0e0e0;font-size:1.05em;">Enable daily threat collection</span>
                     </label>
 
-                    <div style="display:flex;gap:20px;color:#888;font-size:0.9em;">
+                    <div style="display:flex;flex-wrap:wrap;gap:20px;color:#888;font-size:0.9em;margin-bottom:10px;">
                         <span>Threats: <strong style="color:#d4af37;"><?= $threatCount ?></strong></span>
                         <span>Polls: <strong style="color:#d4af37;"><?= $pollCount ?></strong></span>
                         <span>Status: <strong style="color:<?= $collectEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $collectEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
                         <span>Cost: <strong style="color:#ccc;">~$1/day</strong></span>
                     </div>
+
+                    <?php if ($lastRun): ?>
+                    <div style="background:#111;border:1px solid #222;border-radius:6px;padding:12px;font-size:0.85em;color:#888;margin-top:10px;">
+                        <strong style="color:#ccc;">Last run:</strong>
+                        <?= $lastRun['timestamp'] ?? 'unknown' ?>
+                        &mdash;
+                        <?php if (($lastRun['status'] ?? '') === 'success'): ?>
+                            <span style="color:#4caf50;">OK</span>
+                            &mdash; <?= $lastRun['inserted'] ?? 0 ?> inserted, <?= $lastRun['skipped'] ?? 0 ?> skipped
+                            <?php if (!empty($lastRun['note'])): ?>&mdash; <?= htmlspecialchars($lastRun['note']) ?><?php endif; ?>
+                            &mdash; <?= $lastRun['window_days'] ?? '?' ?>-day window
+                            &mdash; <?= number_format($lastRun['input_tokens'] ?? 0) ?> in / <?= number_format($lastRun['output_tokens'] ?? 0) ?> out
+                            &mdash; <?= $lastRun['elapsed'] ?? '?' ?>s
+                        <?php else: ?>
+                            <span style="color:#ef5350;">FAILED</span>
+                            &mdash; <?= htmlspecialchars($lastRun['error'] ?? 'Unknown error') ?>
+                        <?php endif; ?>
+                    </div>
+                    <?php elseif (!$lastSuccess): ?>
+                    <div style="color:#666;font-size:0.85em;margin-top:10px;">No runs recorded yet.</div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Threat Bulletin -->
