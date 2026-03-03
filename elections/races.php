@@ -115,6 +115,15 @@ foreach ($races as $race) {
 }
 $totalShift = count($shiftData['flip_d']) + count($shiftData['flip_r']) + count($shiftData['open']);
 
+// 5. Recent rating/held_by shifts
+$recentShifts = $pdoE->query("
+    SELECT h.*, r.state, r.district, r.office
+    FROM fec_race_history h
+    JOIN fec_races r ON r.race_id = h.race_id
+    ORDER BY h.changed_at DESC
+    LIMIT 10
+")->fetchAll(PDO::FETCH_ASSOC);
+
 $siteUrl = $c['base_url'] ?? 'https://tpb2.sandgems.net';
 $shareText = "$raceCount competitive 2026 races tracked with FEC campaign finance data. See who funds the people who want power over you.";
 
@@ -313,6 +322,23 @@ $pageStyles = <<<'CSS'
     color: #555; font-size: 0.7rem; font-style: italic; margin-left: 0.25rem;
 }
 
+/* Recent shifts */
+.recent-shifts {
+    background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
+    padding: 0.75rem 1rem; margin-bottom: 1.5rem;
+}
+.recent-shifts h3 {
+    color: #d4af37; font-size: 0.85rem; margin: 0 0 0.5rem;
+    font-family: 'Courier New', monospace;
+}
+.shift-row {
+    display: flex; align-items: center; gap: 0.75rem; padding: 3px 0;
+    font-family: 'Courier New', monospace; font-size: 0.8rem; color: #aaa;
+}
+.shift-date { color: #666; min-width: 50px; }
+.shift-race { color: #e0e0e0; font-weight: 600; min-width: 110px; }
+.shift-arrow { color: #d4af37; }
+
 /* Shift tracker */
 .shift-tracker {
     background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
@@ -454,6 +480,30 @@ require dirname(__DIR__) . '/includes/nav.php';
         </ul>
         <?php endif; ?>
     </section>
+    <?php endif; ?>
+
+    <!-- Recent Shifts -->
+    <?php if (!empty($recentShifts)): ?>
+    <div class="recent-shifts">
+        <h3>Recent Shifts</h3>
+        <?php foreach ($recentShifts as $shift):
+            $sLabel = $shift['state'];
+            if ($shift['office'] === 'H' && !empty($shift['district'])) $sLabel .= '-' . $shift['district'];
+            $sLabel .= ' ' . ($shift['office'] === 'S' ? 'Senate' : 'House');
+            $field = $shift['field_changed'] === 'rating' ? '' : ' (' . $shift['field_changed'] . ')';
+        ?>
+        <div class="shift-row">
+            <span class="shift-date"><?= date('M j', strtotime($shift['changed_at'])) ?></span>
+            <span class="shift-race"><?= htmlspecialchars($sLabel) ?></span>
+            <span>
+                <span style="color:<?= getRatingColor($shift['old_value']) ?>;"><?= htmlspecialchars($shift['old_value'] ?: '—') ?></span>
+                <span class="shift-arrow">&rarr;</span>
+                <span style="color:<?= getRatingColor($shift['new_value']) ?>;"><?= htmlspecialchars($shift['new_value']) ?></span>
+                <?= $field ?>
+            </span>
+        </div>
+        <?php endforeach; ?>
+    </div>
     <?php endif; ?>
 
     <!-- Race Cards -->

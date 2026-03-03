@@ -495,6 +495,47 @@ if (isset($_POST['toggle_race'])) {
     }
 }
 
+// Update race rating/held_by (with history logging)
+if (isset($_POST['update_race'])) {
+    validateCsrf();
+    if (!$pdoElection) {
+        $message = "Election database not available";
+        $messageType = 'error';
+    } else {
+        $raceId = (int)($_POST['race_id'] ?? 0);
+        $newRating = $_POST['new_rating'] ?? '';
+        $newHeldBy = in_array($_POST['new_held_by'] ?? '', ['D', 'R']) ? $_POST['new_held_by'] : null;
+
+        // Get current values
+        $current = $pdoElection->prepare("SELECT rating, held_by FROM fec_races WHERE race_id = ?");
+        $current->execute([$raceId]);
+        $old = $current->fetch(PDO::FETCH_ASSOC);
+
+        if ($old) {
+            $histStmt = $pdoElection->prepare("INSERT INTO fec_race_history (race_id, field_changed, old_value, new_value) VALUES (?, ?, ?, ?)");
+
+            // Log rating change
+            if ($newRating && $newRating !== $old['rating']) {
+                $histStmt->execute([$raceId, 'rating', $old['rating'], $newRating]);
+                $pdoElection->prepare("UPDATE fec_races SET rating = ? WHERE race_id = ?")->execute([$newRating, $raceId]);
+            }
+
+            // Log held_by change
+            if ($newHeldBy !== null && $newHeldBy !== ($old['held_by'] ?? '')) {
+                $histStmt->execute([$raceId, 'held_by', $old['held_by'], $newHeldBy]);
+                $pdoElection->prepare("UPDATE fec_races SET held_by = ? WHERE race_id = ?")->execute([$newHeldBy, $raceId]);
+            }
+
+            logAdminAction($pdo, $adminUserId, 'update_race', 'fec_race', $raceId, [
+                'old_rating' => $old['rating'], 'new_rating' => $newRating,
+                'old_held_by' => $old['held_by'], 'new_held_by' => $newHeldBy,
+            ]);
+            $message = "Race updated";
+            $messageType = 'success';
+        }
+    }
+}
+
 // Delete race and associated data
 if (isset($_POST['delete_race'])) {
     validateCsrf();
@@ -1883,18 +1924,22 @@ $adminActions = $pdo->query("
                                     <td style="padding:8px;color:#e0e0e0;font-weight:600;"><?= htmlspecialchars($race['state']) ?></td>
                                     <td style="padding:8px;color:#ccc;"><?= $race['district'] ? htmlspecialchars($race['district']) : '-' ?></td>
                                     <td style="padding:8px;color:#ccc;"><?= $race['office'] === 'H' ? 'House' : 'Senate' ?></td>
-                                    <td style="padding:8px;">
-                                        <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.8em;font-weight:600;background:<?= $badgeColor ?>;color:#fff;">
-                                            <?= htmlspecialchars($race['rating']) ?>
-                                        </span>
-                                    </td>
-                                    <td style="padding:8px;text-align:center;">
-                                        <?php
-                                            $hb = $race['held_by'] ?? '';
-                                            if ($hb === 'D') echo '<span style="color:#42a5f5;font-weight:600;">D</span>';
-                                            elseif ($hb === 'R') echo '<span style="color:#ef5350;font-weight:600;">R</span>';
-                                            else echo '<span style="color:#555;">-</span>';
-                                        ?>
+                                    <td style="padding:8px;" colspan="2">
+                                        <form method="POST" style="display:flex;gap:4px;align-items:center;">
+                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="update_race" value="1">
+                                            <input type="hidden" name="race_id" value="<?= $race['race_id'] ?>">
+                                            <select name="new_rating" style="background:#252525;color:#e0e0e0;border:1px solid <?= $badgeColor ?>;padding:2px 6px;border-radius:4px;font-size:0.75em;">
+                                                <?php foreach (['Toss-Up','Lean D','Lean R','Likely D','Likely R'] as $opt): ?>
+                                                <option value="<?= $opt ?>" <?= $race['rating'] === $opt ? 'selected' : '' ?>><?= $opt ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <select name="new_held_by" style="background:#252525;color:#e0e0e0;border:1px solid #444;padding:2px 6px;border-radius:4px;font-size:0.75em;">
+                                                <option value="D" <?= ($race['held_by'] ?? '') === 'D' ? 'selected' : '' ?>>D</option>
+                                                <option value="R" <?= ($race['held_by'] ?? '') === 'R' ? 'selected' : '' ?>>R</option>
+                                            </select>
+                                            <button type="submit" style="background:none;border:1px solid #d4af37;color:#d4af37;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:0.7em;">Save</button>
+                                        </form>
                                     </td>
                                     <td style="padding:8px;text-align:center;color:#ccc;"><?= (int)$race['candidate_count'] ?></td>
                                     <td style="padding:8px;color:#888;font-size:0.85em;"><?= $race['last_synced'] ? date('M j, g:ia', strtotime($race['last_synced'])) : 'Never' ?></td>

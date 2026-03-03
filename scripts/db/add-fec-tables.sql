@@ -46,3 +46,14 @@ CREATE TABLE IF NOT EXISTS fec_top_contributors (
   last_synced_at DATETIME DEFAULT NULL,
   INDEX idx_candidate (fec_candidate_id)
 );
+
+CREATE TABLE IF NOT EXISTS fec_race_history (
+  history_id INT AUTO_INCREMENT PRIMARY KEY,
+  race_id INT NOT NULL,
+  field_changed VARCHAR(50) NOT NULL,
+  old_value VARCHAR(100),
+  new_value VARCHAR(100),
+  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_race (race_id),
+  INDEX idx_changed (changed_at)
+);
