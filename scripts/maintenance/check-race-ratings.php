@@ -136,6 +136,7 @@ Format:
     "old_rating": "Likely R",
     "new_rating": "Lean R",
     "source": "Cook Political Report",
+    "source_date": "2026-01-15",
     "notes": "Shifted after Paxton won primary"
   }
 ]
@@ -145,6 +146,7 @@ IMPORTANT:
 - Only include races where the rating ACTUALLY CHANGED
 - Use the EXACT rating strings: "Solid R", "Likely R", "Lean R", "Toss-Up", "Lean D", "Likely D", "Solid D"
 - Include the source (which outlet reported the change)
+- Include source_date as YYYY-MM-DD — the date the outlet published the rating change
 - Search for the LATEST ratings — they may have changed recently
 - If you can't find a current rating for a race, skip it (don't guess)
 PROMPT;
@@ -245,7 +247,7 @@ $applied = 0;
 $skipped = 0;
 $changedRaces = [];
 
-$histStmt = $pdoE->prepare("INSERT INTO fec_race_history (race_id, field_changed, old_value, new_value) VALUES (?, 'rating', ?, ?)");
+$histStmt = $pdoE->prepare("INSERT INTO fec_race_history (race_id, field_changed, old_value, new_value, source, source_date) VALUES (?, 'rating', ?, ?, ?, ?)");
 $updateStmt = $pdoE->prepare("UPDATE fec_races SET rating = ? WHERE race_id = ?");
 
 foreach ($changes as $change) {
@@ -253,6 +255,7 @@ foreach ($changes as $change) {
     $newRating = $change['new_rating'] ?? '';
     $label = $change['race_label'] ?? "race #{$raceId}";
     $source = $change['source'] ?? 'unknown';
+    $sourceDate = $change['source_date'] ?? null;
     $notes = $change['notes'] ?? '';
 
     // Validate race exists
@@ -279,7 +282,7 @@ foreach ($changes as $change) {
     }
 
     // Apply change
-    $histStmt->execute([$raceId, $currentRating, $newRating]);
+    $histStmt->execute([$raceId, $currentRating, $newRating, $source, $sourceDate]);
     $updateStmt->execute([$newRating, $raceId]);
     logMsg("UPDATED {$label}: {$currentRating} → {$newRating} (source: {$source})");
     $applied++;

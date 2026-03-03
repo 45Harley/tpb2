@@ -120,7 +120,7 @@ $recentShifts = $pdoE->query("
     SELECT h.*, r.state, r.district, r.office
     FROM fec_race_history h
     JOIN fec_races r ON r.race_id = h.race_id
-    ORDER BY h.changed_at DESC
+    ORDER BY COALESCE(h.source_date, h.changed_at) DESC
     LIMIT 10
 ")->fetchAll(PDO::FETCH_ASSOC);
 
@@ -338,6 +338,7 @@ $pageStyles = <<<'CSS'
 .shift-date { color: #aaa; min-width: 50px; }
 .shift-race { color: #fff; font-weight: 600; min-width: 110px; }
 .shift-arrow { color: #d4af37; }
+.shift-source { color: #888; font-size: 0.7rem; margin-left: auto; }
 
 /* Shift tracker */
 .shift-tracker {
@@ -493,7 +494,7 @@ require dirname(__DIR__) . '/includes/nav.php';
             $field = $shift['field_changed'] === 'rating' ? '' : ' (' . $shift['field_changed'] . ')';
         ?>
         <div class="shift-row">
-            <span class="shift-date"><?= date('M j', strtotime($shift['changed_at'])) ?></span>
+            <span class="shift-date"><?= date('M j', strtotime($shift['source_date'] ?? $shift['changed_at'])) ?></span>
             <span class="shift-race"><?= htmlspecialchars($sLabel) ?></span>
             <span>
                 <span style="color:<?= getRatingColor($shift['old_value']) ?>;"><?= htmlspecialchars($shift['old_value'] ?: '—') ?></span>
@@ -501,6 +502,9 @@ require dirname(__DIR__) . '/includes/nav.php';
                 <span style="color:<?= getRatingColor($shift['new_value']) ?>;"><?= htmlspecialchars($shift['new_value']) ?></span>
                 <?= $field ?>
             </span>
+            <?php if (!empty($shift['source'])): ?>
+            <span class="shift-source"><?= htmlspecialchars($shift['source']) ?></span>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
     </div>

@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS fec_race_history (
   field_changed VARCHAR(50) NOT NULL,
   old_value VARCHAR(100),
   new_value VARCHAR(100),
+  source VARCHAR(100) DEFAULT NULL,
+  source_date DATE DEFAULT NULL,
   changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_race (race_id),
   INDEX idx_changed (changed_at)
