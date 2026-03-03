@@ -202,7 +202,7 @@ include dirname(__DIR__) . '/includes/nav.php';
         <a href="/elections/the-amendment.php">The War</a>
         <a href="/elections/threats.php">Threats</a>
         <a href="/elections/races.php">Races</a>
-        <a href="/elections/impeachment-vote.php" class="active">Trump Impeachment Vote #1</a>
+        <a href="/elections/impeachment-vote.php" class="active">Impeachment #1</a>
     </div>
 
     <div class="iv-bill-info">

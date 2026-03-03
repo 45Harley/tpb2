@@ -175,7 +175,7 @@ $siteUrl = $c['base_url'] ?? 'https://tpb2.sandgems.net';
         <a href="/elections/the-amendment.php" class="active">The War</a>
         <a href="/elections/threats.php">Threats</a>
         <a href="/elections/races.php">Races</a>
-        <a href="/elections/impeachment-vote.php">Trump Impeachment Vote #1</a>
+        <a href="/elections/impeachment-vote.php">Impeachment #1</a>
     </div>
 
     <section class="war-hero">
