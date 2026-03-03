@@ -319,7 +319,7 @@ $pageStyles = <<<'CSS'
     font-weight: 600; color: #fff;
 }
 .rating-legend-note {
-    color: #555; font-size: 0.7rem; font-style: italic; margin-left: 0.25rem;
+    color: #888; font-size: 0.7rem; font-style: italic; margin-left: 0.25rem;
 }
 
 /* Recent shifts */
@@ -333,10 +333,10 @@ $pageStyles = <<<'CSS'
 }
 .shift-row {
     display: flex; align-items: center; gap: 0.75rem; padding: 3px 0;
-    font-family: 'Courier New', monospace; font-size: 0.8rem; color: #aaa;
+    font-family: 'Courier New', monospace; font-size: 0.8rem; color: #ccc;
 }
-.shift-date { color: #666; min-width: 50px; }
-.shift-race { color: #e0e0e0; font-weight: 600; min-width: 110px; }
+.shift-date { color: #aaa; min-width: 50px; }
+.shift-race { color: #fff; font-weight: 600; min-width: 110px; }
 .shift-arrow { color: #d4af37; }
 
 /* Shift tracker */
@@ -485,7 +485,7 @@ require dirname(__DIR__) . '/includes/nav.php';
     <!-- Recent Shifts -->
     <?php if (!empty($recentShifts)): ?>
     <div class="recent-shifts">
-        <h3>Recent Shifts</h3>
+        <h3>Recent Shifts <span style="font-size:0.7em;color:#888;font-weight:400;">(Example)</span></h3>
         <?php foreach ($recentShifts as $shift):
             $sLabel = $shift['state'];
             if ($shift['office'] === 'H' && !empty($shift['district'])) $sLabel .= '-' . $shift['district'];
