@@ -432,6 +432,7 @@ if (isset($_POST['add_race'])) {
         $state = strtoupper(trim($_POST['state'] ?? ''));
         $district = trim($_POST['district'] ?? '');
         $rating = $_POST['rating'] ?? 'Toss-Up';
+        $heldBy = in_array($_POST['held_by'] ?? '', ['D', 'R']) ? $_POST['held_by'] : null;
         $cycle = (int)($_POST['cycle'] ?? 2026);
 
         // Validate office
@@ -454,12 +455,12 @@ if (isset($_POST['add_race'])) {
 
             try {
                 $stmt = $pdoElection->prepare("
-                    INSERT INTO fec_races (office, state, district, rating, cycle)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO fec_races (office, state, district, rating, held_by, cycle)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 ");
-                $stmt->execute([$office, $state, $district, $rating, $cycle]);
+                $stmt->execute([$office, $state, $district, $rating, $heldBy, $cycle]);
                 logAdminAction($pdo, $adminUserId, 'add_race', 'fec_race', $pdoElection->lastInsertId(), [
-                    'office' => $office, 'state' => $state, 'district' => $district, 'rating' => $rating, 'cycle' => $cycle
+                    'office' => $office, 'state' => $state, 'district' => $district, 'rating' => $rating, 'held_by' => $heldBy, 'cycle' => $cycle
                 ]);
                 $message = "Race added: $state" . ($district ? "-$district" : '') . " ($office)";
                 $messageType = 'success';
@@ -1828,6 +1829,15 @@ $adminActions = $pdo->query("
                     </div>
 
                     <div>
+                        <label style="display:block;color:#888;font-size:0.8em;margin-bottom:4px;">Held By</label>
+                        <select name="held_by" style="background:#252525;color:#e0e0e0;border:1px solid #444;padding:8px 12px;border-radius:4px;">
+                            <option value="">Unknown</option>
+                            <option value="D">Democrat</option>
+                            <option value="R">Republican</option>
+                        </select>
+                    </div>
+
+                    <div>
                         <label style="display:block;color:#888;font-size:0.8em;margin-bottom:4px;">Cycle</label>
                         <input type="number" name="cycle" value="2026" min="2024" max="2030"
                             style="background:#252525;color:#e0e0e0;border:1px solid #444;padding:8px 12px;border-radius:4px;width:80px;">
@@ -1851,6 +1861,7 @@ $adminActions = $pdo->query("
                                 <th style="padding:10px 8px;text-align:left;color:#d4af37;font-size:0.85em;">District</th>
                                 <th style="padding:10px 8px;text-align:left;color:#d4af37;font-size:0.85em;">Office</th>
                                 <th style="padding:10px 8px;text-align:left;color:#d4af37;font-size:0.85em;">Rating</th>
+                                <th style="padding:10px 8px;text-align:center;color:#d4af37;font-size:0.85em;">Held</th>
                                 <th style="padding:10px 8px;text-align:center;color:#d4af37;font-size:0.85em;">Candidates</th>
                                 <th style="padding:10px 8px;text-align:left;color:#d4af37;font-size:0.85em;">Last Sync</th>
                                 <th style="padding:10px 8px;text-align:center;color:#d4af37;font-size:0.85em;">Status</th>
@@ -1876,6 +1887,14 @@ $adminActions = $pdo->query("
                                         <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.8em;font-weight:600;background:<?= $badgeColor ?>;color:#fff;">
                                             <?= htmlspecialchars($race['rating']) ?>
                                         </span>
+                                    </td>
+                                    <td style="padding:8px;text-align:center;">
+                                        <?php
+                                            $hb = $race['held_by'] ?? '';
+                                            if ($hb === 'D') echo '<span style="color:#42a5f5;font-weight:600;">D</span>';
+                                            elseif ($hb === 'R') echo '<span style="color:#ef5350;font-weight:600;">R</span>';
+                                            else echo '<span style="color:#555;">-</span>';
+                                        ?>
                                     </td>
                                     <td style="padding:8px;text-align:center;color:#ccc;"><?= (int)$race['candidate_count'] ?></td>
                                     <td style="padding:8px;color:#888;font-size:0.85em;"><?= $race['last_synced'] ? date('M j, g:ia', strtotime($race['last_synced'])) : 'Never' ?></td>

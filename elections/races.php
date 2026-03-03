@@ -87,6 +87,34 @@ if ($allCandidateIds) {
     }
 }
 
+// 4. Party shift tracker — which seats could flip?
+$shiftData = ['flip_d' => [], 'flip_r' => [], 'open' => []];
+foreach ($races as $race) {
+    if (empty($race['held_by'])) continue;
+
+    $district = $race['district'] ?? '';
+    $chamber = $race['office'] === 'S' ? 'Senate' : 'House';
+    $label = ($chamber === 'Senate' || empty($district))
+        ? $race['state'] . ' ' . $chamber
+        : $race['state'] . '-' . $district . ' ' . $chamber;
+    $rating = $race['rating'] ?? '';
+
+    // Check if seat has an incumbent running
+    $hasIncumbent = false;
+    foreach (($candidatesByRace[$race['race_id']] ?? []) as $cand) {
+        if (($cand['incumbent_challenge'] ?? '') === 'I') { $hasIncumbent = true; break; }
+    }
+
+    if (!$hasIncumbent && $rating === 'Toss-Up') {
+        $shiftData['open'][] = ['label' => $label, 'rating' => $rating, 'held_by' => $race['held_by']];
+    } elseif ($race['held_by'] === 'R' && in_array($rating, ['Toss-Up', 'Lean D'])) {
+        $shiftData['flip_d'][] = ['label' => $label, 'rating' => $rating];
+    } elseif ($race['held_by'] === 'D' && in_array($rating, ['Toss-Up', 'Lean R'])) {
+        $shiftData['flip_r'][] = ['label' => $label, 'rating' => $rating];
+    }
+}
+$totalShift = count($shiftData['flip_d']) + count($shiftData['flip_r']) + count($shiftData['open']);
+
 $siteUrl = $c['base_url'] ?? 'https://tpb2.sandgems.net';
 $shareText = "$raceCount competitive 2026 races tracked with FEC campaign finance data. See who funds the people who want power over you.";
 
@@ -267,6 +295,46 @@ $pageStyles = <<<'CSS'
     font-size: 1.1rem;
 }
 
+/* Shift tracker */
+.shift-tracker {
+    background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
+    padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;
+}
+.shift-tracker h2 {
+    color: #d4af37; font-size: 1.1rem; margin: 0 0 1rem;
+    font-family: 'Courier New', monospace;
+}
+.shift-boxes { display: flex; gap: 1rem; margin-bottom: 1rem; }
+.shift-box {
+    flex: 1; text-align: center; padding: 0.75rem 0.5rem;
+    border-radius: 6px; border: 1px solid #333;
+}
+.shift-box .shift-count {
+    font-size: 1.8rem; font-weight: 900; line-height: 1;
+    font-family: 'Courier New', monospace;
+}
+.shift-box .shift-label {
+    font-size: 0.75rem; color: #aaa; margin-top: 0.25rem;
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+.shift-box.flip-d { border-color: #1565c0; }
+.shift-box.flip-d .shift-count { color: #42a5f5; }
+.shift-box.flip-r { border-color: #c62828; }
+.shift-box.flip-r .shift-count { color: #ef5350; }
+.shift-box.open-seat { border-color: #9c27b0; }
+.shift-box.open-seat .shift-count { color: #ce93d8; }
+.shift-list { margin: 0; padding: 0; list-style: none; }
+.shift-list li {
+    display: inline-block; padding: 3px 10px; margin: 3px 4px;
+    border-radius: 4px; font-size: 0.8rem; font-weight: 600;
+    color: #e0e0e0; background: rgba(255,255,255,0.05);
+    border: 1px solid #333; font-family: 'Courier New', monospace;
+}
+.shift-section-label {
+    font-size: 0.75rem; color: #888; margin: 0.75rem 0 0.35rem;
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .races-hero h1 { font-size: 1.6em; }
@@ -276,6 +344,9 @@ $pageStyles = <<<'CSS'
     .bar-label { width: 42px; font-size: 0.7rem; }
     .race-header { gap: 0.5rem; }
     .rating-badge { margin-left: 0; }
+    .shift-boxes { gap: 0.5rem; }
+    .shift-box .shift-count { font-size: 1.4rem; }
+    .shift-box .shift-label { font-size: 0.65rem; }
 }
 CSS;
 
@@ -301,6 +372,60 @@ require dirname(__DIR__) . '/includes/nav.php';
         <div class="race-count-label">Competitive Races Tracked</div>
         <p class="tagline">Who's funding the people who want power over you?</p>
     </section>
+
+    <!-- Party Shift Tracker -->
+    <?php if ($totalShift > 0): ?>
+    <section class="shift-tracker">
+        <h2>&#9878; Party Shift Tracker</h2>
+        <div class="shift-boxes">
+            <div class="shift-box flip-d">
+                <div class="shift-count"><?= count($shiftData['flip_d']) ?></div>
+                <div class="shift-label">Could Flip D</div>
+            </div>
+            <div class="shift-box flip-r">
+                <div class="shift-count"><?= count($shiftData['flip_r']) ?></div>
+                <div class="shift-label">Could Flip R</div>
+            </div>
+            <div class="shift-box open-seat">
+                <div class="shift-count"><?= count($shiftData['open']) ?></div>
+                <div class="shift-label">Open Seats</div>
+            </div>
+        </div>
+
+        <?php if (!empty($shiftData['flip_d'])): ?>
+        <div class="shift-section-label">R-held seats in play (could flip D)</div>
+        <ul class="shift-list">
+            <?php foreach ($shiftData['flip_d'] as $s): ?>
+            <li><?= htmlspecialchars($s['label']) ?>
+                <span class="rating-badge" style="background:<?= getRatingColor($s['rating']) ?>;color:#fff;font-size:0.7rem;padding:1px 6px;margin-left:4px;"><?= htmlspecialchars($s['rating']) ?></span>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php endif; ?>
+
+        <?php if (!empty($shiftData['flip_r'])): ?>
+        <div class="shift-section-label">D-held seats in play (could flip R)</div>
+        <ul class="shift-list">
+            <?php foreach ($shiftData['flip_r'] as $s): ?>
+            <li><?= htmlspecialchars($s['label']) ?>
+                <span class="rating-badge" style="background:<?= getRatingColor($s['rating']) ?>;color:#fff;font-size:0.7rem;padding:1px 6px;margin-left:4px;"><?= htmlspecialchars($s['rating']) ?></span>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php endif; ?>
+
+        <?php if (!empty($shiftData['open'])): ?>
+        <div class="shift-section-label">Open seats (either party)</div>
+        <ul class="shift-list">
+            <?php foreach ($shiftData['open'] as $s): ?>
+            <li><?= htmlspecialchars($s['label']) ?>
+                <span style="font-size:0.65rem;color:#888;margin-left:4px;">(was <?= $s['held_by'] ?>)</span>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php endif; ?>
+    </section>
+    <?php endif; ?>
 
     <!-- Race Cards -->
     <?php if ($raceCount === 0): ?>
