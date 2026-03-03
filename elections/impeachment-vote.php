@@ -205,13 +205,14 @@ include dirname(__DIR__) . '/includes/nav.php';
         <a href="/elections/impeachment-vote.php" class="active">Trump Impeachment Vote #1</a>
     </div>
 
+    <div class="iv-bill-info">
+        <strong>H.Res. 939</strong> &mdash; Sponsor: Rep. Al Green (D-TX-9) &mdash; Introduced: Dec 10, 2025<br>
+        Vote: Dec 11, 2025 &mdash; Roll Call #322 &mdash; Motion to Table: <strong>Passed 237&ndash;140</strong> (47 Present, 9 Not Voting)
+    </div>
+
     <div class="iv-hero">
         <h1>House Impeachment Vote</h1>
         <p class="subtitle">How your representative voted on Trump impeachment</p>
-        <div class="iv-bill-info">
-            <strong>H.Res. 939</strong> &mdash; Sponsor: Rep. Al Green (D-TX-9) &mdash; Introduced: Dec 10, 2025<br>
-            Vote: Dec 11, 2025 &mdash; Roll Call #322 &mdash; Motion to Table: <strong>Passed 237&ndash;140</strong> (47 Present, 9 Not Voting)
-        </div>
         <div class="iv-tally">
             <div class="iv-tally-box support"><span class="num" id="tallySupport"><?= $totalSupport ?></span><span class="lbl">Support</span></div>
             <div class="iv-tally-box oppose"><span class="num" id="tallyOppose"><?= $totalOppose ?></span><span class="lbl">Oppose</span></div>
