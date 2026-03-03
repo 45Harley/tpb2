@@ -123,11 +123,23 @@ $pageStyles = <<<'CSS'
     background: #1a1a2e; border: 1px solid #d4af37; border-radius: 10px;
     padding: 1rem; min-width: 260px; max-width: 320px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    pointer-events: auto;
+    pointer-events: auto; cursor: default;
 }
 .rep-popover.show { display: block; }
+.rep-popover.dragging { cursor: grabbing; user-select: none; }
+.rep-popover .pop-close {
+    position: absolute; top: 6px; right: 10px;
+    background: none; border: none; color: #888; font-size: 1.2rem;
+    cursor: pointer; padding: 2px 6px; border-radius: 4px; line-height: 1;
+}
+.rep-popover .pop-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.rep-popover .pop-drag-bar {
+    position: absolute; top: 0; left: 0; right: 30px; height: 28px;
+    cursor: grab; border-radius: 10px 0 0 0;
+}
 .rep-popover .pop-header {
     display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;
+    padding-top: 0.25rem;
 }
 .rep-popover .pop-photo {
     width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
@@ -307,34 +319,35 @@ include dirname(__DIR__) . '/includes/nav.php';
         });
     });
 
-    // ---- Rep contact popover on hover ----
+    // ---- Rep contact popover on click, draggable, closable ----
     var popover = document.getElementById('repPopover');
     var popCache = {};
     var popTimer = null;
-    var hideTimer = null;
     var activeRow = null;
+    var pinned = false;
 
     function showPopover(row) {
         var district = row.dataset.district;
         if (!district || district === '') return;
 
-        clearTimeout(hideTimer);
         activeRow = row;
+        pinned = true;
 
         // Position popover near the row
         var rect = row.getBoundingClientRect();
         var scrollY = window.scrollY || document.documentElement.scrollTop;
         var scrollX = window.scrollX || document.documentElement.scrollLeft;
         popover.style.top = (rect.bottom + scrollY + 4) + 'px';
-        popover.style.left = Math.min(rect.left + scrollX, window.innerWidth - 340) + 'px';
+        popover.style.left = Math.min(rect.left + scrollX + 40, window.innerWidth - 340) + 'px';
 
         if (popCache[district]) {
             renderPopover(popCache[district]);
             return;
         }
 
-        popover.innerHTML = '<div class="pop-loading">Loading rep info...</div>';
+        popover.innerHTML = '<button class="pop-close" title="Close">&times;</button><div class="pop-loading">Loading rep info...</div>';
         popover.classList.add('show');
+        bindClose();
 
         fetch('/api/get-rep-by-district.php?district=' + encodeURIComponent(district))
             .then(function(r) { return r.json(); })
@@ -343,19 +356,25 @@ include dirname(__DIR__) . '/includes/nav.php';
                 if (activeRow === row) renderPopover(data);
             })
             .catch(function() {
-                popover.innerHTML = '<div class="pop-loading">Could not load rep info</div>';
+                popover.innerHTML = '<button class="pop-close" title="Close">&times;</button><div class="pop-loading">Could not load rep info</div>';
+                bindClose();
             });
     }
 
     function renderPopover(data) {
+        var html = '<button class="pop-close" title="Close">&times;</button>';
+        html += '<div class="pop-drag-bar"></div>';
+
         if (!data.found) {
-            popover.innerHTML = '<div class="pop-loading">Vacant seat</div>';
+            html += '<div class="pop-loading">Vacant seat</div>';
+            popover.innerHTML = html;
             popover.classList.add('show');
+            bindClose(); initDrag();
             return;
         }
 
         var partyClass = data.party === 'Democratic' ? 'pop-party-d' : (data.party === 'Republican' ? 'pop-party-r' : '');
-        var html = '<div class="pop-header">';
+        html += '<div class="pop-header">';
         if (data.photo) {
             html += '<img class="pop-photo" src="' + data.photo + '" alt="" onerror="this.style.display=\'none\'">';
         }
@@ -375,30 +394,57 @@ include dirname(__DIR__) . '/includes/nav.php';
 
         popover.innerHTML = html;
         popover.classList.add('show');
+        bindClose();
+        initDrag();
     }
 
-    function hidePopover() {
-        hideTimer = setTimeout(function() {
-            popover.classList.remove('show');
-            activeRow = null;
-        }, 200);
+    function closePopover() {
+        popover.classList.remove('show');
+        activeRow = null;
+        pinned = false;
     }
 
-    // Hover events on table rows
-    rows.forEach(function(row) {
-        row.addEventListener('mouseenter', function() {
-            clearTimeout(hideTimer);
-            popTimer = setTimeout(function() { showPopover(row); }, 300);
+    function bindClose() {
+        var btn = popover.querySelector('.pop-close');
+        if (btn) btn.addEventListener('click', function(e) { e.stopPropagation(); closePopover(); });
+    }
+
+    // Drag support
+    function initDrag() {
+        var bar = popover.querySelector('.pop-drag-bar');
+        if (!bar) return;
+        var dragX, dragY, startLeft, startTop;
+
+        bar.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            dragX = e.clientX;
+            dragY = e.clientY;
+            startLeft = popover.offsetLeft;
+            startTop = popover.offsetTop;
+            popover.classList.add('dragging');
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
         });
-        row.addEventListener('mouseleave', function() {
-            clearTimeout(popTimer);
-            hidePopover();
+
+        function onDrag(e) {
+            popover.style.left = (startLeft + e.clientX - dragX) + 'px';
+            popover.style.top = (startTop + e.clientY - dragY) + 'px';
+        }
+        function stopDrag() {
+            popover.classList.remove('dragging');
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+    }
+
+    // Click row to show popover (replaces hover)
+    rows.forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            // Don't intercept link clicks inside popover
+            if (e.target.closest('.rep-popover')) return;
+            showPopover(row);
         });
     });
-
-    // Keep popover visible when hovering over it
-    popover.addEventListener('mouseenter', function() { clearTimeout(hideTimer); });
-    popover.addEventListener('mouseleave', function() { hidePopover(); });
 })();
 </script>
 
