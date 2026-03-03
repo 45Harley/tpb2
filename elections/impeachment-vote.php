@@ -58,7 +58,14 @@ $pageStyles = <<<'CSS'
     border-bottom: 2px solid #ff4444; margin-bottom: 1rem;
 }
 .iv-hero h1 { color: #ff4444; font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem; }
-.iv-hero .subtitle { color: #aaa; font-size: 1rem; margin-bottom: 1rem; }
+.iv-hero .subtitle { color: #aaa; font-size: 1rem; margin-bottom: 0.75rem; }
+
+.iv-bill-info {
+    color: #888; font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.75rem;
+    background: rgba(255,255,255,0.03); padding: 0.5rem 1rem; border-radius: 6px;
+    border: 1px solid #222;
+}
+.iv-bill-info strong { color: #ccc; }
 
 .iv-tally {
     display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem;
@@ -201,6 +208,10 @@ include dirname(__DIR__) . '/includes/nav.php';
     <div class="iv-hero">
         <h1>House Impeachment Vote</h1>
         <p class="subtitle">How your representative voted on Trump impeachment</p>
+        <div class="iv-bill-info">
+            <strong>H.Res. 939</strong> &mdash; Sponsor: Rep. Al Green (D-TX-9) &mdash; Introduced: Dec 10, 2025<br>
+            Vote: Dec 11, 2025 &mdash; Roll Call #322 &mdash; Motion to Table: <strong>Passed 237&ndash;140</strong> (47 Present, 9 Not Voting)
+        </div>
         <div class="iv-tally">
             <div class="iv-tally-box support"><span class="num" id="tallySupport"><?= $totalSupport ?></span><span class="lbl">Support</span></div>
             <div class="iv-tally-box oppose"><span class="num" id="tallyOppose"><?= $totalOppose ?></span><span class="lbl">Oppose</span></div>
