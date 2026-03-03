@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS fec_races (
   state CHAR(2) NOT NULL,
   district CHAR(2) DEFAULT NULL,
   rating VARCHAR(20) DEFAULT NULL,
+  held_by ENUM('D','R') DEFAULT NULL,
   notes TEXT DEFAULT NULL,
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   last_synced_at DATETIME DEFAULT NULL,
