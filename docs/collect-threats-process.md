@@ -633,6 +633,62 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 
 ---
 
+## Automated Collection (Daily Cron)
+
+The manual process above is now supplemented by an automated daily collection script.
+
+### Script: `scripts/maintenance/collect-threats.php`
+
+**Cron schedule:** `0 19 * * *` (7:00 PM EST daily)
+
+**How it works:**
+1. Checks kill switch: `site_settings.threat_collect_enabled` must be `'1'`
+2. Loads last 60 threats from DB as dedup context
+3. Calls Claude API (Sonnet) with web search enabled (15 searches max)
+4. Claude researches AP, Reuters, NPR, PBS, and major outlets for last 2 days
+5. Returns structured JSON with new threats (title, description, score, tags, etc.)
+6. **Programmatic dedup** — checks title similarity (>60% word overlap) and source URL match against ALL existing threats before inserting
+7. Inserts new threats, applies tags, generates polls for 300+ scores
+8. Saves audit trail to `scripts/db/threats-YYYY-MM-DD-auto.sql`
+9. Logs to `scripts/maintenance/logs/collect-threats.log`
+
+### Kill Switch
+
+```sql
+-- Disable automated collection
+UPDATE site_settings SET setting_value = '0' WHERE setting_key = 'threat_collect_enabled';
+
+-- Re-enable
+UPDATE site_settings SET setting_value = '1' WHERE setting_key = 'threat_collect_enabled';
+```
+
+### Monitoring
+
+Check the log file for results:
+```bash
+ssh sandge5@ecngx308.inmotionhosting.com -p 2222 \
+  "tail -50 /home/sandge5/tpb2.sandgems.net/scripts/maintenance/logs/collect-threats.log"
+```
+
+### Manual trigger
+```bash
+ssh sandge5@ecngx308.inmotionhosting.com -p 2222 \
+  "cd /home/sandge5/tpb2.sandgems.net && ea-php84 scripts/maintenance/collect-threats.php"
+```
+
+### Cost
+
+Each run uses ~300k input tokens (mostly from web search results) and ~2k output tokens. At Sonnet pricing, this is roughly **$1-2 per day**.
+
+### Limitations
+
+- Claude may miss threats that don't appear in web search results
+- Scoring may differ from manual scoring (tends to be within ±50 points)
+- The prompt instructs Claude to score conservatively, but human review of auto-collected threats is recommended
+- Auto-generated audit SQL files can be reviewed for quality control
+
+---
+
 ## Files Reference
 
 | File | Purpose |
@@ -640,6 +696,7 @@ WHERE office_name LIKE '%Senator%' AND full_name LIKE '%lastname%';
 | `docs/collect-threats-process.md` | This document |
 | `scripts/db/create-executive-tables.sql` | Core schema: executive_threats, threat_responses, threat_ratings |
 | `scripts/db/create-threat-tags.sql` | Tags schema + 15 initial tag definitions + severity_score column |
+| `scripts/maintenance/collect-threats.php` | **Automated daily collection** — Claude API + web search, dedup, insert, tag, poll |
 | `scripts/db/generate-threat-polls.php` | Auto-create polls for 300+ threats (safe to re-run) |
 | `scripts/db/threats-YYYY-MM-DD.sql` | Threat data files (one per collection run) |
 | `scripts/db/score-threats-2026-02-24.sql` | Scoring + tagging for first 227 threats |
