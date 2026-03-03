@@ -45,6 +45,14 @@ foreach ($votes as $v) {
 $pageStyles = <<<'CSS'
 .iv-container { max-width: 1000px; margin: 0 auto; padding: 1.5rem 1rem; }
 
+.view-links { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.view-links a {
+    padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+    text-decoration: none; border: 1px solid #444; color: #aaa; transition: all 0.2s;
+}
+.view-links a:hover { border-color: #d4af37; color: #d4af37; }
+.view-links a.active { background: #d4af37; color: #000; border-color: #d4af37; }
+
 .iv-hero {
     text-align: center; padding: 2rem 1rem 1.5rem;
     border-bottom: 2px solid #ff4444; margin-bottom: 1.5rem;
@@ -114,8 +122,6 @@ $pageStyles = <<<'CSS'
 .iv-footnotes { color: #666; font-size: 0.8rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #222; }
 .iv-footnotes p { margin-bottom: 0.3rem; }
 
-.iv-back { color: #d4af37; text-decoration: none; font-size: 0.9rem; }
-.iv-back:hover { text-decoration: underline; }
 
 /* Rep popover */
 .rep-popover {
@@ -183,7 +189,14 @@ include dirname(__DIR__) . '/includes/nav.php';
 ?>
 
 <div class="iv-container">
-    <p><a href="/elections/" class="iv-back">&larr; Back to Elections</a></p>
+    <div class="view-links">
+        <a href="/elections/">Elections</a>
+        <a href="/elections/the-fight.php">The Fight</a>
+        <a href="/elections/the-amendment.php">The War</a>
+        <a href="/elections/threats.php">Threats</a>
+        <a href="/elections/races.php">Races</a>
+        <a href="/elections/impeachment-vote.php" class="active">Trump Impeachment Vote #1</a>
+    </div>
 
     <div class="iv-hero">
         <h1>House Impeachment Vote</h1>
