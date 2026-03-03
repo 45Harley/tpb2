@@ -189,9 +189,9 @@ include dirname(__DIR__) . '/includes/nav.php';
         <h1>House Impeachment Vote</h1>
         <p class="subtitle">How your representative voted on Trump impeachment</p>
         <div class="iv-tally">
-            <div class="iv-tally-box support"><span class="num"><?= $totalSupport ?></span><span class="lbl">Support</span></div>
-            <div class="iv-tally-box oppose"><span class="num"><?= $totalOppose ?></span><span class="lbl">Oppose</span></div>
-            <div class="iv-tally-box present"><span class="num"><?= $totalPresent ?></span><span class="lbl">Present</span></div>
+            <div class="iv-tally-box support"><span class="num" id="tallySupport"><?= $totalSupport ?></span><span class="lbl">Support</span></div>
+            <div class="iv-tally-box oppose"><span class="num" id="tallyOppose"><?= $totalOppose ?></span><span class="lbl">Oppose</span></div>
+            <div class="iv-tally-box present"><span class="num" id="tallyPresent"><?= $totalPresent ?></span><span class="lbl">Present</span></div>
         </div>
     </div>
 
@@ -268,12 +268,16 @@ include dirname(__DIR__) . '/includes/nav.php';
     var filterName = document.getElementById('filterName');
     var countEl = document.getElementById('visibleCount');
 
+    var tallySupport = document.getElementById('tallySupport');
+    var tallyOppose = document.getElementById('tallyOppose');
+    var tallyPresent = document.getElementById('tallyPresent');
+
     function applyFilters() {
         var st = filterState.value;
         var pa = filterParty.value;
         var vo = filterVote.value.toLowerCase();
         var nm = filterName.value.toLowerCase();
-        var visible = 0;
+        var visible = 0, sup = 0, opp = 0, pre = 0;
 
         rows.forEach(function(row) {
             var show = true;
@@ -283,10 +287,18 @@ include dirname(__DIR__) . '/includes/nav.php';
             if (nm && row.cells[0].textContent.toLowerCase().indexOf(nm) === -1) show = false;
 
             row.classList.toggle('hidden', !show);
-            if (show) visible++;
+            if (show) {
+                visible++;
+                if (row.dataset.vote === 'support') sup++;
+                else if (row.dataset.vote === 'oppose') opp++;
+                else if (row.dataset.vote === 'present') pre++;
+            }
         });
 
         countEl.textContent = visible;
+        tallySupport.textContent = sup;
+        tallyOppose.textContent = opp;
+        tallyPresent.textContent = pre;
     }
 
     filterState.addEventListener('change', applyFilters);
