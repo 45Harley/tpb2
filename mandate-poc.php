@@ -856,6 +856,320 @@ require __DIR__ . '/includes/nav.php';
 
 <?php
 require __DIR__ . '/includes/c-widget.php';
+?>
+
+<?php if ($isLoggedIn): ?>
+<!-- ── Claudia Mandate Voice Commands ── -->
+<script>
+(function() {
+    // Wait for cWidget to be available
+    var checkWidget = setInterval(function() {
+        if (!window.cWidget || !window.cWidget.liveRespond) return;
+        clearInterval(checkWidget);
+
+        var origLiveRespond = window.cWidget.liveRespond;
+        var prefix = '<?= $_tsPrefix ?? "ts0" ?>';
+
+        // Intercept liveRespond to catch mandate commands first
+        window.cWidget.liveRespond = function(text) {
+            if (handleMandateCommand(text)) return;
+            origLiveRespond(text);
+        };
+
+        function handleMandateCommand(text) {
+            var lower = text.toLowerCase().trim();
+
+            // ── Logout ──
+            if (lower.includes('log me out') || lower === 'log out' || lower === 'logout') {
+                localStorage.removeItem('tpb_mandate_phone');
+                localStorage.removeItem('tpb_mandate_user');
+                window.cWidget.addMessage("Done, you're logged out.", 'c');
+                window.cWidget.speak("Done, you're logged out.");
+                setTimeout(function() { location.reload(); }, 2000);
+                return true;
+            }
+
+            // ── Add to mandate ──
+            if (lower.startsWith('add to my ') && lower.includes('mandate') ||
+                lower.startsWith('mandate ')) {
+                var level = 'mandate-federal';
+                if (lower.includes('state')) level = 'mandate-state';
+                else if (lower.includes('town')) level = 'mandate-town';
+
+                var content = text
+                    .replace(/^(add to my |mandate )(federal |state |town )?(mandate[: ]*)?/i, '')
+                    .trim();
+
+                if (!content) {
+                    window.cWidget.addMessage("What would you like to add?", 'c');
+                    window.cWidget.speak("What would you like to add?");
+                    return true;
+                }
+
+                submitMandateItem(content, level);
+                return true;
+            }
+
+            // ── Read / List mandate ──
+            if ((lower.includes('read') || lower.includes('list')) && lower.includes('mandate')) {
+                readMandate(lower);
+                return true;
+            }
+
+            // ── Delete from mandate ──
+            if (lower.startsWith('delete number') || lower.startsWith('delete #') ||
+                lower.startsWith('remove number') || lower.startsWith('remove #')) {
+                var num = parseInt(lower.replace(/\D/g, ''));
+                if (num) {
+                    deleteMandateItem(num);
+                    return true;
+                }
+            }
+
+            // ── Edit mandate item ──
+            if (lower.startsWith('edit number') || lower.startsWith('change number')) {
+                var parts = text.match(/(?:edit|change)\s+number\s+(\d+)[:\s]+(.*)/i);
+                if (parts && parts[1] && parts[2]) {
+                    editMandateItem(parseInt(parts[1]), parts[2].trim());
+                    return true;
+                }
+            }
+
+            // ── Move level ──
+            if (lower.startsWith('move number') && (lower.includes('federal') || lower.includes('state') || lower.includes('town'))) {
+                var moveMatch = text.match(/move\s+number\s+(\d+)\s+to\s+(federal|state|town)/i);
+                if (moveMatch) {
+                    moveMandateLevel(parseInt(moveMatch[1]), 'mandate-' + moveMatch[2].toLowerCase());
+                    return true;
+                }
+            }
+
+            // ── What does [district/town] want? ──
+            if (lower.includes('what does') && lower.includes('want') ||
+                lower.includes('what\'s trending') ||
+                lower.includes('constituent mandate for') ||
+                lower.includes('how many people')) {
+                readPublicSummary(lower);
+                return true;
+            }
+
+            // ── Help me refine ──
+            if (lower.includes('refine number') || lower.includes('help me refine')) {
+                window.cWidget.addMessage("Refining is coming soon! For now, you can edit items directly.", 'c');
+                window.cWidget.speak("Refining is coming soon. For now, you can edit items directly.");
+                return true;
+            }
+
+            return false; // Not a mandate command — pass to Claude
+        }
+
+        // ── Submit a new mandate item via Talk API ──
+        function submitMandateItem(content, level) {
+            var ts = TalkStream._instances[prefix];
+            if (!ts) {
+                window.cWidget.addMessage("Stream not ready. Try again.", 'c');
+                window.cWidget.speak("Stream not ready. Try again.");
+                return;
+            }
+
+            // Set the level picker
+            document.querySelectorAll('.mandate-level-btn').forEach(function(b) {
+                if (b.dataset.level === level) b.click();
+            });
+
+            // Fill and submit
+            var input = document.getElementById(prefix + '-input');
+            if (input) {
+                input.value = content;
+                input.dispatchEvent(new Event('input'));
+                ts.submitIdea();
+
+                var levelName = level.replace('mandate-', '');
+                var msg = "Added to your " + levelName + " mandate: " + content;
+                window.cWidget.addMessage(msg, 'c');
+                window.cWidget.speak("Added to your " + levelName + " mandate.");
+            }
+        }
+
+        // ── Read mandate items aloud ──
+        function readMandate(lower) {
+            var levelFilter = '';
+            if (lower.includes('federal')) levelFilter = 'mandate-federal';
+            else if (lower.includes('state')) levelFilter = 'mandate-state';
+            else if (lower.includes('town')) levelFilter = 'mandate-town';
+
+            var cards = document.querySelectorAll('#' + prefix + '-stream .idea-card');
+            var items = [];
+            var n = 0;
+            cards.forEach(function(card) {
+                var cat = card.dataset.category || '';
+                if (!cat.startsWith('mandate-')) return;
+                if (levelFilter && cat !== levelFilter) return;
+                n++;
+                var content = card.querySelector('.card-content');
+                if (content) items.push(n + ". " + content.textContent.trim());
+            });
+
+            if (items.length === 0) {
+                var msg = "Your mandate is empty. Say: add to my federal mandate, followed by your priority.";
+                window.cWidget.addMessage(msg, 'c');
+                window.cWidget.speak(msg);
+            } else {
+                var levelLabel = levelFilter ? levelFilter.replace('mandate-', '') + ' ' : '';
+                var intro = "Your " + levelLabel + "mandate has " + items.length + " item" + (items.length !== 1 ? 's' : '') + ". ";
+                var full = intro + items.join('. ');
+                window.cWidget.addMessage(full, 'c');
+                window.cWidget.speak(full);
+            }
+        }
+
+        // ── Delete a mandate item by number ──
+        function deleteMandateItem(num) {
+            var cards = document.querySelectorAll('#' + prefix + '-stream .idea-card');
+            var mandateCards = [];
+            cards.forEach(function(card) {
+                var cat = card.dataset.category || '';
+                if (cat.startsWith('mandate-')) mandateCards.push(card);
+            });
+
+            if (num < 1 || num > mandateCards.length) {
+                window.cWidget.addMessage("Item number " + num + " not found.", 'c');
+                window.cWidget.speak("Item number " + num + " not found.");
+                return;
+            }
+
+            var card = mandateCards[num - 1];
+            var ideaId = card.dataset.ideaId;
+            if (ideaId) {
+                var ts = TalkStream._instances[prefix];
+                if (ts) ts.deleteIdea(parseInt(ideaId));
+                window.cWidget.addMessage("Deleted item number " + num + ".", 'c');
+                window.cWidget.speak("Deleted item number " + num + ".");
+            }
+        }
+
+        // ── Edit a mandate item by number ──
+        function editMandateItem(num, newContent) {
+            var cards = document.querySelectorAll('#' + prefix + '-stream .idea-card');
+            var mandateCards = [];
+            cards.forEach(function(card) {
+                var cat = card.dataset.category || '';
+                if (cat.startsWith('mandate-')) mandateCards.push(card);
+            });
+
+            if (num < 1 || num > mandateCards.length) {
+                window.cWidget.addMessage("Item number " + num + " not found.", 'c');
+                window.cWidget.speak("Item number " + num + " not found.");
+                return;
+            }
+
+            var card = mandateCards[num - 1];
+            var ideaId = card.dataset.ideaId;
+            if (ideaId) {
+                fetch('/talk/api.php?action=edit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: parseInt(ideaId), content: newContent })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        var ts = TalkStream._instances[prefix];
+                        if (ts) ts.loadIdeas();
+                        window.cWidget.addMessage("Updated item " + num + ".", 'c');
+                        window.cWidget.speak("Updated item " + num + ".");
+                    } else {
+                        window.cWidget.addMessage("Couldn't update: " + (data.error || 'unknown error'), 'c');
+                        window.cWidget.speak("Couldn't update that item.");
+                    }
+                });
+            }
+        }
+
+        // ── Move a mandate item to a different level ──
+        function moveMandateLevel(num, newLevel) {
+            var cards = document.querySelectorAll('#' + prefix + '-stream .idea-card');
+            var mandateCards = [];
+            cards.forEach(function(card) {
+                var cat = card.dataset.category || '';
+                if (cat.startsWith('mandate-')) mandateCards.push(card);
+            });
+
+            if (num < 1 || num > mandateCards.length) {
+                window.cWidget.addMessage("Item number " + num + " not found.", 'c');
+                window.cWidget.speak("Item number " + num + " not found.");
+                return;
+            }
+
+            var card = mandateCards[num - 1];
+            var ideaId = card.dataset.ideaId;
+            if (ideaId) {
+                fetch('/talk/api.php?action=edit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: parseInt(ideaId), category: newLevel })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        var ts = TalkStream._instances[prefix];
+                        if (ts) ts.loadIdeas();
+                        var levelName = newLevel.replace('mandate-', '');
+                        window.cWidget.addMessage("Moved item " + num + " to " + levelName + ".", 'c');
+                        window.cWidget.speak("Moved item " + num + " to " + levelName + ".");
+                    } else {
+                        window.cWidget.addMessage("Couldn't move: " + (data.error || 'unknown error'), 'c');
+                        window.cWidget.speak("Couldn't move that item.");
+                    }
+                });
+            }
+        }
+
+        // ── Read the public mandate summary aloud ──
+        function readPublicSummary(lower) {
+            var level = 'federal';
+            if (lower.includes('state')) level = 'state';
+            else if (lower.includes('town') || lower.includes('putnam')) level = 'town';
+
+            var district = <?= json_encode($userDistrict ?: '') ?>;
+            var stateId = <?= (int)($userStateId ?? 0) ?>;
+            var townId = <?= (int)($userTownId ?? 0) ?>;
+
+            var url = '/api/mandate-aggregate.php?level=' + level;
+            if (level === 'federal' && district) url += '&district=' + encodeURIComponent(district);
+            else if (level === 'state' && stateId) url += '&state_id=' + stateId;
+            else if (level === 'town' && townId) url += '&town_id=' + townId;
+
+            fetch(url)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.success || data.item_count === 0) {
+                        window.cWidget.addMessage("No mandate items yet for this scope.", 'c');
+                        window.cWidget.speak("No mandate items yet for this scope.");
+                        return;
+                    }
+
+                    var intro = data.contributor_count + " constituent" +
+                        (data.contributor_count !== 1 ? "s have" : " has") + " spoken. ";
+                    var list = data.items.map(function(item, i) {
+                        return (i + 1) + ". " + item.content;
+                    }).join('. ');
+
+                    var full = intro + "Top priorities: " + list;
+                    window.cWidget.addMessage(full, 'c');
+                    window.cWidget.speak(full);
+                })
+                .catch(function() {
+                    window.cWidget.addMessage("Couldn't load the mandate summary.", 'c');
+                    window.cWidget.speak("Couldn't load the mandate summary.");
+                });
+        }
+    }, 500);
+})();
+</script>
+<?php endif; ?>
+
+<?php
 require __DIR__ . '/includes/footer.php';
 ?>
 </body>
