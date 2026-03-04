@@ -1,42 +1,14 @@
 {
   "id": "purpose",
   "title": "Our Purpose",
-  "subtitle": "What The People's Branch is, why it exists, and who it serves.",
+  "subtitle": "Why The People's Branch exists.",
   "generated": "2026-03-03T18:00:00.000Z",
-  "stepCount": 5,
+  "stepCount": 1,
   "steps": [
     {
       "number": 1,
-      "title": "What Is The People's Branch?",
-      "description": "The People's Branch (TPB) is a civic engagement platform built by citizens, for citizens. It makes democracy visible through continuous conversation — not just during elections, but every day.\n\nTPB helps you find your representatives, understand what they're doing, see who funds their campaigns, track threats to democratic norms, and make your voice heard. It connects you to the civic infrastructure that already exists but is deliberately hard to find.\n\nThis isn't about replacing democracy. It's about making it work better through transparency.",
-      "alt": null,
-      "screenshot": null
-    },
-    {
-      "number": 2,
-      "title": "Why Does TPB Exist?",
-      "description": "Because most people want to participate in their government but don't know where to start. The information is scattered across dozens of government websites. Contact forms are buried. Campaign finance data requires a degree to interpret. Threats to democratic norms go untracked.\n\nTPB pulls it all together in one place — your state, your town, your representatives, your district — so you can see the full picture and act on it.\n\nBuilt by citizens who refuse to do nothing. Not venture-backed. Grassroots. Not years away. Working today.",
-      "alt": null,
-      "screenshot": null
-    },
-    {
-      "number": 3,
-      "title": "Who Does TPB Serve?",
-      "description": "Everyone. TPB is non-partisan and serves all citizens regardless of political affiliation, age, or background.\n\nMaria, 34, a single mom who needs to know what benefits her state offers. Tom, 67, retired on a fixed income, who wants to understand what his representative is actually doing. Jamal, 22, a recent graduate navigating civic life for the first time.\n\nThe platform is built with the Golden Rule as its operating standard: serve every user as carefully as you'd want to be served yourself. Accuracy over speed. Official sources over convenience. Plain language over jargon.",
-      "alt": null,
-      "screenshot": null
-    },
-    {
-      "number": 4,
-      "title": "What Can You Do on TPB?",
-      "description": "Find Your Representatives — Enter your address on the interactive map and instantly see your federal, state, and local officials.\n\nTrack Elections — Follow competitive races with real FEC campaign finance data. See who's raising money, who's spending it, and where it comes from.\n\nMonitor Threats — The threat stream tracks actions by officials that undermine democratic norms, scored by severity and sourced from verified reporting.\n\nSpeak Up — Share your civic thoughts in the Talk stream. Participate in polls on the issues that matter to your district.\n\nVolunteer — Help build TPB itself. Research state benefits, verify data, write content, or contribute code.",
-      "alt": null,
-      "screenshot": null
-    },
-    {
-      "number": 5,
-      "title": "The Foundation: The Golden Rule",
-      "description": "More than 5.9 billion people across 10 world religions share one ethical command: treat others as you want to be treated.\n\nThis isn't just a slogan on TPB. It's the standard by which every feature is built, every piece of content is written, and every volunteer serves. When we research benefits for Maria, we research as carefully as we'd want someone to research for us. When we write for Tom, we write as clearly as we'd want it written for our own grandfather.\n\nPerfect self-governance — each individual governing themselves unselfishly — is the ideal. TPB exists to help citizens practice that, starting with knowing how their government works and holding it accountable.\n\nThis is an evolution for the next millennium.",
+      "title": "Our Purpose",
+      "description": "Perfect government isn't a better system imposed from above — it's each person governing themselves so well that external government becomes almost unnecessary. The Golden Rule as the operating system, not legislation.\n\nThe pyramid inverts: instead of power flowing down from institutions to people, it flows up from self-governed individuals who don't need to be told to do the right thing because they already are.\n\nThat's why TPB tracks elections, race ratings, campaign finance — not to worship the system, but to hold it accountable until people don't need it to behave. TPB is building the scaffolding for a transition from \"government tells you what to do\" to \"you already know what to do because you treat others the way you want to be treated.\"\n\n5.9 billion people across 10 religions already agreed on the rule. The platform just connects them.\n\nThis is an evolution for the next millennium.",
       "alt": null,
       "screenshot": null
     }
