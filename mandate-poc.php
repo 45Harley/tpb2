@@ -610,40 +610,39 @@ require __DIR__ . '/includes/nav.php';
         };
         var originalFetch = window.fetch;
         window.fetch = function(url, opts) {
-            if (selectedLevel && typeof url === 'string' && url.indexOf('talk/api.php') !== -1 && opts && opts.method && opts.method.toUpperCase() === 'POST') {
+            if (typeof url !== 'string' || url.indexOf('talk/api.php') === -1) {
+                return originalFetch.apply(this, arguments);
+            }
+
+            // Only intercept save and brainstorm POSTs — leave delete/edit/promote alone
+            var isSave = opts && opts.method && opts.method.toUpperCase() === 'POST'
+                && url.indexOf('action=') === -1; // no action param = save
+            var isBrainstorm = opts && opts.method && opts.method.toUpperCase() === 'POST'
+                && url.indexOf('action=brainstorm') !== -1;
+
+            if (selectedLevel && (isSave || isBrainstorm)) {
                 try {
-                    var body;
-                    if (opts.body instanceof FormData) {
-                        // Save POST — inject category
-                        if (!url.match(/action=brainstorm/)) {
-                            opts.body.set('category', selectedLevel);
-                            opts.body.set('auto_classify', '0');
-                        }
-                    } else if (typeof opts.body === 'string') {
-                        body = JSON.parse(opts.body);
-                        if (url.indexOf('action=brainstorm') !== -1) {
-                            // Brainstorm POST — prepend mandate refining context
+                    if (typeof opts.body === 'string') {
+                        var body = JSON.parse(opts.body);
+                        if (isBrainstorm) {
                             var ctx = mandateContext[selectedLevel] || '';
                             if (ctx) {
                                 body.message = '[MANDATE REFINE MODE: ' + ctx + ']\n\n' + body.message;
                             }
                         } else {
-                            // Save POST — inject category
                             body.category = selectedLevel;
                             body.auto_classify = false;
                         }
                         opts.body = JSON.stringify(body);
                     }
-                } catch(e) {
-                    // ignore parse errors, send original
-                }
+                } catch(e) {}
             }
-            // Log and capture response for debugging
-            var isSave = url.indexOf('action=') === -1 || url.indexOf('action=save') !== -1;
+
+            // Debug: show save result
             var promise = originalFetch.apply(this, arguments);
             if (isSave && selectedLevel) {
                 promise.then(function(resp) {
-                    return resp.clone().json().then(function(data) {
+                    resp.clone().json().then(function(data) {
                         var dbg = document.getElementById('mandate-debug');
                         if (dbg) {
                             dbg.textContent = (data.success ? 'SAVED' : 'FAILED') +
