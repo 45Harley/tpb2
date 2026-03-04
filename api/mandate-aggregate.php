@@ -1,0 +1,137 @@
+<?php
+/**
+ * Mandate Aggregation API
+ * =======================
+ * GET endpoint returning mandate items for a geographic scope.
+ *
+ * Parameters:
+ *   level    — federal | state | town (default: federal)
+ *   district — required if level=federal (e.g. "CT-2")
+ *   state_id — required if level=state (integer)
+ *   town_id  — required if level=town (integer)
+ *
+ * Response:
+ *   { success: true, level, item_count, contributor_count, items: [...] }
+ */
+
+header('Content-Type: application/json; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit();
+}
+
+$level = $_GET['level'] ?? 'federal';
+
+// Validate level
+$validLevels = ['federal', 'state', 'town'];
+if (!in_array($level, $validLevels, true)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Invalid level. Must be: federal, state, or town']);
+    exit();
+}
+
+// Determine category and required geo param
+$categoryMap = [
+    'federal' => 'mandate-federal',
+    'state'   => 'mandate-state',
+    'town'    => 'mandate-town',
+];
+$category = $categoryMap[$level];
+
+// Validate required geo parameters
+$geoParam = null;
+switch ($level) {
+    case 'federal':
+        $district = trim($_GET['district'] ?? '');
+        if ($district === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'district parameter is required for federal level']);
+            exit();
+        }
+        $geoParam = $district;
+        break;
+    case 'state':
+        $stateId = $_GET['state_id'] ?? '';
+        if ($stateId === '' || !ctype_digit((string)$stateId)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'state_id parameter (integer) is required for state level']);
+            exit();
+        }
+        $geoParam = (int)$stateId;
+        break;
+    case 'town':
+        $townId = $_GET['town_id'] ?? '';
+        if ($townId === '' || !ctype_digit((string)$townId)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'town_id parameter (integer) is required for town level']);
+            exit();
+        }
+        $geoParam = (int)$townId;
+        break;
+}
+
+$config = require __DIR__ . '/../config.php';
+
+try {
+    $pdo = new PDO(
+        "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}",
+        $config['username'],
+        $config['password'],
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+    );
+
+    // Build geo filter
+    switch ($level) {
+        case 'federal':
+            $geoWhere = 'u.us_congress_district = ?';
+            break;
+        case 'state':
+            $geoWhere = 'u.current_state_id = ?';
+            break;
+        case 'town':
+            $geoWhere = 'u.current_town_id = ?';
+            break;
+    }
+
+    $sql = "
+        SELECT i.id, i.content, i.tags, i.created_at,
+               COUNT(DISTINCT i.user_id) OVER() AS total_contributors
+        FROM idea_log i
+        JOIN users u ON i.user_id = u.user_id
+        WHERE i.category = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
+          AND {$geoWhere}
+        ORDER BY i.created_at DESC
+    ";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$category, $geoParam]);
+    $rows = $stmt->fetchAll();
+
+    // Extract contributor count from first row's window function (0 if no rows)
+    $contributorCount = !empty($rows) ? (int)$rows[0]['total_contributors'] : 0;
+
+    // Format items (strip the window column)
+    $items = [];
+    foreach ($rows as $row) {
+        $items[] = [
+            'id'         => (int)$row['id'],
+            'content'    => $row['content'],
+            'tags'       => $row['tags'],
+            'created_at' => $row['created_at'],
+        ];
+    }
+
+    echo json_encode([
+        'success'           => true,
+        'level'             => $level,
+        'item_count'        => count($items),
+        'contributor_count' => $contributorCount,
+        'items'             => $items,
+    ]);
+
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Database error']);
+}
