@@ -243,7 +243,8 @@ $pageStyles = <<<'CSS'
     margin-top: 2rem;
     text-align: center;
 }
-.mandate-summary h2 {
+.mandate-summary h2,
+.mandate-summary h3 {
     color: #d4af37;
     font-size: 1.15rem;
     margin-bottom: 0.5rem;
@@ -721,11 +722,134 @@ require __DIR__ . '/includes/nav.php';
     })();
     </script>
 
-    <!-- Public Mandate Summary (placeholder) -->
-    <div class="mandate-summary">
-        <h2>Public Mandate Summary</h2>
-        <p>Aggregated mandate data from your community will appear here.</p>
+    <!-- Public Mandate Summary -->
+    <div class="mandate-summary" id="mandateSummary">
+        <h3 id="mandateSummaryTitle">Public Mandate Summary</h3>
+        <div id="mandateSummaryBody">
+            <p>Loading mandate data...</p>
+        </div>
     </div>
+
+    <!-- ── Task 7: Wire Public Summary to Aggregation API ──── -->
+    <script>
+    (function() {
+        var userDistrict = <?= json_encode($dbUser['us_congress_district'] ?? null) ?>;
+        var userStateId  = <?= json_encode($userStateId ?: null) ?>;
+        var userTownId   = <?= json_encode($userTownId ?: null) ?>;
+        var userTownName = <?= json_encode($userTownName ?: '') ?>;
+        var userStateName = <?= json_encode($userStateDisplay ?: '') ?>;
+
+        var titleEl = document.getElementById('mandateSummaryTitle');
+        var bodyEl  = document.getElementById('mandateSummaryBody');
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        function buildUrl(level) {
+            var base = '/api/mandate-aggregate.php?level=' + encodeURIComponent(level);
+            switch (level) {
+                case 'federal':
+                    if (userDistrict) base += '&district=' + encodeURIComponent(userDistrict);
+                    break;
+                case 'state':
+                    if (userStateId) base += '&state_id=' + encodeURIComponent(userStateId);
+                    break;
+                case 'town':
+                    if (userTownId) base += '&town_id=' + encodeURIComponent(userTownId);
+                    break;
+            }
+            return base;
+        }
+
+        function buildTitle(level) {
+            switch (level) {
+                case 'federal':
+                    return userDistrict
+                        ? 'Constituent Mandate for ' + escapeHtml(userDistrict)
+                        : 'Constituent Mandate (Federal)';
+                case 'state':
+                    return userStateName
+                        ? 'Constituent Mandate for ' + escapeHtml(userStateName)
+                        : 'Constituent Mandate (State)';
+                case 'town':
+                    return userTownName
+                        ? 'Constituent Mandate for ' + escapeHtml(userTownName)
+                        : 'Constituent Mandate (Town)';
+                default:
+                    return 'Public Mandate Summary';
+            }
+        }
+
+        function loadSummary(level) {
+            titleEl.innerHTML = buildTitle(level);
+            bodyEl.innerHTML = '<p style="color:#b0b0b0;">Loading...</p>';
+
+            fetch(buildUrl(level))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.success || data.item_count === 0) {
+                        bodyEl.innerHTML = '<p style="color:#b0b0b0;">No mandate items yet for this scope.</p>';
+                        return;
+                    }
+
+                    var html = '<p style="color:#81c784; font-size:0.95rem; margin-bottom:0.75rem;">'
+                        + data.contributor_count + ' constituent'
+                        + (data.contributor_count !== 1 ? 's' : '')
+                        + ' ha' + (data.contributor_count !== 1 ? 've' : 's')
+                        + ' spoken.</p>';
+
+                    html += '<ol style="text-align:left; padding-left:1.5rem; margin:0;">';
+                    data.items.forEach(function(item) {
+                        html += '<li style="color:#ccc; margin-bottom:0.5rem;">'
+                            + escapeHtml(item.content);
+                        if (item.tags) {
+                            html += ' <span style="color:#999; font-size:0.85rem;">('
+                                + escapeHtml(item.tags) + ')</span>';
+                        }
+                        html += '</li>';
+                    });
+                    html += '</ol>';
+
+                    bodyEl.innerHTML = html;
+                })
+                .catch(function() {
+                    bodyEl.innerHTML = '<p style="color:#e63946;">Failed to load mandate summary.</p>';
+                });
+        }
+
+        // ── Initial load: federal level ────────────────────────
+        var initialLevel = userDistrict ? 'federal' : (userStateId ? 'state' : (userTownId ? 'town' : 'federal'));
+        loadSummary(initialLevel);
+
+        // ── Extend tab click handlers to also update summary ───
+        var tabs = document.querySelectorAll('#levelTabs .level-tab');
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                var dataLevel = tab.dataset.level || '';
+                var summaryLevel;
+                switch (dataLevel) {
+                    case 'mandate-federal':
+                        summaryLevel = 'federal';
+                        break;
+                    case 'mandate-state':
+                        summaryLevel = 'state';
+                        break;
+                    case 'mandate-town':
+                        summaryLevel = 'town';
+                        break;
+                    default:
+                        // "All" tab — default to federal
+                        summaryLevel = userDistrict ? 'federal' : (userStateId ? 'state' : 'town');
+                        break;
+                }
+                loadSummary(summaryLevel);
+            });
+        });
+    })();
+    </script>
 
 </div>
 <?php endif; ?>
