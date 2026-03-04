@@ -219,7 +219,7 @@ function handleSave($pdo, $input, $userId, $dbUser = null) {
     }
 
     // Validate category
-    $validCategories = ['idea', 'decision', 'todo', 'note', 'question', 'reaction', 'distilled', 'digest', 'chat'];
+    $validCategories = ['idea', 'decision', 'todo', 'note', 'question', 'reaction', 'distilled', 'digest', 'chat', 'mandate-federal', 'mandate-state', 'mandate-town'];
     if (!in_array($category, $validCategories)) {
         $category = 'idea';
     }

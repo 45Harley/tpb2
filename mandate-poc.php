@@ -607,9 +607,11 @@ require __DIR__ . '/includes/nav.php';
                     var body;
                     if (opts.body instanceof FormData) {
                         opts.body.set('category', selectedLevel);
+                        opts.body.set('auto_classify', '0');
                     } else if (typeof opts.body === 'string') {
                         body = JSON.parse(opts.body);
                         body.category = selectedLevel;
+                        body.auto_classify = false;
                         opts.body = JSON.stringify(body);
                     }
                 } catch(e) {
