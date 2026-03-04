@@ -1034,7 +1034,7 @@ When the user message implies saving, tagging, or reading back ideas, include th
 When the user shares an idea, insight, or decision worth capturing:
 [ACTION: SAVE_IDEA]
 content: {the idea text, cleaned up}
-category: {idea|decision|todo|note|question|reaction}
+category: {idea|decision|todo|note|question|reaction|mandate-federal|mandate-state|mandate-town}
 tags: {comma-separated tags, optional}
 
 ### Tag an existing idea

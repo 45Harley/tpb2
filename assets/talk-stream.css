@@ -215,14 +215,15 @@
 .talk-stream .card-author { color: #80d8ff; font-weight: 600; }
 
 .talk-stream .card-id {
-    color: #aaa;
+    color: #d4af37;
     font-weight: 400;
     margin-right: 6px;
     font-size: 0.8rem;
     cursor: pointer;
+    text-decoration: underline;
 }
 
-.talk-stream .card-id:hover { color: #eee; text-decoration: underline; }
+.talk-stream .card-id:hover { color: #f0d060; }
 .talk-stream .card-time { color: #999; }
 
 .talk-stream .card-content {

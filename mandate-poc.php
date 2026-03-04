@@ -604,9 +604,9 @@ require __DIR__ . '/includes/nav.php';
 
         // ── Intercept fetch to inject category + mandate context ──
         var mandateContext = {
-            'mandate-federal': 'This is a constituent priority for federal representatives (U.S. Congress). Help refine it to be specific, actionable, and clear for a legislator. Keep it to 1-2 concise sentences. Ask one follow-up question if the idea is vague.',
-            'mandate-state':   'This is a constituent priority for state legislators. Help refine it to be specific, actionable, and clear for a state rep. Keep it to 1-2 concise sentences. Ask one follow-up question if the idea is vague.',
-            'mandate-town':    'This is a constituent priority for town/local officials. Help refine it to be specific, actionable, and clear for a local official. Keep it to 1-2 concise sentences. Ask one follow-up question if the idea is vague.'
+            'mandate-federal': 'This is a constituent priority for federal representatives (U.S. Congress). Help the user refine their idea into a specific, actionable 1-2 sentence mandate statement. Ask one follow-up question if the idea is vague. Once the idea is clear, offer to save the final version as their mandate using [ACTION: SAVE_IDEA] with category mandate-federal. Do NOT offer to draft letters, emails, or other documents. The mandate is a concise priority statement that goes into the public aggregation feed.',
+            'mandate-state':   'This is a constituent priority for state legislators. Help the user refine their idea into a specific, actionable 1-2 sentence mandate statement. Ask one follow-up question if the idea is vague. Once the idea is clear, offer to save the final version as their mandate using [ACTION: SAVE_IDEA] with category mandate-state. Do NOT offer to draft letters, emails, or other documents. The mandate is a concise priority statement that goes into the public aggregation feed.',
+            'mandate-town':    'This is a constituent priority for town/local officials. Help the user refine their idea into a specific, actionable 1-2 sentence mandate statement. Ask one follow-up question if the idea is vague. Once the idea is clear, offer to save the final version as their mandate using [ACTION: SAVE_IDEA] with category mandate-town. Do NOT offer to draft letters, emails, or other documents. The mandate is a concise priority statement that goes into the public aggregation feed.'
         };
         var originalFetch = window.fetch;
         window.fetch = function(url, opts) {
