@@ -89,7 +89,7 @@ $pageStyles = <<<'CSS'
 .digit-row .digit-dash {
     display: flex;
     align-items: center;
-    color: #555;
+    color: #b0b0b0;
     font-size: 1.2rem;
     padding: 0 2px;
 }
