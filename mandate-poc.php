@@ -599,19 +599,36 @@ require __DIR__ . '/includes/nav.php';
             inputArea.prepend(picker);
         }
 
-        // ── Intercept fetch to inject category into talk/api.php POSTs ──
+        // ── Intercept fetch to inject category + mandate context ──
+        var mandateContext = {
+            'mandate-federal': 'This is a constituent priority for federal representatives (U.S. Congress). Help refine it to be specific, actionable, and clear for a legislator. Keep it to 1-2 concise sentences. Ask one follow-up question if the idea is vague.',
+            'mandate-state':   'This is a constituent priority for state legislators. Help refine it to be specific, actionable, and clear for a state rep. Keep it to 1-2 concise sentences. Ask one follow-up question if the idea is vague.',
+            'mandate-town':    'This is a constituent priority for town/local officials. Help refine it to be specific, actionable, and clear for a local official. Keep it to 1-2 concise sentences. Ask one follow-up question if the idea is vague.'
+        };
         var originalFetch = window.fetch;
         window.fetch = function(url, opts) {
             if (selectedLevel && typeof url === 'string' && url.indexOf('talk/api.php') !== -1 && opts && opts.method && opts.method.toUpperCase() === 'POST') {
                 try {
                     var body;
                     if (opts.body instanceof FormData) {
-                        opts.body.set('category', selectedLevel);
-                        opts.body.set('auto_classify', '0');
+                        // Save POST — inject category
+                        if (!url.match(/action=brainstorm/)) {
+                            opts.body.set('category', selectedLevel);
+                            opts.body.set('auto_classify', '0');
+                        }
                     } else if (typeof opts.body === 'string') {
                         body = JSON.parse(opts.body);
-                        body.category = selectedLevel;
-                        body.auto_classify = false;
+                        if (url.indexOf('action=brainstorm') !== -1) {
+                            // Brainstorm POST — prepend mandate refining context
+                            var ctx = mandateContext[selectedLevel] || '';
+                            if (ctx) {
+                                body.message = '[MANDATE REFINE MODE: ' + ctx + ']\n\n' + body.message;
+                            }
+                        } else {
+                            // Save POST — inject category
+                            body.category = selectedLevel;
+                            body.auto_classify = false;
+                        }
                         opts.body = JSON.stringify(body);
                     }
                 } catch(e) {
