@@ -506,6 +506,9 @@ require __DIR__ . '/includes/nav.php';
         <button class="level-tab" data-level="mandate-town">Town</button>
     </div>
 
+    <!-- Debug indicator -->
+    <div id="mandate-debug" style="font-size:0.8rem;padding:4px 8px;color:#888;font-family:monospace;">Ready</div>
+
     <!-- Talk Stream -->
     <?php
     $talkStreamConfig = [
@@ -635,7 +638,24 @@ require __DIR__ . '/includes/nav.php';
                     // ignore parse errors, send original
                 }
             }
-            return originalFetch.apply(this, arguments);
+            // Log and capture response for debugging
+            var isSave = url.indexOf('action=') === -1 || url.indexOf('action=save') !== -1;
+            var promise = originalFetch.apply(this, arguments);
+            if (isSave && selectedLevel) {
+                promise.then(function(resp) {
+                    return resp.clone().json().then(function(data) {
+                        var dbg = document.getElementById('mandate-debug');
+                        if (dbg) {
+                            dbg.textContent = (data.success ? 'SAVED' : 'FAILED') +
+                                ' id=' + (data.id || '?') +
+                                ' cat=' + (data.idea ? data.idea.category : '?') +
+                                (data.error ? ' err=' + data.error : '');
+                            dbg.style.color = data.success ? '#4caf50' : '#ef5350';
+                        }
+                    });
+                });
+            }
+            return promise;
         };
     })();
     </script>
