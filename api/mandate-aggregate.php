@@ -95,9 +95,9 @@ try {
             break;
     }
 
+    // Get items
     $sql = "
-        SELECT i.id, i.content, i.tags, i.created_at,
-               COUNT(DISTINCT i.user_id) OVER() AS total_contributors
+        SELECT i.id, i.content, i.tags, i.created_at
         FROM idea_log i
         JOIN users u ON i.user_id = u.user_id
         WHERE i.category = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
@@ -107,14 +107,8 @@ try {
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$category, $geoParam]);
-    $rows = $stmt->fetchAll();
-
-    // Extract contributor count from first row's window function (0 if no rows)
-    $contributorCount = !empty($rows) ? (int)$rows[0]['total_contributors'] : 0;
-
-    // Format items (strip the window column)
     $items = [];
-    foreach ($rows as $row) {
+    foreach ($stmt->fetchAll() as $row) {
         $items[] = [
             'id'         => (int)$row['id'],
             'content'    => $row['content'],
@@ -122,6 +116,18 @@ try {
             'created_at' => $row['created_at'],
         ];
     }
+
+    // Separate contributor count query (MariaDB compatible)
+    $cntSql = "
+        SELECT COUNT(DISTINCT i.user_id)
+        FROM idea_log i
+        JOIN users u ON i.user_id = u.user_id
+        WHERE i.category = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
+          AND {$geoWhere}
+    ";
+    $cntStmt = $pdo->prepare($cntSql);
+    $cntStmt->execute([$category, $geoParam]);
+    $contributorCount = (int)$cntStmt->fetchColumn();
 
     echo json_encode([
         'success'           => true,
