@@ -5,7 +5,7 @@
  * Pulls candidate and contributor data from OpenFEC API
  * into local cache tables for the race dashboard.
  *
- * Cron: every 2 hours (0 0,2,4,...,22 * * *) — cPanel clock is EST.
+ * Cron: every 6 hours (0 0,6,12,18 * * *) — cPanel clock is EST.
  * With DEMO_KEY: syncs 1 race per run (rotates by fec_races.last_synced_at).
  * With real key (1000 req/hr): syncs all races in one run.
  *

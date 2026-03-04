@@ -2091,7 +2091,7 @@ $adminActions = $pdo->query("
                 <!-- FEC Sync -->
                 <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
                     <h3 style="color:#d4af37;margin:0 0 15px;">FEC Data Sync</h3>
-                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Pulls candidate and contributor data from OpenFEC API every 2 hours.</p>
+                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Pulls candidate and contributor data from OpenFEC API every 6 hours.</p>
 
                     <input type="hidden" name="fec_sync_enabled" value="0">
                     <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
@@ -2102,7 +2102,7 @@ $adminActions = $pdo->query("
 
                     <div style="display:flex;gap:20px;color:#888;font-size:0.9em;">
                         <span>Status: <strong style="color:<?= $fecSyncEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $fecSyncEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
-                        <span>Schedule: <strong style="color:#ccc;">Every 2 hours</strong></span>
+                        <span>Schedule: <strong style="color:#ccc;">Every 6 hours</strong></span>
                     </div>
                 </div>
 
