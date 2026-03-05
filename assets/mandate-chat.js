@@ -503,6 +503,8 @@
                     }
                     self.commandMode = !self.commandMode;
                     self.updateMicMode();
+                    // Sync micBaseText so interim results don't inject "claude x" into textarea
+                    self.micBaseText = self.inputEl.value;
                     if (self.commandMode) {
                         self.addSystemMessage('Command mode ON. Say a command (pin, save federal, help, etc.) or say "Claudex" to return to chat.');
                         self.speak('Command mode on.');
