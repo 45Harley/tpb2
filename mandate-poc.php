@@ -520,6 +520,7 @@ require __DIR__ . '/includes/nav.php';
         'show_mic'            => true,
         'show_admin_tools'    => false,
         'user_only'           => true,
+        'categories'          => 'mandate-federal,mandate-state,mandate-town',
         'limit'               => 50,
     ];
     require __DIR__ . '/includes/talk-stream.php';

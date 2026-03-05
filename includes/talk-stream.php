@@ -29,6 +29,7 @@ $_tsDefaults = [
     'geo_state_id'        => null,
     'geo_town_id'         => null,
     'user_only'           => false,     // true = show only current user's ideas
+    'categories'          => null,      // comma-separated category filter (e.g. 'mandate-federal,mandate-state,mandate-town')
     'limit'               => 30,
 ];
 $_ts = array_merge($_tsDefaults, $talkStreamConfig ?? []);
@@ -171,6 +172,7 @@ new TalkStream({
     geoStateId:        <?= $_ts['geo_state_id'] ? (int)$_ts['geo_state_id'] : 'null' ?>,
     geoTownId:         <?= $_ts['geo_town_id'] ? (int)$_ts['geo_town_id'] : 'null' ?>,
     userOnly:          <?= $_ts['user_only'] ? 'true' : 'false' ?>,
+    categories:        <?= $_ts['categories'] ? json_encode($_ts['categories']) : 'null' ?>,
     currentUser:       <?= $_tsUserJson ?>,
     canPost:           <?= $_tsCanPost ? 'true' : 'false' ?>,
     isLoggedIn:        <?= $isLoggedIn ? 'true' : 'false' ?>,

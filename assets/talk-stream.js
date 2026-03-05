@@ -428,6 +428,7 @@ window.TalkStream = (function() {
             url += '&state_id=' + this.config.geoStateId;
         }
         if (this.config.userOnly) url += '&user_only=1';
+        if (this.config.categories && !this.currentCategoryFilter) url += '&categories=' + encodeURIComponent(this.config.categories);
         if (this.currentFilter) url += '&status=' + this.currentFilter;
         if (this.currentCategoryFilter) url += '&category=' + this.currentCategoryFilter;
         if (before) url += '&before=' + encodeURIComponent(before);

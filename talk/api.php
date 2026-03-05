@@ -435,9 +435,22 @@ function handleHistory($pdo, $userId, $dbUser = null) {
         $where[] = "i.category != 'chat'";
     }
 
+    // Multiple categories filter (comma-separated)
+    $categories = $_GET['categories'] ?? null;
     if ($category) {
         $where[] = 'i.category = :category';
         $params[':category'] = $category;
+    } elseif ($categories) {
+        $catList = array_filter(array_map('trim', explode(',', $categories)));
+        if ($catList) {
+            $catPlaceholders = [];
+            foreach ($catList as $ci => $cat) {
+                $key = ':cat_' . $ci;
+                $catPlaceholders[] = $key;
+                $params[$key] = $cat;
+            }
+            $where[] = 'i.category IN (' . implode(',', $catPlaceholders) . ')';
+        }
     }
 
     if ($status) {
