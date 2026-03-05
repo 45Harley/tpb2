@@ -946,7 +946,7 @@ require __DIR__ . '/includes/nav.php';
 
     <!-- Mandate Header -->
     <div class="mandate-header">
-        <h1>My Mandate</h1>
+        <h1>My Mandate <a href="/help/guide.php?flow=mandate-chat" title="How to use My Mandate" style="font-size:0.5em;vertical-align:middle;text-decoration:none;">&#x1F393;</a></h1>
         <p class="geo-info">
             <?php if ($userTownName): ?>
                 <span><?= htmlspecialchars($userTownName) ?></span>,
