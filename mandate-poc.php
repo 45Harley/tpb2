@@ -378,6 +378,7 @@ require __DIR__ . '/includes/nav.php';
 
             <div class="email-section" id="emailSection" style="display:none;">
                 <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email">
+                <button type="button" class="voice-phone-btn" id="voiceEmailBtn" title="Say your email address">&#x1F3A4; Say your email</button>
             </div>
 
             <div class="name-section" id="nameSection">
@@ -725,6 +726,138 @@ require __DIR__ . '/includes/nav.php';
             };
 
             phoneRec.start();
+        });
+
+        // ── Voice email entry ─────────────────────────────────────
+        var voiceEmailBtn = document.getElementById('voiceEmailBtn');
+
+        // NATO/spoken letter map
+        var spokenLetters = {
+            'alpha':'a','bravo':'b','charlie':'c','delta':'d','echo':'e',
+            'foxtrot':'f','golf':'g','hotel':'h','india':'i','juliet':'j',
+            'kilo':'k','lima':'l','mike':'m','november':'n','oscar':'o',
+            'papa':'p','quebec':'q','romeo':'r','sierra':'s','tango':'t',
+            'uniform':'u','victor':'v','whiskey':'w','x-ray':'x','xray':'x',
+            'yankee':'y','zulu':'z',
+            // Common misheard
+            'be':'b','see':'c','sea':'c','dee':'d','gee':'g','jay':'j',
+            'kay':'k','queue':'q','cue':'q','are':'r','you':'u','why':'y',
+            'double you':'w','double u':'w','w':'w'
+        };
+
+        function parseEmail(transcript) {
+            var text = transcript.toLowerCase().trim();
+            // Replace spoken email parts
+            text = text.replace(/\bat\b/g, '@');
+            text = text.replace(/\bdot\b/g, '.');
+            text = text.replace(/\bperiod\b/g, '.');
+            text = text.replace(/\bunderscore\b/g, '_');
+            text = text.replace(/\bdash\b/g, '-');
+            text = text.replace(/\bhyphen\b/g, '-');
+            text = text.replace(/\bplus\b/g, '+');
+
+            // Check if it looks like spelling (mostly single letters/NATO words)
+            var words = text.split(/\s+/);
+            var letterCount = 0;
+            for (var i = 0; i < words.length; i++) {
+                var w = words[i];
+                if (w.length === 1 || spokenLetters[w] || w === '@' || w === '.' || w === '_' || w === '-') {
+                    letterCount++;
+                }
+            }
+            var isSpelling = letterCount > words.length * 0.6;
+
+            if (isSpelling) {
+                // Spelling mode — join individual letters
+                var result = '';
+                for (var i = 0; i < words.length; i++) {
+                    var w = words[i];
+                    if (w === '@' || w === '.' || w === '_' || w === '-' || w === '+') {
+                        result += w;
+                    } else if (w.length === 1 && /[a-z0-9]/.test(w)) {
+                        result += w;
+                    } else if (spokenLetters[w]) {
+                        result += spokenLetters[w];
+                    } else if (/^\d+$/.test(w)) {
+                        result += w;
+                    }
+                    // skip unrecognized words in spelling mode
+                }
+                return result;
+            } else {
+                // Spoken mode — "harley at sandgems dot net"
+                // Remove spaces around @ and .
+                text = text.replace(/\s*@\s*/g, '@');
+                text = text.replace(/\s*\.\s*/g, '.');
+                // Remove remaining spaces (spoken words become the email)
+                text = text.replace(/\s+/g, '');
+                return text;
+            }
+        }
+
+        var emailRec = null;
+        var emailListening = false;
+
+        voiceEmailBtn.addEventListener('click', function() {
+            if (emailListening) {
+                emailRec.stop();
+                return;
+            }
+
+            emailRec = new SpeechRecognition();
+            emailRec.continuous = false;
+            emailRec.interimResults = false;
+            emailRec.lang = 'en-US';
+
+            emailRec.onstart = function() {
+                emailListening = true;
+                voiceEmailBtn.classList.add('listening');
+                voiceEmailBtn.innerHTML = '&#x23FA; Listening...';
+                setStatus('Say your email (e.g. "harley at gmail dot com").', 'info');
+            };
+
+            emailRec.onend = function() {
+                emailListening = false;
+                voiceEmailBtn.classList.remove('listening');
+                voiceEmailBtn.innerHTML = '&#x1F3A4; Say your email';
+            };
+
+            emailRec.onresult = function(e) {
+                var transcript = e.results[0][0].transcript;
+                var email = parseEmail(transcript);
+
+                if (email && email.indexOf('@') !== -1 && email.indexOf('.') !== -1) {
+                    emailInput.value = email;
+                    verifyBtn.disabled = false;
+                    setStatus('I heard: ' + email + '. Correct? Press Verify.', 'success');
+                    if (window.speechSynthesis) {
+                        // Spell out the email for confirmation
+                        var spoken = email.split('').map(function(c) {
+                            if (c === '@') return 'at';
+                            if (c === '.') return 'dot';
+                            if (c === '_') return 'underscore';
+                            if (c === '-') return 'dash';
+                            return c;
+                        }).join(', ');
+                        var utter = new SpeechSynthesisUtterance('I heard: ' + spoken);
+                        utter.rate = 0.85;
+                        speechSynthesis.speak(utter);
+                    }
+                } else if (email) {
+                    emailInput.value = email;
+                    setStatus('I heard: "' + email + '" — missing @ or domain. Try again or type it.', 'error');
+                } else {
+                    setStatus('Could not understand. Try saying "name at domain dot com".', 'error');
+                }
+            };
+
+            emailRec.onerror = function(e) {
+                if (e.error !== 'no-speech') {
+                    setStatus('Microphone error: ' + e.error, 'error');
+                }
+            };
+
+            emailRec.start();
         });
     }
 })();
