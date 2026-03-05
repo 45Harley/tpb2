@@ -516,8 +516,18 @@
                 if (self.commandMode) {
                     // Execute as command
                     if (!self.handleCommand(text)) {
-                        self.addSystemMessage('Unknown command: "' + text + '". Say "help" for commands.');
-                        self.speak('Unknown command.');
+                        // If it's a long phrase (5+ words), it's clearly dictation, not a command
+                        if (text.split(/\s+/).length >= 5) {
+                            self.commandMode = false;
+                            self.updateMicMode();
+                            self.addSystemMessage('That sounds like dictation. Switching to chat mode.');
+                            self.inputEl.value = (self.inputEl.value ? self.inputEl.value + ' ' : '') + text;
+                            self.autoResize();
+                            self.updateCharCount();
+                        } else {
+                            self.addSystemMessage('Unknown command: "' + text + '". Say "help" for commands.');
+                            self.speak('Unknown command.');
+                        }
                     }
                 } else {
                     // Chat mode — append to textarea
@@ -623,7 +633,7 @@
         }
 
         // ── Pin last AI response ──
-        if (/\b(pin|pen)\b/.test(lower)) {
+        if (/\b(pin|pen|penis)\b/.test(lower)) {
             var lastAi = null;
             for (var i = this.messages.length - 1; i >= 0; i--) {
                 if (this.messages[i].role === 'assistant') { lastAi = this.messages[i]; break; }
