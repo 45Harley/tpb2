@@ -149,9 +149,10 @@
         this.messagesEl.appendChild(thinkingEl);
         this.scrollToBottom();
 
-        // Build conversation history for AI
+        // Build conversation history for AI (skip system messages)
         var history = [];
         for (var i = 0; i < this.messages.length - 1; i++) {
+            if (this.messages[i].role === 'system') continue;
             history.push({ role: this.messages[i].role, content: this.messages[i].content });
         }
 
