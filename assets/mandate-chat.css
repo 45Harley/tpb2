@@ -57,21 +57,24 @@
 }
 
 .mc-bubble-ai .mc-pin {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 4px;
+    position: static;
+    display: inline-block;
+    margin-top: 8px;
+    background: rgba(212,175,55,0.15);
+    border: 1px solid #d4af37;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 1.1rem;
-    opacity: 1;
+    font-size: 0.8rem;
+    color: #d4af37;
+    font-weight: 600;
     transition: background 0.2s;
-    padding: 4px 6px;
+    padding: 4px 12px;
 }
 
+.mc-bubble-ai .mc-pin::after { content: ' Pin this'; }
 .mc-bubble-ai .mc-pin:hover { background: rgba(212,175,55,0.3); }
-.mc-bubble-ai .mc-pin.pinned { color: #d4af37; background: rgba(212,175,55,0.2); border-color: #d4af37; }
+.mc-bubble-ai .mc-pin.pinned { background: rgba(212,175,55,0.25); }
+.mc-bubble-ai .mc-pin.pinned::after { content: ' Pinned!'; }
 
 .mc-bubble-time {
     font-size: 0.7rem;
