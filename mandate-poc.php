@@ -288,6 +288,22 @@ $pageStyles = <<<'CSS'
 .mandate-header .geo-info span {
     color: #ccc;
 }
+.mandate-help-btn {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.4rem 1rem;
+    background: #2a1d12;
+    border: 1px solid #d4af37;
+    border-radius: 20px;
+    color: #d4af37;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
+}
+.mandate-help-btn:hover {
+    background: #3a2d1a;
+    transform: translateY(-1px);
+}
 
 /* ── Level Tabs ──────────────────────────────────────────── */
 .level-tabs {
@@ -946,7 +962,8 @@ require __DIR__ . '/includes/nav.php';
 
     <!-- Mandate Header -->
     <div class="mandate-header">
-        <h1>My Mandate <a href="/help/guide.php?flow=mandate-chat" title="How to use My Mandate" style="font-size:0.5em;vertical-align:middle;text-decoration:none;">&#x1F393;</a></h1>
+        <h1>My Mandate</h1>
+        <a href="/help/guide.php?flow=mandate-chat" class="mandate-help-btn">&#x1F393; How It Works</a>
         <p class="geo-info">
             <?php if ($userTownName): ?>
                 <span><?= htmlspecialchars($userTownName) ?></span>,
