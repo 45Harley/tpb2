@@ -61,8 +61,8 @@ try {
     $params = [$email];
 
     if ($name !== null && $name !== '') {
-        $sql .= " AND LOWER(u.first_name) = LOWER(?)";
-        $params[] = $name;
+        $sql .= " AND LOWER(u.first_name) LIKE LOWER(?)";
+        $params[] = $name . '%';
     }
 
     $stmt = $pdo->prepare($sql);
