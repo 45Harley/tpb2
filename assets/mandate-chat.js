@@ -806,6 +806,14 @@
         var utter = new SpeechSynthesisUtterance(text);
         utter.rate = 1.0;
         utter.pitch = 1.0;
+        // Pick preferred voice: Microsoft Mark
+        var voices = speechSynthesis.getVoices();
+        for (var i = 0; i < voices.length; i++) {
+            if (voices[i].name.indexOf('Mark') !== -1) {
+                utter.voice = voices[i];
+                break;
+            }
+        }
         utter.onend = function() {
             // Resume recognition after TTS finishes
             if (wasListening && self.recognition) {
