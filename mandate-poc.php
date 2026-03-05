@@ -657,13 +657,16 @@ require __DIR__ . '/includes/nav.php';
                 return;
             }
 
+            var collectedDigits = [];
+
             phoneRec = new SpeechRecognition();
-            phoneRec.continuous = false;
+            phoneRec.continuous = true;
             phoneRec.interimResults = false;
             phoneRec.lang = 'en-US';
 
             phoneRec.onstart = function() {
                 phoneListening = true;
+                collectedDigits = [];
                 voiceBtn.classList.add('listening');
                 voiceBtn.innerHTML = '&#x23FA; Listening...';
                 setStatus('Say your 10-digit phone number.', 'info');
@@ -673,37 +676,46 @@ require __DIR__ . '/includes/nav.php';
                 phoneListening = false;
                 voiceBtn.classList.remove('listening');
                 voiceBtn.innerHTML = '&#x1F3A4; Say your number';
+                // If we got some but not 10, show what we have
+                if (collectedDigits.length > 0 && collectedDigits.length < 10) {
+                    setStatus('Got ' + collectedDigits.length + ' digits. Need 10. Try again.', 'info');
+                }
             };
 
-            phoneRec.onresult = function(e) {
-                var transcript = e.results[0][0].transcript;
-                var nums = extractDigits(transcript);
+            function fillAndCheck() {
+                for (var i = 0; i < Math.min(collectedDigits.length, 10); i++) {
+                    digits[i].value = collectedDigits[i];
+                }
+                updateVerifyState();
+                setStatus('Got ' + Math.min(collectedDigits.length, 10) + ' of 10 digits...', 'info');
 
-                if (nums.length >= 10) {
-                    for (var i = 0; i < 10; i++) {
-                        digits[i].value = nums[i];
-                    }
-                    updateVerifyState();
-                    var formatted = nums.slice(0,3).join('') + '-' + nums.slice(3,6).join('') + '-' + nums.slice(6,10).join('');
+                if (collectedDigits.length >= 10) {
+                    phoneRec.stop();
+                    var formatted = collectedDigits.slice(0,3).join('') + '-' + collectedDigits.slice(3,6).join('') + '-' + collectedDigits.slice(6,10).join('');
                     setStatus('I heard: ' + formatted + '. Correct? Press Verify.', 'success');
-                    // Speak it back for confirmation
                     if (window.speechSynthesis) {
-                        var readback = nums.slice(0,10).map(function(d) {
+                        var readback = collectedDigits.slice(0,10).map(function(d) {
                             return ['zero','one','two','three','four','five','six','seven','eight','nine'][d];
                         }).join(', ');
                         var utter = new SpeechSynthesisUtterance('I heard: ' + readback);
                         utter.rate = 0.9;
                         speechSynthesis.speak(utter);
                     }
-                } else if (nums.length > 0) {
-                    for (var i = 0; i < Math.min(nums.length, 10); i++) {
-                        digits[i].value = nums[i];
-                    }
-                    updateVerifyState();
-                    setStatus('Got ' + nums.length + ' digits. Need 10. Try again.', 'info');
-                } else {
-                    setStatus('Could not hear digits. Try again.', 'error');
                 }
+            }
+
+            phoneRec.onresult = function(e) {
+                for (var r = 0; r < e.results.length; r++) {
+                    if (!e.results[r].isFinal) continue;
+                    var transcript = e.results[r][0].transcript;
+                    var nums = extractDigits(transcript);
+                    for (var n = 0; n < nums.length; n++) {
+                        if (collectedDigits.length < 10) {
+                            collectedDigits.push(nums[n]);
+                        }
+                    }
+                }
+                fillAndCheck();
             };
 
             phoneRec.onerror = function(e) {
