@@ -273,6 +273,14 @@
             extracted = match[1].replace(/\*\*/g, '').replace(/<[^>]+>/g, '').trim();
         }
 
+        // Prevent duplicates
+        for (var i = 0; i < this.ideas.length; i++) {
+            if (this.ideas[i].content === extracted) {
+                this.showToast('Already pinned as #' + this.ideas[i].num, 'success');
+                return;
+            }
+        }
+
         var idea = {
             num: this.nextIdea++,
             content: extracted,
@@ -644,6 +652,22 @@
                 this.pinIdea(lastAi.content);
             } else {
                 this.addSystemMessage('No AI response to pin yet.');
+            }
+            return true;
+        }
+
+        // ── Delete pinned idea ──
+        if (/\b(delete|remove)\b/.test(lower) && /\b#?\d+\b/.test(lower)) {
+            var num = lower.match(/\b#?(\d+)\b/);
+            if (num) {
+                var n = parseInt(num[1], 10);
+                var found = this.ideas.some(function(i) { return i.num === n; });
+                if (found) {
+                    this.removeIdea(n);
+                    this.addSystemMessage('Deleted idea #' + n + '.');
+                } else {
+                    this.addSystemMessage('No idea #' + n + ' to delete.');
+                }
             }
             return true;
         }
