@@ -721,7 +721,6 @@ function handleEdit($pdo, $input, $userId) {
 
 function handleDelete($pdo, $input, $userId) {
     $ideaId = (int)($input['idea_id'] ?? 0);
-    $hard   = (bool)($input['hard'] ?? false);
 
     if (!$ideaId) return ['success' => false, 'error' => 'idea_id is required'];
     if (!$userId) return ['success' => false, 'error' => 'Login required'];
@@ -753,23 +752,7 @@ function handleDelete($pdo, $input, $userId) {
     $stmt->execute([$ideaId]);
     $hasSynthLinks = (int)$stmt->fetch()['cnt'] > 0;
 
-    if ($hard) {
-        if ($hasSynthLinks) {
-            return ['success' => false, 'error' => 'Cannot permanently delete: this idea was used in a gather or crystallization'];
-        }
-        $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM idea_log WHERE parent_id = ?");
-        $stmt->execute([$ideaId]);
-        if ((int)$stmt->fetch()['cnt'] > 0) {
-            return ['success' => false, 'error' => 'Cannot permanently delete: other ideas build on this one'];
-        }
-
-        $pdo->prepare("DELETE FROM idea_links WHERE idea_id_a = ? OR idea_id_b = ?")->execute([$ideaId, $ideaId]);
-        $pdo->prepare("DELETE FROM idea_log WHERE id = ?")->execute([$ideaId]);
-
-        return ['success' => true, 'idea_id' => $ideaId, 'action' => 'hard_deleted'];
-    }
-
-    // Soft delete
+    // Always soft delete — no hard deletes allowed
     $pdo->prepare("UPDATE idea_log SET deleted_at = NOW() WHERE id = ?")->execute([$ideaId]);
 
     return ['success' => true, 'idea_id' => $ideaId, 'action' => 'soft_deleted', 'had_links' => $hasSynthLinks];
