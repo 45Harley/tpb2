@@ -59,6 +59,51 @@ $pageStyles = <<<'CSS'
     font-size: 0.95rem;
     margin-bottom: 2rem;
 }
+/* Login method tabs */
+.login-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(212,175,55,0.3);
+}
+.login-tab {
+    flex: 1;
+    padding: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: transparent;
+    color: #b0b0b0;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.login-tab.active {
+    background: rgba(212,175,55,0.15);
+    color: #d4af37;
+}
+.login-tab:hover:not(.active) {
+    background: rgba(255,255,255,0.05);
+}
+
+/* Email input */
+.email-section input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    background: #0d0d1a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #e0e0e0;
+    margin-bottom: 1.25rem;
+}
+.email-section input:focus {
+    outline: none;
+    border-color: #d4af37;
+    box-shadow: 0 0 0 2px rgba(212,175,55,0.2);
+}
+
 .digit-row {
     display: flex;
     gap: 6px;
@@ -280,7 +325,12 @@ require __DIR__ . '/includes/nav.php';
 <div class="mandate-wrap">
     <div class="login-card" id="loginCard">
         <h1>My Mandate</h1>
-        <p class="login-sub">Enter your verified phone number to access your mandate.</p>
+        <p class="login-sub" id="loginSub">Enter your verified phone number to access your mandate.</p>
+
+        <div class="login-tabs">
+            <button class="login-tab active" data-mode="phone">Phone</button>
+            <button class="login-tab" data-mode="email">Email</button>
+        </div>
 
         <div id="loginForm">
             <div class="digit-row" id="digitRow">
@@ -296,6 +346,10 @@ require __DIR__ . '/includes/nav.php';
                 <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="7" aria-label="Digit 8">
                 <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="8" aria-label="Digit 9">
                 <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="9" aria-label="Digit 10">
+            </div>
+
+            <div class="email-section" id="emailSection" style="display:none;">
+                <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email">
             </div>
 
             <div class="name-section" id="nameSection">
@@ -327,8 +381,49 @@ require __DIR__ . '/includes/nav.php';
     var loginForm   = document.getElementById('loginForm');
     var lockoutMsg  = document.getElementById('lockoutMsg');
 
+    var loginSub    = document.getElementById('loginSub');
+    var emailSection = document.getElementById('emailSection');
+    var emailInput   = document.getElementById('emailInput');
+    var digitRow     = document.getElementById('digitRow');
+    var loginTabs    = document.querySelectorAll('.login-tab');
+    var loginMode    = 'phone';
+
     var attempts  = 0;
     var needsName = false;
+
+    // ── Tab switching ──────────────────────────────────────────
+    loginTabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            loginMode = tab.dataset.mode;
+            loginTabs.forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            status.textContent = '';
+            nameSection.style.display = 'none';
+            needsName = false;
+
+            if (loginMode === 'phone') {
+                digitRow.style.display = 'flex';
+                emailSection.style.display = 'none';
+                loginSub.textContent = 'Enter your verified phone number to access your mandate.';
+                updateVerifyState();
+                digits[0].focus();
+            } else {
+                digitRow.style.display = 'none';
+                emailSection.style.display = 'block';
+                loginSub.textContent = 'Enter your verified email address to access your mandate.';
+                verifyBtn.disabled = !emailInput.value.trim();
+                emailInput.focus();
+            }
+        });
+    });
+
+    emailInput.addEventListener('input', function() {
+        verifyBtn.disabled = !emailInput.value.trim();
+    });
+
+    emailInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !verifyBtn.disabled) verifyBtn.click();
+    });
 
     // Check lockout
     var lockUntil = parseInt(localStorage.getItem(LOCKOUT_KEY) || '0', 10);
@@ -402,21 +497,36 @@ require __DIR__ . '/includes/nav.php';
     verifyBtn.addEventListener('click', function() {
         if (verifyBtn.disabled) return;
 
-        var phone = getPhone();
-        if (phone.length < 10) {
-            setStatus('Enter all 10 digits.', 'error');
-            return;
+        var url, body;
+
+        if (loginMode === 'phone') {
+            var phone = getPhone();
+            if (phone.length < 10) {
+                setStatus('Enter all 10 digits.', 'error');
+                return;
+            }
+            url = '/api/mandate-phone-login.php';
+            body = { phone: phone };
+            if (needsName && nameInput.value.trim()) {
+                body.name = nameInput.value.trim();
+            }
+        } else {
+            var email = emailInput.value.trim();
+            if (!email || email.indexOf('@') === -1) {
+                setStatus('Enter a valid email address.', 'error');
+                return;
+            }
+            url = '/api/mandate-email-login.php';
+            body = { email: email };
+            if (needsName && nameInput.value.trim()) {
+                body.name = nameInput.value.trim();
+            }
         }
 
         verifyBtn.disabled = true;
         setStatus('Verifying...', 'info');
 
-        var body = { phone: phone };
-        if (needsName && nameInput.value.trim()) {
-            body.name = nameInput.value.trim();
-        }
-
-        fetch('/api/mandate-phone-login.php', {
+        fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
@@ -425,7 +535,11 @@ require __DIR__ . '/includes/nav.php';
         .then(function(data) {
             if (data.success) {
                 // Save to localStorage and reload
-                localStorage.setItem('mandate_phone', phone);
+                if (loginMode === 'phone') {
+                    localStorage.setItem('mandate_phone', getPhone());
+                } else {
+                    localStorage.setItem('mandate_phone', emailInput.value.trim());
+                }
                 localStorage.setItem('mandate_user', JSON.stringify(data.user));
                 setStatus('Welcome, ' + data.user.first_name + '!', 'success');
                 setTimeout(function() { location.reload(); }, 600);
