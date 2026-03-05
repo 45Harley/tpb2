@@ -93,10 +93,26 @@ try {
 
     if ($count === 1) {
         $user = $matches[0];
+        $userId = (int)$user['user_id'];
+
+        // Create device session and set auth cookies
+        require_once __DIR__ . '/../includes/set-cookie.php';
+        $sessionId = bin2hex(random_bytes(32));
+        $deviceName = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+        $deviceType = preg_match('/Mobile|Android|iPhone/i', $deviceName) ? 'mobile' : 'desktop';
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        $stmt = $pdo->prepare("
+            INSERT INTO user_devices (user_id, device_session, device_name, device_type, ip_address, is_active, verified_at, last_active_at, login_count)
+            VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW(), 1)
+        ");
+        $stmt->execute([$userId, $sessionId, $deviceName, $deviceType, $ip]);
+        tpbSetLoginCookies($userId, $sessionId);
+
         echo json_encode([
             'success' => true,
             'user' => [
-                'user_id'    => (int)$user['user_id'],
+                'user_id'    => $userId,
                 'first_name' => $user['first_name'],
                 'state_abbr' => $user['state_abbr'],
                 'town_name'  => $user['town_name'],
