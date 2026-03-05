@@ -928,7 +928,7 @@ window.TalkStream = (function() {
             var sep = self.micBaseText && !self.micBaseText.endsWith(' ') ? ' ' : '';
             self.inputEl.value = self.micBaseText + sep + final + interim;
             self.inputEl.style.height = 'auto';
-            self.inputEl.style.height = Math.min(self.inputEl.scrollHeight, 120) + 'px';
+            self.inputEl.style.height = Math.min(self.inputEl.scrollHeight, 200) + 'px';
         };
         this.recognition.onerror = function(e) {
             if (e.error === 'no-speech') return;
