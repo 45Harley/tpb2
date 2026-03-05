@@ -486,10 +486,10 @@
 
                 if (!text) continue;
 
-                var lower = text.toLowerCase();
+                var lower = text.toLowerCase().replace(/[.,!?]+$/, '').trim();
 
                 // Check for "claudex" toggle — standalone or at end of phrase
-                var claudexMatch = lower.match(/(claudex|claude x|claude ex|clawed ex|claud ex|cloud ex|clod ex|claude axe|clodex)$/);
+                var claudexMatch = lower.match(/(claudex|clawdex|clodex|claude\s*x|claude?\s*ex|clawed?\s*(?:ex|x)|claud?\s*(?:ex|x)|cloud?\s*(?:ex|x)|clod\s*(?:ex|x)|claude\s*axe)\s*$/);
                 if (claudexMatch) {
                     // If there's text before "claudex", keep it as dictation first
                     var before = text.substring(0, lower.lastIndexOf(claudexMatch[1])).trim();
@@ -595,24 +595,24 @@
     // ── Voice / Text Commands ─────────────────────────────────
 
     MandateChat.prototype.handleCommand = function(text) {
-        var lower = text.toLowerCase().trim();
+        var lower = text.toLowerCase().replace(/[.,!?]+$/, '').trim();
 
         // ── Save mandate ──
-        if (lower === 'save federal mandate' || lower === 'save federal') {
+        if (lower.includes('save') && lower.includes('federal')) {
             this.saveIdea('mandate-federal'); return true;
         }
-        if (lower === 'save state mandate' || lower === 'save state') {
+        if (lower.includes('save') && lower.includes('state')) {
             this.saveIdea('mandate-state'); return true;
         }
-        if (lower === 'save town mandate' || lower === 'save town') {
+        if (lower.includes('save') && lower.includes('town')) {
             this.saveIdea('mandate-town'); return true;
         }
-        if (lower === 'save idea' || lower === 'save as idea') {
+        if (lower.includes('save') && lower.includes('idea')) {
             this.saveIdea('idea'); return true;
         }
 
         // ── Pin last AI response ──
-        if (lower === 'pin' || lower === 'pen' || lower === 'pin last' || lower === 'pin this') {
+        if (/\b(pin|pen)\b/.test(lower)) {
             var lastAi = null;
             for (var i = this.messages.length - 1; i >= 0; i--) {
                 if (this.messages[i].role === 'assistant') { lastAi = this.messages[i]; break; }
@@ -626,7 +626,7 @@
         }
 
         // ── Clear ──
-        if (lower === 'clear' || lower === 'start over' || lower === 'clear all') {
+        if (/\b(clear|start over)\b/.test(lower)) {
             this.clearSession();
             return true;
         }
@@ -638,7 +638,7 @@
         }
 
         // ── Help ──
-        if (lower === 'help' || lower === 'commands' || lower === 'what can i say') {
+        if (/\b(help|commands)\b/.test(lower)) {
             this.addSystemMessage(
                 'Voice commands:\n' +
                 '• "pin" or "pin last" — pin the last AI response\n' +
@@ -655,7 +655,7 @@
         }
 
         // ── Logout ──
-        if (lower === 'log out' || lower === 'logout' || lower.includes('log me out')) {
+        if (/\b(log\s*out|logout)\b/.test(lower)) {
             this.addSystemMessage("Logging you out...");
             this.speak("Logging you out.");
             localStorage.removeItem('mandate_phone');
