@@ -87,6 +87,33 @@ $pageStyles = <<<'CSS'
     background: rgba(255,255,255,0.05);
 }
 
+/* Voice phone button */
+.voice-phone-btn {
+    display: block;
+    margin: 0 auto 1.25rem;
+    background: none;
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 8px;
+    color: #b0b0b0;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.voice-phone-btn:hover {
+    color: #d4af37;
+    border-color: #d4af37;
+}
+.voice-phone-btn.listening {
+    color: #ef5350;
+    border-color: #ef5350;
+    animation: mc-pulse 1s ease-in-out infinite;
+}
+@keyframes mc-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
 /* Email input */
 .email-section input {
     width: 100%;
@@ -347,6 +374,7 @@ require __DIR__ . '/includes/nav.php';
                 <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="8" aria-label="Digit 9">
                 <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="9" aria-label="Digit 10">
             </div>
+            <button type="button" class="voice-phone-btn" id="voicePhoneBtn" title="Speak your phone number">&#x1F3A4; Say your number</button>
 
             <div class="email-section" id="emailSection" style="display:none;">
                 <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email">
@@ -584,6 +612,98 @@ require __DIR__ . '/includes/nav.php';
     // Focus first digit on load
     if (loginForm.style.display !== 'none') {
         digits[0].focus();
+    }
+
+    // ── Voice phone entry ─────────────────────────────────────
+    var voiceBtn = document.getElementById('voicePhoneBtn');
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        voiceBtn.style.display = 'none';
+    } else {
+        var wordToDigit = {
+            'zero':0,'oh':0,'o':0, 'one':1,'won':1, 'two':2,'to':2,'too':2,
+            'three':3,'tree':3, 'four':4,'for':4,'fore':4, 'five':5,
+            'six':6,'sex':6,'sicks':6, 'seven':7, 'eight':8,'ate':8,
+            'nine':9,'niner':9, 'ten':10
+        };
+
+        function extractDigits(text) {
+            var result = [];
+            // Replace word numbers with digits
+            var lower = text.toLowerCase().replace(/[.,!?-]/g, ' ');
+            var words = lower.split(/\s+/);
+            for (var w = 0; w < words.length; w++) {
+                var word = words[w];
+                if (/^\d+$/.test(word)) {
+                    // Numeric string — split each char
+                    for (var c = 0; c < word.length; c++) {
+                        result.push(parseInt(word[c], 10));
+                    }
+                } else if (wordToDigit.hasOwnProperty(word)) {
+                    var val = wordToDigit[word];
+                    if (val === 10) { result.push(1); result.push(0); }
+                    else { result.push(val); }
+                }
+            }
+            return result;
+        }
+
+        var phoneRec = null;
+        var phoneListening = false;
+
+        voiceBtn.addEventListener('click', function() {
+            if (phoneListening) {
+                phoneRec.stop();
+                return;
+            }
+
+            phoneRec = new SpeechRecognition();
+            phoneRec.continuous = false;
+            phoneRec.interimResults = false;
+            phoneRec.lang = 'en-US';
+
+            phoneRec.onstart = function() {
+                phoneListening = true;
+                voiceBtn.classList.add('listening');
+                voiceBtn.innerHTML = '&#x23FA; Listening...';
+                setStatus('Say your 10-digit phone number.', 'info');
+            };
+
+            phoneRec.onend = function() {
+                phoneListening = false;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '&#x1F3A4; Say your number';
+            };
+
+            phoneRec.onresult = function(e) {
+                var transcript = e.results[0][0].transcript;
+                var nums = extractDigits(transcript);
+
+                if (nums.length >= 10) {
+                    for (var i = 0; i < 10; i++) {
+                        digits[i].value = nums[i];
+                    }
+                    updateVerifyState();
+                    setStatus('Got it! Press Verify.', 'success');
+                } else if (nums.length > 0) {
+                    for (var i = 0; i < Math.min(nums.length, 10); i++) {
+                        digits[i].value = nums[i];
+                    }
+                    updateVerifyState();
+                    setStatus('Got ' + nums.length + ' digits. Need 10 total.', 'info');
+                } else {
+                    setStatus('Could not hear digits. Try again.', 'error');
+                }
+            };
+
+            phoneRec.onerror = function(e) {
+                if (e.error !== 'no-speech') {
+                    setStatus('Microphone error: ' + e.error, 'error');
+                }
+            };
+
+            phoneRec.start();
+        });
     }
 })();
 </script>
