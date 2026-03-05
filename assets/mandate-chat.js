@@ -490,7 +490,7 @@
                 var lower = text.toLowerCase().replace(/[.,!?]+$/, '').trim();
 
                 // Check for "claudex" toggle — standalone or at end of phrase
-                var claudexMatch = lower.match(/(claudex|clawdex|clodex|claude\s*x|claude?\s*ex|clawed?\s*(?:ex|x)|claud?\s*(?:ex|x)|cloud?\s*(?:ex|x)|clod\s*(?:ex|x)|claude\s*axe)\s*$/);
+                var claudexMatch = lower.match(/(claudex|clawdex|clodex|chadwell|chad\s*well|claude\s*x|claude?\s*ex|clawed?\s*(?:ex|x)|claud?\s*(?:ex|x)|cloud?\s*(?:ex|x)|clod\s*(?:ex|x)|claude\s*axe)\s*$/);
                 if (claudexMatch) {
                     // If there's text before "claudex", keep it as dictation first
                     var before = text.substring(0, lower.lastIndexOf(claudexMatch[1])).trim();
