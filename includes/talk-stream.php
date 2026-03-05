@@ -28,6 +28,7 @@ $_tsDefaults = [
     'show_admin_tools'    => 'auto',     // true/false/'auto'
     'geo_state_id'        => null,
     'geo_town_id'         => null,
+    'user_only'           => false,     // true = show only current user's ideas
     'limit'               => 30,
 ];
 $_ts = array_merge($_tsDefaults, $talkStreamConfig ?? []);
@@ -169,6 +170,7 @@ new TalkStream({
     groupId:           <?= $_tsGroupId ? $_tsGroupId : 'null' ?>,
     geoStateId:        <?= $_ts['geo_state_id'] ? (int)$_ts['geo_state_id'] : 'null' ?>,
     geoTownId:         <?= $_ts['geo_town_id'] ? (int)$_ts['geo_town_id'] : 'null' ?>,
+    userOnly:          <?= $_ts['user_only'] ? 'true' : 'false' ?>,
     currentUser:       <?= $_tsUserJson ?>,
     canPost:           <?= $_tsCanPost ? 'true' : 'false' ?>,
     isLoggedIn:        <?= $isLoggedIn ? 'true' : 'false' ?>,

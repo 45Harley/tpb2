@@ -424,6 +424,13 @@ function handleHistory($pdo, $userId, $dbUser = null) {
         $where[] = 'i.group_id IS NULL';
     }
 
+    // User-only mode: restrict to current user's ideas
+    $userOnly = (bool)($_GET['user_only'] ?? false);
+    if ($userOnly && $userId) {
+        $where[] = 'i.user_id = :filter_user_id';
+        $params[':filter_user_id'] = $userId;
+    }
+
     if ($excludeChat) {
         $where[] = "i.category != 'chat'";
     }

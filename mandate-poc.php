@@ -519,8 +519,7 @@ require __DIR__ . '/includes/nav.php';
         'show_ai_toggle'      => true,
         'show_mic'            => true,
         'show_admin_tools'    => false,
-        'geo_state_id'        => $userStateId,
-        'geo_town_id'         => $userTownId,
+        'user_only'           => true,
         'limit'               => 50,
     ];
     require __DIR__ . '/includes/talk-stream.php';
