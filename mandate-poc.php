@@ -684,13 +684,23 @@ require __DIR__ . '/includes/nav.php';
                         digits[i].value = nums[i];
                     }
                     updateVerifyState();
-                    setStatus('Got it! Press Verify.', 'success');
+                    var formatted = nums.slice(0,3).join('') + '-' + nums.slice(3,6).join('') + '-' + nums.slice(6,10).join('');
+                    setStatus('I heard: ' + formatted + '. Correct? Press Verify.', 'success');
+                    // Speak it back for confirmation
+                    if (window.speechSynthesis) {
+                        var readback = nums.slice(0,10).map(function(d) {
+                            return ['zero','one','two','three','four','five','six','seven','eight','nine'][d];
+                        }).join(', ');
+                        var utter = new SpeechSynthesisUtterance('I heard: ' + readback);
+                        utter.rate = 0.9;
+                        speechSynthesis.speak(utter);
+                    }
                 } else if (nums.length > 0) {
                     for (var i = 0; i < Math.min(nums.length, 10); i++) {
                         digits[i].value = nums[i];
                     }
                     updateVerifyState();
-                    setStatus('Got ' + nums.length + ' digits. Need 10 total.', 'info');
+                    setStatus('Got ' + nums.length + ' digits. Need 10. Try again.', 'info');
                 } else {
                     setStatus('Could not hear digits. Try again.', 'error');
                 }
