@@ -45,26 +45,26 @@ if (!defined('MANDATE_CHAT_ASSETS_LOADED')) {
                   placeholder="<?= htmlspecialchars($_mc['placeholder']) ?>"
                   rows="2"
                   maxlength="2000"></textarea>
-        <button class="mc-mic" id="<?= $_mcPrefix ?>-mic" title="Voice input">&#x1F3A4;</button>
-        <button class="mc-send" id="<?= $_mcPrefix ?>-send" title="Send">&#x27A4;</button>
+        <button class="mc-mic" id="<?= $_mcPrefix ?>-mic" title="Tap to dictate — say &quot;command&quot; to switch to voice commands">&#x1F3A4;</button>
+        <button class="mc-send" id="<?= $_mcPrefix ?>-send" title="Send your idea to AI for refinement">&#x27A4;</button>
     </div>
     <div class="mc-char" id="<?= $_mcPrefix ?>-char">0 / 2,000</div>
 
     <!-- Ideas Scratchpad -->
     <div class="mc-scratchpad">
         <div class="mc-scratchpad-header">
-            <h3>Ideas Scratchpad</h3>
-            <button class="mc-clear-chat">Clear All</button>
+            <h3 title="Your pinned ideas — select one and save it as a mandate">Ideas Scratchpad</h3>
+            <button class="mc-clear-chat" title="Clear chat and all pinned ideas">Clear All</button>
         </div>
         <div class="mc-idea-list" id="<?= $_mcPrefix ?>-idea-list"></div>
 
         <!-- Save Bar -->
         <div class="mc-save-bar">
-            <select id="<?= $_mcPrefix ?>-idea-select"></select>
-            <button class="mc-save-federal">Save Federal Mandate</button>
-            <button class="mc-save-state">Save State Mandate</button>
-            <button class="mc-save-town">Save Town Mandate</button>
-            <button class="mc-save-idea">Save as Idea</button>
+            <select id="<?= $_mcPrefix ?>-idea-select" title="Choose which pinned idea to save"></select>
+            <button class="mc-save-federal" title="Save to your U.S. congressional representatives">Save Federal Mandate</button>
+            <button class="mc-save-state" title="Save to your state legislators">Save State Mandate</button>
+            <button class="mc-save-town" title="Save to your local town officials">Save Town Mandate</button>
+            <button class="mc-save-idea" title="Save privately without publishing">Save as Idea</button>
         </div>
     </div>
 

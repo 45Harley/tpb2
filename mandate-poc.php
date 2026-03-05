@@ -979,10 +979,10 @@ require __DIR__ . '/includes/nav.php';
 
     <!-- Level Filter Tabs -->
     <div class="level-tabs" id="levelTabs">
-        <button class="level-tab active" data-level="">All</button>
-        <button class="level-tab" data-level="mandate-federal">Federal</button>
-        <button class="level-tab" data-level="mandate-state">State</button>
-        <button class="level-tab" data-level="mandate-town">Town</button>
+        <button class="level-tab active" data-level="" title="Show all mandates">All</button>
+        <button class="level-tab" data-level="mandate-federal" title="U.S. Congress — House & Senate">Federal</button>
+        <button class="level-tab" data-level="mandate-state" title="State legislature — your state reps">State</button>
+        <button class="level-tab" data-level="mandate-town" title="Local town government — selectmen, council">Town</button>
     </div>
 
     <!-- Mandate Chat -->
