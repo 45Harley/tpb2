@@ -41,17 +41,26 @@ usort($guides, function($a, $b) {
     return strcasecmp($a['title'], $b['title']);
 });
 
-// Icons per guide ID (extend as new guides are added)
-$guideIcons = [
-    'onboarding' => '&#x1F680;',
-    'talk'       => '&#x1F4AC;',
-    'elections'  => '&#x1F5F3;',
-    'polls'      => '&#x1F4CA;',
-    'volunteer'     => '&#x1F91D;',
-    'civic-points'  => '&#x2B50;',
-    'purpose'       => '&#x1F3AF;',
-    'philosophy'    => '&#x2696;',
+// Icons per guide ID — uses the same emoji system as modal_config.php getIconEmoji()
+// Map each guide to its closest modal icon type for cross-site consistency
+require_once dirname(__DIR__) . '/config/modal_config.php';
+$guideIconMap = [
+    'onboarding'   => 'new',         // 🚀
+    'talk'         => 'social',      // 👥
+    'elections'    => 'feature',     // 🎯
+    'polls'        => 'tip',         // 💡
+    'volunteer'    => 'social',      // 👥
+    'civic-points' => 'important',   // ⭐
+    'purpose'      => 'philosophy',  // 🎪
+    'philosophy'   => 'philosophy',  // 🎪
+    'profile'      => 'info',        // ℹ️
+    'mandate-chat' => 'tutorial',    // 🎓
 ];
+// Resolve to actual emoji via the centralized function
+$guideIcons = [];
+foreach ($guideIconMap as $id => $type) {
+    $guideIcons[$id] = getIconEmoji($type);
+}
 
 $pageStyles = <<<'CSS'
 .help-container {
@@ -102,8 +111,9 @@ $pageStyles = <<<'CSS'
     transform: translateY(-2px);
 }
 .help-card .card-icon {
-    font-size: 2rem;
+    font-size: 3rem;
     margin-bottom: 0.75rem;
+    line-height: 1;
 }
 .help-card h3 {
     color: #fff;
@@ -170,7 +180,7 @@ require dirname(__DIR__) . '/includes/nav.php';
     <div class="help-grid">
 <?php foreach ($guides as $g): ?>
         <a href="/help/guide.php?flow=<?= htmlspecialchars($g['id']) ?>" class="help-card">
-            <div class="card-icon"><?= $guideIcons[$g['id']] ?? '&#x1F4D6;' ?></div>
+            <div class="card-icon"><?= $guideIcons[$g['id']] ?? getIconEmoji('docs') ?></div>
             <h3><?= htmlspecialchars($g['title']) ?></h3>
             <p><?= htmlspecialchars($g['subtitle']) ?></p>
             <span class="card-meta"><?= $g['stepCount'] ?> steps</span>

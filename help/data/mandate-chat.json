@@ -1,0 +1,79 @@
+{
+  "id": "mandate-chat",
+  "title": "My Mandate",
+  "subtitle": "Tell your representatives what you want them to do — refine your ideas with AI and save them as official mandates.",
+  "generated": "2026-03-05T22:00:00.000Z",
+  "stepCount": 10,
+  "steps": [
+    {
+      "number": 1,
+      "title": "Log In",
+      "description": "Go to My Mandate from the nav bar. You'll see a login card with two tabs: Phone and Email.\n\nPhone: Enter your 10-digit verified phone number, or tap the mic button to say it aloud. The system reads it back for confirmation.\n\nEmail: Type your verified email address, or tap the mic button to say it (e.g. \"harley at gmail dot com\").\n\nIf multiple accounts share your phone number, you'll be asked to enter your first name to disambiguate.\n\nNew user? Click \"Create Your Account\" to sign up via the standard join flow.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 2,
+      "title": "The Mandate Interface",
+      "description": "Once logged in, you'll see:\n\n- Your location and congressional district (e.g. \"Putnam, CT — District CT-2\")\n- Filter tabs: All, Federal, State, Town\n- The AI chat area for refining ideas\n- A text input with mic and send buttons\n- The Ideas Scratchpad for pinned ideas\n- The Public Mandate Summary showing saved mandates",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 3,
+      "title": "Type or Dictate Your Idea",
+      "description": "Type your idea in the text box, or click the mic button to dictate it by voice. Speak naturally — your words appear in the text box as you talk.\n\nYou don't need a polished statement. Just share your raw thoughts: \"we need to get big money out of politics\" or \"fix the potholes on Route 44.\"\n\nThe AI will help you refine it into a clear, actionable mandate.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 4,
+      "title": "Refine with AI",
+      "description": "After you send your idea, the AI responds with clarifying questions and helps craft a specific mandate statement. It may:\n\n- Ask which approach you prefer (e.g. constitutional amendment vs. legislation)\n- Provide relevant facts and context\n- Suggest a polished \"Mandate:\" statement\n\nKeep the conversation going until you have a mandate you're happy with. You can send multiple messages to refine it.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 5,
+      "title": "Pin Your Mandate",
+      "description": "When the AI produces a mandate statement you like, click the gold pin button on that response. The mandate text is extracted and added to your Ideas Scratchpad below the chat.\n\nDuplicate pins are prevented — if you accidentally pin the same text twice, it tells you it's already pinned.\n\nYou can pin multiple ideas from different conversations.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 6,
+      "title": "Save Your Mandate",
+      "description": "In the Ideas Scratchpad, select which pinned idea to save using the dropdown, then click one of the save buttons:\n\n- Save Federal Mandate — for your U.S. congressional representatives\n- Save State Mandate — for your state legislators\n- Save Town Mandate — for your local town officials\n- Save as Idea — save privately without publishing\n\nAfter saving, the Public Mandate Summary updates automatically to show your new mandate alongside others from your district.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 7,
+      "title": "Voice Commands",
+      "description": "With the mic on, say \"command\" to enter command mode (mic turns gold). Then say any command:\n\n- \"send\" — submit your dictated text to AI\n- \"pin\" — pin the last AI response\n- \"save federal mandate\" / \"save state mandate\" / \"save town mandate\"\n- \"save idea\" — save as private idea\n- \"read #1\" — read back a pinned idea\n- \"read my mandate\" — read your saved mandates aloud\n- \"delete #3\" — remove a pinned idea\n- \"clear all\" — clear everything\n- \"clear prompt\" — clear just the text input\n- \"clear response\" — clear chat but keep pins\n- \"help\" — list all commands\n\nSay \"command\" again to return to dictation mode.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 8,
+      "title": "Managing Your Ideas",
+      "description": "The Ideas Scratchpad holds your pinned ideas during your session. You can:\n\n- Click the X button to remove an idea\n- Use the dropdown to select which idea to save\n- Clear All removes every pinned idea\n\nPinned ideas persist in your browser until you clear them. Saved mandates are stored permanently in the database.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 9,
+      "title": "Public Mandate Summary",
+      "description": "At the bottom of the page, the Public Mandate Summary shows all saved mandates for your area. Use the filter tabs (All, Federal, State, Town) to view mandates by government level.\n\nThe summary shows how many constituents have spoken and lists each mandate. As more people in your district save mandates, the collective voice grows stronger.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 10,
+      "title": "Tips",
+      "description": "- Be specific: \"Pass the DISCLOSE Act\" is stronger than \"fix campaign finance\"\n- One idea per mandate: keep each mandate focused on a single action\n- Use all three levels: federal, state, and town mandates address different representatives\n- Voice works best in a quiet environment\n- Your mandates are tied to your location — they go to the right representatives\n- Come back anytime to add more mandates as new issues arise",
+      "alt": null,
+      "screenshot": null
+    }
+  ]
+}
