@@ -612,6 +612,16 @@
             this.saveIdea('idea'); return true;
         }
 
+        // ── Send prompt ──
+        if (/\b(send|submit|go)\b/.test(lower)) {
+            if (this.inputEl.value.trim()) {
+                this.send();
+            } else {
+                this.addSystemMessage('Nothing to send. Dictate an idea first.');
+            }
+            return true;
+        }
+
         // ── Pin last AI response ──
         if (/\b(pin|pen)\b/.test(lower)) {
             var lastAi = null;
@@ -642,7 +652,8 @@
         if (/\b(help|commands)\b/.test(lower)) {
             this.addSystemMessage(
                 'Voice commands:\n' +
-                '• "pin" or "pin last" — pin the last AI response\n' +
+                '• "send" — submit your dictated idea to AI\n' +
+                '• "pin" — pin the last AI response\n' +
                 '• "save federal mandate" — save pinned idea as federal mandate\n' +
                 '• "save state mandate" — save as state mandate\n' +
                 '• "save town mandate" — save as town mandate\n' +
@@ -651,7 +662,7 @@
                 '• "clear" — clear conversation\n' +
                 '• "help" — show this list'
             );
-            this.speak('Available commands: pin, save federal mandate, save state mandate, save town mandate, save idea, read my mandate, clear, and help.');
+            this.speak('Available commands: send, pin, save federal mandate, save state mandate, save town mandate, save idea, read my mandate, clear, and help.');
             return true;
         }
 
