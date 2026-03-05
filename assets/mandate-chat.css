@@ -56,6 +56,17 @@
     border-bottom-left-radius: 4px;
 }
 
+.mc-bubble-system {
+    align-self: center;
+    background: rgba(212,175,55,0.1);
+    border: 1px solid rgba(212,175,55,0.25);
+    color: #d4af37;
+    font-size: 0.85rem;
+    font-style: italic;
+    max-width: 90%;
+    text-align: center;
+}
+
 .mc-bubble-ai .mc-pin {
     position: static;
     display: inline-block;

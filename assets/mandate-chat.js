@@ -36,6 +36,7 @@
         this.micOn = false;
         this.commandMode = false;
         this.micBaseText = '';
+        this.lastResultIndex = 0;
         this.isSubmitting = false;
         this.sessionId = sessionStorage.getItem('mandate_session');
         if (!this.sessionId) {
@@ -211,13 +212,14 @@
 
     MandateChat.prototype.renderBubble = function(msg) {
         var div = document.createElement('div');
-        div.className = 'mc-bubble ' + (msg.role === 'user' ? 'mc-bubble-user' : 'mc-bubble-ai');
+        var bubbleClass = msg.role === 'user' ? 'mc-bubble-user' : (msg.role === 'system' ? 'mc-bubble-system' : 'mc-bubble-ai');
+        div.className = 'mc-bubble ' + bubbleClass;
 
         // Format content: convert newlines to <br>, bold **text**
         var html = this.formatContent(msg.content);
         div.innerHTML = html;
 
-        // Pin button on AI messages
+        // Pin button on AI messages only (not system)
         if (msg.role === 'assistant') {
             var pinBtn = document.createElement('button');
             pinBtn.className = 'mc-pin';
@@ -448,6 +450,7 @@
             self.micBtn.classList.add('listening');
             self.micBtn.textContent = '\u23FA'; // ⏺
             self.micBaseText = self.inputEl.value;
+            self.lastResultIndex = 0;
         };
 
         this.recognition.onend = function() {
@@ -459,45 +462,57 @@
         };
 
         this.recognition.onresult = function(e) {
-            var final = '', interim = '';
-            for (var i = 0; i < e.results.length; i++) {
-                if (e.results[i].isFinal) final += e.results[i][0].transcript;
-                else interim += e.results[i][0].transcript;
-            }
+            // Process only NEW results since last check
+            for (var i = self.lastResultIndex; i < e.results.length; i++) {
+                if (!e.results[i].isFinal) {
+                    // Show interim text in textarea (chat mode only)
+                    if (!self.commandMode) {
+                        var interim = e.results[i][0].transcript;
+                        var sep = self.micBaseText && !self.micBaseText.endsWith(' ') ? ' ' : '';
+                        self.inputEl.value = self.micBaseText + sep + interim;
+                        self.autoResize();
+                        self.updateCharCount();
+                    }
+                    continue;
+                }
 
-            // Check for "claudex" toggle in final transcript
-            var finalLower = final.toLowerCase().trim();
-            if (/^(claudex|claude x|claude ex|clawed ex|claud ex|cloud ex)$/i.test(finalLower)) {
-                self.commandMode = !self.commandMode;
-                self.updateMicMode();
+                // Final result — process it
+                var text = e.results[i][0].transcript.trim();
+                self.lastResultIndex = i + 1;
+
+                if (!text) continue;
+
+                var lower = text.toLowerCase();
+
+                // Check for "claudex" toggle
+                if (/^(claudex|claude x|claude ex|clawed ex|claud ex|cloud ex|clod ex)$/.test(lower)) {
+                    self.commandMode = !self.commandMode;
+                    self.updateMicMode();
+                    if (self.commandMode) {
+                        self.addSystemMessage('Command mode ON. Say a command (pin, save federal, help, etc.) or say "Claudex" to return to chat.');
+                        self.speak('Command mode on.');
+                    } else {
+                        self.addSystemMessage('Chat mode. Speak your ideas.');
+                        self.speak('Chat mode.');
+                    }
+                    continue;
+                }
+
                 if (self.commandMode) {
-                    self.addSystemMessage('Command mode ON. Say a command (pin, save federal, help, etc.) or say "Claudex" to return to chat.');
-                    self.speak('Command mode on.');
+                    // Execute as command
+                    if (!self.handleCommand(text)) {
+                        self.addSystemMessage('Unknown command: "' + text + '". Say "help" for commands.');
+                        self.speak('Unknown command.');
+                    }
                 } else {
-                    self.addSystemMessage('Chat mode. Speak your ideas.');
-                    self.speak('Chat mode.');
+                    // Chat mode — append to textarea
+                    var sep = self.micBaseText && !self.micBaseText.endsWith(' ') ? ' ' : '';
+                    self.micBaseText = self.micBaseText + sep + text;
+                    self.inputEl.value = self.micBaseText;
+                    self.autoResize();
+                    self.updateCharCount();
                 }
-                self.inputEl.value = '';
-                self.micBaseText = '';
-                return;
             }
-
-            // In command mode, execute final speech as command
-            if (self.commandMode && final.trim()) {
-                self.inputEl.value = '';
-                self.micBaseText = '';
-                if (!self.handleCommand(final.trim())) {
-                    self.addSystemMessage('Unknown command: "' + final.trim() + '". Say "help" for available commands.');
-                    self.speak('Unknown command.');
-                }
-                return;
-            }
-
-            // Normal chat mode — fill textarea
-            var sep = self.micBaseText && !self.micBaseText.endsWith(' ') ? ' ' : '';
-            self.inputEl.value = self.micBaseText + sep + final + interim;
-            self.autoResize();
-            self.updateCharCount();
         };
 
         this.recognition.onerror = function(e) {
@@ -583,7 +598,7 @@
         }
 
         // ── Pin last AI response ──
-        if (lower === 'pin' || lower === 'pin last' || lower === 'pin this') {
+        if (lower === 'pin' || lower === 'pen' || lower === 'pin last' || lower === 'pin this') {
             var lastAi = null;
             for (var i = this.messages.length - 1; i >= 0; i--) {
                 if (this.messages[i].role === 'assistant') { lastAi = this.messages[i]; break; }
@@ -673,7 +688,7 @@
     // ── System Message (non-AI, non-user) ─────────────────────
 
     MandateChat.prototype.addSystemMessage = function(text) {
-        var msg = { role: 'assistant', content: text, ts: new Date().toISOString() };
+        var msg = { role: 'system', content: text, ts: new Date().toISOString() };
         this.messages.push(msg);
         this.renderBubble(msg);
         this.saveToStorage();
