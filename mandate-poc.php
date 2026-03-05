@@ -610,6 +610,9 @@ require __DIR__ . '/includes/nav.php';
                 });
         }
 
+        // Expose so MandateChat can refresh after saving
+        window.refreshMandateSummary = loadSummary;
+
         // ── Initial load: federal level ────────────────────────
         var initialLevel = userDistrict ? 'federal' : (userStateId ? 'state' : (userTownId ? 'town' : 'federal'));
         loadSummary(initialLevel);

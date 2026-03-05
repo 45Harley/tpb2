@@ -401,6 +401,12 @@
                 this.showToast('Saved as ' + label + '! (ID #' + data.id + ')', 'success');
                 // Remove the saved idea from scratchpad
                 this.removeIdea(idea.num);
+                // Refresh the public mandate summary
+                if (window.refreshMandateSummary) {
+                    var level = category.replace('mandate-', '');
+                    if (level === 'idea') level = 'federal'; // default
+                    window.refreshMandateSummary(level);
+                }
             } else {
                 this.showToast(data.error || 'Save failed', 'error');
             }
