@@ -489,11 +489,11 @@
 
                 var lower = text.toLowerCase().replace(/[.,!?]+$/, '').trim();
 
-                // Check for "claudex" toggle — standalone or at end of phrase
-                var claudexMatch = lower.match(/(claudex|clawdex|clodex|chadwell|chad\s*well|claude\s*x|claude?\s*ex|clawed?\s*(?:ex|x)|claud?\s*(?:ex|x)|cloud?\s*(?:ex|x)|clod\s*(?:ex|x)|claude\s*axe)\s*$/);
-                if (claudexMatch) {
-                    // If there's text before "claudex", keep it as dictation first
-                    var before = text.substring(0, lower.lastIndexOf(claudexMatch[1])).trim();
+                // Check for "command" toggle — standalone or at end of phrase
+                var toggleMatch = lower.match(/\b(command)\s*$/);
+                if (toggleMatch) {
+                    // If there's text before "command", keep it as dictation first
+                    var before = text.substring(0, lower.lastIndexOf(toggleMatch[1])).trim();
                     if (before && !self.commandMode) {
                         var sep = self.micBaseText && !self.micBaseText.endsWith(' ') ? ' ' : '';
                         self.micBaseText = self.micBaseText + sep + before;
@@ -506,7 +506,7 @@
                     // Sync micBaseText so interim results don't inject "claude x" into textarea
                     self.micBaseText = self.inputEl.value;
                     if (self.commandMode) {
-                        self.addSystemMessage('Command mode ON. Say a command (pin, save federal, help, etc.) or say "Claudex" to return to chat.');
+                        self.addSystemMessage('Command mode ON. Say a command (pin, save federal, help, etc.) or say "command" to return to chat.');
                         self.speak('Command mode on.');
                     } else {
                         self.addSystemMessage('Chat mode. Speak your ideas.');
@@ -567,11 +567,11 @@
         if (this.commandMode) {
             this.micBtn.classList.add('command-mode');
             this.micBtn.textContent = '\u2699'; // ⚙
-            this.micBtn.title = 'Command mode — say "Claudex" to exit';
+            this.micBtn.title = 'Command mode — say "command" to exit';
         } else if (this.micOn) {
             this.micBtn.classList.remove('command-mode');
             this.micBtn.textContent = '\u23FA'; // ⏺
-            this.micBtn.title = 'Recording — say "Claudex" for commands';
+            this.micBtn.title = 'Recording — say "command" for commands';
         } else {
             this.micBtn.classList.remove('command-mode');
             this.micBtn.textContent = '\uD83C\uDFA4'; // 🎤
