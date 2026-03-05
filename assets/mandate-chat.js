@@ -652,9 +652,23 @@
             return true;
         }
 
-        // ── Read / list mandate ──
-        if ((lower.includes('read') || lower.includes('list')) && lower.includes('mandate')) {
+        // ── Read / list mandate or pinned idea ──
+        if (/\b(read|list)\b/.test(lower) && (/\bmandates?\b/.test(lower) || /\b(my|all)\b/.test(lower))) {
             this.readMandate(lower);
+            return true;
+        }
+        // "read #1", "read 1", "read number 1"
+        if (/\bread\b/.test(lower) && /\b#?\d+\b/.test(lower)) {
+            var num = lower.match(/\b#?(\d+)\b/);
+            if (num) {
+                var idx = parseInt(num[1], 10) - 1;
+                if (idx >= 0 && idx < this.ideas.length) {
+                    this.addSystemMessage('Idea #' + (idx + 1) + ': ' + this.ideas[idx]);
+                    this.speak(this.ideas[idx]);
+                } else {
+                    this.addSystemMessage('No idea #' + (idx + 1) + '. You have ' + this.ideas.length + ' pinned idea' + (this.ideas.length !== 1 ? 's' : '') + '.');
+                }
+            }
             return true;
         }
 
@@ -734,6 +748,12 @@
 
     MandateChat.prototype.speak = function(text) {
         if (!window.speechSynthesis) return;
+        var self = this;
+        // Pause recognition while TTS speaks to prevent feedback loop
+        var wasListening = this.listening;
+        if (wasListening && this.recognition) {
+            try { this.recognition.stop(); } catch(e) {}
+        }
         var utter = new SpeechSynthesisUtterance(text);
         utter.rate = 1.0;
         utter.pitch = 1.0;
@@ -745,6 +765,12 @@
                 break;
             }
         }
+        utter.onend = function() {
+            // Resume recognition after TTS finishes
+            if (wasListening && self.recognition) {
+                try { self.recognition.start(); } catch(e) {}
+            }
+        };
         speechSynthesis.speak(utter);
     };
 
