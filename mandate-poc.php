@@ -588,7 +588,7 @@ require __DIR__ . '/includes/nav.php';
                 setStatus('Enter all 10 digits.', 'error');
                 return;
             }
-            url = '/api/mandate-phone-login.php';
+            url = '/api/mandate-phone-verify.php';
             body = { phone: phone };
             if (needsName && nameInput.value.trim()) {
                 body.name = nameInput.value.trim();
@@ -599,7 +599,7 @@ require __DIR__ . '/includes/nav.php';
                 setStatus('Enter a valid email address.', 'error');
                 return;
             }
-            url = '/api/mandate-email-login.php';
+            url = '/api/mandate-email-verify.php';
             body = { email: email };
             if (needsName && nameInput.value.trim()) {
                 body.name = nameInput.value.trim();
