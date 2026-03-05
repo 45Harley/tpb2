@@ -427,7 +427,11 @@
         this.messages = [];
         this.ideas = [];
         this.nextIdea = 1;
+        this.micBaseText = '';
         localStorage.removeItem(this.storageKey);
+        this.inputEl.value = '';
+        this.autoResize();
+        this.updateCharCount();
         this.renderAll();
         this.showToast('Conversation cleared', 'success');
     };
@@ -484,8 +488,18 @@
 
                 var lower = text.toLowerCase();
 
-                // Check for "claudex" toggle
-                if (/^(claudex|claude x|claude ex|clawed ex|claud ex|cloud ex|clod ex)$/.test(lower)) {
+                // Check for "claudex" toggle — standalone or at end of phrase
+                var claudexMatch = lower.match(/(claudex|claude x|claude ex|clawed ex|claud ex|cloud ex|clod ex|claude axe|clodex)$/);
+                if (claudexMatch) {
+                    // If there's text before "claudex", keep it as dictation first
+                    var before = text.substring(0, lower.lastIndexOf(claudexMatch[1])).trim();
+                    if (before && !self.commandMode) {
+                        var sep = self.micBaseText && !self.micBaseText.endsWith(' ') ? ' ' : '';
+                        self.micBaseText = self.micBaseText + sep + before;
+                        self.inputEl.value = self.micBaseText;
+                        self.autoResize();
+                        self.updateCharCount();
+                    }
                     self.commandMode = !self.commandMode;
                     self.updateMicMode();
                     if (self.commandMode) {
