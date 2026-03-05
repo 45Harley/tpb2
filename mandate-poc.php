@@ -225,6 +225,53 @@ $pageStyles = <<<'CSS'
     padding: 1rem;
 }
 
+/* No match — new user prompt */
+.no-match-msg {
+    text-align: center;
+    padding: 1rem 0;
+}
+.no-match-msg p {
+    color: #b0b0b0;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+.no-match-msg p:first-child {
+    color: #e0e0e0;
+    font-size: 1.05rem;
+    margin-bottom: 1rem;
+}
+.no-match-msg .join-btn {
+    display: block;
+    width: 100%;
+    padding: 0.85rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    background: #d4af37;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    text-decoration: none;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    transition: background 0.2s;
+}
+.no-match-msg .join-btn:hover {
+    background: #e4bf47;
+}
+.no-match-msg .try-again-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #b0b0b0;
+    font-size: 0.85rem;
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.no-match-msg .try-again-btn:hover {
+    color: #fff;
+    border-color: rgba(255,255,255,0.3);
+}
+
 /* ── Mandate Header ──────────────────────────────────────── */
 .mandate-header {
     margin-bottom: 1.5rem;
@@ -392,6 +439,13 @@ require __DIR__ . '/includes/nav.php';
 
         <div id="lockoutMsg" class="lockout-msg" style="display:none;">
             Too many failed attempts. Please try again later.
+        </div>
+
+        <div id="noMatchMsg" class="no-match-msg" style="display:none;">
+            <p>No account found with that info.</p>
+            <p>New to The People's Branch?</p>
+            <a href="/join.php?return=/mandate-poc.php" class="join-btn">Create Your Account</a>
+            <button type="button" class="try-again-btn" id="tryAgainBtn">Try Again</button>
         </div>
     </div>
 </div>
@@ -589,7 +643,8 @@ require __DIR__ . '/includes/nav.php';
             if (data.error === 'still_ambiguous') {
                 setStatus('Still ambiguous. Contact support.', 'error');
             } else if (data.error === 'no_match') {
-                setStatus('No verified account found for this number.', 'error');
+                loginForm.style.display = 'none';
+                document.getElementById('noMatchMsg').style.display = 'block';
             } else {
                 setStatus(data.error || 'Verification failed.', 'error');
             }
@@ -608,6 +663,23 @@ require __DIR__ . '/includes/nav.php';
             setStatus('Network error. Try again.', 'error');
             verifyBtn.disabled = false;
         });
+    });
+
+    // ── Try Again button ────────────────────────────────────
+    document.getElementById('tryAgainBtn').addEventListener('click', function() {
+        document.getElementById('noMatchMsg').style.display = 'none';
+        loginForm.style.display = 'block';
+        status.textContent = '';
+        attempts = 0;
+        if (loginMode === 'phone') {
+            digits.forEach(function(d) { d.value = ''; });
+            updateVerifyState();
+            digits[0].focus();
+        } else {
+            emailInput.value = '';
+            verifyBtn.disabled = true;
+            emailInput.focus();
+        }
     });
 
     // Focus first digit on load

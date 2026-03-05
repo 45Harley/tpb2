@@ -1126,7 +1126,8 @@ $deviceAdded = isset($_GET['verified']) && $_GET['verified'] === 'device_added';
                     lng: hasMapLocation ? mapLocation.lng : null,
                     us_congress_district: hasMapLocation ? mapLocation.us_congress_district : null,
                     state_senate_district: hasMapLocation ? mapLocation.state_senate_district : null,
-                    state_house_district: hasMapLocation ? mapLocation.state_house_district : null
+                    state_house_district: hasMapLocation ? mapLocation.state_house_district : null,
+                    return_url: new URLSearchParams(window.location.search).get('return') || ''
                 })
             });
             
