@@ -474,6 +474,8 @@
         };
 
         this.recognition.onend = function() {
+            // If TTS paused us, don't touch mic state — speak.onend will restart
+            if (self.ttsPaused) return;
             self.micBtn.classList.remove('listening');
             self.micBtn.textContent = '\uD83C\uDFA4'; // 🎤
             if (self.micOn) {
@@ -799,8 +801,9 @@
         if (!window.speechSynthesis) return;
         var self = this;
         // Pause recognition while TTS speaks to prevent feedback loop
-        var wasListening = this.listening;
+        var wasListening = this.micOn;
         if (wasListening && this.recognition) {
+            this.ttsPaused = true; // prevent onend from killing micOn
             try { this.recognition.stop(); } catch(e) {}
         }
         var utter = new SpeechSynthesisUtterance(text);
@@ -815,9 +818,11 @@
             }
         }
         utter.onend = function() {
+            self.ttsPaused = false;
             // Resume recognition after TTS finishes
             if (wasListening && self.recognition) {
-                try { self.recognition.start(); } catch(e) {}
+                self.micOn = true;
+                try { self.recognition.start(); } catch(e) { self.micOn = false; }
             }
         };
         speechSynthesis.speak(utter);
