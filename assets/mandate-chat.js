@@ -37,7 +37,6 @@
         this.commandMode = false;
         this.micBaseText = '';
         this.lastResultIndex = 0;
-        this.ttsVoice = null;
         this.isSubmitting = false;
         this.sessionId = sessionStorage.getItem('mandate_session');
         if (!this.sessionId) {
@@ -461,28 +460,6 @@
 
         var self = this;
 
-        // Cache TTS voice on init (voices load async)
-        function pickVoice() {
-            var voices = speechSynthesis.getVoices();
-            for (var i = 0; i < voices.length; i++) {
-                if (voices[i].lang.startsWith('en') && voices[i].name.toLowerCase().includes('female')) {
-                    self.ttsVoice = voices[i];
-                    return;
-                }
-            }
-            // Fallback: first English voice
-            for (var i = 0; i < voices.length; i++) {
-                if (voices[i].lang.startsWith('en')) {
-                    self.ttsVoice = voices[i];
-                    return;
-                }
-            }
-        }
-        pickVoice();
-        if (window.speechSynthesis && speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = pickVoice;
-        }
-
         this.recognition = new SpeechRecognition();
         this.recognition.continuous = true;
         this.recognition.interimResults = true;
@@ -829,7 +806,6 @@
         var utter = new SpeechSynthesisUtterance(text);
         utter.rate = 1.0;
         utter.pitch = 1.0;
-        if (this.ttsVoice) utter.voice = this.ttsVoice;
         utter.onend = function() {
             // Resume recognition after TTS finishes
             if (wasListening && self.recognition) {
