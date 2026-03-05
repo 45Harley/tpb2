@@ -659,6 +659,7 @@ require __DIR__ . '/includes/nav.php';
             }
 
             var collectedDigits = [];
+            var phoneLastIdx = 0;
 
             phoneRec = new SpeechRecognition();
             phoneRec.continuous = true;
@@ -668,6 +669,7 @@ require __DIR__ . '/includes/nav.php';
             phoneRec.onstart = function() {
                 phoneListening = true;
                 collectedDigits = [];
+                phoneLastIdx = 0;
                 voiceBtn.classList.add('listening');
                 voiceBtn.innerHTML = '&#x23FA; Listening...';
                 setStatus('Say your 10-digit phone number.', 'info');
@@ -706,8 +708,9 @@ require __DIR__ . '/includes/nav.php';
             }
 
             phoneRec.onresult = function(e) {
-                for (var r = 0; r < e.results.length; r++) {
+                for (var r = phoneLastIdx; r < e.results.length; r++) {
                     if (!e.results[r].isFinal) continue;
+                    phoneLastIdx = r + 1;
                     var transcript = e.results[r][0].transcript;
                     var nums = extractDigits(transcript);
                     for (var n = 0; n < nums.length; n++) {
