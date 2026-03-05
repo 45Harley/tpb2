@@ -646,9 +646,23 @@
             return true;
         }
 
-        // ── Clear ──
-        if (/\b(clear|start over)\b/.test(lower)) {
+        // ── Clear commands ──
+        if (/\bclear\b/.test(lower) && /\b(all|everything)\b/.test(lower) || /\bstart over\b/.test(lower)) {
             this.clearSession();
+            return true;
+        }
+        if (/\bclear\b/.test(lower) && /\b(prompt|text|input)\b/.test(lower)) {
+            this.inputEl.value = '';
+            this.micBaseText = '';
+            this.autoResize();
+            this.updateCharCount();
+            this.addSystemMessage('Prompt cleared.');
+            return true;
+        }
+        if (/\bclear\b/.test(lower) && /\b(response|responses|chat|messages)\b/.test(lower)) {
+            this.messages = [];
+            this.renderAll();
+            this.addSystemMessage('Chat cleared. Pinned ideas kept.');
             return true;
         }
 
@@ -683,10 +697,12 @@
                 '• "save town mandate" — save as town mandate\n' +
                 '• "save idea" — save as private idea\n' +
                 '• "read my mandate" — read your saved mandates\n' +
-                '• "clear" — clear conversation\n' +
+                '• "clear all" — clear everything (chat + pins)\n' +
+                '• "clear prompt" — clear the text input\n' +
+                '• "clear response" — clear chat bubbles, keep pins\n' +
                 '• "help" — show this list'
             );
-            this.speak('Available commands: send, pin, save federal mandate, save state mandate, save town mandate, save idea, read my mandate, clear, and help.');
+            this.speak('Available commands: send, pin, save federal mandate, save state mandate, save town mandate, save idea, read my mandate, clear all, clear prompt, clear response, and help.');
             return true;
         }
 
