@@ -53,7 +53,7 @@ if (!defined('MANDATE_CHAT_ASSETS_LOADED')) {
     <!-- Ideas Scratchpad -->
     <div class="mc-scratchpad">
         <div class="mc-scratchpad-header">
-            <h3>Pinned Ideas</h3>
+            <h3>Ideas Scratchpad</h3>
             <button class="mc-clear-chat">Clear All</button>
         </div>
         <div class="mc-idea-list" id="<?= $_mcPrefix ?>-idea-list"></div>

@@ -731,13 +731,15 @@
                 '• "save state mandate" — save as state mandate\n' +
                 '• "save town mandate" — save as town mandate\n' +
                 '• "save idea" — save as private idea\n' +
+                '• "read #1" — read back a pinned idea\n' +
                 '• "read my mandate" — read your saved mandates\n' +
+                '• "delete #3" — remove a pinned idea\n' +
                 '• "clear all" — clear everything (chat + pins)\n' +
                 '• "clear prompt" — clear the text input\n' +
                 '• "clear response" — clear chat bubbles, keep pins\n' +
                 '• "help" — show this list'
             );
-            this.speak('Available commands: send, pin, save federal mandate, save state mandate, save town mandate, save idea, read my mandate, clear all, clear prompt, clear response, and help.');
+            this.speak('Available commands: send, pin, save federal, save state, save town, save idea, read number, read my mandate, delete number, clear all, clear prompt, clear response, and help.');
             return true;
         }
 
