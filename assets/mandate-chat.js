@@ -34,6 +34,7 @@
         this.storageKey = 'mandate_chat_' + this.config.prefix;
         this.recognition = null;
         this.micOn = false;
+        this.commandMode = false;
         this.micBaseText = '';
         this.isSubmitting = false;
         this.sessionId = sessionStorage.getItem('mandate_session');
@@ -463,6 +464,36 @@
                 if (e.results[i].isFinal) final += e.results[i][0].transcript;
                 else interim += e.results[i][0].transcript;
             }
+
+            // Check for "claudex" toggle in final transcript
+            var finalLower = final.toLowerCase().trim();
+            if (/^(claudex|claude x|claude ex|clawed ex|claud ex|cloud ex)$/i.test(finalLower)) {
+                self.commandMode = !self.commandMode;
+                self.updateMicMode();
+                if (self.commandMode) {
+                    self.addSystemMessage('Command mode ON. Say a command (pin, save federal, help, etc.) or say "Claudex" to return to chat.');
+                    self.speak('Command mode on.');
+                } else {
+                    self.addSystemMessage('Chat mode. Speak your ideas.');
+                    self.speak('Chat mode.');
+                }
+                self.inputEl.value = '';
+                self.micBaseText = '';
+                return;
+            }
+
+            // In command mode, execute final speech as command
+            if (self.commandMode && final.trim()) {
+                self.inputEl.value = '';
+                self.micBaseText = '';
+                if (!self.handleCommand(final.trim())) {
+                    self.addSystemMessage('Unknown command: "' + final.trim() + '". Say "help" for available commands.');
+                    self.speak('Unknown command.');
+                }
+                return;
+            }
+
+            // Normal chat mode — fill textarea
             var sep = self.micBaseText && !self.micBaseText.endsWith(' ') ? ' ' : '';
             self.inputEl.value = self.micBaseText + sep + final + interim;
             self.autoResize();
@@ -479,12 +510,31 @@
         this.micBtn.addEventListener('click', function() {
             if (self.micOn) {
                 self.micOn = false;
+                self.commandMode = false;
                 self.recognition.stop();
                 self.micBaseText = self.inputEl.value;
+                self.updateMicMode();
             } else {
                 self.recognition.start();
             }
         });
+    };
+
+    MandateChat.prototype.updateMicMode = function() {
+        if (!this.micBtn) return;
+        if (this.commandMode) {
+            this.micBtn.classList.add('command-mode');
+            this.micBtn.textContent = '\u2699'; // ⚙
+            this.micBtn.title = 'Command mode — say "Claudex" to exit';
+        } else if (this.micOn) {
+            this.micBtn.classList.remove('command-mode');
+            this.micBtn.textContent = '\u23FA'; // ⏺
+            this.micBtn.title = 'Recording — say "Claudex" for commands';
+        } else {
+            this.micBtn.classList.remove('command-mode');
+            this.micBtn.textContent = '\uD83C\uDFA4'; // 🎤
+            this.micBtn.title = 'Voice input';
+        }
     };
 
     // ── Helpers ────────────────────────────────────────────────
