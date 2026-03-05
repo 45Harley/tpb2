@@ -22,6 +22,8 @@ $_mcDistrict  = $dbUser ? ($dbUser['us_congress_district'] ?? '') : '';
 $_mcStateName = $dbUser ? ($dbUser['state_name'] ?? '') : '';
 $_mcTownName  = $dbUser ? ($dbUser['town_name'] ?? '') : '';
 $_mcUserId    = $dbUser ? (int)$dbUser['user_id'] : 0;
+$_mcStateId   = $dbUser ? (int)($dbUser['current_state_id'] ?? 0) : 0;
+$_mcTownId    = $dbUser ? (int)($dbUser['current_town_id'] ?? 0) : 0;
 
 // ── Load assets once ────────────────────────────────────────────────────
 if (!defined('MANDATE_CHAT_ASSETS_LOADED')) {
@@ -79,6 +81,8 @@ new MandateChat({
     district:    <?= json_encode($_mcDistrict) ?>,
     stateName:   <?= json_encode($_mcStateName) ?>,
     townName:    <?= json_encode($_mcTownName) ?>,
+    stateId:     <?= $_mcStateId ?>,
+    townId:      <?= $_mcTownId ?>,
     placeholder: <?= json_encode($_mc['placeholder']) ?>
 }).init();
 </script>

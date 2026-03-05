@@ -23,6 +23,8 @@
             district:    '',
             stateName:   '',
             townName:    '',
+            stateId:     0,
+            townId:      0,
             placeholder: "What do you want your reps to do?"
         }, config);
 
@@ -120,6 +122,14 @@
 
         var content = this.inputEl.value.trim();
         if (!content || this.isSubmitting) return;
+
+        // Check for voice/text commands before sending to AI
+        if (this.handleCommand(content)) {
+            this.inputEl.value = '';
+            this.autoResize();
+            this.updateCharCount();
+            return;
+        }
 
         // Add user message
         var userMsg = { role: 'user', content: content, ts: new Date().toISOString() };
@@ -501,6 +511,140 @@
         this.toastEl.className = 'mc-toast show ' + (type || 'success');
         var el = this.toastEl;
         setTimeout(function() { el.classList.remove('show'); }, 3000);
+    };
+
+    // ── Voice / Text Commands ─────────────────────────────────
+
+    MandateChat.prototype.handleCommand = function(text) {
+        var lower = text.toLowerCase().trim();
+
+        // ── Save mandate ──
+        if (lower === 'save federal mandate' || lower === 'save federal') {
+            this.saveIdea('mandate-federal'); return true;
+        }
+        if (lower === 'save state mandate' || lower === 'save state') {
+            this.saveIdea('mandate-state'); return true;
+        }
+        if (lower === 'save town mandate' || lower === 'save town') {
+            this.saveIdea('mandate-town'); return true;
+        }
+        if (lower === 'save idea' || lower === 'save as idea') {
+            this.saveIdea('idea'); return true;
+        }
+
+        // ── Pin last AI response ──
+        if (lower === 'pin' || lower === 'pin last' || lower === 'pin this') {
+            var lastAi = null;
+            for (var i = this.messages.length - 1; i >= 0; i--) {
+                if (this.messages[i].role === 'assistant') { lastAi = this.messages[i]; break; }
+            }
+            if (lastAi) {
+                this.pinIdea(lastAi.content);
+            } else {
+                this.addSystemMessage('No AI response to pin yet.');
+            }
+            return true;
+        }
+
+        // ── Clear ──
+        if (lower === 'clear' || lower === 'start over' || lower === 'clear all') {
+            this.clearSession();
+            return true;
+        }
+
+        // ── Read / list mandate ──
+        if ((lower.includes('read') || lower.includes('list')) && lower.includes('mandate')) {
+            this.readMandate(lower);
+            return true;
+        }
+
+        // ── Help ──
+        if (lower === 'help' || lower === 'commands' || lower === 'what can i say') {
+            this.addSystemMessage(
+                'Voice commands:\n' +
+                '• "pin" or "pin last" — pin the last AI response\n' +
+                '• "save federal mandate" — save pinned idea as federal mandate\n' +
+                '• "save state mandate" — save as state mandate\n' +
+                '• "save town mandate" — save as town mandate\n' +
+                '• "save idea" — save as private idea\n' +
+                '• "read my mandate" — read your saved mandates\n' +
+                '• "clear" — clear conversation\n' +
+                '• "help" — show this list'
+            );
+            this.speak('Available commands: pin, save federal mandate, save state mandate, save town mandate, save idea, read my mandate, clear, and help.');
+            return true;
+        }
+
+        // ── Logout ──
+        if (lower === 'log out' || lower === 'logout' || lower.includes('log me out')) {
+            this.addSystemMessage("Logging you out...");
+            this.speak("Logging you out.");
+            localStorage.removeItem('mandate_phone');
+            localStorage.removeItem('mandate_user');
+            setTimeout(function() { location.reload(); }, 1500);
+            return true;
+        }
+
+        return false; // Not a command — send to AI
+    };
+
+    // ── Read saved mandates from aggregation API ──────────────
+
+    MandateChat.prototype.readMandate = async function(lower) {
+        var level = 'federal';
+        if (lower.includes('state')) level = 'state';
+        else if (lower.includes('town')) level = 'town';
+
+        var url = '/api/mandate-aggregate.php?level=' + level;
+        if (level === 'federal' && this.config.district) url += '&district=' + encodeURIComponent(this.config.district);
+        else if (level === 'state' && this.config.stateId) url += '&state_id=' + this.config.stateId;
+        else if (level === 'town' && this.config.townId) url += '&town_id=' + this.config.townId;
+
+        try {
+            var resp = await fetch(url);
+            var data = await resp.json();
+            if (!data.success || data.item_count === 0) {
+                this.addSystemMessage('No mandate items yet for ' + level + ' level.');
+                this.speak('No mandate items yet for ' + level + ' level.');
+                return;
+            }
+            var intro = data.contributor_count + ' constituent' +
+                (data.contributor_count !== 1 ? 's have' : ' has') + ' spoken. ';
+            var list = data.items.map(function(item, i) {
+                return (i + 1) + '. ' + item.content;
+            }).join('. ');
+            this.addSystemMessage(intro + list);
+            this.speak(intro + 'Top priorities: ' + list);
+        } catch (err) {
+            this.addSystemMessage('Could not load mandate data.');
+        }
+    };
+
+    // ── System Message (non-AI, non-user) ─────────────────────
+
+    MandateChat.prototype.addSystemMessage = function(text) {
+        var msg = { role: 'assistant', content: text, ts: new Date().toISOString() };
+        this.messages.push(msg);
+        this.renderBubble(msg);
+        this.saveToStorage();
+    };
+
+    // ── Text-to-Speech ────────────────────────────────────────
+
+    MandateChat.prototype.speak = function(text) {
+        if (!window.speechSynthesis) return;
+        var utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 1.0;
+        utter.pitch = 1.0;
+        // Try to find a female US English voice
+        var voices = speechSynthesis.getVoices();
+        for (var i = 0; i < voices.length; i++) {
+            if (voices[i].lang.startsWith('en') && voices[i].name.toLowerCase().includes('female')) {
+                utter.voice = voices[i];
+                break;
+            }
+        }
+        speechSynthesis.speak(utter);
     };
 
     // ── Expose ─────────────────────────────────────────────────
