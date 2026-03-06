@@ -507,6 +507,10 @@ $pageStyles = <<<'CSS'
     color: #d4af37;
     font-size: 1.15rem;
     margin-bottom: 0.5rem;
+    transition: color 0.2s;
+}
+.mandate-summary h3:hover {
+    color: #fff;
 }
 .mandate-summary p {
     color: #b0b0b0;
@@ -1265,40 +1269,52 @@ require __DIR__ . '/includes/nav.php';
     <!-- ── Delegation Popup Logic ──────────────────────────────── -->
     <script>
     (function() {
-        var trigger = document.getElementById('geoInfoTrigger');
+        var triggers = [
+            document.getElementById('geoInfoTrigger'),
+            document.getElementById('mandateSummaryTitle')
+        ];
         var popup   = document.getElementById('delegationPopup');
         var body    = document.getElementById('delegationBody');
         var closeBtn = document.getElementById('delegationClose');
         var handle  = document.getElementById('delegationDragHandle');
-        if (!trigger || !popup) return;
+        if (!popup) return;
 
         var stateAbbr = <?= json_encode(strtolower($userStateDisplay ?: '')) ?>;
         var district  = <?= json_encode($dbUser['us_congress_district'] ?? '') ?>;
         var loaded = false;
 
-        // ── Open / close ──
-        trigger.addEventListener('click', function(e) {
+        // ── Open / close — any trigger ──
+        function openPopup(e) {
             e.stopPropagation();
             if (popup.classList.contains('open')) {
                 popup.classList.remove('open');
                 return;
             }
-            // Position near the trigger
-            var rect = trigger.getBoundingClientRect();
+            var rect = e.currentTarget.getBoundingClientRect();
             popup.style.top  = (rect.bottom + 8) + 'px';
             popup.style.left = Math.max(10, rect.left) + 'px';
             popup.classList.add('open');
             if (!loaded) loadDelegation();
-        });
+        }
+        for (var i = 0; i < triggers.length; i++) {
+            if (triggers[i]) {
+                triggers[i].style.cursor = 'pointer';
+                triggers[i].title = triggers[i].title || 'Click to see your elected representatives';
+                triggers[i].addEventListener('click', openPopup);
+            }
+        }
 
         closeBtn.addEventListener('click', function() {
             popup.classList.remove('open');
         });
 
         document.addEventListener('click', function(e) {
-            if (popup.classList.contains('open') && !popup.contains(e.target) && e.target !== trigger) {
-                popup.classList.remove('open');
+            if (!popup.classList.contains('open')) return;
+            if (popup.contains(e.target)) return;
+            for (var j = 0; j < triggers.length; j++) {
+                if (triggers[j] && triggers[j].contains(e.target)) return;
             }
+            popup.classList.remove('open');
         });
 
         // ── Fetch delegation ──
