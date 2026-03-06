@@ -284,6 +284,47 @@ function handleSave($pdo, $input, $userId, $dbUser = null) {
 
     $id = (int)$pdo->lastInsertId();
 
+    // ── Mandate dual-tagging: AI assigns citizen_summary + policy_topic ──
+    $mandateCategories = ['mandate-federal', 'mandate-state', 'mandate-town'];
+    if (in_array($category, $mandateCategories) && $content !== '') {
+        try {
+            require_once __DIR__ . '/../config-claude.php';
+            require_once __DIR__ . '/../config/mandate-topics.php';
+
+            $topicList = implode(', ', MANDATE_POLICY_TOPICS);
+            $classifySystem = "You classify citizen mandates. Respond with ONLY a JSON object on one line, nothing else:\n"
+                . "{\"citizen_summary\": \"<plain language topic, 5-10 words, citizen's voice>\", "
+                . "\"policy_topic\": \"<exactly one of: {$topicList}>\"}";
+
+            $classifyMsgs = [['role' => 'user', 'content' => $content]];
+            $resp = talkCallClaudeAPI($classifySystem, $classifyMsgs, 'claude-haiku-4-5-20251001', false);
+
+            if (!isset($resp['error'])) {
+                $aiText = '';
+                foreach (($resp['content'] ?? []) as $block) {
+                    if ($block['type'] === 'text') $aiText .= $block['text'];
+                }
+                if (preg_match('/\{[^}]+\}/', trim($aiText), $m)) {
+                    $parsed = json_decode($m[0], true);
+                    if ($parsed) {
+                        $cSummary = trim($parsed['citizen_summary'] ?? '');
+                        $pTopic   = trim($parsed['policy_topic'] ?? '');
+                        // Validate topic is in taxonomy
+                        if ($pTopic && !in_array($pTopic, MANDATE_POLICY_TOPICS)) {
+                            $pTopic = 'Other';
+                        }
+                        if ($cSummary || $pTopic) {
+                            $pdo->prepare("UPDATE idea_log SET citizen_summary = ?, policy_topic = ? WHERE id = ?")
+                                ->execute([$cSummary ?: null, $pTopic ?: null, $id]);
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Tagging failed — mandate is saved, tags stay NULL for backfill
+        }
+    }
+
     // Auto-classify via AI if requested
     $autoClassify = (bool)($input['auto_classify'] ?? false);
     if ($autoClassify && $content !== '') {
