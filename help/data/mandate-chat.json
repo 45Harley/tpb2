@@ -15,7 +15,7 @@
     {
       "number": 2,
       "title": "The Mandate Interface",
-      "description": "Once logged in, you'll see:\n\n- Your location and congressional district (e.g. \"Putnam, CT — District CT-2\")\n- Filter tabs: All, Federal, State, Town\n- The AI chat area for refining ideas\n- A text input with mic and send buttons\n- The Ideas Scratchpad for pinned ideas\n- The Public Mandate Summary showing saved mandates",
+      "description": "Once logged in, you'll see four sections:\n\n- Response — AI responses appear here\n- Prompt — type or dictate your idea (with mic and send buttons)\n- Ideas Scratchpad — your pinned ideas with save buttons\n- Public Mandate Summary — saved mandates from your area, with filter tabs: All, Federal, State, Town, My Mandates\n\nYour location and congressional district (e.g. \"Putnam, CT — District CT-2\") appear at the top. Click it to see your elected representatives.",
       "alt": null,
       "screenshot": null
     },
@@ -64,7 +64,7 @@
     {
       "number": 9,
       "title": "Public Mandate Summary",
-      "description": "At the bottom of the page, the Public Mandate Summary shows all saved mandates for your area. Use the filter tabs (All, Federal, State, Town) to view mandates by government level.\n\nThe summary shows how many constituents have spoken and lists each mandate. As more people in your district save mandates, the collective voice grows stronger.",
+      "description": "At the bottom of the page, the Public Mandate Summary shows saved mandates. Use the filter tabs above it:\n\n- All — all mandates from your area\n- Federal — mandates for your U.S. congressional district\n- State — mandates for your state legislators\n- Town — mandates for your local town officials\n- My Mandates — only mandates you have saved (with level labels)\n\nThe summary shows how many constituents have spoken and lists each mandate. Click the title to see your elected representatives. As more people in your district save mandates, the collective voice grows stronger.",
       "alt": null,
       "screenshot": null
     },

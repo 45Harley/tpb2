@@ -1128,7 +1128,7 @@ require __DIR__ . '/includes/nav.php';
 
     <!-- Public Mandate Summary -->
     <div class="mandate-summary" id="mandateSummary">
-        <h3 id="mandateSummaryTitle">Public Mandate Summary</h3>
+        <h3 id="mandateSummaryTitle" title="Saved mandates from your area — say &quot;read my mandate&quot; to hear them">Public Mandate Summary</h3>
         <!-- Level Filter Tabs -->
         <div class="level-tabs" id="levelTabs">
             <button class="level-tab active" data-level="" title="Show all mandates from your area">All</button>
