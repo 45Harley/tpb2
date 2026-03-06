@@ -36,10 +36,16 @@ if (!defined('MANDATE_CHAT_ASSETS_LOADED')) {
 ?>
 
 <div class="mandate-chat" id="<?= $_mcPrefix ?>-wrapper">
-    <!-- Chat Messages -->
+    <!-- Response -->
+    <div class="mc-section-header">
+        <h3 title="AI responses appear here — say &quot;clear response&quot; to clear">Response</h3>
+    </div>
     <div class="mc-messages" id="<?= $_mcPrefix ?>-messages"></div>
 
-    <!-- Input Area -->
+    <!-- Prompt -->
+    <div class="mc-section-header">
+        <h3 title="Type or dictate your idea — say &quot;clear prompt&quot; to clear">Prompt</h3>
+    </div>
     <div class="mc-input">
         <textarea id="<?= $_mcPrefix ?>-input"
                   placeholder="<?= htmlspecialchars($_mc['placeholder']) ?>"

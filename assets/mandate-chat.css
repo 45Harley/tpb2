@@ -201,6 +201,18 @@
     overflow: hidden;
 }
 
+.mc-section-header {
+    padding: 8px 16px;
+    background: rgba(212,175,55,0.08);
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+}
+.mc-section-header h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #d4af37;
+    font-weight: 600;
+}
+
 .mc-scratchpad-header {
     display: flex;
     justify-content: space-between;
