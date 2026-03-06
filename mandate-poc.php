@@ -1174,6 +1174,13 @@ require __DIR__ . '/includes/nav.php';
             if (level === 'mine') {
                 return '/api/mandate-aggregate.php?level=mine&user_id=' + encodeURIComponent(userId);
             }
+            if (level === 'all') {
+                var base = '/api/mandate-aggregate.php?level=all';
+                if (userDistrict) base += '&district=' + encodeURIComponent(userDistrict);
+                if (userStateId) base += '&state_id=' + encodeURIComponent(userStateId);
+                if (userTownId) base += '&town_id=' + encodeURIComponent(userTownId);
+                return base;
+            }
             var base = '/api/mandate-aggregate.php?level=' + encodeURIComponent(level);
             switch (level) {
                 case 'federal':
@@ -1254,9 +1261,8 @@ require __DIR__ . '/includes/nav.php';
         // Expose so MandateChat can refresh after saving
         window.refreshMandateSummary = loadSummary;
 
-        // ── Initial load: federal level ────────────────────────
-        var initialLevel = userDistrict ? 'federal' : (userStateId ? 'state' : (userTownId ? 'town' : 'federal'));
-        loadSummary(initialLevel);
+        // ── Initial load ──────────────────────────────────────
+        loadSummary('all');
 
         // ── Extend tab click handlers to also update summary ───
         var tabs = document.querySelectorAll('#levelTabs .level-tab');
@@ -1282,8 +1288,7 @@ require __DIR__ . '/includes/nav.php';
                         summaryLevel = 'mine';
                         break;
                     default:
-                        // "All" tab — default to federal
-                        summaryLevel = userDistrict ? 'federal' : (userStateId ? 'state' : 'town');
+                        summaryLevel = 'all';
                         break;
                 }
                 loadSummary(summaryLevel);

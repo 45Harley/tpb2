@@ -25,10 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $level = $_GET['level'] ?? 'federal';
 
 // Validate level
-$validLevels = ['federal', 'state', 'town', 'mine'];
+$validLevels = ['federal', 'state', 'town', 'mine', 'all'];
 if (!in_array($level, $validLevels, true)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Invalid level. Must be: federal, state, town, or mine']);
+    echo json_encode(['success' => false, 'error' => 'Invalid level']);
     exit();
 }
 
@@ -92,7 +92,72 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
     );
 
-    if ($level === 'mine') {
+    if ($level === 'all') {
+        // All mandates for this user's geographic area (federal + state + town combined)
+        $district = trim($_GET['district'] ?? '');
+        $stId     = $_GET['state_id'] ?? '';
+        $twId     = $_GET['town_id'] ?? '';
+
+        $whereParts = [];
+        $params = [];
+
+        if ($district) {
+            $whereParts[] = "(i.category = 'mandate-federal' AND u.us_congress_district = ?)";
+            $params[] = $district;
+        }
+        if ($stId && ctype_digit((string)$stId)) {
+            $whereParts[] = "(i.category = 'mandate-state' AND u.current_state_id = ?)";
+            $params[] = (int)$stId;
+        }
+        if ($twId && ctype_digit((string)$twId)) {
+            $whereParts[] = "(i.category = 'mandate-town' AND u.current_town_id = ?)";
+            $params[] = (int)$twId;
+        }
+
+        if (empty($whereParts)) {
+            echo json_encode(['success' => true, 'level' => 'all', 'item_count' => 0, 'contributor_count' => 0, 'items' => []]);
+            exit;
+        }
+
+        $geoFilter = '(' . implode(' OR ', $whereParts) . ')';
+
+        $sql = "
+            SELECT i.id, i.content, i.tags, i.category, i.created_at
+            FROM idea_log i
+            JOIN users u ON i.user_id = u.user_id
+            WHERE i.deleted_at IS NULL AND u.deleted_at IS NULL
+              AND i.category IN ('mandate-federal','mandate-state','mandate-town')
+              AND {$geoFilter}
+            ORDER BY i.created_at DESC
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $items = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $levelLabel = str_replace('mandate-', '', $row['category']);
+            $items[] = [
+                'id'         => (int)$row['id'],
+                'content'    => $row['content'],
+                'tags'       => $row['tags'],
+                'level'      => ucfirst($levelLabel),
+                'created_at' => $row['created_at'],
+            ];
+        }
+
+        // Contributor count
+        $cntSql = "
+            SELECT COUNT(DISTINCT i.user_id)
+            FROM idea_log i
+            JOIN users u ON i.user_id = u.user_id
+            WHERE i.deleted_at IS NULL AND u.deleted_at IS NULL
+              AND i.category IN ('mandate-federal','mandate-state','mandate-town')
+              AND {$geoFilter}
+        ";
+        $cntStmt = $pdo->prepare($cntSql);
+        $cntStmt->execute($params);
+        $contributorCount = (int)$cntStmt->fetchColumn();
+
+    } else if ($level === 'mine') {
         // My mandates — all categories for this user
         $sql = "
             SELECT i.id, i.content, i.tags, i.category, i.created_at
