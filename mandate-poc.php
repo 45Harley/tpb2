@@ -284,9 +284,135 @@ $pageStyles = <<<'CSS'
 .mandate-header .geo-info {
     color: #b0b0b0;
     font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-block;
+    transition: color 0.2s;
+}
+.mandate-header .geo-info:hover {
+    color: #d4af37;
 }
 .mandate-header .geo-info span {
     color: #ccc;
+}
+
+/* ── Delegation Popup ──────────────────────────────────────── */
+.delegation-popup {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    background: #1a1a2e;
+    border: 1px solid #d4af37;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    width: 360px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.delegation-popup.open { display: block; }
+.delegation-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(212,175,55,0.1);
+    border-bottom: 1px solid rgba(212,175,55,0.2);
+    border-radius: 12px 12px 0 0;
+    cursor: move;
+    user-select: none;
+}
+.delegation-popup-header h3 {
+    margin: 0;
+    color: #d4af37;
+    font-size: 1rem;
+}
+.delegation-popup-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+.delegation-popup-close:hover { color: #fff; }
+.delegation-group {
+    padding: 10px 16px;
+}
+.delegation-group-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #888;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #333;
+}
+.delegation-card {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.delegation-card:last-child { border-bottom: none; }
+.delegation-photo {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #333;
+    flex-shrink: 0;
+}
+.delegation-photo-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.delegation-info { flex: 1; min-width: 0; }
+.delegation-name {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.delegation-title {
+    color: #b0b0b0;
+    font-size: 0.8rem;
+}
+.delegation-party {
+    font-size: 0.75rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-top: 2px;
+}
+.delegation-party.dem { background: #1a3a6a; color: #6aadff; }
+.delegation-party.rep { background: #5a1a1a; color: #ff6a6a; }
+.delegation-party.ind { background: #3a3a1a; color: #d4af37; }
+.delegation-links {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+.delegation-links a {
+    color: #90caf9;
+    font-size: 0.8rem;
+    text-decoration: none;
+}
+.delegation-links a:hover { text-decoration: underline; }
+.delegation-loading {
+    padding: 20px;
+    text-align: center;
+    color: #888;
+}
+@media (max-width: 420px) {
+    .delegation-popup { width: calc(100vw - 20px); left: 10px !important; }
 }
 .mandate-help-btn {
     display: inline-block;
@@ -964,7 +1090,7 @@ require __DIR__ . '/includes/nav.php';
     <div class="mandate-header">
         <h1>My Mandate</h1>
         <a href="/help/guide.php?flow=mandate-chat" class="mandate-help-btn">&#x1F393; How It Works</a>
-        <p class="geo-info">
+        <p class="geo-info" id="geoInfoTrigger" title="Click to see your elected representatives">
             <?php if ($userTownName): ?>
                 <span><?= htmlspecialchars($userTownName) ?></span>,
             <?php endif; ?>
@@ -975,6 +1101,17 @@ require __DIR__ . '/includes/nav.php';
                 &mdash; District <span><?= htmlspecialchars($dbUser['us_congress_district']) ?></span>
             <?php endif; ?>
         </p>
+    </div>
+
+    <!-- Delegation Popup -->
+    <div class="delegation-popup" id="delegationPopup">
+        <div class="delegation-popup-header" id="delegationDragHandle">
+            <h3>Your Representatives</h3>
+            <button class="delegation-popup-close" id="delegationClose">&times;</button>
+        </div>
+        <div id="delegationBody">
+            <div class="delegation-loading">Loading...</div>
+        </div>
     </div>
 
     <!-- Level Filter Tabs -->
@@ -1122,6 +1259,142 @@ require __DIR__ . '/includes/nav.php';
                 loadSummary(summaryLevel);
             });
         });
+    })();
+    </script>
+
+    <!-- ── Delegation Popup Logic ──────────────────────────────── -->
+    <script>
+    (function() {
+        var trigger = document.getElementById('geoInfoTrigger');
+        var popup   = document.getElementById('delegationPopup');
+        var body    = document.getElementById('delegationBody');
+        var closeBtn = document.getElementById('delegationClose');
+        var handle  = document.getElementById('delegationDragHandle');
+        if (!trigger || !popup) return;
+
+        var stateAbbr = <?= json_encode(strtolower($userStateDisplay ?: '')) ?>;
+        var district  = <?= json_encode($dbUser['us_congress_district'] ?? '') ?>;
+        var loaded = false;
+
+        // ── Open / close ──
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (popup.classList.contains('open')) {
+                popup.classList.remove('open');
+                return;
+            }
+            // Position near the trigger
+            var rect = trigger.getBoundingClientRect();
+            popup.style.top  = (rect.bottom + 8) + 'px';
+            popup.style.left = Math.max(10, rect.left) + 'px';
+            popup.classList.add('open');
+            if (!loaded) loadDelegation();
+        });
+
+        closeBtn.addEventListener('click', function() {
+            popup.classList.remove('open');
+        });
+
+        document.addEventListener('click', function(e) {
+            if (popup.classList.contains('open') && !popup.contains(e.target) && e.target !== trigger) {
+                popup.classList.remove('open');
+            }
+        });
+
+        // ── Fetch delegation ──
+        function loadDelegation() {
+            loaded = true;
+            var url = '/api/get-delegation.php?state=' + encodeURIComponent(stateAbbr)
+                    + '&district=' + encodeURIComponent(district);
+            fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+                var html = '';
+                if (data.federal && data.federal.length) {
+                    html += buildGroup('Federal', data.federal);
+                }
+                if (data.state && data.state.length) {
+                    html += buildGroup('State', data.state);
+                }
+                if (!html) html = '<div class="delegation-loading">No representatives found.</div>';
+                body.innerHTML = html;
+            }).catch(function() {
+                body.innerHTML = '<div class="delegation-loading">Failed to load.</div>';
+            });
+        }
+
+        function buildGroup(label, officials) {
+            var html = '<div class="delegation-group"><div class="delegation-group-title">' + label + '</div>';
+            for (var i = 0; i < officials.length; i++) {
+                var o = officials[i];
+                var partyClass = (o.party || '').toLowerCase().indexOf('democrat') >= 0 ? 'dem'
+                               : (o.party || '').toLowerCase().indexOf('republican') >= 0 ? 'rep' : 'ind';
+                var partyShort = partyClass === 'dem' ? 'D' : partyClass === 'rep' ? 'R' : 'I';
+                html += '<div class="delegation-card">';
+                if (o.photo) {
+                    html += '<img class="delegation-photo" src="' + escH(o.photo) + '" alt="' + escH(o.name) + '" onerror="this.outerHTML=\'<div class=delegation-photo-placeholder>&#x1F464;</div>\'">';
+                } else {
+                    html += '<div class="delegation-photo-placeholder">&#x1F464;</div>';
+                }
+                html += '<div class="delegation-info">';
+                html += '<div class="delegation-name">' + escH(o.name) + '</div>';
+                html += '<div class="delegation-title">' + escH(o.title) + '</div>';
+                html += '<span class="delegation-party ' + partyClass + '">' + partyShort + ' — ' + escH(o.party) + '</span>';
+                html += '<div class="delegation-links">';
+                if (o.phone) html += '<a href="tel:' + escH(o.phone) + '">&#x1F4DE; ' + escH(o.phone) + '</a>';
+                if (o.website) html += '<a href="' + escH(o.website) + '" target="_blank">&#x1F310; Website</a>';
+                html += '</div></div></div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function escH(s) {
+            if (!s) return '';
+            var d = document.createElement('div');
+            d.appendChild(document.createTextNode(s));
+            return d.innerHTML;
+        }
+
+        // ── Draggable ──
+        var isDragging = false, dragX = 0, dragY = 0;
+        handle.addEventListener('mousedown', startDrag);
+        handle.addEventListener('touchstart', startDragTouch, {passive: false});
+
+        function startDrag(e) {
+            isDragging = true;
+            dragX = e.clientX - popup.offsetLeft;
+            dragY = e.clientY - popup.offsetTop;
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+            e.preventDefault();
+        }
+        function startDragTouch(e) {
+            isDragging = true;
+            var t = e.touches[0];
+            dragX = t.clientX - popup.offsetLeft;
+            dragY = t.clientY - popup.offsetTop;
+            document.addEventListener('touchmove', onDragTouch, {passive: false});
+            document.addEventListener('touchend', stopDrag);
+            e.preventDefault();
+        }
+        function onDrag(e) {
+            if (!isDragging) return;
+            popup.style.left = (e.clientX - dragX) + 'px';
+            popup.style.top  = (e.clientY - dragY) + 'px';
+        }
+        function onDragTouch(e) {
+            if (!isDragging) return;
+            var t = e.touches[0];
+            popup.style.left = (t.clientX - dragX) + 'px';
+            popup.style.top  = (t.clientY - dragY) + 'px';
+            e.preventDefault();
+        }
+        function stopDrag() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchmove', onDragTouch);
+            document.removeEventListener('touchend', stopDrag);
+        }
     })();
     </script>
 
