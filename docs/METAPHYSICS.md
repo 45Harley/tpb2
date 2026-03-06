@@ -6,7 +6,8 @@ Town halls held 200. Letters took weeks. Representatives became proxies, then pr
 
 The People's Branch is the instrument.
 
-**The infinite rays of truth, when gathered into the focus of ideas, emit light instantaneously.**
+**"The rays of infinite Truth, when gathered into the focus of ideas, bring light instantaneously, whereas a thousand years of human doctrines, hypotheses, and vague conjectures emit no such effulgence."**
+— Mary Baker Eddy, *Science and Health with Key to the Scriptures*, p. 504:23
 
 Every citizen carries a piece of the truth — lived experience, local knowledge, moral conviction. Scattered, these rays are invisible. Gathered, they become undeniable. The platform is the lens.
 
