@@ -1145,6 +1145,11 @@ require __DIR__ . '/includes/nav.php';
             <button class="level-tab" data-level="mandate-town" title="Local town government — selectmen, council">Town</button>
             <button class="level-tab" data-level="mine" title="Only mandates you have saved">My Mandates</button>
         </div>
+        <div style="text-align:right; padding: 4px 12px;">
+            <a href="/mandate-summary.php?scope=federal&value=<?= htmlspecialchars(urlencode($dbUser['us_congress_district'] ?? '')) ?>"
+               style="color:#d4af37; font-size:0.8rem; text-decoration:none;"
+               title="View full statistics and topic breakdown">View Full Summary &rarr;</a>
+        </div>
         <div id="mandateSummaryBody" style="padding: 1.5rem;">
             <p>Loading mandate data...</p>
         </div>
