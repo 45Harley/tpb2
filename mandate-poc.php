@@ -498,18 +498,24 @@ $pageStyles = <<<'CSS'
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     border: 1px solid rgba(212,175,55,0.15);
     border-radius: 12px;
-    padding: 2rem;
+    overflow: hidden;
     margin-top: 2rem;
     text-align: center;
 }
-.mandate-summary h2,
-.mandate-summary h3 {
+.mandate-summary-header {
+    padding: 10px 16px;
+    background: rgba(212,175,55,0.08);
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+}
+.mandate-summary-header h3 {
+    margin: 0;
+    font-size: 0.9rem;
     color: #d4af37;
-    font-size: 1.15rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
     transition: color 0.2s;
 }
-.mandate-summary h3:hover {
+.mandate-summary-header h3:hover {
     color: #fff;
 }
 .mandate-summary p {
@@ -1128,7 +1134,9 @@ require __DIR__ . '/includes/nav.php';
 
     <!-- Public Mandate Summary -->
     <div class="mandate-summary" id="mandateSummary">
-        <h3 id="mandateSummaryTitle" title="Saved mandates from your area — say &quot;read my mandate&quot; to hear them">Public Mandate Summary</h3>
+        <div class="mandate-summary-header">
+            <h3 id="mandateSummaryTitle" title="Saved mandates from your area — say &quot;read my mandate&quot; to hear them">Public Mandate Summary</h3>
+        </div>
         <!-- Level Filter Tabs -->
         <div class="level-tabs" id="levelTabs">
             <button class="level-tab active" data-level="" title="Show all mandates from your area">All</button>
@@ -1137,7 +1145,7 @@ require __DIR__ . '/includes/nav.php';
             <button class="level-tab" data-level="mandate-town" title="Local town government — selectmen, council">Town</button>
             <button class="level-tab" data-level="mine" title="Only mandates you have saved">My Mandates</button>
         </div>
-        <div id="mandateSummaryBody">
+        <div id="mandateSummaryBody" style="padding: 1.5rem;">
             <p>Loading mandate data...</p>
         </div>
     </div>
