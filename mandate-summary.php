@@ -48,7 +48,7 @@ if ($scope === 'state' && ctype_digit($scopeValue)) {
 }
 
 $scopeLabel = ucfirst($scope);
-$pageTitle  = "Constituent Mandate Summary: {$scopeDisplay} | The People's Branch";
+$pageTitle  = "The People's Pulse: {$scopeDisplay} | The People's Branch";
 $currentPage = 'mandate';
 
 $headLinks = '';
@@ -247,7 +247,7 @@ require __DIR__ . '/includes/header.php';
 <div class="summary-wrap">
 
     <div class="summary-header">
-        <h1>Constituent Mandate Summary</h1>
+        <h1>The People's Pulse</h1>
         <p class="scope-label"><?= htmlspecialchars($scopeLabel) ?> &mdash; <?= htmlspecialchars($scopeDisplay) ?></p>
     </div>
 
