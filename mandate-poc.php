@@ -1118,14 +1118,6 @@ require __DIR__ . '/includes/nav.php';
         </div>
     </div>
 
-    <!-- Level Filter Tabs -->
-    <div class="level-tabs" id="levelTabs">
-        <button class="level-tab active" data-level="" title="Show all mandates">All</button>
-        <button class="level-tab" data-level="mandate-federal" title="U.S. Congress — House & Senate">Federal</button>
-        <button class="level-tab" data-level="mandate-state" title="State legislature — your state reps">State</button>
-        <button class="level-tab" data-level="mandate-town" title="Local town government — selectmen, council">Town</button>
-    </div>
-
     <!-- Mandate Chat -->
     <?php
     $mandateChatConfig = [
@@ -1137,6 +1129,14 @@ require __DIR__ . '/includes/nav.php';
     <!-- Public Mandate Summary -->
     <div class="mandate-summary" id="mandateSummary">
         <h3 id="mandateSummaryTitle">Public Mandate Summary</h3>
+        <!-- Level Filter Tabs -->
+        <div class="level-tabs" id="levelTabs">
+            <button class="level-tab active" data-level="" title="Show all mandates from your area">All</button>
+            <button class="level-tab" data-level="mandate-federal" title="U.S. Congress — House & Senate">Federal</button>
+            <button class="level-tab" data-level="mandate-state" title="State legislature — your state reps">State</button>
+            <button class="level-tab" data-level="mandate-town" title="Local town government — selectmen, council">Town</button>
+            <button class="level-tab" data-level="mine" title="Only mandates you have saved">My Mandates</button>
+        </div>
         <div id="mandateSummaryBody">
             <p>Loading mandate data...</p>
         </div>
@@ -1160,7 +1160,12 @@ require __DIR__ . '/includes/nav.php';
             return div.innerHTML;
         }
 
+        var userId = <?= json_encode($dbUser ? (int)$dbUser['user_id'] : 0) ?>;
+
         function buildUrl(level) {
+            if (level === 'mine') {
+                return '/api/mandate-aggregate.php?level=mine&user_id=' + encodeURIComponent(userId);
+            }
             var base = '/api/mandate-aggregate.php?level=' + encodeURIComponent(level);
             switch (level) {
                 case 'federal':
@@ -1178,6 +1183,8 @@ require __DIR__ . '/includes/nav.php';
 
         function buildTitle(level) {
             switch (level) {
+                case 'mine':
+                    return 'My Mandates';
                 case 'federal':
                     return userDistrict
                         ? 'Constituent Mandate for ' + escapeHtml(userDistrict)
@@ -1215,8 +1222,12 @@ require __DIR__ . '/includes/nav.php';
 
                     html += '<ol style="text-align:left; padding-left:1.5rem; margin:0;">';
                     data.items.forEach(function(item) {
-                        html += '<li style="color:#ccc; margin-bottom:0.5rem;">'
-                            + escapeHtml(item.content);
+                        html += '<li style="color:#ccc; margin-bottom:0.5rem;">';
+                        if (item.level) {
+                            html += '<span style="color:#d4af37; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; margin-right:6px;">'
+                                + escapeHtml(item.level) + '</span> ';
+                        }
+                        html += escapeHtml(item.content);
                         if (item.tags) {
                             html += ' <span style="color:#999; font-size:0.85rem;">('
                                 + escapeHtml(item.tags) + ')</span>';
@@ -1243,6 +1254,10 @@ require __DIR__ . '/includes/nav.php';
         var tabs = document.querySelectorAll('#levelTabs .level-tab');
         tabs.forEach(function(tab) {
             tab.addEventListener('click', function() {
+                // Update active tab
+                tabs.forEach(function(t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+
                 var dataLevel = tab.dataset.level || '';
                 var summaryLevel;
                 switch (dataLevel) {
@@ -1254,6 +1269,9 @@ require __DIR__ . '/includes/nav.php';
                         break;
                     case 'mandate-town':
                         summaryLevel = 'town';
+                        break;
+                    case 'mine':
+                        summaryLevel = 'mine';
                         break;
                     default:
                         // "All" tab — default to federal
