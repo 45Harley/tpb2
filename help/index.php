@@ -34,7 +34,7 @@ if (is_dir($dataDir)) {
 }
 // Pin "purpose" and "philosophy" to top, rest alphabetical by title
 usort($guides, function($a, $b) {
-    $pinOrder = ['purpose' => 0, 'philosophy' => 1];
+    $pinOrder = ['metaphysics' => 0, 'purpose' => 1, 'philosophy' => 2];
     $aPin = $pinOrder[$a['id']] ?? 99;
     $bPin = $pinOrder[$b['id']] ?? 99;
     if ($aPin !== $bPin) return $aPin - $bPin;
@@ -51,6 +51,7 @@ $guideIconMap = [
     'polls'        => 'tip',         // 💡
     'volunteer'    => 'social',      // 👥
     'civic-points' => 'important',   // ⭐
+    'metaphysics'  => 'philosophy',  // 🎪
     'purpose'      => 'philosophy',  // 🎪
     'philosophy'   => 'philosophy',  // 🎪
     'profile'      => 'info',        // ℹ️
