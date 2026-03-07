@@ -1,0 +1,314 @@
+/* ==========================================================================
+   Facilitator Tools — Dark theme, gold (#d4af37) accent
+   Minimum text contrast: #b0b0b0 on dark backgrounds
+   ========================================================================== */
+
+/* ---- Group Ballot Embed ---- */
+
+.group-ballot-embed {
+  max-width: 720px;
+}
+
+.gbe-section {
+  margin-bottom: 24px;
+}
+
+.gbe-heading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin: 0 0 12px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #333;
+}
+
+.gbe-empty {
+  background: #0d0d1a;
+  border: 1px dashed #333;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  color: #b0b0b0;
+}
+
+.gbe-empty p {
+  margin: 4px 0;
+}
+
+.gbe-hint {
+  color: #d4af37;
+  font-size: 0.85rem;
+}
+
+/* ---- Facilitator Panel ---- */
+
+.facilitator-panel {
+  background: #12122a;
+  border: 1px solid #d4af37;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.facilitator-heading {
+  color: #d4af37 !important;
+  border-bottom-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+.facilitator-tool {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #2a2a3e;
+}
+
+.facilitator-tool:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.facilitator-tool-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ccc;
+  margin: 0 0 10px 0;
+}
+
+/* ---- Form Fields ---- */
+
+.fac-field {
+  margin-bottom: 12px;
+}
+
+.fac-field label {
+  display: block;
+  font-size: 0.85rem;
+  color: #b0b0b0;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.fac-field input[type="text"],
+.fac-field textarea,
+.fac-field select {
+  width: 100%;
+  box-sizing: border-box;
+  background: #0d0d1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #e0e0e0;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.fac-field input[type="text"]:focus,
+.fac-field textarea:focus,
+.fac-field select:focus {
+  border-color: #d4af37;
+  outline: none;
+}
+
+.fac-field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.fac-option-input {
+  margin-bottom: 6px;
+}
+
+/* ---- Buttons ---- */
+
+.btn-facilitator {
+  background: #d4af37;
+  color: #1a1a2e;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-right: 6px;
+}
+
+.btn-facilitator:hover {
+  background: #e0c04a;
+}
+
+.btn-facilitator.btn-small {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+}
+
+.btn-facilitator.btn-call-vote {
+  margin-top: 8px;
+}
+
+.btn-facilitator.btn-ratify {
+  background: #4caf50;
+  color: #fff;
+}
+
+.btn-facilitator.btn-ratify:hover {
+  background: #66bb6a;
+}
+
+/* ---- Ballot History ---- */
+
+.fac-ballot-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fac-ballot-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background: #0d0d1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.fac-ballot-question {
+  flex: 1;
+  color: #ccc;
+  font-size: 0.9rem;
+  min-width: 120px;
+}
+
+.fac-ballot-round {
+  background: rgba(79, 195, 247, 0.15);
+  color: #4fc3f7;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.fac-ballot-votes {
+  color: #b0b0b0;
+  font-size: 0.8rem;
+}
+
+.fac-ballot-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.fac-ballot-status.active {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+.fac-ballot-status.closed {
+  background: rgba(136, 136, 136, 0.15);
+  color: #b0b0b0;
+}
+
+/* ---- Declaration Cards ---- */
+
+.gbe-declarations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.declaration-card {
+  background: #0d0d1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+
+.declaration-card.ratified {
+  border-color: #d4af37;
+}
+
+.declaration-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.declaration-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin: 0;
+}
+
+.declaration-status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.declaration-status-badge.status-draft {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+
+.declaration-status-badge.status-voting {
+  background: rgba(79, 195, 247, 0.15);
+  color: #4fc3f7;
+}
+
+.declaration-status-badge.status-ratified {
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+}
+
+.declaration-status-badge.status-superseded {
+  background: rgba(136, 136, 136, 0.15);
+  color: #b0b0b0;
+}
+
+.declaration-body {
+  color: #ccc;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.declaration-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: #b0b0b0;
+}
+
+.declaration-threshold {
+  color: #d4af37;
+}
+
+.declaration-actions {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #2a2a3e;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 600px) {
+  .fac-ballot-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .declaration-header {
+    flex-direction: column;
+  }
+}
