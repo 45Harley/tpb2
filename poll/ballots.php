@@ -30,11 +30,8 @@ if (!in_array($scopeType, $validScopes, true)) {
 }
 $scopeId = isset($_GET['scope_id']) ? (int) $_GET['scope_id'] : null;
 
-// Map scope_type to the DB value used by Ballot (federal = national in DB)
-$dbScopeType = ($scopeType === 'federal') ? 'national' : $scopeType;
-
 // --- Fetch ballots ---
-$ballots = Ballot::listByScope($pdo, $dbScopeType, $scopeId);
+$ballots = Ballot::listByScope($pdo, $scopeType, $scopeId);
 
 // --- Auth / can-vote check ---
 $canVote = $dbUser && (($dbUser['identity_level_id'] ?? 0) >= 2);

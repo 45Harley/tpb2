@@ -64,7 +64,7 @@ class Ballot
             $stmt->execute([
                 ':question'       => $data['question'],
                 ':slug'           => $slug,
-                ':scope_type'     => $data['scope_type']     ?? 'national',
+                ':scope_type'     => $data['scope_type']     ?? 'federal',
                 ':scope_id'       => $data['scope_id']       ?? null,
                 ':vote_type'      => $voteType,
                 ':threshold_type' => $data['threshold_type'] ?? 'majority',
