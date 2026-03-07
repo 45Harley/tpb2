@@ -85,8 +85,6 @@ if ($hasEmail) {
     }
 }
 
-// Election site base URL (legacy — most links now internal)
-$electionSite = 'https://tpb.sandgems.net';
 ?>
     <!-- Navigation (Collapsible) -->
     <style>
@@ -479,9 +477,8 @@ $electionSite = 'https://tpb.sandgems.net';
                 <?php if ($isLoggedIn): ?>
                 <!-- My TPB Dropdown -->
                 <div class="nav-dropdown">
-                    <span class="nav-dropdown-toggle <?= in_array($currentPage, ['profile','town','power']) ? 'active' : '' ?>">My TPB</span>
+                    <span class="nav-dropdown-toggle <?= in_array($currentPage, ['profile','town','power','invite','volunteer']) ? 'active' : '' ?>">My TPB</span>
                     <div class="nav-dropdown-menu">
-                        <a href="/welcome.php">Getting Started</a>
                         <a href="/profile.php">My Profile</a>
                         <?php if ($hasTown): ?>
                         <a href="/z-states/<?= htmlspecialchars($userStateAbbr) ?>/<?= htmlspecialchars($userTownSlug) ?>/">My Town</a>
@@ -494,16 +491,14 @@ $electionSite = 'https://tpb.sandgems.net';
                         <a href="/profile.php#town" class="add-link">Add State</a>
                         <?php endif; ?>
                         <a href="/reps.php?my=1">My Reps</a>
-                        <a href="/poll/">My Opinion</a>
-                        <a href="/0t/">My Power</a>
                         <a href="/profile.php#points">My Points</a>
+                        <div style="border-top: 1px solid #333; margin: 4px 0;"></div>
+                        <a href="/talk/groups.php?my=1">My Groups</a>
+                        <a href="/mandate-poc.php">My Mandate</a>
+                        <a href="#" onclick="handleVolunteerClick(); return false;">Volunteer</a>
+                        <a href="/invite/">Invite</a>
                     </div>
                 </div>
-                <a href="/invite/" <?= $currentPage === 'invite' ? 'class="active"' : '' ?>>Invite</a>
-                <a href="<?= htmlspecialchars($talkUrl) ?>" <?= $currentPage === 'talk' ? 'class="active"' : '' ?>>USA Talk</a>
-
-                <a href="/usa/" <?= in_array($currentPage, ['government', 'usa']) ? 'class="active"' : '' ?>>USA</a>
-                
                 <?php else: ?>
                 <div class="nav-dropdown">
                     <span class="nav-dropdown-toggle <?= $currentPage === 'login' ? 'active' : '' ?>">Login</span>
@@ -513,11 +508,29 @@ $electionSite = 'https://tpb.sandgems.net';
                     </div>
                 </div>
                 <?php endif; ?>
-                
+
+                <a href="/talk/groups.php" <?= $currentPage === 'groups' ? 'class="active"' : '' ?>>Groups</a>
+                <a href="/poll/ballots.php" <?= $currentPage === 'ballots' ? 'class="active"' : '' ?>>Ballots</a>
+                <?php if ($isLoggedIn): ?>
+                <a href="/mandate-poc.php" <?= $currentPage === 'mandate' ? 'class="active"' : '' ?>>My Mandate</a>
+                <?php endif; ?>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle <?= in_array($currentPage, ['government','usa','elections']) ? 'active' : '' ?>">USA</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="/map.php">Map</a>
+                        <a href="/usa/">Congressional</a>
+                        <a href="/usa/executive-overview.php">Executive</a>
+                        <a href="/usa/judicial.php">Judicial</a>
+                        <a href="/usa/docs/">Documents</a>
+                        <a href="/usa/glossary.php">Glossary</a>
+                        <div style="border-top: 1px solid #333; margin: 4px 0;"></div>
+                        <a href="/elections/">Elections</a>
+                        <?php if ($isLoggedIn): ?>
+                        <a href="/reps.php">My Reps</a>
+                        <?php endif; ?>
+                    </div>
+                </div>
                 <a href="/poll/" <?= $currentPage === 'poll' ? 'class="active"' : '' ?>>Polls</a>
-                <a href="/elections/" <?= $currentPage === 'elections' ? 'class="active"' : '' ?>>Elections</a>
-                <a href="/story.php" <?= $currentPage === 'story' ? 'class="active"' : '' ?>>Our Story</a>
-                <a href="#" onclick="handleVolunteerClick(); return false;" <?= $currentPage === 'volunteer' ? 'class="active"' : '' ?>>Volunteer</a>
             </div>
         </div>
         
