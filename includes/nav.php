@@ -33,11 +33,29 @@
  */
 
 $currentPage = isset($currentPage) ? $currentPage : '';
-$userId = isset($userId) ? (int)$userId : 0;
-$trustLevel = isset($trustLevel) ? $trustLevel : 'Visitor';
-$points = isset($points) ? (int)$points : 0;
-$userTrustLevel = isset($userTrustLevel) ? (int)$userTrustLevel : 0;
-$isLoggedIn = isset($isLoggedIn) ? $isLoggedIn : ($trustLevel !== 'Visitor');
+
+// Auto-derive nav variables from $dbUser when available
+if (isset($dbUser) && is_array($dbUser) && $dbUser) {
+    $userId = isset($userId) ? (int)$userId : (int)($dbUser['user_id'] ?? 0);
+    $isLoggedIn = true;
+    $points = isset($points) ? (int)$points : (int)($dbUser['civic_points'] ?? 0);
+    $userEmail = isset($userEmail) ? $userEmail : ($dbUser['email'] ?? '');
+    $userTownName = isset($userTownName) ? $userTownName : ($dbUser['town_name'] ?? '');
+    $userTownSlug = isset($userTownSlug) ? $userTownSlug : ($userTownName ? strtolower(str_replace(' ', '-', $userTownName)) : '');
+    $userStateAbbr = isset($userStateAbbr) ? $userStateAbbr : strtolower($dbUser['state_abbrev'] ?? '');
+    $userStateDisplay = isset($userStateDisplay) ? $userStateDisplay : strtoupper($userStateAbbr);
+    // Derive trust level from identity_level_id
+    $identityLevel = (int)($dbUser['identity_level_id'] ?? 1);
+    $trustLevelMap = [1 => 'Anonymous', 2 => 'Level 2: Remembered', 3 => 'Level 3: Verified', 4 => 'Level 4: Vetted'];
+    $trustLevel = isset($trustLevel) ? $trustLevel : ($trustLevelMap[$identityLevel] ?? 'Visitor');
+    $userTrustLevel = isset($userTrustLevel) ? (int)$userTrustLevel : $identityLevel;
+} else {
+    $userId = isset($userId) ? (int)$userId : 0;
+    $trustLevel = isset($trustLevel) ? $trustLevel : 'Visitor';
+    $points = isset($points) ? (int)$points : 0;
+    $userTrustLevel = isset($userTrustLevel) ? (int)$userTrustLevel : 0;
+    $isLoggedIn = isset($isLoggedIn) ? $isLoggedIn : false;
+}
 
 // Profile nudge: detect missing password or location from $dbUser (if available in calling scope)
 $_navNudge = null;
