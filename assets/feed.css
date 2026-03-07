@@ -1,0 +1,290 @@
+/**
+ * Feed Admin Styles — Civic Engine Phase 4
+ * Dark theme: #0a0a0f bg, #1a1a2e cards, #d4af37 gold accents
+ */
+
+.feed-admin-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* Header */
+.feed-header h1 {
+    color: #d4af37;
+    font-size: 1.8rem;
+    margin-bottom: 0.25rem;
+}
+.feed-subtitle {
+    color: #b0b0b0;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Message bar */
+.feed-message {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+.feed-message.success {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+.feed-message.error {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+.feed-message.info {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+/* Sections */
+.feed-section {
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.feed-section h2 {
+    color: #d4af37;
+    font-size: 1.2rem;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #333;
+}
+
+/* Stats grid */
+.feed-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+}
+.feed-stat-card {
+    background: #0d0d1a;
+    border: 1px solid #2a2a3e;
+    border-radius: 8px;
+    padding: 1.25rem;
+    text-align: center;
+}
+.feed-stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.feed-stat-label {
+    display: block;
+    color: #b0b0b0;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Sync grid */
+.feed-sync-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+.feed-sync-card {
+    background: #0d0d1a;
+    border: 1px solid #2a2a3e;
+    border-radius: 8px;
+    padding: 1.25rem;
+}
+.feed-sync-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.feed-sync-header h3 {
+    color: #e0e0e0;
+    font-size: 1rem;
+    margin: 0;
+}
+.feed-sync-desc {
+    color: #b0b0b0;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+/* Badges */
+.feed-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.feed-badge-alert {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+}
+.feed-badge-ok {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.4);
+}
+.feed-badge-stub {
+    background: rgba(150, 150, 150, 0.2);
+    color: #b0b0b0;
+    border: 1px solid rgba(150, 150, 150, 0.4);
+}
+
+/* Sync buttons */
+.btn-sync {
+    background: #2a2a3e;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    width: 100%;
+}
+.btn-sync:hover {
+    background: rgba(212, 175, 55, 0.15);
+    border-color: #d4af37;
+    color: #d4af37;
+}
+.btn-sync:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.btn-sync-all {
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+}
+
+/* Table */
+.feed-table-wrapper {
+    overflow-x: auto;
+}
+.feed-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.feed-table th,
+.feed-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #2a2a3e;
+}
+.feed-table th {
+    background: #0d0d1a;
+    color: #d4af37;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+.feed-table td {
+    color: #e0e0e0;
+    font-size: 0.9rem;
+}
+.feed-table tbody tr:hover {
+    background: rgba(212, 175, 55, 0.05);
+}
+
+/* Source badges in table */
+.feed-source-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+.feed-source-threat {
+    background: #8B0000;
+    color: #fff;
+}
+.feed-source-bill {
+    background: #1a5276;
+    color: #85c1e9;
+}
+.feed-source-executive_order {
+    background: #784212;
+    color: #f0b27a;
+}
+.feed-source-group {
+    background: #4a235a;
+    color: #d2b4de;
+}
+.feed-source-manual {
+    background: #555;
+    color: #fff;
+}
+
+.feed-question-cell {
+    max-width: 350px;
+}
+.feed-date-cell {
+    white-space: nowrap;
+    color: #b0b0b0;
+    font-size: 0.85rem;
+}
+
+/* Status labels */
+.feed-status-active {
+    color: #4caf50;
+    font-weight: 600;
+}
+.feed-status-closed {
+    color: #b0b0b0;
+}
+
+/* Empty state */
+.feed-empty {
+    color: #b0b0b0;
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.95rem;
+}
+
+/* Back link */
+.feed-back-link {
+    margin-top: 1rem;
+}
+.feed-back-link a {
+    color: #d4af37;
+    text-decoration: none;
+}
+.feed-back-link a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .feed-admin-container {
+        padding: 1rem 0.5rem;
+    }
+    .feed-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .feed-sync-grid {
+        grid-template-columns: 1fr;
+    }
+    .feed-table th,
+    .feed-table td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+    .feed-question-cell {
+        max-width: 180px;
+    }
+}
