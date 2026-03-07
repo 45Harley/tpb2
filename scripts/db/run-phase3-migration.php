@@ -25,14 +25,19 @@ try {
         die("ERROR: Could not read civic-engine-phase3.sql\n");
     }
 
-    // Split on semicolons, skip empty statements and comments-only blocks
+    // Split on semicolons, filter to statements that have actual SQL (not just comments)
     $statements = array_filter(
         array_map('trim', explode(';', $sql)),
-        fn($s) => $s !== '' && !preg_match('/^--/', $s)
+        function($s) {
+            $lines = array_filter(explode("\n", $s), function($l) {
+                $l = trim($l);
+                return $l !== '' && strpos($l, '--') !== 0;
+            });
+            return !empty($lines);
+        }
     );
 
     foreach ($statements as $stmt) {
-        if (empty($stmt) || preg_match('/^\s*--/', $stmt)) continue;
         echo "Executing: " . substr(preg_replace('/\s+/', ' ', $stmt), 0, 80) . "...\n";
         $pdo->exec($stmt);
     }
