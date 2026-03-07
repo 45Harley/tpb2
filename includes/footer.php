@@ -4,6 +4,8 @@
  * =================
  * Self-contained: CSS + HTML in one include.
  * Place before closing </body></html> or at end of page content.
+ *
+ * 4-column layout: The People's Branch | Learn | Build | Connect
  */
 ?>
 <style>
@@ -11,9 +13,9 @@
         background: #0a0a0a;
         border-top: 1px solid #222;
         padding: 40px 20px 20px;
-        color: #888;
+        color: #b0b0b0;
     }
-    
+
     .tpb-footer .footer-columns {
         display: flex;
         justify-content: space-around;
@@ -21,7 +23,7 @@
         margin: 0 auto 30px;
         gap: 30px;
     }
-    
+
     .tpb-footer .footer-col h4 {
         color: #d4af37;
         font-size: 0.95em;
@@ -29,40 +31,57 @@
         text-transform: uppercase;
         letter-spacing: 1px;
     }
-    
-    .tpb-footer .footer-col p {
-        font-size: 0.9em;
-        line-height: 1.5;
-        margin: 0 0 8px;
-    }
-    
+
     .tpb-footer .footer-col a {
-        color: #aaa;
+        color: #b0b0b0;
         text-decoration: none;
         font-size: 0.9em;
         display: block;
         padding: 3px 0;
         transition: color 0.2s;
     }
-    
+
     .tpb-footer .footer-col a:hover {
         color: #d4af37;
     }
-    
+
     .tpb-footer .footer-col .email-link {
         color: #62a4d0;
     }
-    
+
     .tpb-footer .footer-col .email-link:hover {
         color: #d4af37;
     }
-    
-    .tpb-footer .footer-tip {
+
+    .tpb-footer .footer-col a.external::after {
+        content: ' \2197';
+        font-size: 0.75em;
+    }
+
+    .tpb-footer .footer-bottom {
+        text-align: center;
+        border-top: 1px solid #1a1a1a;
+        padding-top: 15px;
+        font-size: 0.85em;
+        color: #b0b0b0;
+    }
+
+    .tpb-footer .footer-bottom a {
+        color: #b0b0b0;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .tpb-footer .footer-bottom a:hover {
+        color: #d4af37;
+    }
+
+    .tpb-footer .footer-bottom .footer-tip {
         position: relative;
         display: inline-block;
     }
-    
-    .tpb-footer .footer-tip .tip-text {
+
+    .tpb-footer .footer-bottom .footer-tip .tip-text {
         visibility: hidden;
         opacity: 0;
         position: absolute;
@@ -83,8 +102,8 @@
         pointer-events: none;
         margin-bottom: 8px;
     }
-    
-    .tpb-footer .footer-tip .tip-text::after {
+
+    .tpb-footer .footer-bottom .footer-tip .tip-text::after {
         content: '';
         position: absolute;
         top: 100%;
@@ -93,20 +112,12 @@
         border: 6px solid transparent;
         border-top-color: #333;
     }
-    
-    .tpb-footer .footer-tip:hover .tip-text {
+
+    .tpb-footer .footer-bottom .footer-tip:hover .tip-text {
         visibility: visible;
         opacity: 1;
     }
-    
-    .tpb-footer .footer-bottom {
-        text-align: center;
-        border-top: 1px solid #1a1a1a;
-        padding-top: 15px;
-        font-size: 0.85em;
-        color: #555;
-    }
-    
+
     @media (max-width: 600px) {
         .tpb-footer .footer-columns {
             flex-direction: column;
@@ -114,11 +125,11 @@
             text-align: center;
             gap: 25px;
         }
-        .tpb-footer .footer-tip .tip-text {
+        .tpb-footer .footer-bottom .footer-tip .tip-text {
             left: 0;
             transform: none;
         }
-        .tpb-footer .footer-tip .tip-text::after {
+        .tpb-footer .footer-bottom .footer-tip .tip-text::after {
             left: 30px;
         }
     }
@@ -128,37 +139,40 @@
     <div class="footer-columns">
         <div class="footer-col">
             <h4>The People's Branch</h4>
-            <p>Your voice in democracy</p>
+            <a href="/story.php">Our Story</a>
+            <a href="/goldenrule.html">The Golden Rule</a>
+            <a href="/constitution/">Constitution</a>
             <a href="#" id="tpbContactEmail" class="email-link"></a>
         </div>
         <div class="footer-col">
-            <h4>Platform</h4>
-            <a href="/index.php">Home</a>
-            <a href="/story.php">Our Story</a>
-            <a href="/constitution/">Constitution</a>
-            <a href="/help/">Help</a>
+            <h4>Learn</h4>
+            <a href="/welcome.php">Getting Started</a>
+            <a href="/help/">User Guides</a>
+            <a href="/docs/metaphysics-of-democracy.md">The Metaphysics</a>
         </div>
         <div class="footer-col">
-            <h4>Get Involved</h4>
-            <a href="/join.php">Join</a>
+            <h4>Build</h4>
             <a href="/volunteer/">Volunteer</a>
-            <a href="/profile.php">Profile</a>
-            <a href="/reps.php">Your Reps</a>
+            <a href="/volunteer/state-builder-start.php">State Build Kit</a>
+            <a href="#">Town Build Kit</a>
         </div>
         <div class="footer-col">
-            <h4>Legal</h4>
-            <span class="footer-tip">
-                <a href="#">Privacy</a>
-                <span class="tip-text">We collect only what's needed to make civic engagement work — your town, your voice, your vote. Nothing is sold. Ever.</span>
-            </span>
-            <span class="footer-tip">
-                <a href="#">Terms</a>
-                <span class="tip-text">Be civil. Be honest. This platform belongs to the people — use it to build, not to tear down.</span>
-            </span>
+            <h4>Connect</h4>
+            <a href="/invite/">Invite a Citizen</a>
+            <a href="#">Invite a Rep</a>
+            <a href="https://github.com/45Harley/tpb2" target="_blank" rel="noopener" class="external">GitHub</a>
         </div>
     </div>
     <div class="footer-bottom">
-        &copy; 2025 The People's Branch
+        &copy; 2025 The People's Branch &middot;
+        <span class="footer-tip">
+            <a href="#">Privacy</a>
+            <span class="tip-text">We collect only what's needed to make civic engagement work — your town, your voice, your vote. Nothing is sold. Ever.</span>
+        </span> &middot;
+        <span class="footer-tip">
+            <a href="#">Terms</a>
+            <span class="tip-text">Be civil. Be honest. This platform belongs to the people — use it to build, not to tear down.</span>
+        </span>
     </div>
 </footer>
 <script>
