@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Engine — Multi-Option Ballot Mockup</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #eee;
+        }
+
+        .mockup-label {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,215,0,0.15);
+            border-bottom: 1px solid rgba(255,215,0,0.3);
+            color: #ffd700;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 3rem;
+        }
+
+        h2 {
+            color: #d4af37;
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
+        }
+        .group-name {
+            color: #b0b0b0;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ── Section dividers ── */
+        .section-title {
+            color: #fff;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 2rem 0 0.75rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid #333;
+        }
+        .section-title:first-of-type { margin-top: 0; }
+
+        /* ══════════════════════════════════════════ */
+        /*  SCENARIO A: Yes/No (current style)       */
+        /* ══════════════════════════════════════════ */
+        .ballot-card {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .ballot-card:hover { border-color: #555; }
+
+        .ballot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .ballot-type-badge {
+            display: inline-block;
+            padding: 0.15rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-yes-no { background: rgba(76,175,80,0.2); color: #81c784; }
+        .badge-multi { background: rgba(79,195,247,0.2); color: #80d8ff; }
+        .badge-ranked { background: rgba(206,147,216,0.2); color: #e1bee7; }
+
+        .round-indicator {
+            font-size: 0.75rem;
+            color: #b0b0b0;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .round-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .round-dot.active { background: #d4af37; }
+        .round-dot.past { background: #555; }
+        .round-dot.future { background: #333; border: 1px solid #555; }
+
+        .ballot-question {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+        .ballot-source {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 1rem;
+        }
+        .ballot-source a { color: #90caf9; text-decoration: none; }
+        .ballot-source a:hover { text-decoration: underline; }
+
+        /* ── Yes/No vote buttons ── */
+        .vote-buttons-yn {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .vote-btn-yn {
+            flex: 1;
+            padding: 0.6rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 2px solid;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+        }
+        .vote-btn-yn.yea { border-color: #4caf50; color: #4caf50; }
+        .vote-btn-yn.yea:hover, .vote-btn-yn.yea.selected { background: #4caf50; color: #fff; }
+        .vote-btn-yn.nay { border-color: #f44336; color: #f44336; }
+        .vote-btn-yn.nay:hover, .vote-btn-yn.nay.selected { background: #f44336; color: #fff; }
+        .vote-btn-yn.abstain { border-color: #888; color: #888; }
+        .vote-btn-yn.abstain:hover, .vote-btn-yn.abstain.selected { background: #888; color: #fff; }
+
+        /* ── Threshold progress ── */
+        .threshold-bar {
+            margin: 1rem 0 0.5rem;
+        }
+        .threshold-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #b0b0b0;
+            margin-bottom: 0.3rem;
+        }
+        .threshold-track {
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+        .threshold-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .threshold-fill.below { background: linear-gradient(90deg, #f44336, #ff9800); }
+        .threshold-fill.met { background: linear-gradient(90deg, #4caf50, #81c784); }
+        .threshold-marker {
+            position: absolute;
+            top: -3px;
+            width: 2px;
+            height: 12px;
+            background: #d4af37;
+        }
+        .threshold-met-text {
+            font-size: 0.75rem;
+            color: #81c784;
+            font-weight: 600;
+            margin-top: 0.3rem;
+        }
+
+        /* ── Tally row ── */
+        .ballot-tally {
+            display: flex;
+            gap: 1rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid #333;
+            font-size: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .tally-item { font-weight: 600; }
+        .tally-yea { color: #4caf50; }
+        .tally-nay { color: #f44336; }
+        .tally-abstain { color: #888; }
+        .tally-total { color: #555; margin-left: auto; }
+        .quorum-badge {
+            font-size: 0.7rem;
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(212,175,55,0.15);
+            color: #d4af37;
+        }
+
+        /* ══════════════════════════════════════════ */
+        /*  SCENARIO B: Multi-Choice                 */
+        /* ══════════════════════════════════════════ */
+        .option-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .option-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #333;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-card:hover { border-color: #555; background: rgba(255,255,255,0.06); }
+        .option-card.selected {
+            border-color: #4fc3f7;
+            background: rgba(79,195,247,0.08);
+        }
+
+        .option-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #555;
+            border-radius: 4px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .option-card.selected .option-checkbox {
+            border-color: #4fc3f7;
+            background: #4fc3f7;
+        }
+        .option-checkbox .check { display: none; color: #000; font-size: 0.75rem; font-weight: 900; }
+        .option-card.selected .option-checkbox .check { display: block; }
+
+        .option-body { flex: 1; }
+        .option-text { font-size: 0.9rem; color: #e0e0e0; line-height: 1.4; margin-bottom: 0.25rem; }
+        .option-source { font-size: 0.7rem; color: #888; }
+        .option-source a { color: #90caf9; text-decoration: none; }
+
+        .option-votes {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #b0b0b0;
+            flex-shrink: 0;
+            text-align: right;
+            min-width: 40px;
+        }
+        .option-votes .pct {
+            font-size: 0.7rem;
+            color: #888;
+            display: block;
+        }
+        .option-bar {
+            width: 60px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            margin-top: 4px;
+        }
+        .option-bar-fill {
+            height: 100%;
+            background: #4fc3f7;
+            border-radius: 2px;
+        }
+        .option-card.leading .option-bar-fill { background: #d4af37; }
+
+        .submit-vote-btn {
+            display: block;
+            width: 100%;
+            padding: 0.7rem;
+            background: linear-gradient(145deg, #4caf50, #388e3c);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+        }
+        .submit-vote-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(76,175,80,0.3); }
+
+        /* ══════════════════════════════════════════ */
+        /*  SCENARIO C: Ranked Choice                */
+        /* ══════════════════════════════════════════ */
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .rank-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #333;
+            border-radius: 8px;
+            cursor: grab;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .rank-card:hover { border-color: #555; background: rgba(255,255,255,0.06); }
+        .rank-card.dragging {
+            opacity: 0.5;
+            border-color: #d4af37;
+        }
+
+        .rank-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(206,147,216,0.2);
+            color: #e1bee7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .rank-number.first { background: rgba(212,175,55,0.3); color: #ffd700; }
+
+        .rank-grip {
+            color: #555;
+            font-size: 1rem;
+            flex-shrink: 0;
+            cursor: grab;
+        }
+
+        .rank-arrows {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .rank-arrow {
+            width: 24px;
+            height: 18px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid #444;
+            border-radius: 3px;
+            color: #b0b0b0;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .rank-arrow:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: #666; }
+
+        /* ══════════════════════════════════════════ */
+        /*  FACILITATOR CONTROLS                     */
+        /* ══════════════════════════════════════════ */
+        .facilitator-panel {
+            background: rgba(212,175,55,0.08);
+            border: 1px solid rgba(212,175,55,0.25);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .facilitator-panel h4 {
+            color: #d4af37;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .facilitator-panel h4 .badge {
+            font-size: 0.6rem;
+            padding: 0.1rem 0.4rem;
+            background: rgba(212,175,55,0.2);
+            border-radius: 3px;
+            color: #d4af37;
+        }
+
+        .fac-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .fac-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 6px;
+            background: rgba(212,175,55,0.1);
+            color: #d4af37;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .fac-btn:hover { background: rgba(212,175,55,0.2); border-color: rgba(212,175,55,0.5); }
+        .fac-btn.primary { background: #d4af37; color: #000; border-color: #d4af37; }
+        .fac-btn.primary:hover { background: #e0c068; }
+        .fac-btn.danger { border-color: rgba(244,67,54,0.3); color: #ef5350; background: rgba(244,67,54,0.1); }
+        .fac-btn.danger:hover { background: rgba(244,67,54,0.2); }
+
+        /* ── Round results (between rounds) ── */
+        .round-results {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .round-results h4 {
+            color: #b0b0b0;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+        .result-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .result-row:last-child { border-bottom: none; }
+        .result-text { flex: 1; font-size: 0.85rem; color: #ddd; }
+        .result-votes { font-size: 0.85rem; font-weight: 600; color: #b0b0b0; min-width: 35px; text-align: right; }
+        .result-pct { font-size: 0.75rem; color: #888; min-width: 40px; text-align: right; }
+        .result-bar-wrap { width: 80px; height: 4px; background: #333; border-radius: 2px; }
+        .result-bar-fill { height: 100%; border-radius: 2px; background: #4fc3f7; }
+        .result-row.winner .result-bar-fill { background: #d4af37; }
+        .result-row.winner .result-text { color: #ffd700; }
+        .result-row.eliminated { opacity: 0.5; }
+        .result-row.eliminated .result-text { text-decoration: line-through; }
+
+        .merge-hint {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: rgba(79,195,247,0.08);
+            border: 1px dashed rgba(79,195,247,0.3);
+            border-radius: 6px;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: #80d8ff;
+        }
+
+        /* ── Declaration banner ── */
+        .declaration-banner {
+            background: linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(76,175,80,0.08) 100%);
+            border: 2px solid rgba(212,175,55,0.4);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .declaration-banner .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .declaration-banner h3 { color: #ffd700; font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .declaration-banner .body { color: #ddd; font-size: 0.95rem; line-height: 1.5; margin-bottom: 0.75rem; font-style: italic; }
+        .declaration-banner .meta { color: #b0b0b0; font-size: 0.75rem; }
+        .declaration-banner .meta strong { color: #81c784; }
+
+        /* ── Notes ── */
+        .mockup-note {
+            background: rgba(255,255,255,0.04);
+            border-left: 3px solid #d4af37;
+            padding: 0.75rem 1rem;
+            margin: 1.5rem 0;
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            line-height: 1.5;
+        }
+        .mockup-note strong { color: #d4af37; }
+
+        @media (max-width: 500px) {
+            .vote-buttons-yn { flex-direction: column; gap: 0.5rem; }
+            .fac-actions { flex-direction: column; }
+            .option-card { flex-wrap: wrap; }
+            .option-votes { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mockup-label">CIVIC ENGINE MOCKUP — Multi-Option Ballot (Phase 1)</div>
+
+    <div class="container">
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  DECLARATION BANNER (ratified result)   -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="declaration-banner">
+            <div class="icon">&#x1F4DC;</div>
+            <h3>Group Declaration — Ratified</h3>
+            <div class="body">"We mandate that the town of Putnam allocate 15% of the annual budget surplus to affordable housing development, with priority given to mixed-income projects within the downtown corridor."</div>
+            <div class="meta">
+                Housing &amp; Development &middot; Town of Putnam &middot;
+                <strong>82% approval</strong> (41 of 50 members) &middot;
+                Ratified Mar 5, 2026
+            </div>
+        </div>
+
+        <h2>Active Ballots</h2>
+        <div class="group-name">Housing &amp; Development &middot; Town of Putnam, CT</div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  FACILITATOR PANEL                      -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="facilitator-panel">
+            <h4>Facilitator Tools <span class="badge">You are facilitating</span></h4>
+            <div class="fac-actions">
+                <button class="fac-btn">Surface Option</button>
+                <button class="fac-btn primary">Call Vote</button>
+                <button class="fac-btn">Merge Options</button>
+                <button class="fac-btn">Draft Declaration</button>
+                <button class="fac-btn danger">Close Round</button>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  SCENARIO A: Yes/No Ballot              -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Yes / No Ballot</h3>
+
+        <div class="ballot-card">
+            <div class="ballot-header">
+                <span class="ballot-type-badge badge-yes_no">Yes / No</span>
+                <div class="round-indicator">
+                    <span class="round-dot past"></span>
+                    <span class="round-dot active"></span>
+                    <span class="round-dot future"></span>
+                    Round 2 of 3
+                </div>
+            </div>
+            <div class="ballot-question">Should the town allocate emergency funds ($50K) to repair the Oak Street bridge before winter?</div>
+            <div class="ballot-source">Surfaced from post <a href="#">#142</a> by Sarah M. &middot; Roads &amp; Transportation</div>
+
+            <div class="vote-buttons-yn">
+                <button class="vote-btn-yn yea selected">Yea</button>
+                <button class="vote-btn-yn nay">Nay</button>
+                <button class="vote-btn-yn abstain">Abstain</button>
+            </div>
+
+            <div class="threshold-bar">
+                <div class="threshold-label">
+                    <span>62% agreement</span>
+                    <span>Majority needed (>50%)</span>
+                </div>
+                <div class="threshold-track">
+                    <div class="threshold-fill met" style="width: 62%;"></div>
+                    <div class="threshold-marker" style="left: 50%;"></div>
+                </div>
+                <div class="threshold-met-text">&#x2713; Majority threshold met</div>
+            </div>
+
+            <div class="ballot-tally">
+                <span class="tally-item tally-yea">Yea: 31</span>
+                <span class="tally-item tally-nay">Nay: 14</span>
+                <span class="tally-item tally-abstain">Abstain: 5</span>
+                <span class="quorum-badge">Quorum: 40/50 voted</span>
+                <span class="tally-total">50 members</span>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Yes/No ballot</strong> — same as current polls but with scope, round tracking, threshold progress, and quorum display. Existing poll cards upgrade to this format with zero breaking changes.
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  SCENARIO B: Multi-Choice Ballot        -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Multi-Choice Ballot</h3>
+
+        <div class="ballot-card">
+            <div class="ballot-header">
+                <span class="ballot-type-badge badge-multi">Multi-Choice</span>
+                <div class="round-indicator">
+                    <span class="round-dot active"></span>
+                    <span class="round-dot future"></span>
+                    <span class="round-dot future"></span>
+                    Round 1 of 3
+                </div>
+            </div>
+            <div class="ballot-question">How should the town address the affordable housing shortage? Select one.</div>
+            <div class="ballot-source">3 options surfaced from group discussion &middot; Called by facilitator</div>
+
+            <div class="option-list">
+                <div class="option-card selected leading" onclick="this.classList.toggle('selected')">
+                    <div class="option-checkbox"><span class="check">&#x2713;</span></div>
+                    <div class="option-body">
+                        <div class="option-text">Allocate 15% of budget surplus to mixed-income housing in the downtown corridor</div>
+                        <div class="option-source">From post <a href="#">#98</a> by Maria C.</div>
+                    </div>
+                    <div class="option-votes">
+                        18
+                        <span class="pct">45%</span>
+                        <div class="option-bar"><div class="option-bar-fill" style="width:75%"></div></div>
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="this.classList.toggle('selected')">
+                    <div class="option-checkbox"><span class="check">&#x2713;</span></div>
+                    <div class="option-body">
+                        <div class="option-text">Partner with Habitat for Humanity for 10 new units on the Miller Road lot</div>
+                        <div class="option-source">From post <a href="#">#103</a> by Tom R.</div>
+                    </div>
+                    <div class="option-votes">
+                        14
+                        <span class="pct">35%</span>
+                        <div class="option-bar"><div class="option-bar-fill" style="width:58%"></div></div>
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="this.classList.toggle('selected')">
+                    <div class="option-checkbox"><span class="check">&#x2713;</span></div>
+                    <div class="option-body">
+                        <div class="option-text">Rezone the industrial park for mixed-use residential/commercial development</div>
+                        <div class="option-source">From post <a href="#">#115</a> by Jamal K.</div>
+                    </div>
+                    <div class="option-votes">
+                        8
+                        <span class="pct">20%</span>
+                        <div class="option-bar"><div class="option-bar-fill" style="width:33%"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="submit-vote-btn">Submit Vote</button>
+
+            <div class="threshold-bar">
+                <div class="threshold-label">
+                    <span>Leading: 45%</span>
+                    <span>Majority needed (>50%)</span>
+                </div>
+                <div class="threshold-track">
+                    <div class="threshold-fill below" style="width: 45%;"></div>
+                    <div class="threshold-marker" style="left: 50%;"></div>
+                </div>
+            </div>
+
+            <div class="ballot-tally">
+                <span class="tally-item" style="color: #80d8ff;">40 of 50 voted</span>
+                <span class="quorum-badge">Quorum met</span>
+                <span class="tally-total">No majority yet — round 2 likely</span>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Multi-choice ballot</strong> — options surfaced from group posts by the facilitator. Each option traces back to its source post. Vote counts and percentages shown after voting. When no option reaches majority, facilitator can merge similar options and call another round.
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  ROUND RESULTS (between rounds)         -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Between Rounds — Results &amp; Merge</h3>
+
+        <div class="round-results">
+            <h4>Round 1 Results — No Majority</h4>
+            <div class="result-row winner">
+                <div class="result-text">Allocate 15% of budget surplus to mixed-income housing</div>
+                <div class="result-votes">18</div>
+                <div class="result-pct">45%</div>
+                <div class="result-bar-wrap"><div class="result-bar-fill" style="width:75%"></div></div>
+            </div>
+            <div class="result-row">
+                <div class="result-text">Partner with Habitat for Humanity for 10 new units</div>
+                <div class="result-votes">14</div>
+                <div class="result-pct">35%</div>
+                <div class="result-bar-wrap"><div class="result-bar-fill" style="width:58%"></div></div>
+            </div>
+            <div class="result-row eliminated">
+                <div class="result-text">Rezone the industrial park for mixed-use</div>
+                <div class="result-votes">8</div>
+                <div class="result-pct">20%</div>
+                <div class="result-bar-wrap"><div class="result-bar-fill" style="width:33%"></div></div>
+            </div>
+
+            <div class="merge-hint">
+                &#x1F4A1; Facilitator suggestion: Options 1 &amp; 2 overlap (both involve new housing construction). Consider merging before Round 2.
+            </div>
+        </div>
+
+        <div class="facilitator-panel">
+            <h4>Round 2 Setup <span class="badge">Facilitator</span></h4>
+            <div class="fac-actions">
+                <button class="fac-btn primary">Merge Options 1 &amp; 2</button>
+                <button class="fac-btn">Revise Option Text</button>
+                <button class="fac-btn">Add New Option</button>
+                <button class="fac-btn primary">Call Round 2</button>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Between rounds</strong> — facilitator reviews results, can merge similar options, revise text based on discussion, eliminate low-vote options, or add new options. Then calls the next round. This is the feedback loop that drives convergence.
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  SCENARIO C: Ranked Choice              -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Ranked Choice Ballot</h3>
+
+        <div class="ballot-card">
+            <div class="ballot-header">
+                <span class="ballot-type-badge badge-ranked">Ranked Choice</span>
+                <div class="round-indicator">
+                    <span class="round-dot active"></span>
+                    Round 1 &middot; Instant runoff
+                </div>
+            </div>
+            <div class="ballot-question">Rank your preferences for the town's climate action priority.</div>
+            <div class="ballot-source">4 options from Parks/Land/Conservation group &middot; Two-thirds threshold</div>
+
+            <div class="rank-list" id="rankList">
+                <div class="rank-card" draggable="true">
+                    <div class="rank-number first">1</div>
+                    <div class="rank-arrows">
+                        <button class="rank-arrow" title="Move up">&#x25B2;</button>
+                        <button class="rank-arrow" title="Move down">&#x25BC;</button>
+                    </div>
+                    <div class="option-body">
+                        <div class="option-text">Solar panel incentive program for residential properties</div>
+                        <div class="option-source">From post <a href="#">#201</a></div>
+                    </div>
+                    <div class="rank-grip">&#x2630;</div>
+                </div>
+
+                <div class="rank-card" draggable="true">
+                    <div class="rank-number">2</div>
+                    <div class="rank-arrows">
+                        <button class="rank-arrow" title="Move up">&#x25B2;</button>
+                        <button class="rank-arrow" title="Move down">&#x25BC;</button>
+                    </div>
+                    <div class="option-body">
+                        <div class="option-text">Town-wide composting and food waste reduction program</div>
+                        <div class="option-source">From post <a href="#">#208</a></div>
+                    </div>
+                    <div class="rank-grip">&#x2630;</div>
+                </div>
+
+                <div class="rank-card" draggable="true">
+                    <div class="rank-number">3</div>
+                    <div class="rank-arrows">
+                        <button class="rank-arrow" title="Move up">&#x25B2;</button>
+                        <button class="rank-arrow" title="Move down">&#x25BC;</button>
+                    </div>
+                    <div class="option-body">
+                        <div class="option-text">EV charging stations at Town Hall and library parking lots</div>
+                        <div class="option-source">From post <a href="#">#215</a></div>
+                    </div>
+                    <div class="rank-grip">&#x2630;</div>
+                </div>
+
+                <div class="rank-card" draggable="true">
+                    <div class="rank-number">4</div>
+                    <div class="rank-arrows">
+                        <button class="rank-arrow" title="Move up">&#x25B2;</button>
+                        <button class="rank-arrow" title="Move down">&#x25BC;</button>
+                    </div>
+                    <div class="option-body">
+                        <div class="option-text">Tree canopy restoration — plant 500 native trees by 2028</div>
+                        <div class="option-source">From post <a href="#">#220</a></div>
+                    </div>
+                    <div class="rank-grip">&#x2630;</div>
+                </div>
+            </div>
+
+            <button class="submit-vote-btn">Submit Rankings</button>
+
+            <div class="threshold-bar">
+                <div class="threshold-label">
+                    <span>First-choice leader: 38%</span>
+                    <span>Two-thirds needed (>66.7%)</span>
+                </div>
+                <div class="threshold-track">
+                    <div class="threshold-fill below" style="width: 38%;"></div>
+                    <div class="threshold-marker" style="left: 66.7%;"></div>
+                </div>
+            </div>
+
+            <div class="ballot-tally">
+                <span class="tally-item" style="color: #e1bee7;">35 of 50 ranked</span>
+                <span class="quorum-badge">Quorum: 70% (35/50)</span>
+                <span class="tally-total">Instant runoff will eliminate lowest</span>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Ranked choice ballot</strong> — drag to reorder or use arrows. Instant runoff eliminates the lowest option and redistributes votes until a winner meets the threshold. The grip handle (&#x2630;) and arrows both work for reordering. Mobile users use arrows exclusively.
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  COMPONENT LEGEND                       -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Component Legend</h3>
+
+        <div class="mockup-note">
+            <strong>New components shown in this mockup:</strong><br><br>
+            &#x2022; <strong>Vote type badges</strong> — Yes/No (green), Multi-Choice (blue), Ranked (purple)<br>
+            &#x2022; <strong>Round indicator</strong> — dots showing current position in multi-round voting<br>
+            &#x2022; <strong>Threshold progress bar</strong> — gold marker at threshold, fill color changes when met<br>
+            &#x2022; <strong>Quorum badge</strong> — shows participation vs requirement<br>
+            &#x2022; <strong>Option cards</strong> — checkbox-select with source post reference and vote bars<br>
+            &#x2022; <strong>Rank cards</strong> — draggable with grip handle + arrow fallback<br>
+            &#x2022; <strong>Facilitator panel</strong> — gold-themed controls (only shown to facilitator role)<br>
+            &#x2022; <strong>Round results</strong> — between-round view with merge suggestions<br>
+            &#x2022; <strong>Declaration banner</strong> — ratified group mandate at top of group page<br>
+        </div>
+
+    </div>
+
+    <div style="text-align:center;padding:20px;color:#666;font-size:0.75rem;">
+        Mockup only — no JS functionality. Open in browser to review.<br>
+        Part of The Civic Engine design (docs/plans/civic-engine-design.md)
+    </div>
+
+</body>
+</html>

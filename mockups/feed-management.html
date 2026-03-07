@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Engine — Feed Management Mockup</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #eee;
+        }
+
+        .mockup-label {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,215,0,0.15);
+            border-bottom: 1px solid rgba(255,215,0,0.3);
+            color: #ffd700;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 3rem;
+        }
+
+        /* ── Page Header ── */
+        .page-header {
+            margin-bottom: 1.5rem;
+        }
+        .page-header h1 {
+            color: #d4af37;
+            font-size: 1.4rem;
+            margin-bottom: 0.25rem;
+        }
+        .page-header .subtitle {
+            color: #b0b0b0;
+            font-size: 0.85rem;
+        }
+
+        /* ── Feed Source Tabs ── */
+        .source-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 1.25rem;
+        }
+        .source-tab {
+            padding: 0.6rem 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #888;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .source-tab:hover { color: #ccc; }
+        .source-tab.active { color: #d4af37; border-bottom-color: #d4af37; }
+        .source-tab .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .source-tab .indicator.threats { background: #f44336; }
+        .source-tab .indicator.bills { background: #4fc3f7; }
+        .source-tab .indicator.eos { background: #ff9800; }
+        .source-tab .indicator.declarations { background: #81c784; }
+        .source-tab .count {
+            font-size: 0.65rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.05rem 0.4rem;
+            border-radius: 8px;
+        }
+
+        /* ── Summary Stats ── */
+        .feed-stats {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+        .feed-stat {
+            flex: 1;
+            min-width: 100px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .feed-stat .number {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #d4af37;
+        }
+        .feed-stat .label {
+            font-size: 0.65rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Section Title ── */
+        .section-title {
+            color: #fff;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 1.75rem 0 0.75rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid #333;
+        }
+
+        /* ── Pipeline Visual ── */
+        .pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .pipeline-step {
+            text-align: center;
+            padding: 0.6rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 6px;
+            min-width: 100px;
+        }
+        .pipeline-step.source { background: rgba(244,67,54,0.15); color: #ef9a9a; border: 1px solid rgba(244,67,54,0.3); }
+        .pipeline-step.transform { background: rgba(79,195,247,0.15); color: #80d8ff; border: 1px solid rgba(79,195,247,0.3); }
+        .pipeline-step.ballot { background: rgba(212,175,55,0.15); color: #d4af37; border: 1px solid rgba(212,175,55,0.3); }
+        .pipeline-step.citizen { background: rgba(76,175,80,0.15); color: #81c784; border: 1px solid rgba(76,175,80,0.3); }
+        .pipeline-arrow {
+            color: #555;
+            font-size: 1.2rem;
+            padding: 0 0.3rem;
+        }
+
+        /* ══════════════════════════════════════════ */
+        /*  FEED EVENT CARDS                         */
+        /* ══════════════════════════════════════════ */
+
+        .feed-card {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            transition: border-color 0.2s;
+        }
+        .feed-card:hover { border-color: #555; }
+        .feed-card.threat { border-left: 3px solid #f44336; }
+        .feed-card.bill { border-left: 3px solid #4fc3f7; }
+        .feed-card.eo { border-left: 3px solid #ff9800; }
+        .feed-card.declaration { border-left: 3px solid #81c784; }
+
+        .feed-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .feed-source-badge {
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .feed-source-badge.threat { background: rgba(244,67,54,0.2); color: #ef9a9a; }
+        .feed-source-badge.bill { background: rgba(79,195,247,0.2); color: #80d8ff; }
+        .feed-source-badge.eo { background: rgba(255,152,0,0.2); color: #ffb74d; }
+        .feed-source-badge.declaration { background: rgba(76,175,80,0.2); color: #81c784; }
+
+        .feed-severity {
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .feed-date {
+            font-size: 0.7rem;
+            color: #666;
+            margin-left: auto;
+        }
+
+        .feed-status {
+            padding: 0.1rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+        .feed-status.auto-created { background: rgba(76,175,80,0.15); color: #81c784; }
+        .feed-status.pending { background: rgba(255,152,0,0.15); color: #ffb74d; }
+        .feed-status.skipped { background: rgba(255,255,255,0.08); color: #888; }
+
+        .feed-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 0.35rem;
+            line-height: 1.4;
+        }
+
+        .feed-meta {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 0.75rem;
+        }
+        .feed-meta a { color: #90caf9; text-decoration: none; }
+
+        /* ── Ballot Preview (generated from event) ── */
+        .ballot-preview {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #2a2a3e;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .ballot-preview-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #d4af37;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+        .ballot-preview-question {
+            font-size: 0.9rem;
+            color: #e0e0e0;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 0.4rem;
+        }
+        .ballot-preview-config {
+            display: flex;
+            gap: 0.75rem;
+            font-size: 0.7rem;
+            color: #b0b0b0;
+            flex-wrap: wrap;
+        }
+        .config-tag {
+            padding: 0.1rem 0.4rem;
+            border: 1px solid #444;
+            border-radius: 3px;
+        }
+
+        /* ── Action Buttons ── */
+        .feed-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .feed-btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid;
+        }
+        .feed-btn.publish {
+            background: #4caf50;
+            color: #fff;
+            border-color: #4caf50;
+        }
+        .feed-btn.publish:hover { background: #388e3c; }
+        .feed-btn.edit {
+            background: transparent;
+            color: #d4af37;
+            border-color: rgba(212,175,55,0.3);
+        }
+        .feed-btn.edit:hover { background: rgba(212,175,55,0.1); }
+        .feed-btn.skip {
+            background: transparent;
+            color: #888;
+            border-color: #444;
+        }
+        .feed-btn.skip:hover { background: rgba(255,255,255,0.05); }
+        .feed-btn.view {
+            background: transparent;
+            color: #90caf9;
+            border-color: rgba(144,202,249,0.3);
+        }
+        .feed-btn.view:hover { background: rgba(144,202,249,0.1); }
+
+        /* ── Activity Log ── */
+        .activity-log {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+        }
+        .activity-log h4 {
+            color: #b0b0b0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+        .log-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.8rem;
+        }
+        .log-entry:last-child { border-bottom: none; }
+        .log-time {
+            color: #666;
+            font-size: 0.7rem;
+            min-width: 70px;
+            flex-shrink: 0;
+        }
+        .log-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            flex-shrink: 0;
+        }
+        .log-icon.created { background: rgba(76,175,80,0.2); color: #81c784; }
+        .log-icon.skipped { background: rgba(255,255,255,0.08); color: #888; }
+        .log-icon.edited { background: rgba(212,175,55,0.2); color: #d4af37; }
+        .log-icon.escalated { background: rgba(79,195,247,0.2); color: #80d8ff; }
+        .log-text { color: #ccc; flex: 1; }
+        .log-text a { color: #90caf9; text-decoration: none; }
+
+        /* ── Config Panel ── */
+        .config-panel {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .config-panel h4 {
+            color: #d4af37;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+        .config-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.85rem;
+        }
+        .config-row:last-child { border-bottom: none; }
+        .config-label {
+            color: #ccc;
+            min-width: 180px;
+        }
+        .config-value {
+            color: #b0b0b0;
+        }
+        .config-select {
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-size: 0.8rem;
+        }
+        .config-toggle {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background: #555;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .config-toggle.on { background: #4caf50; }
+        .config-toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            top: 2px;
+            left: 2px;
+            transition: left 0.2s;
+        }
+        .config-toggle.on::after { left: 18px; }
+
+        /* ── Escalation Card ── */
+        .escalation-card {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-left: 3px solid #81c784;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        .escalation-flow {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .flow-node {
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .flow-node.town { background: rgba(76,175,80,0.15); color: #81c784; }
+        .flow-node.state { background: rgba(79,195,247,0.15); color: #80d8ff; }
+        .flow-arrow { color: #555; }
+
+        /* ── Notes ── */
+        .mockup-note {
+            background: rgba(255,255,255,0.04);
+            border-left: 3px solid #d4af37;
+            padding: 0.75rem 1rem;
+            margin: 1.5rem 0;
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            line-height: 1.5;
+        }
+        .mockup-note strong { color: #d4af37; }
+
+        @media (max-width: 600px) {
+            .feed-stats { flex-direction: column; }
+            .pipeline { flex-direction: column; gap: 0.25rem; }
+            .pipeline-arrow { transform: rotate(90deg); }
+            .config-row { flex-direction: column; gap: 0.25rem; }
+            .config-label { min-width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mockup-label">CIVIC ENGINE MOCKUP — Feed Management (Phase 4)</div>
+
+    <div class="container">
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  PAGE HEADER                            -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="page-header">
+            <h1>Feed Management</h1>
+            <div class="subtitle">External events that trigger citizen ballots — admin view</div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  PIPELINE VISUAL                        -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="pipeline">
+            <div class="pipeline-step source">External Event</div>
+            <span class="pipeline-arrow">&#x2192;</span>
+            <div class="pipeline-step transform">Transform</div>
+            <span class="pipeline-arrow">&#x2192;</span>
+            <div class="pipeline-step ballot">Auto-Ballot</div>
+            <span class="pipeline-arrow">&#x2192;</span>
+            <div class="pipeline-step citizen">Citizen Vote</div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  SOURCE TABS                            -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="source-tabs">
+            <div class="source-tab active">
+                <span class="indicator threats"></span>
+                Threats <span class="count">47</span>
+            </div>
+            <div class="source-tab">
+                <span class="indicator bills"></span>
+                Bills <span class="count">12</span>
+            </div>
+            <div class="source-tab">
+                <span class="indicator eos"></span>
+                Executive Orders <span class="count">8</span>
+            </div>
+            <div class="source-tab">
+                <span class="indicator declarations"></span>
+                Escalations <span class="count">4</span>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  FEED STATS                             -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="feed-stats">
+            <div class="feed-stat">
+                <div class="number">47</div>
+                <div class="label">Events</div>
+            </div>
+            <div class="feed-stat">
+                <div class="number">38</div>
+                <div class="label">Ballots Created</div>
+            </div>
+            <div class="feed-stat">
+                <div class="number">6</div>
+                <div class="label">Pending Review</div>
+            </div>
+            <div class="feed-stat">
+                <div class="number">3</div>
+                <div class="label">Skipped</div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  THREATS TAB — FEED EVENTS              -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Threat Feed — Pending Review</h3>
+
+        <!-- Pending threat → auto-ballot preview -->
+        <div class="feed-card threat">
+            <div class="feed-card-header">
+                <span class="feed-source-badge threat">Threat</span>
+                <span class="feed-severity" style="background:#d32f2f;">680 — Severe</span>
+                <span class="feed-status pending">Pending</span>
+                <span class="feed-date">Mar 6, 2026</span>
+            </div>
+            <div class="feed-title">Executive order to eliminate Department of Education</div>
+            <div class="feed-meta">
+                Threat #312 &middot; Tagged: Education, Federal Power &middot;
+                <a href="#">View full threat</a>
+            </div>
+
+            <div class="ballot-preview">
+                <div class="ballot-preview-label">Auto-Generated Ballot Preview</div>
+                <div class="ballot-preview-question">Should elected officials be held accountable for the executive order to eliminate the Department of Education?</div>
+                <div class="ballot-preview-config">
+                    <span class="config-tag">yes_no</span>
+                    <span class="config-tag">scope: federal</span>
+                    <span class="config-tag">threshold: majority</span>
+                    <span class="config-tag">source: threat #312</span>
+                </div>
+            </div>
+
+            <div class="feed-actions">
+                <button class="feed-btn publish">Publish Ballot</button>
+                <button class="feed-btn edit">Edit Question</button>
+                <button class="feed-btn skip">Skip</button>
+            </div>
+        </div>
+
+        <!-- Auto-created threat ballot -->
+        <div class="feed-card threat">
+            <div class="feed-card-header">
+                <span class="feed-source-badge threat">Threat</span>
+                <span class="feed-severity" style="background:#e65100;">520 — High</span>
+                <span class="feed-status auto-created">Ballot Live</span>
+                <span class="feed-date">Mar 5, 2026</span>
+            </div>
+            <div class="feed-title">Mass firing of federal inspectors at USDA food safety division</div>
+            <div class="feed-meta">
+                Threat #298 &middot; Tagged: Public Health, Labor &middot;
+                Ballot #142 &middot; <a href="#">View ballot</a> &middot; 89 votes so far
+            </div>
+            <div class="feed-actions">
+                <button class="feed-btn view">View Results</button>
+                <button class="feed-btn edit">Edit</button>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Threat feed</strong> — existing pattern from poll/admin.php, now with UI. Events above the severity threshold auto-generate ballot previews. Admin can publish, edit the question, or skip. Published ballots show vote counts inline.
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  BILLS TAB PREVIEW                      -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Bill Feed — New</h3>
+
+        <div class="feed-card bill">
+            <div class="feed-card-header">
+                <span class="feed-source-badge bill">Bill</span>
+                <span class="feed-status pending">Pending</span>
+                <span class="feed-date">Mar 5, 2026</span>
+            </div>
+            <div class="feed-title">H.R. 4521 — Affordable Housing Investment Act of 2026</div>
+            <div class="feed-meta">
+                Sponsor: Rep. Torres (D-NY) &middot; Committee: Financial Services &middot;
+                Status: Introduced &middot; <a href="#">Congress.gov</a>
+            </div>
+
+            <div class="ballot-preview">
+                <div class="ballot-preview-label">Auto-Generated Ballot Preview</div>
+                <div class="ballot-preview-question">Do you support H.R. 4521 — Affordable Housing Investment Act of 2026?</div>
+                <div class="ballot-preview-config">
+                    <span class="config-tag">yes_no_novote</span>
+                    <span class="config-tag">scope: federal</span>
+                    <span class="config-tag">threshold: majority</span>
+                    <span class="config-tag">source: bill</span>
+                </div>
+            </div>
+
+            <div class="feed-actions">
+                <button class="feed-btn publish">Publish Ballot</button>
+                <button class="feed-btn edit">Edit Question</button>
+                <button class="feed-btn skip">Skip</button>
+            </div>
+        </div>
+
+        <div class="feed-card bill">
+            <div class="feed-card-header">
+                <span class="feed-source-badge bill">Bill</span>
+                <span class="feed-status auto-created">Ballot Live</span>
+                <span class="feed-date">Mar 3, 2026</span>
+            </div>
+            <div class="feed-title">S. 1847 — Veterans Mental Health Access Act</div>
+            <div class="feed-meta">
+                Sponsor: Sen. Murray (D-WA) &middot; Committee: Veterans' Affairs &middot;
+                Status: Committee hearing scheduled &middot; Ballot #139 &middot; 156 votes
+            </div>
+            <div class="feed-actions">
+                <button class="feed-btn view">View Results</button>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  EXECUTIVE ORDERS TAB PREVIEW           -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Executive Order Feed</h3>
+
+        <div class="feed-card eo">
+            <div class="feed-card-header">
+                <span class="feed-source-badge eo">Executive Order</span>
+                <span class="feed-status auto-created">Ballot Live</span>
+                <span class="feed-date">Mar 4, 2026</span>
+            </div>
+            <div class="feed-title">EO 14198 — Restructuring Federal Workforce and Eliminating Remote Work</div>
+            <div class="feed-meta">
+                Signed: Mar 3, 2026 &middot; Affects: All federal agencies &middot;
+                Ballot #141 &middot; 312 votes &middot; <a href="#">View ballot</a>
+            </div>
+            <div class="feed-actions">
+                <button class="feed-btn view">View Results</button>
+                <button class="feed-btn edit">Edit</button>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  DECLARATION ESCALATIONS                -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Declaration Escalations</h3>
+
+        <div class="escalation-card">
+            <div class="escalation-flow">
+                <span class="flow-node town">Putnam Housing</span>
+                <span class="flow-arrow">&#x2192;</span>
+                <span class="flow-node town">Norwich Housing</span>
+                <span class="flow-arrow">&#x2192;</span>
+                <span class="flow-node town">Windham Housing</span>
+                <span class="flow-arrow">&#x2192;</span>
+                <span class="flow-node state">CT State Housing</span>
+            </div>
+            <div class="feed-title">3 Connecticut towns declared on affordable housing — escalation to state group</div>
+            <div class="feed-meta">
+                Common thread: affordable housing allocation &middot;
+                Auto-ballot at state level: "Should Connecticut adopt a statewide affordable housing mandate?"
+            </div>
+
+            <div class="ballot-preview">
+                <div class="ballot-preview-label">Escalation Ballot Preview</div>
+                <div class="ballot-preview-question">3 Connecticut towns have declared mandates on affordable housing. Should the state adopt a unified affordable housing policy?</div>
+                <div class="ballot-preview-config">
+                    <span class="config-tag">yes_no</span>
+                    <span class="config-tag">scope: state CT</span>
+                    <span class="config-tag">threshold: majority</span>
+                    <span class="config-tag">source: declaration escalation</span>
+                </div>
+            </div>
+
+            <div class="feed-actions">
+                <button class="feed-btn publish">Publish to State Group</button>
+                <button class="feed-btn edit">Edit Question</button>
+                <button class="feed-btn skip">Skip</button>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Declaration escalations</strong> — when multiple towns declare on the same topic, the system detects convergence and suggests an escalation ballot at the state level. This is the fractal in action: town declarations bubble up into state-level questions. The flow visualization shows the chain of contributing towns.
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  FEED CONFIGURATION                     -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Feed Configuration</h3>
+
+        <div class="config-panel">
+            <h4>Auto-Ballot Rules</h4>
+            <div class="config-row">
+                <span class="config-label">Threat severity threshold</span>
+                <select class="config-select">
+                    <option>200+</option>
+                    <option selected>300+</option>
+                    <option>400+</option>
+                    <option>500+</option>
+                </select>
+            </div>
+            <div class="config-row">
+                <span class="config-label">Auto-publish threats</span>
+                <div class="config-toggle on"></div>
+                <span class="config-value">Ballots created automatically (current behavior)</span>
+            </div>
+            <div class="config-row">
+                <span class="config-label">Auto-publish bills</span>
+                <div class="config-toggle"></div>
+                <span class="config-value">Require manual review before publishing</span>
+            </div>
+            <div class="config-row">
+                <span class="config-label">Auto-publish executive orders</span>
+                <div class="config-toggle on"></div>
+                <span class="config-value">Ballots created automatically</span>
+            </div>
+            <div class="config-row">
+                <span class="config-label">Escalation threshold</span>
+                <select class="config-select">
+                    <option>2+ towns</option>
+                    <option selected>3+ towns</option>
+                    <option>5+ towns</option>
+                </select>
+                <span class="config-value">towns must declare before escalation is suggested</span>
+            </div>
+            <div class="config-row">
+                <span class="config-label">Default vote type for bills</span>
+                <select class="config-select">
+                    <option>yes_no</option>
+                    <option selected>yes_no_novote</option>
+                    <option>multi_choice</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  ACTIVITY LOG                           -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Activity Log</h3>
+
+        <div class="activity-log">
+            <h4>Recent Feed Activity</h4>
+            <div class="log-entry">
+                <span class="log-time">2h ago</span>
+                <div class="log-icon created">+</div>
+                <span class="log-text">Ballot #142 auto-created from <a href="#">Threat #298</a> (severity 520)</span>
+            </div>
+            <div class="log-entry">
+                <span class="log-time">5h ago</span>
+                <div class="log-icon edited">&#x270E;</div>
+                <span class="log-text">Ballot #141 question edited for <a href="#">EO 14198</a> — "Restructuring Federal Workforce"</span>
+            </div>
+            <div class="log-entry">
+                <span class="log-time">8h ago</span>
+                <div class="log-icon escalated">&#x2191;</div>
+                <span class="log-text">Escalation suggested: 3 CT towns declared on affordable housing → <a href="#">State Housing group</a></span>
+            </div>
+            <div class="log-entry">
+                <span class="log-time">1d ago</span>
+                <div class="log-icon skipped">&#x2013;</div>
+                <span class="log-text">Threat #305 skipped (severity 310, duplicate of #298)</span>
+            </div>
+            <div class="log-entry">
+                <span class="log-time">1d ago</span>
+                <div class="log-icon created">+</div>
+                <span class="log-text">Ballot #139 published from <a href="#">S. 1847</a> — Veterans Mental Health Access Act</span>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  COMPONENT LEGEND                       -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Component Legend</h3>
+
+        <div class="mockup-note">
+            <strong>New components for Feed Management:</strong><br><br>
+            &#x2022; <strong>Pipeline visual</strong> — External Event → Transform → Auto-Ballot → Citizen Vote<br>
+            &#x2022; <strong>Source tabs</strong> — Threats (red) / Bills (blue) / Executive Orders (orange) / Escalations (green)<br>
+            &#x2022; <strong>Feed event cards</strong> — color-coded by source, with severity/status badges<br>
+            &#x2022; <strong>Ballot preview</strong> — auto-generated question + config tags, shown before publishing<br>
+            &#x2022; <strong>Action buttons</strong> — Publish / Edit Question / Skip per event<br>
+            &#x2022; <strong>Declaration escalation flow</strong> — visual chain of contributing towns → state group<br>
+            &#x2022; <strong>Feed configuration</strong> — severity threshold, auto-publish toggles, escalation rules<br>
+            &#x2022; <strong>Activity log</strong> — chronological feed of all auto-ballot actions<br>
+        </div>
+
+    </div>
+
+    <div style="text-align:center;padding:20px;color:#666;font-size:0.75rem;">
+        Mockup only — no JS functionality. Open in browser to review.<br>
+        Part of The Civic Engine design (docs/plans/civic-engine-design.md)
+    </div>
+
+</body>
+</html>

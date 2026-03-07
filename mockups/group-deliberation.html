@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Engine — Group Deliberation Page Mockup</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #eee;
+        }
+
+        .mockup-label {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,215,0,0.15);
+            border-bottom: 1px solid rgba(255,215,0,0.3);
+            color: #ffd700;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 3rem;
+        }
+
+        /* ── Group Header ── */
+        .group-header {
+            margin-bottom: 1.5rem;
+        }
+        .group-breadcrumb {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 0.4rem;
+        }
+        .group-breadcrumb a { color: #90caf9; text-decoration: none; }
+        .group-breadcrumb a:hover { text-decoration: underline; }
+
+        .group-title-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .group-title-row h1 {
+            color: #d4af37;
+            font-size: 1.4rem;
+            margin: 0;
+        }
+        .scope-badge {
+            padding: 0.15rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(76,175,80,0.2);
+            color: #81c784;
+        }
+        .member-count {
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            margin-left: auto;
+        }
+
+        .group-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #888;
+            flex-wrap: wrap;
+        }
+        .group-meta a { color: #90caf9; text-decoration: none; }
+
+        /* ── Tabs ── */
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 1.25rem;
+        }
+        .tab {
+            padding: 0.6rem 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #888;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab:hover { color: #ccc; }
+        .tab.active {
+            color: #d4af37;
+            border-bottom-color: #d4af37;
+        }
+        .tab .count-badge {
+            display: inline-block;
+            background: rgba(212,175,55,0.2);
+            color: #d4af37;
+            font-size: 0.65rem;
+            padding: 0.05rem 0.4rem;
+            border-radius: 8px;
+            margin-left: 0.3rem;
+            font-weight: 700;
+        }
+
+        /* ── Declaration Banner (ratified, pinned at top) ── */
+        .declaration-banner {
+            background: linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(76,175,80,0.08) 100%);
+            border: 2px solid rgba(212,175,55,0.4);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .declaration-banner .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #d4af37;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+        .declaration-banner .title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #ffd700;
+            margin-bottom: 0.4rem;
+        }
+        .declaration-banner .body {
+            color: #ddd;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            font-style: italic;
+            margin-bottom: 0.5rem;
+        }
+        .declaration-banner .meta {
+            font-size: 0.75rem;
+            color: #b0b0b0;
+        }
+        .declaration-banner .meta strong { color: #81c784; }
+
+        .opinion-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid rgba(212,175,55,0.2);
+        }
+        .opinion-btn {
+            padding: 0.35rem 0.8rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid;
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .opinion-btn.agree { border-color: #4caf50; color: #4caf50; }
+        .opinion-btn.agree:hover { background: #4caf50; color: #fff; }
+        .opinion-btn.disagree { border-color: #f44336; color: #f44336; }
+        .opinion-btn.disagree:hover { background: #f44336; color: #fff; }
+        .opinion-btn.mixed { border-color: #ff9800; color: #ff9800; }
+        .opinion-btn.mixed:hover { background: #ff9800; color: #fff; }
+        .opinion-summary {
+            font-size: 0.75rem;
+            color: #b0b0b0;
+            margin-left: auto;
+        }
+        .opinion-summary strong { color: #81c784; }
+
+        /* ── Facilitator Panel ── */
+        .facilitator-panel {
+            background: rgba(212,175,55,0.08);
+            border: 1px solid rgba(212,175,55,0.25);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .facilitator-panel h4 {
+            color: #d4af37;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .facilitator-panel h4 .badge {
+            font-size: 0.6rem;
+            padding: 0.1rem 0.4rem;
+            background: rgba(212,175,55,0.2);
+            border-radius: 3px;
+            color: #d4af37;
+        }
+        .fac-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .fac-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 6px;
+            background: rgba(212,175,55,0.1);
+            color: #d4af37;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .fac-btn:hover { background: rgba(212,175,55,0.2); border-color: rgba(212,175,55,0.5); }
+        .fac-btn.primary { background: #d4af37; color: #000; border-color: #d4af37; }
+        .fac-btn.primary:hover { background: #e0c068; }
+
+        /* ── Active Ballot (embedded) ── */
+        .active-ballot {
+            background: #1a1a2e;
+            border: 2px solid rgba(79,195,247,0.3);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .ballot-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .ballot-label .icon { color: #4fc3f7; font-size: 1rem; }
+        .ballot-label .text {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #4fc3f7;
+            font-weight: 700;
+        }
+        .ballot-label .round {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: #b0b0b0;
+        }
+        .round-dots {
+            display: inline-flex;
+            gap: 4px;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        .round-dot {
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+        }
+        .round-dot.active { background: #d4af37; }
+        .round-dot.past { background: #555; }
+        .round-dot.future { background: #333; border: 1px solid #555; }
+
+        .ballot-question {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .option-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .option-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #333;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-card:hover { border-color: #555; background: rgba(255,255,255,0.06); }
+        .option-card.selected { border-color: #4fc3f7; background: rgba(79,195,247,0.08); }
+
+        .option-radio {
+            width: 20px; height: 20px;
+            border: 2px solid #555;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .option-card.selected .option-radio {
+            border-color: #4fc3f7;
+        }
+        .option-radio .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            display: none;
+        }
+        .option-card.selected .option-radio .dot { display: block; }
+
+        .option-body { flex: 1; }
+        .option-text { font-size: 0.9rem; color: #e0e0e0; line-height: 1.4; margin-bottom: 0.2rem; }
+        .option-source { font-size: 0.7rem; color: #888; }
+        .option-source a { color: #90caf9; text-decoration: none; }
+
+        .option-votes {
+            font-size: 0.8rem; font-weight: 600; color: #b0b0b0;
+            flex-shrink: 0; text-align: right; min-width: 40px;
+        }
+        .option-votes .pct { font-size: 0.7rem; color: #888; display: block; }
+        .option-bar { width: 60px; height: 4px; background: #333; border-radius: 2px; margin-top: 4px; }
+        .option-bar-fill { height: 100%; border-radius: 2px; background: #4fc3f7; }
+        .option-card.leading .option-bar-fill { background: #d4af37; }
+
+        .submit-vote-btn {
+            display: block; width: 100%; padding: 0.7rem;
+            background: linear-gradient(145deg, #4caf50, #388e3c);
+            color: #fff; border: none; border-radius: 8px;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            margin-bottom: 0.75rem; transition: all 0.2s;
+        }
+        .submit-vote-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(76,175,80,0.3); }
+
+        .threshold-bar { margin: 0.5rem 0; }
+        .threshold-label {
+            display: flex; justify-content: space-between;
+            font-size: 0.75rem; color: #b0b0b0; margin-bottom: 0.3rem;
+        }
+        .threshold-track {
+            height: 6px; background: #333; border-radius: 3px; overflow: hidden; position: relative;
+        }
+        .threshold-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+        .threshold-fill.below { background: linear-gradient(90deg, #f44336, #ff9800); }
+        .threshold-fill.met { background: linear-gradient(90deg, #4caf50, #81c784); }
+        .threshold-marker { position: absolute; top: -3px; width: 2px; height: 12px; background: #d4af37; }
+
+        .ballot-tally {
+            display: flex; gap: 1rem; padding-top: 0.5rem;
+            font-size: 0.8rem; align-items: center; flex-wrap: wrap;
+        }
+        .quorum-badge {
+            font-size: 0.7rem; padding: 0.1rem 0.5rem; border-radius: 4px;
+            background: rgba(212,175,55,0.15); color: #d4af37;
+        }
+        .tally-total { color: #555; margin-left: auto; }
+
+        /* ── Discussion Stream ── */
+        .stream-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .stream-header h3 {
+            color: #ccc;
+            font-size: 0.95rem;
+        }
+        .stream-header .filter-pills {
+            display: flex;
+            gap: 0.4rem;
+            margin-left: auto;
+        }
+        .filter-pill {
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            border: 1px solid #444;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+        }
+        .filter-pill:hover { border-color: #888; color: #ccc; }
+        .filter-pill.active { background: rgba(212,175,55,0.15); border-color: #d4af37; color: #d4af37; }
+
+        /* ── Post Card ── */
+        .post-card {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            transition: border-color 0.2s;
+        }
+        .post-card:hover { border-color: #444; }
+        .post-card.surfaced {
+            border-left: 3px solid #4fc3f7;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .post-avatar {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: rgba(212,175,55,0.2);
+            color: #d4af37;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .post-author { font-size: 0.85rem; color: #ccc; font-weight: 500; }
+        .post-time { font-size: 0.7rem; color: #666; margin-left: auto; }
+
+        .post-body {
+            font-size: 0.9rem;
+            color: #ddd;
+            line-height: 1.5;
+            margin-bottom: 0.6rem;
+        }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.75rem;
+        }
+        .post-action {
+            color: #666;
+            cursor: pointer;
+            transition: color 0.2s;
+            background: none;
+            border: none;
+            font-size: 0.75rem;
+            padding: 0;
+        }
+        .post-action:hover { color: #b0b0b0; }
+        .post-action.agree-action { color: #4caf50; }
+        .post-action.disagree-action { color: #f44336; }
+
+        /* Facilitator-only action on posts */
+        .post-action.fac-only {
+            color: #d4af37;
+            border: 1px solid rgba(212,175,55,0.3);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+        .post-action.fac-only:hover {
+            background: rgba(212,175,55,0.15);
+        }
+
+        .surfaced-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 0.1rem 0.4rem;
+            background: rgba(79,195,247,0.15);
+            color: #80d8ff;
+            border-radius: 3px;
+            margin-left: 0.5rem;
+        }
+
+        /* ── Compose Box ── */
+        .compose-box {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .compose-box textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            min-height: 60px;
+        }
+        .compose-box textarea::placeholder { color: #555; }
+        .compose-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #2a2a3e;
+        }
+        .compose-btn {
+            padding: 0.4rem 1rem;
+            background: #d4af37;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: auto;
+        }
+        .compose-btn:hover { background: #e0c068; }
+        .compose-icon {
+            color: #666;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.2s;
+            background: none;
+            border: none;
+        }
+        .compose-icon:hover { color: #b0b0b0; }
+
+        /* ── Sidebar Stats (inline for mockup) ── */
+        .group-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 100px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #d4af37;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.15rem;
+        }
+
+        /* ── Vertical relations ── */
+        .related-groups {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+        .related-groups h4 {
+            color: #b0b0b0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.6rem;
+        }
+        .related-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0;
+            font-size: 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .related-link:last-child { border-bottom: none; }
+        .related-link .scope { color: #81c784; font-size: 0.65rem; text-transform: uppercase; min-width: 50px; }
+        .related-link .name { color: #90caf9; cursor: pointer; }
+        .related-link .name:hover { text-decoration: underline; }
+        .related-link .decl-count { color: #888; font-size: 0.7rem; margin-left: auto; }
+
+        /* ── Section dividers ── */
+        .section-title {
+            color: #fff;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 2rem 0 0.75rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid #333;
+        }
+
+        /* ── Notes ── */
+        .mockup-note {
+            background: rgba(255,255,255,0.04);
+            border-left: 3px solid #d4af37;
+            padding: 0.75rem 1rem;
+            margin: 1.5rem 0;
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            line-height: 1.5;
+        }
+        .mockup-note strong { color: #d4af37; }
+
+        @media (max-width: 500px) {
+            .group-title-row { flex-direction: column; align-items: flex-start; }
+            .member-count { margin-left: 0; }
+            .fac-actions { flex-direction: column; }
+            .group-stats { flex-direction: column; }
+            .tab { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+            .stream-header { flex-direction: column; align-items: flex-start; }
+            .stream-header .filter-pills { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mockup-label">CIVIC ENGINE MOCKUP — Group Deliberation Page (Phase 2)</div>
+
+    <div class="container">
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  GROUP HEADER                           -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="group-header">
+            <div class="group-breadcrumb">
+                <a href="#">Civic Topics</a> &rsaquo; <a href="#">Town</a> &rsaquo; Housing &amp; Development
+            </div>
+            <div class="group-title-row">
+                <h1>Housing &amp; Development</h1>
+                <span class="scope-badge">Town of Putnam</span>
+                <span class="member-count">50 members</span>
+            </div>
+            <div class="group-meta">
+                <span>Facilitator: <a href="#">Sarah M.</a></span>
+                <span>Created Jan 2026</span>
+                <span>2 declarations ratified</span>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  TABS                                   -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="tab-bar">
+            <div class="tab active">Discussion <span class="count-badge">24</span></div>
+            <div class="tab">Ballots <span class="count-badge">1</span></div>
+            <div class="tab">Declarations <span class="count-badge">2</span></div>
+            <div class="tab">Members</div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  GROUP STATS                            -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="group-stats">
+            <div class="stat-card">
+                <div class="stat-number">24</div>
+                <div class="stat-label">Posts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">50</div>
+                <div class="stat-label">Members</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Declarations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">156</div>
+                <div class="stat-label">Public Opinions</div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  LATEST DECLARATION (pinned)            -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="declaration-banner">
+            <div class="label">Latest Declaration — Ratified</div>
+            <div class="title">Affordable Housing Allocation</div>
+            <div class="body">"We mandate that the town of Putnam allocate 15% of the annual budget surplus to affordable housing development, with priority given to mixed-income projects within the downtown corridor."</div>
+            <div class="meta">
+                <strong>82% approval</strong> (41 of 50 members) &middot;
+                Ratified Mar 5, 2026 &middot;
+                Escalated to State Housing
+            </div>
+            <div class="opinion-bar">
+                <button class="opinion-btn agree">Agree</button>
+                <button class="opinion-btn disagree">Disagree</button>
+                <button class="opinion-btn mixed">Mixed</button>
+                <span class="opinion-summary"><strong>89%</strong> agree (142 of 156 public opinions)</span>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Declaration banner</strong> — pinned at top of group. Shows ratified mandate, vote results, escalation status. Public opinion buttons (agree/disagree/mixed) let non-members weigh in. Sentiment shown inline.
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  FACILITATOR PANEL                      -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="facilitator-panel">
+            <h4>Facilitator Tools <span class="badge">You are facilitating</span></h4>
+            <div class="fac-actions">
+                <button class="fac-btn">Surface Option</button>
+                <button class="fac-btn primary">Call Vote</button>
+                <button class="fac-btn">Merge Options</button>
+                <button class="fac-btn">Draft Declaration</button>
+                <button class="fac-btn">Close Round</button>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  ACTIVE BALLOT (embedded in group)      -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="active-ballot">
+            <div class="ballot-label">
+                <span class="icon">&#x2611;</span>
+                <span class="text">Active Ballot — Multi-Choice</span>
+                <span class="round">
+                    <span class="round-dots">
+                        <span class="round-dot past"></span>
+                        <span class="round-dot active"></span>
+                        <span class="round-dot future"></span>
+                    </span>
+                    Round 2 of 3
+                </span>
+            </div>
+            <div class="ballot-question">How should the town address the Miller Road vacant lot?</div>
+
+            <div class="option-list">
+                <div class="option-card selected leading" onclick="this.classList.toggle('selected')">
+                    <div class="option-radio"><div class="dot"></div></div>
+                    <div class="option-body">
+                        <div class="option-text">Community garden + 6 affordable units (merged from Round 1)</div>
+                        <div class="option-source">Merged from posts <a href="#">#145</a> + <a href="#">#152</a></div>
+                    </div>
+                    <div class="option-votes">
+                        24
+                        <span class="pct">55%</span>
+                        <div class="option-bar"><div class="option-bar-fill" style="width:80%"></div></div>
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="this.classList.toggle('selected')">
+                    <div class="option-radio"><div class="dot"></div></div>
+                    <div class="option-body">
+                        <div class="option-text">Small business incubator with maker space and co-working</div>
+                        <div class="option-source">From post <a href="#">#148</a> by Tom R.</div>
+                    </div>
+                    <div class="option-votes">
+                        20
+                        <span class="pct">45%</span>
+                        <div class="option-bar"><div class="option-bar-fill" style="width:65%"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="submit-vote-btn">Submit Vote</button>
+
+            <div class="threshold-bar">
+                <div class="threshold-label">
+                    <span>Leading: 55%</span>
+                    <span>Majority needed (&gt;50%)</span>
+                </div>
+                <div class="threshold-track">
+                    <div class="threshold-fill met" style="width: 55%;"></div>
+                    <div class="threshold-marker" style="left: 50%;"></div>
+                </div>
+            </div>
+
+            <div class="ballot-tally">
+                <span style="color: #80d8ff;">44 of 50 voted</span>
+                <span class="quorum-badge">Quorum met</span>
+                <span class="tally-total">Majority reached — facilitator may draft declaration</span>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Embedded ballot</strong> — lives inside the group page, not a separate page. Round 2 shows a merged option (from Round 1 discussion). When majority is reached, facilitator gets "Draft Declaration" enabled.
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  COMPOSE BOX                            -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="compose-box">
+            <textarea placeholder="Share your perspective on housing in Putnam..."></textarea>
+            <div class="compose-bar">
+                <button class="compose-icon" title="Attach mandate">&#x1F4CB;</button>
+                <button class="compose-icon" title="Voice input">&#x1F3A4;</button>
+                <button class="compose-btn">Post</button>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  DISCUSSION STREAM                      -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="stream-header">
+            <h3>Discussion</h3>
+            <div class="filter-pills">
+                <button class="filter-pill active">All</button>
+                <button class="filter-pill">Surfaced</button>
+                <button class="filter-pill">My Posts</button>
+            </div>
+        </div>
+
+        <!-- Post 1: surfaced as option -->
+        <div class="post-card surfaced">
+            <div class="post-header">
+                <div class="post-avatar">MC</div>
+                <span class="post-author">Maria C.</span>
+                <span class="surfaced-badge">Surfaced as option</span>
+                <span class="post-time">2h ago</span>
+            </div>
+            <div class="post-body">
+                I think the Miller Road lot should combine community use with housing. A community garden on the front half and 6 affordable units in the back. The garden brings people together, the housing addresses our shortage. Win-win.
+            </div>
+            <div class="post-actions">
+                <button class="post-action agree-action">&#x25B2; 18</button>
+                <button class="post-action disagree-action">&#x25BC; 3</button>
+                <button class="post-action">Reply (4)</button>
+                <button class="post-action fac-only" title="Facilitator: surface as ballot option">&#x2605; Surface</button>
+            </div>
+        </div>
+
+        <!-- Post 2: regular discussion -->
+        <div class="post-card">
+            <div class="post-header">
+                <div class="post-avatar">TR</div>
+                <span class="post-author">Tom R.</span>
+                <span class="post-time">3h ago</span>
+            </div>
+            <div class="post-body">
+                We need economic development more than housing right now. A small business incubator with a maker space could create 20+ jobs. The housing conversation keeps coming up but we're losing young people because there are no career opportunities, not because there aren't enough apartments.
+            </div>
+            <div class="post-actions">
+                <button class="post-action agree-action">&#x25B2; 14</button>
+                <button class="post-action disagree-action">&#x25BC; 5</button>
+                <button class="post-action">Reply (7)</button>
+                <button class="post-action fac-only" title="Facilitator: surface as ballot option">&#x2605; Surface</button>
+            </div>
+        </div>
+
+        <!-- Post 3: mandate share -->
+        <div class="post-card">
+            <div class="post-header">
+                <div class="post-avatar">JK</div>
+                <span class="post-author">Jamal K.</span>
+                <span class="post-time">5h ago</span>
+            </div>
+            <div class="post-body">
+                Shared my mandate from the AI session: "Putnam should incentivize landlords to convert vacant commercial spaces downtown into studio apartments with below-market rent caps for residents under 30." Anyone else thinking about conversion instead of new builds?
+            </div>
+            <div class="post-actions">
+                <button class="post-action agree-action">&#x25B2; 9</button>
+                <button class="post-action disagree-action">&#x25BC; 2</button>
+                <button class="post-action">Reply (2)</button>
+                <button class="post-action fac-only" title="Facilitator: surface as ballot option">&#x2605; Surface</button>
+            </div>
+        </div>
+
+        <!-- Post 4: facilitator note -->
+        <div class="post-card" style="border-left: 3px solid #d4af37;">
+            <div class="post-header">
+                <div class="post-avatar" style="background: rgba(212,175,55,0.3);">SM</div>
+                <span class="post-author">Sarah M.</span>
+                <span style="font-size:0.65rem; padding: 0.1rem 0.4rem; background: rgba(212,175,55,0.15); color: #d4af37; border-radius: 3px;">Facilitator</span>
+                <span class="post-time">1h ago</span>
+            </div>
+            <div class="post-body">
+                Good discussion everyone. I've merged Maria's garden+housing idea with the affordability thread from Round 1 into one option for Round 2. Tom's incubator idea stays as the alternative. Two clear paths — let's vote and see where we land. If we hit majority, I'll draft the declaration for final approval.
+            </div>
+            <div class="post-actions">
+                <button class="post-action agree-action">&#x25B2; 22</button>
+                <button class="post-action disagree-action">&#x25BC; 1</button>
+                <button class="post-action">Reply (3)</button>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Discussion stream</strong> — existing talk stream enhanced with:<br><br>
+            &#x2022; <strong>Agree/Disagree votes</strong> on posts (signal, not binding)<br>
+            &#x2022; <strong>"Surface" button</strong> (facilitator-only, gold star) — promotes a post to ballot option<br>
+            &#x2022; <strong>"Surfaced as option" badge</strong> — blue left border + tag on posts that became ballot options<br>
+            &#x2022; <strong>Facilitator posts</strong> — gold left border + facilitator badge, used for round management notes<br>
+            &#x2022; <strong>Mandate sharing</strong> — Jamal shared his AI-refined mandate into the group discussion<br>
+            &#x2022; <strong>Filter: "Surfaced"</strong> — quickly see only posts that became ballot options
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  VERTICAL RELATIONS                     -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="related-groups">
+            <h4>Related Groups (Vertical)</h4>
+            <div class="related-link">
+                <span class="scope">State</span>
+                <span class="name">Housing &amp; Development — Connecticut</span>
+                <span class="decl-count">4 declarations</span>
+            </div>
+            <div class="related-link">
+                <span class="scope">Federal</span>
+                <span class="name">Housing &amp; Development — National</span>
+                <span class="decl-count">1 declaration</span>
+            </div>
+        </div>
+
+        <div class="related-groups" style="margin-top: 0.75rem;">
+            <h4>Related Groups (Horizontal — Putnam)</h4>
+            <div class="related-link">
+                <span class="scope">Town</span>
+                <span class="name">Budget &amp; Taxes — Putnam</span>
+                <span class="decl-count">1 declaration</span>
+            </div>
+            <div class="related-link">
+                <span class="scope">Town</span>
+                <span class="name">Zoning &amp; Planning — Putnam</span>
+                <span class="decl-count">0 declarations</span>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Group relations</strong> — vertical (same topic, higher jurisdiction) and horizontal (same town, related topics). Shows declaration counts so members see the broader context. Clicking navigates to that group's page.
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  COMPONENT LEGEND                       -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Component Legend</h3>
+
+        <div class="mockup-note">
+            <strong>New components on the Group Page:</strong><br><br>
+            &#x2022; <strong>Group header</strong> — breadcrumb, scope badge, member count, facilitator name<br>
+            &#x2022; <strong>Tabs</strong> — Discussion / Ballots / Declarations / Members<br>
+            &#x2022; <strong>Stats row</strong> — posts, members, declarations, public opinions at a glance<br>
+            &#x2022; <strong>Declaration banner</strong> — pinned ratified mandate with public opinion buttons<br>
+            &#x2022; <strong>Facilitator panel</strong> — gold-themed action buttons (only visible to facilitator)<br>
+            &#x2022; <strong>Embedded ballot</strong> — active vote inside the group, not a separate page<br>
+            &#x2022; <strong>Compose box</strong> — post with mandate attach + voice input<br>
+            &#x2022; <strong>Enhanced stream</strong> — agree/disagree, surface button, surfaced badge, facilitator posts<br>
+            &#x2022; <strong>Related groups</strong> — vertical (jurisdiction ladder) + horizontal (same-town cross-topic)<br>
+        </div>
+
+    </div>
+
+    <div style="text-align:center;padding:20px;color:#666;font-size:0.75rem;">
+        Mockup only — no JS functionality. Open in browser to review.<br>
+        Part of The Civic Engine design (docs/plans/civic-engine-design.md)
+    </div>
+
+</body>
+</html>

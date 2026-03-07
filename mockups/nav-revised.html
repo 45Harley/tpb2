@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Engine — Revised Navigation Mockup</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d0d1a;
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        .mockup-label {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,215,0,0.15);
+            border-bottom: 1px solid rgba(255,215,0,0.3);
+            color: #ffd700;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* ══════════════════════════════════════════ */
+        /*  NAV STYLES (matching existing nav.php)   */
+        /* ══════════════════════════════════════════ */
+        .top-nav {
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            border-bottom: 1px solid #d4af37;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.3rem 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .nav-row-1 {
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        .nav-row-2 {
+            padding: 0.25rem 1rem;
+        }
+        .nav-row-3 {
+            padding: 0.2rem 1rem;
+            border-top: 1px solid rgba(212, 175, 55, 0.15);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-brand-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .nav-brand {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #d4af37;
+            text-decoration: none;
+        }
+        .nav-subtitle {
+            font-size: 0.75rem;
+            color: #aaa;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-status {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+        .nav-status .email-link { color: #88c0d0; text-decoration: none; }
+        .nav-status .town-link { color: #88c0d0; text-decoration: none; }
+        .nav-status .divider { color: #555; }
+        .nav-status .user-id { color: #888; font-family: monospace; font-size: 0.9em; }
+        .nav-status .points {
+            color: #f5c842; font-weight: 700;
+            background: rgba(212, 175, 55, 0.15);
+            padding: 0.15rem 0.5rem; border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            font-size: 0.9em;
+        }
+        .nav-status .level { color: #d4af37; font-weight: 500; }
+        .nav-status .logout-link {
+            color: #e0e0e0; padding: 0.2rem 0.5rem;
+            border: 1px solid #555; border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            align-items: center;
+        }
+        .nav-links > a {
+            color: #e0e0e0; text-decoration: none;
+            padding: 0.4rem 0.7rem; border-radius: 4px;
+            font-size: 0.9rem; transition: all 0.2s;
+        }
+        .nav-links > a:hover {
+            background: rgba(212, 175, 55, 0.2); color: #fff;
+        }
+        .nav-links > a.active {
+            background: rgba(212, 175, 55, 0.3); color: #d4af37;
+        }
+
+        /* Dropdown */
+        .nav-dropdown { position: relative; display: inline-block; }
+        .nav-dropdown-toggle {
+            color: #e0e0e0; text-decoration: none;
+            padding: 0.4rem 0.7rem; border-radius: 4px;
+            font-size: 0.9rem; transition: all 0.2s;
+            cursor: pointer; display: inline-flex;
+            align-items: center; gap: 0.3rem;
+            background: none; border: none;
+        }
+        .nav-dropdown-toggle:hover,
+        .nav-dropdown:hover .nav-dropdown-toggle {
+            background: rgba(212, 175, 55, 0.2); color: #fff;
+        }
+        .nav-dropdown-toggle.active {
+            background: rgba(212, 175, 55, 0.3); color: #d4af37;
+        }
+        .nav-dropdown-toggle::after {
+            content: '\25BE'; font-size: 0.7rem; opacity: 0.7;
+        }
+        .nav-dropdown-menu {
+            display: none; position: absolute; top: 100%; left: 0;
+            background: #1a1a2e; border: 1px solid #d4af37;
+            border-radius: 4px; min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1001; padding: 0.3rem 0;
+        }
+        .nav-dropdown:hover .nav-dropdown-menu { display: block; }
+        .nav-dropdown-menu a {
+            display: block; color: #e0e0e0; text-decoration: none;
+            padding: 0.5rem 1rem; font-size: 0.85rem; transition: all 0.2s;
+        }
+        .nav-dropdown-menu a:hover {
+            background: rgba(212, 175, 55, 0.2); color: #fff;
+        }
+        .nav-dropdown-menu .separator {
+            border-top: 1px solid rgba(212,175,55,0.15);
+            margin: 0.3rem 0;
+        }
+        .nav-dropdown-menu .section-label {
+            color: #888;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.4rem 1rem 0.2rem;
+        }
+
+        /* Secondary nav (row 3) */
+        .secondary-nav-links {
+            display: flex; gap: 0.3rem; flex-wrap: wrap;
+            justify-content: center; width: 100%; align-items: center;
+        }
+        .secondary-nav-brand {
+            color: #d4af37; font-weight: 600; font-size: 0.85rem;
+            margin-right: 0.5rem; padding-right: 0.75rem;
+            border-right: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        .secondary-nav-links > a {
+            color: #aaa; text-decoration: none;
+            padding: 0.3rem 0.6rem; border-radius: 4px;
+            font-size: 0.8rem; transition: all 0.2s;
+        }
+        .secondary-nav-links > a:hover {
+            background: rgba(212, 175, 55, 0.15); color: #e0e0e0;
+        }
+        .secondary-nav-links > a.active {
+            background: rgba(212, 175, 55, 0.25); color: #d4af37;
+        }
+
+        /* ── Page Content ── */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 3rem;
+        }
+
+        .section-title {
+            color: #fff; font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: 2px;
+            margin: 2rem 0 0.75rem;
+            padding-bottom: 0.4rem; border-bottom: 1px solid #333;
+        }
+        .section-title:first-of-type { margin-top: 0.5rem; }
+
+        .mockup-note {
+            background: rgba(255,255,255,0.04);
+            border-left: 3px solid #d4af37;
+            padding: 0.75rem 1rem;
+            margin: 1rem 0;
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            line-height: 1.5;
+        }
+        .mockup-note strong { color: #d4af37; }
+
+        .scenario-label {
+            background: rgba(79,195,247,0.1);
+            border: 1px solid rgba(79,195,247,0.3);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            margin: 1.5rem 0 0.5rem;
+            font-size: 0.8rem;
+            color: #80d8ff;
+            font-weight: 600;
+        }
+
+        /* ── Footer ── */
+        .footer-mockup {
+            background: #0a0a14;
+            border-top: 1px solid #333;
+            padding: 1.5rem 1rem;
+            margin-top: 2rem;
+        }
+        .footer-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        .footer-col h4 {
+            color: #d4af37;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        .footer-col a {
+            display: block;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.8rem;
+            padding: 0.2rem 0;
+        }
+        .footer-col a:hover { color: #ccc; }
+
+        @media (max-width: 768px) {
+            .nav-row { padding: 0.4rem 0.5rem; }
+            .nav-links { gap: 0.2rem; }
+            .nav-links > a, .nav-dropdown-toggle { padding: 0.3rem 0.5rem; font-size: 0.8rem; }
+            .nav-brand { font-size: 1.2rem; }
+            .nav-subtitle { display: none; }
+            .nav-status { flex-wrap: wrap; font-size: 0.8rem; gap: 0.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mockup-label">CIVIC ENGINE MOCKUP — Revised Navigation</div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  SCENARIO 1: My Mandate page (logged in)           -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="scenario-label">Scenario 1: My Mandate page — logged in user with town set</div>
+
+    <nav class="top-nav">
+        <!-- Row 1: Brand + Status -->
+        <div class="nav-row nav-row-1">
+            <div class="nav-brand-group">
+                <a href="/" class="nav-brand">&#x1F3DB; TPB</a>
+                <span class="nav-subtitle">Democracy that works</span>
+            </div>
+            <div class="nav-status">
+                <span class="user-id">42</span>
+                <span class="divider">|</span>
+                <a href="#" class="email-link">maria@gmai...</a>
+                <span class="divider">|</span>
+                <a href="#" class="town-link">Putnam, CT</a>
+                <span class="divider">|</span>
+                <span class="points">156 pts</span>
+                <span class="divider">|</span>
+                <span class="level">Verified</span>
+                <span class="divider">|</span>
+                <a href="#" class="logout-link">Logout</a>
+            </div>
+        </div>
+
+        <!-- Row 2: Main Nav -->
+        <div class="nav-row nav-row-2">
+            <div class="nav-links">
+                <a href="#" class="active">My Mandate</a>
+                <a href="#">Groups</a>
+                <a href="#">Ballots</a>
+
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">USA</span>
+                    <div class="nav-dropdown-menu">
+                        <div class="section-label">Explore</div>
+                        <a href="#">Map</a>
+                        <a href="#">Congressional</a>
+                        <a href="#">Executive</a>
+                        <a href="#">Judicial</a>
+                        <a href="#">Documents</a>
+                        <a href="#">Glossary</a>
+                        <div class="separator"></div>
+                        <div class="section-label">Action</div>
+                        <a href="#">Elections</a>
+                        <a href="#">My Reps</a>
+                    </div>
+                </div>
+
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">My TPB</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">My Profile</a>
+                        <a href="#">My Town</a>
+                        <a href="#">My State</a>
+                        <a href="#">My Points</a>
+                        <div class="separator"></div>
+                        <a href="#">Volunteer</a>
+                        <a href="#">Invite</a>
+                    </div>
+                </div>
+
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">Help</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">User Guides</a>
+                        <a href="#">Getting Started</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: My Mandate sub-nav -->
+        <div class="nav-row nav-row-3">
+            <div class="secondary-nav-links">
+                <span class="secondary-nav-brand">My Mandate &#x203A;</span>
+                <a href="#" class="active">Voice</a>
+                <a href="#">The Pulse</a>
+                <a href="#">Town Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="mockup-note">
+            <strong>My Mandate sub-nav:</strong><br>
+            &#x2022; <strong>Voice</strong> — mandate-poc.php (citizen + AI pair, refine your mandate)<br>
+            &#x2022; <strong>The Pulse</strong> — mandate-summary.php extended (all mandates + declarations + opinions)<br>
+            &#x2022; <strong>Town Dashboard</strong> — cross-group declaration portfolio for your town<br>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  SCENARIO 2: Groups page (logged in)               -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="scenario-label" style="max-width:800px;margin:1.5rem auto;">Scenario 2: Groups page — Putnam geo context</div>
+
+    <nav class="top-nav">
+        <div class="nav-row nav-row-1">
+            <div class="nav-brand-group">
+                <a href="/" class="nav-brand">&#x1F3DB; TPB</a>
+                <span class="nav-subtitle">Democracy that works</span>
+            </div>
+            <div class="nav-status">
+                <span class="user-id">42</span>
+                <span class="divider">|</span>
+                <a href="#" class="email-link">maria@gmai...</a>
+                <span class="divider">|</span>
+                <a href="#" class="town-link">Putnam, CT</a>
+                <span class="divider">|</span>
+                <span class="points">156 pts</span>
+                <span class="divider">|</span>
+                <span class="level">Verified</span>
+                <span class="divider">|</span>
+                <a href="#" class="logout-link">Logout</a>
+            </div>
+        </div>
+        <div class="nav-row nav-row-2">
+            <div class="nav-links">
+                <a href="#">My Mandate</a>
+                <a href="#" class="active">Groups</a>
+                <a href="#">Ballots</a>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">USA</span>
+                    <div class="nav-dropdown-menu">
+                        <div class="section-label">Explore</div>
+                        <a href="#">Map</a>
+                        <a href="#">Congressional</a>
+                        <a href="#">Executive</a>
+                        <a href="#">Judicial</a>
+                        <a href="#">Documents</a>
+                        <a href="#">Glossary</a>
+                        <div class="separator"></div>
+                        <div class="section-label">Action</div>
+                        <a href="#">Elections</a>
+                        <a href="#">My Reps</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">My TPB</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">My Profile</a>
+                        <a href="#">My Town</a>
+                        <a href="#">My State</a>
+                        <a href="#">My Points</a>
+                        <div class="separator"></div>
+                        <a href="#">Volunteer</a>
+                        <a href="#">Invite</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">Help</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">User Guides</a>
+                        <a href="#">Getting Started</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Row 3: Groups sub-nav (geo-dynamic) -->
+        <div class="nav-row nav-row-3">
+            <div class="secondary-nav-links">
+                <span class="secondary-nav-brand">Putnam Groups &#x203A;</span>
+                <a href="#" class="active">Stream</a>
+                <a href="#">Topics</a>
+                <a href="#">My Groups</a>
+                <a href="#">Help</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="mockup-note">
+            <strong>Groups sub-nav (geo-dynamic):</strong><br>
+            &#x2022; Brand changes with context: "USA Groups" / "Connecticut Groups" / "Putnam Groups"<br>
+            &#x2022; <strong>Stream</strong> — discussion feed (was Talk stream)<br>
+            &#x2022; <strong>Topics</strong> — civic topic groups list (was "Groups" tab — renamed to avoid confusion)<br>
+            &#x2022; <strong>My Groups</strong> — groups you've joined (new)<br>
+            &#x2022; <strong>Help</strong> — how groups work<br>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  SCENARIO 3: Ballots page                          -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="scenario-label" style="max-width:800px;margin:1.5rem auto;">Scenario 3: Ballots page — replaces Polls</div>
+
+    <nav class="top-nav">
+        <div class="nav-row nav-row-1">
+            <div class="nav-brand-group">
+                <a href="/" class="nav-brand">&#x1F3DB; TPB</a>
+                <span class="nav-subtitle">Democracy that works</span>
+            </div>
+            <div class="nav-status">
+                <span class="user-id">42</span>
+                <span class="divider">|</span>
+                <a href="#" class="email-link">maria@gmai...</a>
+                <span class="divider">|</span>
+                <a href="#" class="town-link">Putnam, CT</a>
+                <span class="divider">|</span>
+                <span class="points">156 pts</span>
+                <span class="divider">|</span>
+                <span class="level">Verified</span>
+                <span class="divider">|</span>
+                <a href="#" class="logout-link">Logout</a>
+            </div>
+        </div>
+        <div class="nav-row nav-row-2">
+            <div class="nav-links">
+                <a href="#">My Mandate</a>
+                <a href="#">Groups</a>
+                <a href="#" class="active">Ballots</a>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">USA</span>
+                    <div class="nav-dropdown-menu">
+                        <div class="section-label">Explore</div>
+                        <a href="#">Map</a>
+                        <a href="#">Congressional</a>
+                        <a href="#">Executive</a>
+                        <a href="#">Judicial</a>
+                        <a href="#">Documents</a>
+                        <a href="#">Glossary</a>
+                        <div class="separator"></div>
+                        <div class="section-label">Action</div>
+                        <a href="#">Elections</a>
+                        <a href="#">My Reps</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">My TPB</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">My Profile</a>
+                        <a href="#">My Town</a>
+                        <a href="#">My State</a>
+                        <a href="#">My Points</a>
+                        <div class="separator"></div>
+                        <a href="#">Volunteer</a>
+                        <a href="#">Invite</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">Help</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">User Guides</a>
+                        <a href="#">Getting Started</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Row 3: Ballots sub-nav (promotes in-page links) -->
+        <div class="nav-row nav-row-3">
+            <div class="secondary-nav-links">
+                <span class="secondary-nav-brand">Ballots &#x203A;</span>
+                <a href="#" class="active">Vote</a>
+                <a href="#">National</a>
+                <a href="#">By State</a>
+                <a href="#">By Rep</a>
+                <a href="#">Closed</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="mockup-note">
+            <strong>Ballots sub-nav:</strong><br>
+            &#x2022; Promotes existing in-page view links (Vote | National | By State | By Rep) to proper sub-nav row<br>
+            &#x2022; Adds "Closed" for archived ballots<br>
+            &#x2022; Same pages, just better navigation consistency<br>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  SCENARIO 4: Town page (Putnam)                    -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="scenario-label" style="max-width:800px;margin:1.5rem auto;">Scenario 4: Town page — Putnam, CT (z-states/ct/putnam/)</div>
+
+    <nav class="top-nav">
+        <div class="nav-row nav-row-1">
+            <div class="nav-brand-group">
+                <a href="/" class="nav-brand">&#x1F3DB; TPB</a>
+                <span class="nav-subtitle">Democracy that works</span>
+            </div>
+            <div class="nav-status">
+                <span class="user-id">42</span>
+                <span class="divider">|</span>
+                <a href="#" class="email-link">maria@gmai...</a>
+                <span class="divider">|</span>
+                <a href="#" class="town-link">Putnam, CT</a>
+                <span class="divider">|</span>
+                <span class="points">156 pts</span>
+                <span class="divider">|</span>
+                <span class="level">Verified</span>
+                <span class="divider">|</span>
+                <a href="#" class="logout-link">Logout</a>
+            </div>
+        </div>
+        <div class="nav-row nav-row-2">
+            <div class="nav-links">
+                <a href="#">My Mandate</a>
+                <a href="#">Groups</a>
+                <a href="#">Ballots</a>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">USA</span>
+                    <div class="nav-dropdown-menu">
+                        <div class="section-label">Explore</div>
+                        <a href="#">Map</a>
+                        <a href="#">Congressional</a>
+                        <a href="#">Executive</a>
+                        <a href="#">Judicial</a>
+                        <a href="#">Documents</a>
+                        <a href="#">Glossary</a>
+                        <div class="separator"></div>
+                        <div class="section-label">Action</div>
+                        <a href="#">Elections</a>
+                        <a href="#">My Reps</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle active">My TPB</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">My Profile</a>
+                        <a href="#">My Town</a>
+                        <a href="#">My State</a>
+                        <a href="#">My Points</a>
+                        <div class="separator"></div>
+                        <a href="#">Volunteer</a>
+                        <a href="#">Invite</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">Help</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">User Guides</a>
+                        <a href="#">Getting Started</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Row 3: Town sub-nav -->
+        <div class="nav-row nav-row-3">
+            <div class="secondary-nav-links">
+                <span class="secondary-nav-brand">Putnam, CT &#x203A;</span>
+                <a href="#" class="active">Overview</a>
+                <a href="#">Dashboard</a>
+                <a href="#">Government</a>
+                <a href="#">Schools</a>
+                <a href="#">Budget</a>
+                <a href="#">Calendar</a>
+                <a href="#">Groups</a>
+                <a href="#">Build Kit</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="mockup-note">
+            <strong>Town sub-nav (revised):</strong><br>
+            &#x2022; <strong>Overview</strong> — existing town landing (history, living here, etc.)<br>
+            &#x2022; <strong>Dashboard</strong> — NEW: town civic dashboard (declarations, pulse strength)<br>
+            &#x2022; <strong>Government</strong> — local gov info<br>
+            &#x2022; <strong>Schools</strong> — schools + school budget (combined)<br>
+            &#x2022; <strong>Budget</strong> — town budget<br>
+            &#x2022; <strong>Calendar</strong> — town meetings/events<br>
+            &#x2022; <strong>Groups</strong> — shortcut to Groups filtered to this town<br>
+            &#x2022; <strong>Build Kit</strong> — volunteer tools for building/improving this town's pages<br>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  SCENARIO 5: State page (Connecticut)              -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="scenario-label" style="max-width:800px;margin:1.5rem auto;">Scenario 5: State page — Connecticut (z-states/ct/)</div>
+
+    <nav class="top-nav">
+        <div class="nav-row nav-row-1">
+            <div class="nav-brand-group">
+                <a href="/" class="nav-brand">&#x1F3DB; TPB</a>
+                <span class="nav-subtitle">Democracy that works</span>
+            </div>
+            <div class="nav-status">
+                <span class="user-id">42</span>
+                <span class="divider">|</span>
+                <a href="#" class="email-link">maria@gmai...</a>
+                <span class="divider">|</span>
+                <a href="#" class="town-link">Putnam, CT</a>
+                <span class="divider">|</span>
+                <span class="points">156 pts</span>
+                <span class="divider">|</span>
+                <span class="level">Verified</span>
+                <span class="divider">|</span>
+                <a href="#" class="logout-link">Logout</a>
+            </div>
+        </div>
+        <div class="nav-row nav-row-2">
+            <div class="nav-links">
+                <a href="#">My Mandate</a>
+                <a href="#">Groups</a>
+                <a href="#">Ballots</a>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">USA</span>
+                    <div class="nav-dropdown-menu">
+                        <div class="section-label">Explore</div>
+                        <a href="#">Map</a>
+                        <a href="#">Congressional</a>
+                        <a href="#">Executive</a>
+                        <a href="#">Judicial</a>
+                        <a href="#">Documents</a>
+                        <a href="#">Glossary</a>
+                        <div class="separator"></div>
+                        <div class="section-label">Action</div>
+                        <a href="#">Elections</a>
+                        <a href="#">My Reps</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle active">My TPB</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">My Profile</a>
+                        <a href="#">My Town</a>
+                        <a href="#">My State</a>
+                        <a href="#">My Points</a>
+                        <div class="separator"></div>
+                        <a href="#">Volunteer</a>
+                        <a href="#">Invite</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">Help</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">User Guides</a>
+                        <a href="#">Getting Started</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Row 3: State sub-nav -->
+        <div class="nav-row nav-row-3">
+            <div class="secondary-nav-links">
+                <span class="secondary-nav-brand">Connecticut &#x203A;</span>
+                <a href="#" class="active">Overview</a>
+                <a href="#">Dashboard</a>
+                <a href="#">Your Reps</a>
+                <a href="#">Government</a>
+                <a href="#">Benefits</a>
+                <a href="#">Economy</a>
+                <a href="#">Elections</a>
+                <a href="#">Towns</a>
+                <a href="#">Groups</a>
+                <a href="#">Build Kit</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="mockup-note">
+            <strong>State sub-nav (revised):</strong><br>
+            &#x2022; <strong>Overview</strong> — existing state landing<br>
+            &#x2022; <strong>Dashboard</strong> — NEW: state civic dashboard (roll-up of all town declarations)<br>
+            &#x2022; <strong>Your Reps</strong> — state delegation<br>
+            &#x2022; <strong>Government</strong> — state gov structure<br>
+            &#x2022; <strong>Benefits</strong> — state benefit programs (Maria's $9,600)<br>
+            &#x2022; <strong>Economy</strong> — economic data<br>
+            &#x2022; <strong>Elections</strong> — state-level races<br>
+            &#x2022; <strong>Towns</strong> — all towns in state (links to town pages)<br>
+            &#x2022; <strong>Groups</strong> — shortcut to Groups filtered to this state<br>
+            &#x2022; <strong>Build Kit</strong> — volunteer tools for building this state's towns<br>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  SCENARIO 6: Logged OUT                            -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="scenario-label" style="max-width:800px;margin:1.5rem auto;">Scenario 6: Logged OUT — visitor view</div>
+
+    <nav class="top-nav">
+        <div class="nav-row nav-row-1">
+            <div class="nav-brand-group">
+                <a href="/" class="nav-brand">&#x1F3DB; TPB</a>
+                <span class="nav-subtitle">Democracy that works</span>
+            </div>
+            <div class="nav-status">
+                <span class="level">Visitor</span>
+                <span class="divider">|</span>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle" style="padding:0.2rem 0.5rem;border:1px solid #555;border-radius:4px;">Login</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">New User</a>
+                        <a href="#">Existing User</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="nav-row nav-row-2">
+            <div class="nav-links">
+                <a href="#">Groups</a>
+                <a href="#">Ballots</a>
+                <a href="#">The Pulse</a>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">USA</span>
+                    <div class="nav-dropdown-menu">
+                        <div class="section-label">Explore</div>
+                        <a href="#">Map</a>
+                        <a href="#">Congressional</a>
+                        <a href="#">Executive</a>
+                        <a href="#">Judicial</a>
+                        <a href="#">Documents</a>
+                        <a href="#">Glossary</a>
+                        <div class="separator"></div>
+                        <div class="section-label">Action</div>
+                        <a href="#">Elections</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">Help</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="#">User Guides</a>
+                        <a href="#">Getting Started</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="mockup-note">
+            <strong>Logged-out nav:</strong><br>
+            &#x2022; No "My Mandate" (requires login)<br>
+            &#x2022; No "My TPB" dropdown (requires login)<br>
+            &#x2022; "The Pulse" appears as top-level link (visitors can browse declarations/opinions)<br>
+            &#x2022; Groups, Ballots visible (can browse, must login to participate)<br>
+            &#x2022; USA dropdown same minus "My Reps"<br>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  SUMMARY TABLE                                     -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="container">
+        <h3 class="section-title">Full Navigation Map</h3>
+
+        <div class="mockup-note">
+            <strong>Row 2 — Main Nav (logged in):</strong><br>
+            <code>My Mandate | Groups | Ballots | USA &#x25BE; | My TPB &#x25BE; | Help &#x25BE;</code><br><br>
+
+            <strong>Row 2 — Main Nav (logged out):</strong><br>
+            <code>Groups | Ballots | The Pulse | USA &#x25BE; | Help &#x25BE;</code><br><br>
+
+            <strong>USA Dropdown:</strong><br>
+            <code>Map | Congressional | Executive | Judicial | Documents | Glossary | --- | Elections | My Reps</code><br><br>
+
+            <strong>My TPB Dropdown:</strong><br>
+            <code>My Profile | My Town | My State | My Points | --- | Volunteer | Invite</code><br><br>
+
+            <strong>Sub-Navs (Row 3):</strong><br>
+            &#x2022; <strong>My Mandate &#x203A;</strong> Voice | The Pulse | Town Dashboard<br>
+            &#x2022; <strong>[Geo] Groups &#x203A;</strong> Stream | Topics | My Groups | Help<br>
+            &#x2022; <strong>Ballots &#x203A;</strong> Vote | National | By State | By Rep | Closed<br>
+            &#x2022; <strong>USA &#x203A;</strong> Map | Congressional | Executive | Judicial | Documents | Glossary (existing)<br>
+            &#x2022; <strong>[Town] &#x203A;</strong> Overview | Dashboard | Government | Schools | Budget | Calendar | Groups | Build Kit<br>
+            &#x2022; <strong>[State] &#x203A;</strong> Overview | Dashboard | Your Reps | Government | Benefits | Economy | Elections | Towns | Groups | Build Kit<br>
+            &#x2022; <strong>Volunteer &#x203A;</strong> My Work | Available | Completed (existing, unchanged)<br><br>
+
+            <strong>Moved to Footer:</strong><br>
+            &#x2022; Our Story<br>
+            &#x2022; Constitution section<br>
+            &#x2022; Contact<br><br>
+
+            <strong>Build Kits:</strong><br>
+            &#x2022; <strong>Town Build Kit</strong> — volunteer tools for populating a town page (gov officials, schools, budget data, calendar). Accessible from town sub-nav.<br>
+            &#x2022; <strong>State Build Kit</strong> — volunteer tools for building out state towns, benefits, economy data. Accessible from state sub-nav.<br>
+            &#x2022; Both link to volunteer task system scoped to that location.<br>
+        </div>
+
+        <h3 class="section-title">What Changed</h3>
+
+        <div class="mockup-note">
+            <strong>Added to main nav:</strong><br>
+            &#x2022; <strong>My Mandate</strong> — was completely missing, now first item<br>
+            &#x2022; <strong>Groups</strong> — renamed from "USA Talk", deliberation is the core<br>
+            &#x2022; <strong>Ballots</strong> — renamed from "Polls", universal voting<br><br>
+
+            <strong>Absorbed into dropdowns:</strong><br>
+            &#x2022; <strong>Elections</strong> → into USA dropdown (under "Action" section)<br>
+            &#x2022; <strong>Volunteer</strong> → into My TPB dropdown<br>
+            &#x2022; <strong>Invite</strong> → into My TPB dropdown<br>
+            &#x2022; <strong>My Reps</strong> → into USA dropdown<br><br>
+
+            <strong>Moved to footer:</strong><br>
+            &#x2022; <strong>Our Story</strong> — informational, not daily-use<br><br>
+
+            <strong>New sub-navs:</strong><br>
+            &#x2022; <strong>My Mandate</strong> — Voice / The Pulse / Town Dashboard<br>
+            &#x2022; <strong>Ballots</strong> — promotes in-page links to proper row 3<br><br>
+
+            <strong>Revised sub-navs:</strong><br>
+            &#x2022; <strong>Town</strong> — adds Dashboard + Groups + Build Kit<br>
+            &#x2022; <strong>State</strong> — adds Dashboard + Groups + Build Kit<br>
+            &#x2022; <strong>Groups</strong> — renames "Groups" tab → "Topics", adds "My Groups"<br>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  FOOTER MOCKUP                                     -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="footer-mockup">
+        <div class="footer-inner">
+            <div class="footer-col">
+                <h4>The People's Branch</h4>
+                <a href="#">Our Story</a>
+                <a href="#">The Golden Rule</a>
+                <a href="#">Constitution</a>
+                <a href="#">Contact</a>
+            </div>
+            <div class="footer-col">
+                <h4>Learn</h4>
+                <a href="#">Getting Started</a>
+                <a href="#">User Guides</a>
+                <a href="#">The Metaphysics</a>
+            </div>
+            <div class="footer-col">
+                <h4>Build</h4>
+                <a href="#">Volunteer</a>
+                <a href="#">State Build Kit</a>
+                <a href="#">Town Build Kit</a>
+            </div>
+            <div class="footer-col">
+                <h4>Connect</h4>
+                <a href="#">Invite a Citizen</a>
+                <a href="#">Invite a Rep</a>
+                <a href="#">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align:center;padding:20px;color:#666;font-size:0.75rem;">
+        Mockup only — no JS functionality. Open in browser to review.<br>
+        Part of The Civic Engine design (docs/plans/civic-engine-design.md)
+    </div>
+
+</body>
+</html>

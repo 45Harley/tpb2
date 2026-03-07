@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Engine — Town Dashboard Mockup</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #eee;
+        }
+
+        .mockup-label {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,215,0,0.15);
+            border-bottom: 1px solid rgba(255,215,0,0.3);
+            color: #ffd700;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 3rem;
+        }
+
+        /* ── Town Header ── */
+        .town-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #333;
+        }
+        .town-header h1 {
+            color: #d4af37;
+            font-size: 1.6rem;
+            margin-bottom: 0.25rem;
+        }
+        .town-header .subtitle {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        /* ── Summary Stats ── */
+        .summary-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 90px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1rem 0.75rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #d4af37;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.15rem;
+        }
+
+        /* ── Pulse Strength ── */
+        .pulse-strength {
+            background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(76,175,80,0.06) 100%);
+            border: 1px solid rgba(212,175,55,0.25);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .pulse-strength .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #d4af37;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .pulse-meter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .pulse-bar-track {
+            width: 200px;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .pulse-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #d4af37, #81c784);
+        }
+        .pulse-pct {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #81c784;
+        }
+        .pulse-desc {
+            font-size: 0.75rem;
+            color: #b0b0b0;
+            margin-top: 0.4rem;
+        }
+
+        /* ── Section Title ── */
+        .section-title {
+            color: #fff;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 1.75rem 0 0.75rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid #333;
+        }
+
+        /* ── Group Cards Grid ── */
+        .group-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .group-card {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .group-card:hover { border-color: #555; transform: translateY(-1px); }
+        .group-card.has-declaration { border-left: 3px solid #81c784; }
+        .group-card.voting { border-left: 3px solid #4fc3f7; }
+        .group-card.no-activity { border-left: 3px solid #444; opacity: 0.7; }
+
+        .group-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .group-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #e0e0e0;
+            flex: 1;
+        }
+        .group-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .group-status-dot.declared { background: #81c784; }
+        .group-status-dot.voting { background: #4fc3f7; animation: pulse-dot 2s infinite; }
+        .group-status-dot.idle { background: #555; }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .group-card-stats {
+            display: flex;
+            gap: 0.75rem;
+            font-size: 0.7rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+
+        .group-declaration-preview {
+            font-size: 0.8rem;
+            color: #ccc;
+            font-style: italic;
+            line-height: 1.4;
+            padding: 0.5rem;
+            background: rgba(129,199,132,0.06);
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+        .group-declaration-preview .quote { color: #81c784; }
+
+        .group-opinion-mini {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.7rem;
+        }
+        .mini-bar {
+            flex: 1;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+            display: flex;
+        }
+        .mini-bar .agree { background: #4caf50; }
+        .mini-bar .disagree { background: #f44336; }
+        .mini-bar .mixed { background: #ff9800; }
+        .mini-opinion-label { color: #b0b0b0; min-width: 30px; text-align: right; }
+
+        .group-voting-preview {
+            font-size: 0.75rem;
+            color: #80d8ff;
+            padding: 0.4rem 0.5rem;
+            background: rgba(79,195,247,0.08);
+            border-radius: 4px;
+        }
+        .group-voting-preview strong { color: #4fc3f7; }
+
+        /* ── Declaration List (full view) ── */
+        .declaration-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .declaration-card {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1.25rem;
+            transition: border-color 0.2s;
+        }
+        .declaration-card:hover { border-color: #555; }
+
+        .decl-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .decl-group-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #d4af37;
+        }
+        .decl-date {
+            font-size: 0.7rem;
+            color: #666;
+            margin-left: auto;
+        }
+        .decl-approval {
+            font-size: 0.7rem;
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .decl-approval.strong { background: rgba(76,175,80,0.2); color: #81c784; }
+        .decl-approval.moderate { background: rgba(255,152,0,0.2); color: #ffb74d; }
+
+        .decl-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 0.4rem;
+        }
+        .decl-body {
+            font-size: 0.85rem;
+            color: #ccc;
+            line-height: 1.5;
+            font-style: italic;
+            margin-bottom: 0.6rem;
+        }
+        .decl-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.75rem;
+            color: #888;
+            flex-wrap: wrap;
+        }
+        .decl-meta strong { color: #81c784; }
+
+        .decl-opinion-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid #2a2a3e;
+        }
+        .opinion-btn {
+            padding: 0.3rem 0.7rem;
+            border-radius: 5px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid;
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .opinion-btn.agree { border-color: #4caf50; color: #4caf50; }
+        .opinion-btn.agree:hover, .opinion-btn.agree.voted { background: #4caf50; color: #fff; }
+        .opinion-btn.disagree { border-color: #f44336; color: #f44336; }
+        .opinion-btn.disagree:hover { background: #f44336; color: #fff; }
+        .opinion-btn.mixed { border-color: #ff9800; color: #ff9800; }
+        .opinion-btn.mixed:hover { background: #ff9800; color: #fff; }
+        .opinion-count {
+            font-size: 0.75rem;
+            color: #b0b0b0;
+            margin-left: auto;
+        }
+        .opinion-count strong { color: #81c784; }
+
+        /* ── Escalation Status ── */
+        .escalation-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+            padding: 0.4rem 0.6rem;
+            background: rgba(144,202,249,0.06);
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .escalation-arrow { color: #90caf9; }
+        .escalation-text { color: #90caf9; }
+        .escalation-status { color: #888; margin-left: auto; }
+
+        /* ── Notes ── */
+        .mockup-note {
+            background: rgba(255,255,255,0.04);
+            border-left: 3px solid #d4af37;
+            padding: 0.75rem 1rem;
+            margin: 1.5rem 0;
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            line-height: 1.5;
+        }
+        .mockup-note strong { color: #d4af37; }
+
+        /* ── Legend ── */
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            font-size: 0.75rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #b0b0b0;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        @media (max-width: 600px) {
+            .group-grid { grid-template-columns: 1fr; }
+            .summary-stats { flex-direction: column; }
+            .decl-header { flex-direction: column; align-items: flex-start; }
+            .decl-date { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mockup-label">CIVIC ENGINE MOCKUP — Town Dashboard (Phase 3)</div>
+
+    <div class="container">
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  TOWN HEADER                            -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="town-header">
+            <h1>Putnam, Connecticut</h1>
+            <div class="subtitle">Town Civic Dashboard — Declaration Portfolio</div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  SUMMARY STATS                          -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="summary-stats">
+            <div class="stat-card">
+                <div class="stat-number">13</div>
+                <div class="stat-label">Topic Groups</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">7</div>
+                <div class="stat-label">Declarations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Active Votes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">312</div>
+                <div class="stat-label">Citizens</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">1,847</div>
+                <div class="stat-label">Public Opinions</div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  PULSE STRENGTH                         -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div class="pulse-strength">
+            <div class="label">Town Pulse Strength</div>
+            <div class="pulse-meter">
+                <div class="pulse-bar-track">
+                    <div class="pulse-bar-fill" style="width: 54%;"></div>
+                </div>
+                <span class="pulse-pct">54%</span>
+            </div>
+            <div class="pulse-desc">7 of 13 topic groups have ratified declarations</div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  CIVIC TOPIC GROUPS (grid)              -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Civic Topic Groups</h3>
+
+        <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#81c784;"></div> Declared</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7; animation: pulse-dot 2s infinite;"></div> Voting</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#555;"></div> Deliberating</div>
+        </div>
+
+        <div class="group-grid">
+
+            <!-- Declared group -->
+            <div class="group-card has-declaration">
+                <div class="group-card-header">
+                    <div class="group-card-title">Housing &amp; Development</div>
+                    <div class="group-status-dot declared"></div>
+                </div>
+                <div class="group-card-stats">
+                    <span>50 members</span>
+                    <span>2 declarations</span>
+                    <span>156 opinions</span>
+                </div>
+                <div class="group-declaration-preview">
+                    <span class="quote">"Allocate 15% of budget surplus to affordable housing..."</span>
+                </div>
+                <div class="group-opinion-mini">
+                    <div class="mini-bar">
+                        <div class="agree" style="width:89%"></div>
+                        <div class="disagree" style="width:7%"></div>
+                        <div class="mixed" style="width:4%"></div>
+                    </div>
+                    <span class="mini-opinion-label">89%</span>
+                </div>
+            </div>
+
+            <!-- Voting group -->
+            <div class="group-card voting">
+                <div class="group-card-header">
+                    <div class="group-card-title">Roads &amp; Transportation</div>
+                    <div class="group-status-dot voting"></div>
+                </div>
+                <div class="group-card-stats">
+                    <span>38 members</span>
+                    <span>1 declaration</span>
+                    <span>89 opinions</span>
+                </div>
+                <div class="group-voting-preview">
+                    Active ballot: <strong>Oak Street bridge repair</strong> — Round 2, 62% yea
+                </div>
+            </div>
+
+            <!-- Declared group -->
+            <div class="group-card has-declaration">
+                <div class="group-card-header">
+                    <div class="group-card-title">Schools &amp; Education</div>
+                    <div class="group-status-dot declared"></div>
+                </div>
+                <div class="group-card-stats">
+                    <span>65 members</span>
+                    <span>1 declaration</span>
+                    <span>201 opinions</span>
+                </div>
+                <div class="group-declaration-preview">
+                    <span class="quote">"Increase teacher aide budget by $120K to reduce K-3 class sizes..."</span>
+                </div>
+                <div class="group-opinion-mini">
+                    <div class="mini-bar">
+                        <div class="agree" style="width:76%"></div>
+                        <div class="disagree" style="width:18%"></div>
+                        <div class="mixed" style="width:6%"></div>
+                    </div>
+                    <span class="mini-opinion-label">76%</span>
+                </div>
+            </div>
+
+            <!-- Declared group -->
+            <div class="group-card has-declaration">
+                <div class="group-card-header">
+                    <div class="group-card-title">Budget &amp; Taxes</div>
+                    <div class="group-status-dot declared"></div>
+                </div>
+                <div class="group-card-stats">
+                    <span>42 members</span>
+                    <span>1 declaration</span>
+                    <span>178 opinions</span>
+                </div>
+                <div class="group-declaration-preview">
+                    <span class="quote">"Cap mill rate increases at 2% annually for 3 years..."</span>
+                </div>
+                <div class="group-opinion-mini">
+                    <div class="mini-bar">
+                        <div class="agree" style="width:68%"></div>
+                        <div class="disagree" style="width:22%"></div>
+                        <div class="mixed" style="width:10%"></div>
+                    </div>
+                    <span class="mini-opinion-label">68%</span>
+                </div>
+            </div>
+
+            <!-- Voting group -->
+            <div class="group-card voting">
+                <div class="group-card-header">
+                    <div class="group-card-title">Police &amp; Public Safety</div>
+                    <div class="group-status-dot voting"></div>
+                </div>
+                <div class="group-card-stats">
+                    <span>31 members</span>
+                    <span>0 declarations</span>
+                    <span>45 opinions</span>
+                </div>
+                <div class="group-voting-preview">
+                    Active ballot: <strong>Community policing expansion</strong> — Round 1, 3 options
+                </div>
+            </div>
+
+            <!-- Declared group -->
+            <div class="group-card has-declaration">
+                <div class="group-card-header">
+                    <div class="group-card-title">Parks &amp; Conservation</div>
+                    <div class="group-status-dot declared"></div>
+                </div>
+                <div class="group-card-stats">
+                    <span>28 members</span>
+                    <span>1 declaration</span>
+                    <span>112 opinions</span>
+                </div>
+                <div class="group-declaration-preview">
+                    <span class="quote">"Restore the River Trail and add ADA-accessible paths..."</span>
+                </div>
+                <div class="group-opinion-mini">
+                    <div class="mini-bar">
+                        <div class="agree" style="width:94%"></div>
+                        <div class="disagree" style="width:3%"></div>
+                        <div class="mixed" style="width:3%"></div>
+                    </div>
+                    <span class="mini-opinion-label">94%</span>
+                </div>
+            </div>
+
+            <!-- Idle group -->
+            <div class="group-card no-activity">
+                <div class="group-card-header">
+                    <div class="group-card-title">Fire Protection</div>
+                    <div class="group-status-dot idle"></div>
+                </div>
+                <div class="group-card-stats">
+                    <span>12 members</span>
+                    <span>0 declarations</span>
+                    <span>8 opinions</span>
+                </div>
+            </div>
+
+            <!-- Declared group -->
+            <div class="group-card has-declaration">
+                <div class="group-card-header">
+                    <div class="group-card-title">Water / Sewer / Waste</div>
+                    <div class="group-status-dot declared"></div>
+                </div>
+                <div class="group-card-stats">
+                    <span>22 members</span>
+                    <span>1 declaration</span>
+                    <span>67 opinions</span>
+                </div>
+                <div class="group-declaration-preview">
+                    <span class="quote">"Replace lead service lines on Elm and Church streets by 2027..."</span>
+                </div>
+                <div class="group-opinion-mini">
+                    <div class="mini-bar">
+                        <div class="agree" style="width:91%"></div>
+                        <div class="disagree" style="width:5%"></div>
+                        <div class="mixed" style="width:4%"></div>
+                    </div>
+                    <span class="mini-opinion-label">91%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-note">
+            <strong>Group grid</strong> — all 13 town topic groups at a glance. Three visual states:<br>
+            &#x2022; <strong>Green border + declaration preview</strong> — group has ratified a declaration, with public opinion mini-bar<br>
+            &#x2022; <strong>Blue border + pulsing dot</strong> — active ballot in progress<br>
+            &#x2022; <strong>Gray border + dimmed</strong> — deliberating or idle, no active vote<br>
+            Click any card to enter the group deliberation page.
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  ALL DECLARATIONS (full list)           -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Town Declarations</h3>
+
+        <div class="declaration-list">
+
+            <div class="declaration-card">
+                <div class="decl-header">
+                    <span class="decl-group-name">Parks &amp; Conservation</span>
+                    <span class="decl-approval strong">94% agree</span>
+                    <span class="decl-date">Mar 4, 2026</span>
+                </div>
+                <div class="decl-title">River Trail Restoration</div>
+                <div class="decl-body">"We mandate the restoration of the Quinebaug River Trail with ADA-accessible paths, new signage, and native plantings along the 2.3-mile corridor."</div>
+                <div class="decl-meta">
+                    <span><strong>94%</strong> group approval (26 of 28)</span>
+                    <span>112 public opinions</span>
+                    <span>Threshold: majority</span>
+                </div>
+                <div class="decl-opinion-row">
+                    <button class="opinion-btn agree voted">Agree (105)</button>
+                    <button class="opinion-btn disagree">Disagree (3)</button>
+                    <button class="opinion-btn mixed">Mixed (4)</button>
+                    <span class="opinion-count">You agreed</span>
+                </div>
+                <div class="escalation-row">
+                    <span class="escalation-arrow">&#x2191;</span>
+                    <span class="escalation-text">Escalated to State Parks &amp; Conservation</span>
+                    <span class="escalation-status">Pending state vote</span>
+                </div>
+            </div>
+
+            <div class="declaration-card">
+                <div class="decl-header">
+                    <span class="decl-group-name">Housing &amp; Development</span>
+                    <span class="decl-approval strong">82% agree</span>
+                    <span class="decl-date">Mar 5, 2026</span>
+                </div>
+                <div class="decl-title">Affordable Housing Allocation</div>
+                <div class="decl-body">"We mandate that the town of Putnam allocate 15% of the annual budget surplus to affordable housing development, with priority given to mixed-income projects within the downtown corridor."</div>
+                <div class="decl-meta">
+                    <span><strong>82%</strong> group approval (41 of 50)</span>
+                    <span>156 public opinions</span>
+                    <span>Threshold: majority</span>
+                </div>
+                <div class="decl-opinion-row">
+                    <button class="opinion-btn agree">Agree (139)</button>
+                    <button class="opinion-btn disagree">Disagree (11)</button>
+                    <button class="opinion-btn mixed">Mixed (6)</button>
+                    <span class="opinion-count"><strong>89%</strong> public agree</span>
+                </div>
+                <div class="escalation-row">
+                    <span class="escalation-arrow">&#x2191;</span>
+                    <span class="escalation-text">Escalated to State Housing &amp; Development</span>
+                    <span class="escalation-status">3 other CT towns also declared</span>
+                </div>
+            </div>
+
+            <div class="declaration-card">
+                <div class="decl-header">
+                    <span class="decl-group-name">Budget &amp; Taxes</span>
+                    <span class="decl-approval moderate">68% agree</span>
+                    <span class="decl-date">Mar 1, 2026</span>
+                </div>
+                <div class="decl-title">Mill Rate Cap</div>
+                <div class="decl-body">"We mandate that Putnam cap annual mill rate increases at 2% for a period of 3 years, with exceptions only for state-mandated cost increases."</div>
+                <div class="decl-meta">
+                    <span><strong>68%</strong> group approval (29 of 42)</span>
+                    <span>178 public opinions</span>
+                    <span>Threshold: majority</span>
+                </div>
+                <div class="decl-opinion-row">
+                    <button class="opinion-btn agree">Agree (121)</button>
+                    <button class="opinion-btn disagree">Disagree (39)</button>
+                    <button class="opinion-btn mixed">Mixed (18)</button>
+                    <span class="opinion-count"><strong>68%</strong> public agree</span>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mockup-note">
+            <strong>Declaration list</strong> — all ratified declarations for the town in one view.<br><br>
+            &#x2022; <strong>Approval badge</strong> — green (strong &gt;80%) or orange (moderate 50-80%)<br>
+            &#x2022; <strong>Public opinion row</strong> — agree/disagree/mixed buttons with counts, "You agreed" state<br>
+            &#x2022; <strong>Escalation row</strong> — shows if declaration was sent up to state level, and status<br>
+            &#x2022; <strong>Convergence signal</strong> — "3 other CT towns also declared" shows cross-town alignment
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--  COMPONENT LEGEND                       -->
+        <!-- ════════════════════════════════════════ -->
+
+        <h3 class="section-title">Component Legend</h3>
+
+        <div class="mockup-note">
+            <strong>New components on the Town Dashboard:</strong><br><br>
+            &#x2022; <strong>Pulse strength meter</strong> — what fraction of topic groups have declared (town coherence)<br>
+            &#x2022; <strong>Group grid</strong> — all civic topic groups with 3 visual states (declared/voting/idle)<br>
+            &#x2022; <strong>Declaration preview cards</strong> — truncated mandate + opinion mini-bar per group<br>
+            &#x2022; <strong>Full declaration list</strong> — complete text, approval %, public opinion buttons<br>
+            &#x2022; <strong>Escalation tracking</strong> — which declarations were sent to state level and their status<br>
+            &#x2022; <strong>Convergence signals</strong> — "3 other CT towns also declared" = amplification in action<br>
+            &#x2022; <strong>Summary stats</strong> — groups, declarations, active votes, citizens, opinions<br>
+        </div>
+
+    </div>
+
+    <div style="text-align:center;padding:20px;color:#666;font-size:0.75rem;">
+        Mockup only — no JS functionality. Open in browser to review.<br>
+        Part of The Civic Engine design (docs/plans/civic-engine-design.md)
+    </div>
+
+</body>
+</html>
