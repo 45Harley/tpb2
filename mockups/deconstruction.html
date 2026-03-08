@@ -149,7 +149,7 @@ const COLONIES = [
 ];
 
 const DECONSTRUCT_TREE = {
-  label: 'Government', color: GOLD, children: [
+  label: 'Constitutional Government', color: GOLD, children: [
     { label: 'Branches', color: GOLD, children: [
       { label: 'Congress', color: CORAL, children: [
         { label: 'Senate', color: CORAL, children: [] },
@@ -238,16 +238,29 @@ function drawSphere(x, y, r, color, label, alpha, showPlus) {
   ctx.arc(x - r * 0.25, y - r * 0.35, r * 0.4, 0, Math.PI * 2);
   ctx.fill();
 
-  // Label
+  // Label — supports multi-word wrapping for long labels
   if (label && r > 8) {
-    const fontSize = Math.max(8, Math.min(r * 0.28, 18));
+    const words = label.split(' ');
+    let lines;
+    // Wrap if label is too long for sphere
+    if (words.length > 1 && ctx.measureText && label.length > 10 && r < 100) {
+      const mid = Math.ceil(words.length / 2);
+      lines = [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+    } else {
+      lines = [label];
+    }
+    const fontSize = Math.max(8, Math.min(r * (lines.length > 1 ? 0.24 : 0.28), 18));
     ctx.font = '700 ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#1a1030';
     ctx.shadowColor = 'rgba(255,255,255,0.25)';
     ctx.shadowBlur = 2;
-    ctx.fillText(label, x, y);
+    const lineH = fontSize * 1.2;
+    const startY = y - (lines.length - 1) * lineH / 2;
+    lines.forEach((line, li) => {
+      ctx.fillText(line, x, startY + li * lineH);
+    });
     ctx.shadowBlur = 0;
 
     if (showPlus) {
@@ -526,9 +539,9 @@ function render(now) {
 
     // Government sphere
     const govAlpha = easeInOut(Math.max(0, (progress - 0.35) * 2.5));
-    const govR = 90 * easeOutBack(Math.min(1, Math.max(0, (progress - 0.3) * 1.8)));
+    const govR = 95 * easeOutBack(Math.min(1, Math.max(0, (progress - 0.3) * 1.8)));
     if (govAlpha > 0) {
-      drawSphere(W / 2, H / 2, govR, GOLD, 'Government', govAlpha, true);
+      drawSphere(W / 2, H / 2, govR, GOLD, 'Constitutional Government', govAlpha, true);
     }
 
     if (progress > 0.6) {
@@ -549,9 +562,9 @@ function render(now) {
 
   // --- GOV ARRIVE: wait for click to enter interactive ---
   } else if (phase === 'gov-arrive') {
-    drawTitle('The United States Government', 0.5);
+    drawTitle('The United States Constitutional Government', 0.5);
     const breathe = Math.sin(now / 600) * 4;
-    drawSphere(W / 2, H / 2, 90 + breathe, GOLD, 'Government', 1, true);
+    drawSphere(W / 2, H / 2, 95 + breathe, GOLD, 'Constitutional Government', 1, true);
 
     ctx.save(); ctx.globalAlpha = 0.5; ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
     ctx.fillStyle = '#d4af37'; ctx.textAlign = 'center';
@@ -801,10 +814,10 @@ canvas.addEventListener('click', function(e) {
       narrate('The towns coalesced into thirteen colonies.');
     } else if (phase === 'states') {
       phase = 'coalesce2'; phaseT = 0;
-      narrate('And they forged a Constitution, creating a Government of the people.');
+      narrate('And they forged a Constitution, creating a Constitutional Government of the people.');
     } else if (phase === 'gov-arrive') {
       phase = 'interactive'; phaseT = 0;
-      const root = makeInteractiveSphere(DECONSTRUCT_TREE, W / 2, H / 2, 90);
+      const root = makeInteractiveSphere(DECONSTRUCT_TREE, W / 2, H / 2, 95);
       spheres.push(root);
       narrate('Now, click to deconstruct.');
       hintEl.textContent = 'Click Government to take it apart';
