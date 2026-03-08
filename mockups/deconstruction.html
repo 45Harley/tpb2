@@ -17,24 +17,34 @@
     font-family: 'Segoe UI', system-ui, sans-serif;
   }
   canvas { cursor: pointer; border-radius: 8px; }
-  .hint {
-    margin-top: 12px;
-    font-size: 0.8rem;
-    color: #888;
+  .narration {
+    margin-top: 14px;
     text-align: center;
-    min-height: 20px;
+    font-size: 1rem;
+    color: #b0b0b0;
+    min-height: 28px;
+    max-width: 700px;
+  }
+  .hint {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: #555;
+    text-align: center;
+    min-height: 18px;
   }
 </style>
 </head>
 <body>
 
 <canvas id="c" width="900" height="600"></canvas>
-<div class="hint" id="hint">Click the sphere to deconstruct</div>
+<div class="narration" id="narration"></div>
+<div class="hint" id="hint">Click to begin</div>
 
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-const hint = document.getElementById('hint');
+const narrationEl = document.getElementById('narration');
+const hintEl = document.getElementById('hint');
 const W = 900, H = 600;
 
 const GOLD = '#d4af37';
@@ -42,11 +52,47 @@ const BLUE = '#62a4d0';
 const GREEN = '#5cb85c';
 const PURPLE = '#9b59b6';
 const CORAL = '#e07050';
+const TEAL = '#45b5aa';
 const BG = '#0d0d1a';
 
-// --- Tree definition ---
-// Each node: { label, color, children: [...] }
-const TREE = {
+// ========================================
+// PHASE 1: CONSTRUCTION (animated timeline)
+// The People → Towns → 13 States → Government
+// ========================================
+
+const TOWNS = [
+  { name: 'Boston', colony: 'MA' },
+  { name: 'Philadelphia', colony: 'PA' },
+  { name: 'New York', colony: 'NY' },
+  { name: 'Williamsburg', colony: 'VA' },
+  { name: 'Charleston', colony: 'SC' },
+  { name: 'Hartford', colony: 'CT' },
+  { name: 'Providence', colony: 'RI' },
+  { name: 'Annapolis', colony: 'MD' },
+  { name: 'Savannah', colony: 'GA' },
+  { name: 'New Bern', colony: 'NC' },
+  { name: 'Portsmouth', colony: 'NH' },
+  { name: 'Dover', colony: 'DE' },
+  { name: 'Perth Amboy', colony: 'NJ' },
+];
+
+const COLONIES = [
+  'Massachusetts', 'Pennsylvania', 'New York', 'Virginia',
+  'South Carolina', 'Connecticut', 'Rhode Island', 'Maryland',
+  'Georgia', 'N. Carolina', 'N. Hampshire', 'Delaware', 'New Jersey',
+];
+
+// Sphere object factory
+function makeBall(x, y, r, label, color) {
+  return { x, y, r, label, color, alpha: 1, vx: 0, vy: 0, targetX: x, targetY: y };
+}
+
+// ========================================
+// PHASE 2: DECONSTRUCTION (interactive)
+// Government → Branches + Jurisdictions → ...
+// ========================================
+
+const DECONSTRUCT_TREE = {
   label: 'Government', color: GOLD, children: [
     { label: 'Branches', color: GOLD, children: [
       { label: 'Congress', color: CORAL, children: [
@@ -72,8 +118,28 @@ const TREE = {
   ]
 };
 
-// --- Live sphere objects ---
-// Each: { x, y, r, label, color, treeDef, state, stateT, children[], parent }
+// ========================================
+// STATE MACHINE
+// ========================================
+// 'start'      — waiting for first click, show The People
+// 'scatter'    — People splits into towns
+// 'towns'      — towns visible, brief hold
+// 'coalesce1'  — towns merge into 13 states
+// 'states'     — 13 states visible, brief hold
+// 'coalesce2'  — states merge into Government
+// 'interactive'— Government sphere clickable, deconstruction tree
+
+let phase = 'start';
+let phaseT = 0;
+let lastTime = 0;
+
+// Construction balls
+let peopleBall = makeBall(W / 2, H / 2, 90, 'The People', GOLD);
+let townBalls = [];
+let stateBalls = [];
+let govBall = null;
+
+// Interactive deconstruction spheres
 let spheres = [];
 let dragging = null;
 let dragOffX = 0, dragOffY = 0;
@@ -83,22 +149,10 @@ let wasDrag = false;
 const JITTER_DUR = 0.8;
 const SPLIT_DUR = 0.7;
 
-function makeSphere(treeDef, x, y, r) {
-  return {
-    x, y, r, label: treeDef.label, color: treeDef.color,
-    treeDef, state: 'idle', stateT: 0,
-    children: [], parent: null, targetX: x, targetY: y,
-    splitOriginX: x, splitOriginY: y,
-  };
-}
-
-// Initialize root
-const root = makeSphere(TREE, W / 2, H / 2, 90);
-spheres.push(root);
-
-// --- Drawing ---
-function drawSphere(s, now, alpha) {
-  const { x, y, r, color, label } = s;
+// ========================================
+// DRAWING HELPERS
+// ========================================
+function drawSphere(x, y, r, color, label, alpha, showPlus) {
   if (alpha < 0.01 || r < 1) return;
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -112,7 +166,7 @@ function drawSphere(s, now, alpha) {
   ctx.arc(x, y, r * 1.4, 0, Math.PI * 2);
   ctx.fill();
 
-  // Sphere gradient
+  // Sphere body
   const grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
   grad.addColorStop(0, lighten(color, 60));
   grad.addColorStop(0.5, color);
@@ -121,336 +175,557 @@ function drawSphere(s, now, alpha) {
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
-
-  // Rim
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = Math.max(1, r * 0.025);
   ctx.stroke();
 
   // Highlight
-  ctx.beginPath();
   const hlGrad = ctx.createRadialGradient(x - r * 0.25, y - r * 0.35, r * 0.05, x - r * 0.25, y - r * 0.35, r * 0.4);
-  hlGrad.addColorStop(0, 'rgba(255,255,255,0.35)');
+  hlGrad.addColorStop(0, 'rgba(255,255,255,0.3)');
   hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = hlGrad;
+  ctx.beginPath();
   ctx.arc(x - r * 0.25, y - r * 0.35, r * 0.4, 0, Math.PI * 2);
   ctx.fill();
 
-  // Label — dark text for readability
-  const fontSize = Math.max(10, r * 0.26);
-  ctx.font = '700 ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#1a1030';
-  ctx.shadowColor = 'rgba(255,255,255,0.3)';
-  ctx.shadowBlur = 2;
-  ctx.fillText(label, x, y);
-
-  // Clickable indicator — small "+" if has children
-  if (s.treeDef.children.length > 0 && s.state === 'idle') {
-    ctx.font = '700 ' + (fontSize * 0.7) + 'px Segoe UI, system-ui, sans-serif';
+  // Label — dark text
+  if (label && r > 8) {
+    const fontSize = Math.max(8, Math.min(r * 0.3, 20));
+    ctx.font = '700 ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillStyle = '#1a1030';
+    ctx.shadowColor = 'rgba(255,255,255,0.25)';
+    ctx.shadowBlur = 2;
+    ctx.fillText(label, x, y);
     ctx.shadowBlur = 0;
-    ctx.globalAlpha = alpha * 0.5;
-    ctx.fillText('+', x, y + r * 0.45);
+
+    if (showPlus) {
+      ctx.font = '700 ' + (fontSize * 0.65) + 'px Segoe UI, system-ui, sans-serif';
+      ctx.globalAlpha = alpha * 0.45;
+      ctx.fillText('+', x, y + r * 0.45);
+    }
   }
 
   ctx.restore();
 }
 
 function lighten(hex, amt) {
-  let r = parseInt(hex.slice(1, 3), 16);
-  let g = parseInt(hex.slice(3, 5), 16);
-  let b = parseInt(hex.slice(5, 7), 16);
+  let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
   return '#' + [Math.min(255, r + amt), Math.min(255, g + amt), Math.min(255, b + amt)]
     .map(c => c.toString(16).padStart(2, '0')).join('');
 }
-
 function darken(hex, amt) {
-  let r = parseInt(hex.slice(1, 3), 16);
-  let g = parseInt(hex.slice(3, 5), 16);
-  let b = parseInt(hex.slice(5, 7), 16);
+  let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
   return '#' + [Math.max(0, r - amt), Math.max(0, g - amt), Math.max(0, b - amt)]
     .map(c => c.toString(16).padStart(2, '0')).join('');
 }
-
 function easeOutBack(t) {
   const c1 = 1.70158, c3 = c1 + 1;
   return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
 }
-function easeInOut(t) {
-  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-}
-function dist(x1, y1, x2, y2) {
-  return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-}
+function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+function dist(x1, y1, x2, y2) { return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2); }
+function lerp(a, b, t) { return a + (b - a) * t; }
 
-// --- Compute child target positions ---
-function computeChildTargets(parent, childCount, childR) {
-  const targets = [];
-  if (childCount === 2) {
-    targets.push({ x: parent.x - childR * 2.2, y: parent.y });
-    targets.push({ x: parent.x + childR * 2.2, y: parent.y });
-  } else if (childCount === 3) {
-    // Triangle arrangement
-    targets.push({ x: parent.x, y: parent.y - childR * 2 });
-    targets.push({ x: parent.x - childR * 1.9, y: parent.y + childR * 1.3 });
-    targets.push({ x: parent.x + childR * 1.9, y: parent.y + childR * 1.3 });
-  } else {
-    // Circle arrangement
-    for (let i = 0; i < childCount; i++) {
-      const angle = -Math.PI / 2 + (i / childCount) * Math.PI * 2;
-      targets.push({
-        x: parent.x + Math.cos(angle) * childR * 2.5,
-        y: parent.y + Math.sin(angle) * childR * 2.5,
-      });
-    }
-  }
-
-  // Clamp to canvas bounds
-  targets.forEach(t => {
-    t.x = Math.max(childR + 10, Math.min(W - childR - 10, t.x));
-    t.y = Math.max(childR + 10, Math.min(H - childR - 10, t.y));
-  });
-
-  return targets;
-}
-
-// --- Split a sphere into its children ---
-function startSplit(sphere) {
-  if (sphere.treeDef.children.length === 0) return;
-  if (sphere.state !== 'idle') return;
-
-  sphere.state = 'jitter';
-  sphere.stateT = 0;
-  hint.textContent = '';
-}
-
-// --- Render ---
-let lastTime = 0;
-
-function render(now) {
-  const dt = lastTime ? (now - lastTime) / 1000 : 0;
-  lastTime = now;
-
-  // Background
-  ctx.fillStyle = BG;
-  ctx.fillRect(0, 0, W, H);
-
-  // Subtle grid
+function drawGrid(now) {
   ctx.save();
   ctx.globalAlpha = 0.03;
   ctx.strokeStyle = '#fff';
   ctx.lineWidth = 1;
-  for (let gx = 0; gx < W; gx += 40) {
-    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
-  }
-  for (let gy = 0; gy < H; gy += 40) {
-    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
-  }
+  for (let gx = 0; gx < W; gx += 40) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+  for (let gy = 0; gy < H; gy += 40) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
   ctx.restore();
+}
 
-  // Title
+function drawTitle(text, alpha) {
   ctx.save();
-  ctx.globalAlpha = 0.5;
-  ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
-  ctx.fillStyle = '#666';
+  ctx.globalAlpha = alpha;
+  ctx.font = '400 12px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#555';
   ctx.textAlign = 'center';
-  ctx.fillText('Visual Deconstruction', W / 2, 25);
+  ctx.fillText(text, W / 2, 22);
   ctx.restore();
+}
 
-  // Draw connection lines between siblings
-  spheres.forEach(s => {
-    if (s.children.length > 0 && s.state === 'done') {
-      // Lines from parent ghost to each child
-      s.children.forEach(child => {
-        if (child.state === 'done' || child.state === 'idle') {
-          ctx.save();
-          ctx.globalAlpha = 0.12;
-          ctx.setLineDash([6, 6]);
-          ctx.lineDashOffset = -now / 100;
-          ctx.strokeStyle = '#666';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(s.x, s.y);
-          ctx.lineTo(child.x, child.y);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.restore();
-        }
-      });
+// Scatter towns in a rough circle
+function scatterTowns() {
+  townBalls = [];
+  const cx = W / 2, cy = H / 2;
+  TOWNS.forEach((t, i) => {
+    const angle = (i / TOWNS.length) * Math.PI * 2 - Math.PI / 2;
+    const radius = 140 + Math.random() * 80;
+    const tx = cx + Math.cos(angle) * radius;
+    const ty = cy + Math.sin(angle) * radius;
+    const ball = makeBall(cx, cy, 22, t.name, TEAL);
+    ball.targetX = tx;
+    ball.targetY = ty;
+    ball.colony = t.colony;
+    townBalls.push(ball);
+  });
+}
 
-      // Ghost label at parent position
+// Place 13 states in a wider arc
+function placeStates() {
+  stateBalls = [];
+  const cx = W / 2, cy = H / 2;
+  COLONIES.forEach((name, i) => {
+    const angle = (i / COLONIES.length) * Math.PI * 2 - Math.PI / 2;
+    const radius = 170;
+    const tx = cx + Math.cos(angle) * radius;
+    const ty = cy + Math.sin(angle) * radius;
+    const ball = makeBall(cx, cy, 35, name, BLUE);
+    ball.targetX = tx;
+    ball.targetY = ty;
+    ball.alpha = 0;
+    stateBalls.push(ball);
+  });
+}
+
+// Map towns to their state index
+function townToStateIndex(colony) {
+  const map = { MA: 0, PA: 1, NY: 2, VA: 3, SC: 4, CT: 5, RI: 6, MD: 7, GA: 8, NC: 9, NH: 10, DE: 11, NJ: 12 };
+  return map[colony] || 0;
+}
+
+// Particles for bursts
+let particles = [];
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 40 + Math.random() * 120;
+    particles.push({
+      x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      life: 0.6 + Math.random() * 0.4, age: 0, color, r: 2 + Math.random() * 2,
+    });
+  }
+}
+function updateParticles(dt) {
+  particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.age += dt; p.vx *= 0.97; p.vy *= 0.97; });
+  particles = particles.filter(p => p.age < p.life);
+}
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - p.age / p.life) * 0.7;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r * (1 - p.age / p.life), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ========================================
+// VOICE
+// ========================================
+let claudiaVoice = null;
+function pickVoice() {
+  const v = speechSynthesis.getVoices();
+  claudiaVoice = v.find(x => /female/i.test(x.name) && /en.US/i.test(x.lang))
+    || v.find(x => /zira|eva|samantha|karen|susan/i.test(x.name))
+    || v.find(x => x.lang && x.lang.startsWith('en'));
+}
+speechSynthesis.onvoiceschanged = pickVoice;
+pickVoice();
+
+let ttsPlaying = false;
+function speak(text) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.92; u.pitch = 1.05;
+  if (claudiaVoice) u.voice = claudiaVoice;
+  ttsPlaying = true;
+  u.onend = () => { ttsPlaying = false; };
+  u.onerror = () => { ttsPlaying = false; };
+  speechSynthesis.speak(u);
+}
+
+function narrate(text) {
+  narrationEl.textContent = text;
+  speak(text);
+}
+
+// ========================================
+// RENDER LOOP
+// ========================================
+function render(now) {
+  const dt = lastTime ? Math.min((now - lastTime) / 1000, 0.05) : 0;
+  lastTime = now;
+
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, W, H);
+  drawGrid(now);
+
+  updateParticles(dt);
+
+  if (phase === 'start') {
+    drawTitle('The Origin of American Government', 0.5);
+    const breathe = Math.sin(now / 600) * 4;
+    drawSphere(peopleBall.x, peopleBall.y, peopleBall.r + breathe, peopleBall.color, peopleBall.label, 1);
+    // Year label
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#888';
+    ctx.textAlign = 'center';
+    ctx.fillText('circa 1750', W / 2, H / 2 + 120);
+    ctx.restore();
+
+  } else if (phase === 'jitter-people') {
+    drawTitle('The Origin of American Government', 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / JITTER_DUR);
+    const intensity = Math.sin(progress * Math.PI) * 14;
+    const jx = (Math.random() - 0.5) * intensity * 2;
+    const jy = (Math.random() - 0.5) * intensity * 2;
+    drawSphere(peopleBall.x + jx, peopleBall.y + jy, peopleBall.r, peopleBall.color, peopleBall.label, 1);
+
+    // Cracks
+    if (progress > 0.3) {
       ctx.save();
-      ctx.globalAlpha = 0.2;
-      ctx.font = '400 11px Segoe UI, system-ui, sans-serif';
-      ctx.fillStyle = '#888';
-      ctx.textAlign = 'center';
-      ctx.fillText(s.label, s.x, s.y - 8);
+      ctx.globalAlpha = (progress - 0.3) * 1.4;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      const ox = peopleBall.x + jx, oy = peopleBall.y + jy, pr = peopleBall.r;
+      ctx.beginPath(); ctx.moveTo(ox - 5, oy - pr * 0.6); ctx.lineTo(ox + 3, oy); ctx.lineTo(ox - 8, oy + pr * 0.5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ox + 12, oy - pr * 0.4); ctx.lineTo(ox - 2, oy + pr * 0.2); ctx.stroke();
       ctx.restore();
     }
-  });
 
-  // Update and draw spheres
-  spheres.forEach(s => {
-    if (s.state === 'idle') {
-      // Breathing
-      const breathe = Math.sin(now / 700 + s.x * 0.01) * 3;
-      const drawR = s.r + breathe;
-      drawSphere({ ...s, r: drawR }, now, 1);
-
-    } else if (s.state === 'jitter') {
-      s.stateT += dt;
-      const progress = Math.min(1, s.stateT / JITTER_DUR);
-
-      const intensity = Math.sin(progress * Math.PI) * 12;
-      const jx = (Math.random() - 0.5) * intensity * 2;
-      const jy = (Math.random() - 0.5) * intensity * 2;
-      const flicker = Math.random() > 0.5 ? s.color : lighten(s.color, 30);
-
-      drawSphere({ ...s, x: s.x + jx, y: s.y + jy, color: flicker }, now, 1);
-
-      // Crack lines
-      if (progress > 0.3) {
-        ctx.save();
-        ctx.globalAlpha = (progress - 0.3) * 1.4;
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(s.x - 5 + jx, s.y - s.r * 0.6 + jy);
-        ctx.lineTo(s.x + 3 + jx, s.y + jy);
-        ctx.lineTo(s.x - 8 + jx, s.y + s.r * 0.5 + jy);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(s.x + 10 + jx, s.y - s.r * 0.4 + jy);
-        ctx.lineTo(s.x - 2 + jx, s.y + s.r * 0.2 + jy);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      if (progress >= 1) {
-        s.state = 'splitting';
-        s.stateT = 0;
-        // Create children
-        const childDefs = s.treeDef.children;
-        const childR = Math.max(30, s.r * 0.65);
-        const targets = computeChildTargets(s, childDefs.length, childR);
-
-        childDefs.forEach((def, i) => {
-          const child = makeSphere(def, s.x, s.y, childR);
-          child.targetX = targets[i].x;
-          child.targetY = targets[i].y;
-          child.splitOriginX = s.x;
-          child.splitOriginY = s.y;
-          child.parent = s;
-          child.state = 'appearing';
-          child.stateT = 0;
-          s.children.push(child);
-          spheres.push(child);
-        });
-      }
-
-    } else if (s.state === 'splitting') {
-      s.stateT += dt;
-      const progress = Math.min(1, s.stateT / SPLIT_DUR);
-
-      // Fade out parent
-      const parentAlpha = 1 - easeInOut(Math.min(1, progress * 3));
-      if (parentAlpha > 0) {
-        drawSphere({ ...s, r: s.r * (1 - progress * 0.5) }, now, parentAlpha);
-      }
-
-      // Burst particles
-      if (progress < 0.4) {
-        ctx.save();
-        ctx.globalAlpha = (0.4 - progress) * 2;
-        for (let i = 0; i < 10; i++) {
-          const angle = (i / 10) * Math.PI * 2;
-          const d = progress * 180;
-          const px = s.x + Math.cos(angle) * d;
-          const py = s.y + Math.sin(angle) * d;
-          const pr = 3 - progress * 6;
-          if (pr > 0.5) {
-            ctx.beginPath();
-            ctx.arc(px, py, pr, 0, Math.PI * 2);
-            ctx.fillStyle = s.color;
-            ctx.fill();
-          }
-        }
-        ctx.restore();
-      }
-
-      if (progress >= 1) {
-        s.state = 'done';
-        updateHint();
-      }
-
-    } else if (s.state === 'appearing') {
-      // Animated by parent's splitting state
-      const parent = s.parent;
-      if (!parent) { s.state = 'idle'; return; }
-      const progress = Math.min(1, parent.stateT / SPLIT_DUR);
-      const ease = easeOutBack(progress);
-
-      s.x = s.splitOriginX + (s.targetX - s.splitOriginX) * ease;
-      s.y = s.splitOriginY + (s.targetY - s.splitOriginY) * ease;
-
-      const childAlpha = easeInOut(Math.min(1, progress * 2));
-      const childR = s.r * Math.min(1, ease);
-      drawSphere({ ...s, r: childR }, now, childAlpha);
-
-      if (progress >= 1) {
-        s.state = 'idle';
-        s.x = s.targetX;
-        s.y = s.targetY;
-      }
-
-    } else if (s.state === 'done') {
-      // Parent that already split — don't draw sphere, just ghost label handled above
+    if (progress >= 1) {
+      phase = 'scatter';
+      phaseT = 0;
+      scatterTowns();
+      spawnParticles(peopleBall.x, peopleBall.y, GOLD, 20);
+      narrate('The people settled into towns.');
     }
-  });
 
+  } else if (phase === 'scatter') {
+    drawTitle('The Origin of American Government', 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 1.2);
+    const ease = easeOutBack(Math.min(1, progress));
+
+    // Fade out people sphere
+    const pAlpha = 1 - easeInOut(Math.min(1, progress * 3));
+    if (pAlpha > 0) {
+      drawSphere(peopleBall.x, peopleBall.y, peopleBall.r * (1 - progress * 0.5), peopleBall.color, peopleBall.label, pAlpha);
+    }
+
+    // Ghost label
+    if (progress > 0.3) {
+      ctx.save();
+      ctx.globalAlpha = 0.25 * Math.min(1, (progress - 0.3) * 2);
+      ctx.font = '400 12px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#888';
+      ctx.textAlign = 'center';
+      ctx.fillText('The People', W / 2, H / 2 - 5);
+      ctx.restore();
+    }
+
+    // Animate towns outward
+    townBalls.forEach(b => {
+      b.x = lerp(peopleBall.x, b.targetX, ease);
+      b.y = lerp(peopleBall.y, b.targetY, ease);
+      const a = easeInOut(Math.min(1, progress * 2));
+      const rr = b.r * Math.min(1, ease);
+      drawSphere(b.x, b.y, rr, b.color, b.label, a);
+    });
+
+    drawParticles();
+
+    if (progress >= 1) {
+      phase = 'towns';
+      phaseT = 0;
+    }
+
+  } else if (phase === 'towns') {
+    drawTitle('circa 1750 — Colonial Towns', 0.5);
+    phaseT += dt;
+
+    // Ghost label
+    ctx.save(); ctx.globalAlpha = 0.2; ctx.font = '400 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#888'; ctx.textAlign = 'center'; ctx.fillText('The People', W / 2, H / 2 - 5); ctx.restore();
+
+    const breathe = Math.sin(now / 700) * 2;
+    townBalls.forEach(b => drawSphere(b.x, b.y, b.r + breathe, b.color, b.label, 1));
+
+    // Wait for TTS to finish, then auto-advance
+    if (phaseT > 1.5 && !ttsPlaying) {
+      phase = 'coalesce1';
+      phaseT = 0;
+      placeStates();
+      narrate('The towns coalesced into thirteen colonies.');
+    }
+
+  } else if (phase === 'coalesce1') {
+    drawTitle('Towns become Colonies', 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 1.8);
+    const ease = easeInOut(progress);
+
+    // Towns shrink and move toward their state's target
+    townBalls.forEach(b => {
+      const si = townToStateIndex(b.colony);
+      const target = stateBalls[si];
+      b.x = lerp(b.targetX, target.targetX, ease);
+      b.y = lerp(b.targetY, target.targetY, ease);
+      const shrink = 1 - ease * 0.8;
+      const a = 1 - ease;
+      drawSphere(b.x, b.y, b.r * shrink, b.color, b.label, a);
+    });
+
+    // States fade in and grow
+    stateBalls.forEach(s => {
+      s.x = lerp(W / 2, s.targetX, easeOutBack(Math.min(1, progress * 1.2)));
+      s.y = lerp(H / 2, s.targetY, easeOutBack(Math.min(1, progress * 1.2)));
+      s.alpha = easeInOut(Math.min(1, progress * 2));
+      const rr = s.r * Math.min(1, easeOutBack(Math.min(1, progress * 1.3)));
+      drawSphere(s.x, s.y, rr, s.color, s.label, s.alpha);
+    });
+
+    if (progress >= 1) {
+      phase = 'states';
+      phaseT = 0;
+      stateBalls.forEach(s => { s.x = s.targetX; s.y = s.targetY; s.alpha = 1; });
+    }
+
+  } else if (phase === 'states') {
+    drawTitle('The Thirteen Colonies — 1776', 0.5);
+    phaseT += dt;
+
+    const breathe = Math.sin(now / 700) * 2;
+    stateBalls.forEach(s => drawSphere(s.x, s.y, s.r + breathe, s.color, s.label, 1));
+
+    if (phaseT > 1.5 && !ttsPlaying) {
+      phase = 'coalesce2';
+      phaseT = 0;
+      narrate('And they forged a Constitution, creating a Government of the people.');
+    }
+
+  } else if (phase === 'coalesce2') {
+    drawTitle('E Pluribus Unum', 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 2.0);
+    const ease = easeInOut(progress);
+
+    // States shrink toward center
+    stateBalls.forEach(s => {
+      s.x = lerp(s.targetX, W / 2, ease);
+      s.y = lerp(s.targetY, H / 2, ease);
+      const shrink = 1 - ease * 0.7;
+      const a = 1 - ease * 0.8;
+      drawSphere(s.x, s.y, s.r * shrink, s.color, s.label, a);
+    });
+
+    // Government sphere grows in
+    const govAlpha = easeInOut(Math.min(1, Math.max(0, (progress - 0.4) * 2.5)));
+    const govR = 90 * easeOutBack(Math.min(1, Math.max(0, (progress - 0.3) * 1.8)));
+    if (govAlpha > 0) {
+      drawSphere(W / 2, H / 2, govR, GOLD, 'Government', govAlpha, true);
+    }
+
+    // "Constitution" subtitle
+    if (progress > 0.6) {
+      ctx.save();
+      ctx.globalAlpha = easeInOut(Math.min(1, (progress - 0.6) * 3)) * 0.6;
+      ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#d4af37';
+      ctx.textAlign = 'center';
+      ctx.fillText('We the People', W / 2, H / 2 + 110);
+      ctx.restore();
+    }
+
+    if (progress >= 1) {
+      phase = 'gov-arrive';
+      phaseT = 0;
+    }
+
+  } else if (phase === 'gov-arrive') {
+    // Brief hold on Government sphere before interactive mode
+    phaseT += dt;
+    drawTitle('The United States Government', 0.5);
+    const breathe = Math.sin(now / 600) * 4;
+    drawSphere(W / 2, H / 2, 90 + breathe, GOLD, 'Government', 1, true);
+
+    ctx.save(); ctx.globalAlpha = 0.5; ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#d4af37'; ctx.textAlign = 'center';
+    ctx.fillText('We the People', W / 2, H / 2 + 110); ctx.restore();
+
+    if (phaseT > 1 && !ttsPlaying) {
+      phase = 'interactive';
+      phaseT = 0;
+      // Create the interactive root sphere
+      const root = makeInteractiveSphere(DECONSTRUCT_TREE, W / 2, H / 2, 90);
+      spheres.push(root);
+      narrate('Now, click to deconstruct.');
+      hintEl.textContent = 'Click Government to take it apart';
+    }
+
+  } else if (phase === 'interactive') {
+    drawTitle('Deconstruction', 0.5);
+
+    // Draw connection lines
+    spheres.forEach(s => {
+      if (s.children.length > 0 && s.state === 'done') {
+        s.children.forEach(child => {
+          if (child.state === 'done' || child.state === 'idle') {
+            ctx.save(); ctx.globalAlpha = 0.12;
+            ctx.setLineDash([6, 6]); ctx.lineDashOffset = -now / 100;
+            ctx.strokeStyle = '#666'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(child.x, child.y); ctx.stroke();
+            ctx.setLineDash([]); ctx.restore();
+          }
+        });
+        ctx.save(); ctx.globalAlpha = 0.2; ctx.font = '400 11px Segoe UI, system-ui, sans-serif';
+        ctx.fillStyle = '#888'; ctx.textAlign = 'center';
+        ctx.fillText(s.label, s.x, s.y - 8); ctx.restore();
+      }
+    });
+
+    // Update and draw spheres
+    spheres.forEach(s => updateInteractiveSphere(s, dt, now));
+
+    drawParticles();
+  }
+
+  drawParticles();
   requestAnimationFrame(render);
+}
+
+// ========================================
+// INTERACTIVE SPHERE SYSTEM
+// ========================================
+function makeInteractiveSphere(treeDef, x, y, r) {
+  return {
+    x, y, r, label: treeDef.label, color: treeDef.color,
+    treeDef, state: 'idle', stateT: 0,
+    children: [], parent: null, targetX: x, targetY: y,
+    splitOriginX: x, splitOriginY: y,
+  };
+}
+
+function updateInteractiveSphere(s, dt, now) {
+  if (s.state === 'idle') {
+    const breathe = Math.sin(now / 700 + s.x * 0.01) * 3;
+    drawSphere(s.x, s.y, s.r + breathe, s.color, s.label, 1, s.treeDef.children.length > 0);
+
+  } else if (s.state === 'jitter') {
+    s.stateT += dt;
+    const progress = Math.min(1, s.stateT / JITTER_DUR);
+    const intensity = Math.sin(progress * Math.PI) * 12;
+    const jx = (Math.random() - 0.5) * intensity * 2;
+    const jy = (Math.random() - 0.5) * intensity * 2;
+
+    drawSphere(s.x + jx, s.y + jy, s.r, s.color, s.label, 1);
+
+    if (progress > 0.3) {
+      ctx.save(); ctx.globalAlpha = (progress - 0.3) * 1.4;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(s.x - 5 + jx, s.y - s.r * 0.6 + jy); ctx.lineTo(s.x + 3 + jx, s.y + jy); ctx.lineTo(s.x - 8 + jx, s.y + s.r * 0.5 + jy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(s.x + 10 + jx, s.y - s.r * 0.4 + jy); ctx.lineTo(s.x - 2 + jx, s.y + s.r * 0.2 + jy); ctx.stroke();
+      ctx.restore();
+    }
+
+    if (progress >= 1) {
+      s.state = 'splitting';
+      s.stateT = 0;
+      const childDefs = s.treeDef.children;
+      const childR = Math.max(28, s.r * 0.6);
+      const targets = computeTargets(s, childDefs.length, childR);
+      childDefs.forEach((def, i) => {
+        const child = makeInteractiveSphere(def, s.x, s.y, childR);
+        child.targetX = targets[i].x;
+        child.targetY = targets[i].y;
+        child.splitOriginX = s.x;
+        child.splitOriginY = s.y;
+        child.parent = s;
+        child.state = 'appearing';
+        child.stateT = 0;
+        s.children.push(child);
+        spheres.push(child);
+      });
+      spawnParticles(s.x, s.y, s.color, 12);
+    }
+
+  } else if (s.state === 'splitting') {
+    s.stateT += dt;
+    const progress = Math.min(1, s.stateT / SPLIT_DUR);
+    const parentAlpha = 1 - easeInOut(Math.min(1, progress * 3));
+    if (parentAlpha > 0) drawSphere(s.x, s.y, s.r * (1 - progress * 0.5), s.color, s.label, parentAlpha);
+    if (progress >= 1) {
+      s.state = 'done';
+      updateHint();
+    }
+
+  } else if (s.state === 'appearing') {
+    const parent = s.parent;
+    if (!parent) { s.state = 'idle'; return; }
+    const progress = Math.min(1, parent.stateT / SPLIT_DUR);
+    const ease = easeOutBack(Math.min(1, progress));
+    s.x = lerp(s.splitOriginX, s.targetX, ease);
+    s.y = lerp(s.splitOriginY, s.targetY, ease);
+    const childAlpha = easeInOut(Math.min(1, progress * 2));
+    drawSphere(s.x, s.y, s.r * Math.min(1, ease), s.color, s.label, childAlpha, s.treeDef.children.length > 0);
+    if (progress >= 1) { s.state = 'idle'; s.x = s.targetX; s.y = s.targetY; }
+  }
+  // 'done' — ghost label handled in main loop
+}
+
+function computeTargets(parent, count, childR) {
+  const targets = [];
+  if (count === 2) {
+    targets.push({ x: parent.x - childR * 2.3, y: parent.y });
+    targets.push({ x: parent.x + childR * 2.3, y: parent.y });
+  } else if (count === 3) {
+    targets.push({ x: parent.x, y: parent.y - childR * 2.1 });
+    targets.push({ x: parent.x - childR * 1.9, y: parent.y + childR * 1.4 });
+    targets.push({ x: parent.x + childR * 1.9, y: parent.y + childR * 1.4 });
+  } else {
+    for (let i = 0; i < count; i++) {
+      const angle = -Math.PI / 2 + (i / count) * Math.PI * 2;
+      targets.push({ x: parent.x + Math.cos(angle) * childR * 2.5, y: parent.y + Math.sin(angle) * childR * 2.5 });
+    }
+  }
+  targets.forEach(t => {
+    t.x = Math.max(childR + 10, Math.min(W - childR - 10, t.x));
+    t.y = Math.max(childR + 40, Math.min(H - childR - 10, t.y));
+  });
+  return targets;
 }
 
 function updateHint() {
   const clickable = spheres.filter(s => s.state === 'idle' && s.treeDef.children.length > 0);
-  if (clickable.length > 0) {
-    hint.textContent = 'Click a sphere to deconstruct further. Drag to rearrange.';
-  } else {
-    const leaves = spheres.filter(s => s.state === 'idle');
-    if (leaves.length > 0) {
-      hint.textContent = 'Fully deconstructed. Drag spheres to rearrange.';
-    }
-  }
+  hintEl.textContent = clickable.length > 0
+    ? 'Click a sphere to deconstruct further. Drag to rearrange.'
+    : 'Fully deconstructed. Drag to rearrange.';
 }
 
-// --- Interaction ---
+// ========================================
+// INPUT
+// ========================================
 function getMousePos(e) {
   const rect = canvas.getBoundingClientRect();
-  return {
-    x: (e.clientX - rect.left) * (W / rect.width),
-    y: (e.clientY - rect.top) * (H / rect.height)
-  };
+  return { x: (e.clientX - rect.left) * (W / rect.width), y: (e.clientY - rect.top) * (H / rect.height) };
 }
 
-function findSphereAt(pos) {
-  // Search in reverse so top-drawn spheres are picked first
-  for (let i = spheres.length - 1; i >= 0; i--) {
-    const s = spheres[i];
-    if ((s.state === 'idle' || s.state === 'done') && s.state !== 'done') {
-      if (dist(pos.x, pos.y, s.x, s.y) < s.r) return s;
-    }
+// Phase 1: click to start
+canvas.addEventListener('click', function(e) {
+  if (phase === 'start') {
+    phase = 'jitter-people';
+    phaseT = 0;
+    hintEl.textContent = '';
+    narrate('It began with the people.');
   }
-  return null;
-}
+});
 
+// Phase 2: interactive drag + click
 canvas.addEventListener('mousedown', function(e) {
+  if (phase !== 'interactive') return;
   const pos = getMousePos(e);
-  dragStartX = pos.x;
-  dragStartY = pos.y;
-  wasDrag = false;
-
+  dragStartX = pos.x; dragStartY = pos.y; wasDrag = false;
   for (let i = spheres.length - 1; i >= 0; i--) {
     const s = spheres[i];
     if (s.state === 'idle' && dist(pos.x, pos.y, s.x, s.y) < s.r) {
@@ -464,84 +739,77 @@ canvas.addEventListener('mousedown', function(e) {
 });
 
 canvas.addEventListener('mousemove', function(e) {
+  if (phase !== 'interactive') return;
   const pos = getMousePos(e);
-
   if (dragging) {
-    const moved = dist(pos.x, pos.y, dragStartX, dragStartY);
-    if (moved > 5) wasDrag = true;
+    if (dist(pos.x, pos.y, dragStartX, dragStartY) > 5) wasDrag = true;
     dragging.x = pos.x + dragOffX;
     dragging.y = pos.y + dragOffY;
     return;
   }
-
-  // Hover
-  const s = findSphereAt(pos);
-  if (s) {
-    canvas.style.cursor = s.treeDef.children.length > 0 ? 'pointer' : 'grab';
-  } else {
-    canvas.style.cursor = 'default';
-  }
-});
-
-canvas.addEventListener('mouseup', function(e) {
-  if (dragging && !wasDrag) {
-    // It was a click, not a drag
-    if (dragging.treeDef.children.length > 0 && dragging.state === 'idle') {
-      startSplit(dragging);
+  let found = false;
+  for (let i = spheres.length - 1; i >= 0; i--) {
+    if (spheres[i].state === 'idle' && dist(pos.x, pos.y, spheres[i].x, spheres[i].y) < spheres[i].r) {
+      canvas.style.cursor = spheres[i].treeDef.children.length > 0 ? 'pointer' : 'grab';
+      found = true; break;
     }
   }
+  if (!found) canvas.style.cursor = 'default';
+});
+
+canvas.addEventListener('mouseup', function() {
+  if (dragging && !wasDrag && dragging.treeDef.children.length > 0 && dragging.state === 'idle') {
+    dragging.state = 'jitter';
+    dragging.stateT = 0;
+    hintEl.textContent = '';
+  }
   dragging = null;
   canvas.style.cursor = 'default';
 });
 
-canvas.addEventListener('mouseleave', function() {
-  dragging = null;
-  canvas.style.cursor = 'default';
-});
+canvas.addEventListener('mouseleave', function() { dragging = null; canvas.style.cursor = 'default'; });
 
-// Touch support
-let touchStartX = 0, touchStartY = 0, touchWasDrag = false;
-
+// Touch
+let touchStartX2 = 0, touchStartY2 = 0, touchWasDrag2 = false;
 canvas.addEventListener('touchstart', function(e) {
   e.preventDefault();
   const pos = getMousePos(e.touches[0]);
-  touchStartX = pos.x;
-  touchStartY = pos.y;
-  touchWasDrag = false;
 
+  if (phase === 'start') {
+    phase = 'jitter-people';
+    phaseT = 0;
+    hintEl.textContent = '';
+    narrate('It began with the people.');
+    return;
+  }
+  if (phase !== 'interactive') return;
+
+  touchStartX2 = pos.x; touchStartY2 = pos.y; touchWasDrag2 = false;
   for (let i = spheres.length - 1; i >= 0; i--) {
     const s = spheres[i];
     if (s.state === 'idle' && dist(pos.x, pos.y, s.x, s.y) < s.r) {
       dragging = s;
-      dragOffX = s.x - pos.x;
-      dragOffY = s.y - pos.y;
+      dragOffX = s.x - pos.x; dragOffY = s.y - pos.y;
       return;
     }
   }
 });
-
 canvas.addEventListener('touchmove', function(e) {
   e.preventDefault();
   if (dragging) {
     const pos = getMousePos(e.touches[0]);
-    const moved = dist(pos.x, pos.y, touchStartX, touchStartY);
-    if (moved > 10) touchWasDrag = true;
-    dragging.x = pos.x + dragOffX;
-    dragging.y = pos.y + dragOffY;
+    if (dist(pos.x, pos.y, touchStartX2, touchStartY2) > 10) touchWasDrag2 = true;
+    dragging.x = pos.x + dragOffX; dragging.y = pos.y + dragOffY;
   }
 });
-
-canvas.addEventListener('touchend', function(e) {
-  if (dragging && !touchWasDrag) {
-    if (dragging.treeDef.children.length > 0 && dragging.state === 'idle') {
-      startSplit(dragging);
-    }
+canvas.addEventListener('touchend', function() {
+  if (dragging && !touchWasDrag2 && dragging.treeDef.children.length > 0 && dragging.state === 'idle') {
+    dragging.state = 'jitter'; dragging.stateT = 0; hintEl.textContent = '';
   }
   dragging = null;
 });
 
 // Start
-updateHint();
 requestAnimationFrame(render);
 </script>
 
