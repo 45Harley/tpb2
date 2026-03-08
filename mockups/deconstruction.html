@@ -589,6 +589,96 @@ function render(now) {
     spheres.forEach(s => updateInteractiveSphere(s, dt, now));
 
     drawParticles();
+
+  } else if (phase === 'closing') {
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 3.5);
+    const ease = easeInOut(progress);
+
+    drawTitle('A More Perfect Union', 0.6);
+
+    // Draw ghost connection lines fading out
+    spheres.forEach(s => {
+      if (s.children.length > 0 && s.state === 'done') {
+        s.children.forEach(child => {
+          ctx.save(); ctx.globalAlpha = 0.08 * (1 - ease);
+          ctx.setLineDash([6, 6]); ctx.lineDashOffset = -now / 100;
+          ctx.strokeStyle = '#666'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(child.x, child.y); ctx.stroke();
+          ctx.setLineDash([]); ctx.restore();
+        });
+      }
+    });
+
+    // Leaf spheres drift gently toward center and shrink
+    leafSpheres.forEach(s => {
+      s.x = lerp(s.originX, W / 2, ease * 0.6);
+      s.y = lerp(s.originY, H / 2, ease * 0.6);
+      const shrink = 1 - ease * 0.5;
+      const a = 1 - ease * 0.7;
+      const breathe = Math.sin(now / 800 + s.originX * 0.01) * 2;
+      drawSphere(s.x, s.y, s.r * shrink + breathe, s.color, s.label, a);
+    });
+
+    // Central text fades in
+    if (progress > 0.3) {
+      const textAlpha = easeInOut(Math.min(1, (progress - 0.3) * 2));
+
+      ctx.save();
+      ctx.globalAlpha = textAlpha * 0.9;
+      ctx.font = '700 28px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = GOLD;
+      ctx.textAlign = 'center';
+      ctx.fillText('A more perfect union.', W / 2, H / 2 - 15);
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalAlpha = textAlpha * 0.6;
+      ctx.font = '400 16px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#b0b0b0';
+      ctx.textAlign = 'center';
+      ctx.fillText('The building continues.', W / 2, H / 2 + 18);
+      ctx.restore();
+    }
+
+    if (progress >= 1 && !ttsPlaying) {
+      phase = 'ended';
+      phaseT = 0;
+      hintEl.textContent = 'Click to begin again';
+    }
+
+  } else if (phase === 'ended') {
+    phaseT += dt;
+    drawTitle('A More Perfect Union', 0.5);
+
+    // Faded leaf spheres orbiting gently
+    const drift = phaseT * 0.15;
+    leafSpheres.forEach((s, i) => {
+      const angle = drift + (i / leafSpheres.length) * Math.PI * 2;
+      const orbitR = 80 + i * 12;
+      s.x = W / 2 + Math.cos(angle) * orbitR;
+      s.y = H / 2 + Math.sin(angle) * orbitR * 0.5;
+      const breathe = Math.sin(now / 900 + i) * 2;
+      drawSphere(s.x, s.y, s.r * 0.4 + breathe, s.color, '', 0.15);
+    });
+
+    // Central text
+    const pulse = 0.85 + Math.sin(now / 1200) * 0.15;
+    ctx.save();
+    ctx.globalAlpha = 0.9 * pulse;
+    ctx.font = '700 28px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = GOLD;
+    ctx.textAlign = 'center';
+    ctx.fillText('A more perfect union.', W / 2, H / 2 - 15);
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.font = '400 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#b0b0b0';
+    ctx.textAlign = 'center';
+    ctx.fillText('The building continues.', W / 2, H / 2 + 18);
+    ctx.restore();
   }
 
   drawParticles();
@@ -698,10 +788,28 @@ function computeTargets(parent, count, childR) {
 
 function updateHint() {
   const clickable = spheres.filter(s => s.state === 'idle' && s.treeDef.children.length > 0);
-  hintEl.textContent = clickable.length > 0
-    ? 'Click a sphere to deconstruct further. Drag to rearrange.'
-    : 'Fully deconstructed. Drag to rearrange.';
+  if (clickable.length > 0) {
+    hintEl.textContent = 'Click a sphere to deconstruct further. Drag to rearrange.';
+  } else {
+    // All deconstructed — trigger closing after a beat
+    hintEl.textContent = '';
+    if (!closingQueued) {
+      closingQueued = true;
+      setTimeout(() => {
+        if (phase === 'interactive') {
+          phase = 'closing';
+          phaseT = 0;
+          // Snapshot leaf positions for drift animation
+          leafSpheres = spheres.filter(s => s.state === 'idle');
+          leafSpheres.forEach(s => { s.originX = s.x; s.originY = s.y; });
+          narrate('A more perfect union. The building continues.');
+        }
+      }, 1500);
+    }
+  }
 }
+let closingQueued = false;
+let leafSpheres = [];
 
 // ========================================
 // INPUT
@@ -711,12 +819,21 @@ function getMousePos(e) {
   return { x: (e.clientX - rect.left) * (W / rect.width), y: (e.clientY - rect.top) * (H / rect.height) };
 }
 
-// Phase 1: click to start
+// Phase 1: click to start / restart
 canvas.addEventListener('click', function(e) {
-  if (phase === 'start') {
+  if (phase === 'start' || phase === 'ended') {
+    // Reset everything
     phase = 'jitter-people';
     phaseT = 0;
+    spheres = [];
+    townBalls = [];
+    stateBalls = [];
+    leafSpheres = [];
+    closingQueued = false;
+    dragging = null;
+    peopleBall = makeBall(W / 2, H / 2, 90, 'The People', GOLD);
     hintEl.textContent = '';
+    narrationEl.textContent = '';
     narrate('It began with the people.');
   }
 });
