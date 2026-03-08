@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claudia Voice POC — Full Triplex</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d0d1a;
+    color: #ccc;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 30px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  h1 { color: #d4af37; font-size: 22px; margin-bottom: 6px; }
+  .subtitle { color: #888; font-size: 13px; margin-bottom: 24px; }
+
+  /* State indicator */
+  .state-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .state-label {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .state-value {
+    font-size: 14px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 4px;
+    min-width: 120px;
+    text-align: center;
+  }
+  .state-value.idle { background: #333; color: #888; }
+  .state-value.speaking { background: #1a3a1a; color: #4a4; }
+  .state-value.listening { background: #1a1a3a; color: #66f; }
+  .state-value.interrupted { background: #3a2a1a; color: #d4af37; }
+  .state-value.yielding { background: #3a1a3a; color: #a6a; }
+  .state-value.processing { background: #2a2a1a; color: #aa6; }
+
+  /* Channels */
+  .channels {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .channel {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .channel .label { font-size: 11px; color: #666; margin-bottom: 4px; }
+  .channel .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+  }
+  .dot.off { background: #333; }
+  .dot.on-green { background: #4a4; box-shadow: 0 0 6px #4a4; }
+  .dot.on-blue { background: #66f; box-shadow: 0 0 6px #66f; }
+  .dot.on-gold { background: #d4af37; box-shadow: 0 0 6px #d4af37; }
+
+  /* Transcript */
+  .transcript {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 6px;
+    padding: 16px;
+    height: 300px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .transcript .claudia { color: #d4af37; }
+  .transcript .human { color: #6af; }
+  .transcript .system { color: #666; font-style: italic; }
+
+  /* Start button */
+  .start-btn {
+    background: #d4af37;
+    color: #000;
+    border: none;
+    padding: 12px 32px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    display: block;
+    margin: 0 auto;
+  }
+  .start-btn:hover { background: #e5c040; }
+  .start-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
+
+  /* Audio mode toggle */
+  .audio-mode {
+    background: #151520;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+  .audio-mode-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .audio-mode-header .mode-label {
+    font-size: 13px;
+    color: #b0b0b0;
+    font-weight: 600;
+  }
+  .audio-toggle {
+    display: flex;
+    gap: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #444;
+  }
+  .audio-toggle button {
+    background: #222;
+    color: #888;
+    border: none;
+    padding: 6px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .audio-toggle button.active {
+    background: #d4af37;
+    color: #000;
+    font-weight: 700;
+  }
+  .audio-toggle button:hover:not(.active) {
+    background: #333;
+    color: #ccc;
+  }
+  .mode-explainer {
+    font-size: 12px;
+    color: #999;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+  .mode-explainer strong { color: #d4af37; }
+  .mode-feature {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-top: 6px;
+    margin-right: 6px;
+  }
+  .mode-feature.on { background: #1a3a1a; color: #4a4; }
+  .mode-feature.off { background: #2a1a1a; color: #a55; }
+</style>
+</head>
+<body>
+
+<h1>Claudia — Full Triplex Voice POC</h1>
+<div class="subtitle">Talk, Listen, Signal — all async, all simultaneous</div>
+
+<div class="state-bar">
+  <span class="state-label">Claudia:</span>
+  <span id="claudiaState" class="state-value idle">IDLE</span>
+  <span class="state-label" style="margin-left:16px">Human:</span>
+  <span id="humanState" class="state-value idle">IDLE</span>
+</div>
+
+<div class="channels">
+  <div class="channel">
+    <div class="label">TTS (Claudia speaks)</div>
+    <span id="ttsDot" class="dot off"></span><span id="ttsStatus">Off</span>
+  </div>
+  <div class="channel">
+    <div class="label">STT (Claudia listens)</div>
+    <span id="sttDot" class="dot off"></span><span id="sttStatus">Off</span>
+  </div>
+  <div class="channel">
+    <div class="label">Signal (Interrupt)</div>
+    <span id="sigDot" class="dot off"></span><span id="sigStatus">None</span>
+  </div>
+</div>
+
+<div class="audio-mode">
+  <div class="audio-mode-header">
+    <span class="mode-label">Audio output:</span>
+    <div class="audio-toggle">
+      <button id="modeEarphones" class="active" onclick="setAudioMode('earphones')">Earphones</button>
+      <button id="modeSpeakers" onclick="setAudioMode('speakers')">Speakers</button>
+    </div>
+  </div>
+  <div id="modeExplainer" class="mode-explainer">
+    <strong>Earphones mode:</strong> Best audio quality. Claudia's voice goes to your ears.
+    The mic mutes during her speech to prevent echo, then re-opens when she finishes.
+    Speak after she pauses — she'll hear you and respond.
+    <br>
+    <span class="mode-feature on">Echo-safe</span>
+    <span class="mode-feature on">Best quality</span>
+  </div>
+</div>
+
+<div id="transcript" class="transcript">
+  <div class="system">Click "Start Conversation" to begin. Allow microphone access when prompted.</div>
+</div>
+
+<button id="startBtn" class="start-btn">Start Conversation</button>
+
+<script>
+// --- State ---
+let claudiaState = 'idle';   // idle, speaking, interrupted, yielding, processing
+let humanState = 'idle';      // idle, listening (STT active), speaking (voice detected)
+let isSpeaking = false;       // TTS active
+let sttActive = false;        // STT running
+let interruptedText = '';     // what Claudia was saying when interrupted
+let ignoreSTT = false;        // echo cancellation — ignore STT while Claudia speaks
+let audioMode = 'earphones';  // 'earphones' = interrupts on, 'speakers' = echo cancellation on
+let recognition = null;
+let claudiaVoice = null;
+let started = false;
+let silenceTimer = null;      // detect end of human speech
+let humanUtterance = '';      // accumulate human words
+
+// --- DOM ---
+const transcript = document.getElementById('transcript');
+const startBtn = document.getElementById('startBtn');
+const claudiaStateEl = document.getElementById('claudiaState');
+const humanStateEl = document.getElementById('humanState');
+const ttsDot = document.getElementById('ttsDot');
+const ttsStatus = document.getElementById('ttsStatus');
+const sttDot = document.getElementById('sttDot');
+const sttStatus = document.getElementById('sttStatus');
+const sigDot = document.getElementById('sigDot');
+const sigStatus = document.getElementById('sigStatus');
+
+function updateUI() {
+  // Claudia state
+  claudiaStateEl.textContent = claudiaState.toUpperCase();
+  claudiaStateEl.className = 'state-value ' + claudiaState;
+
+  // Human state
+  humanStateEl.textContent = humanState.toUpperCase();
+  humanStateEl.className = 'state-value ' + humanState;
+
+  // TTS channel
+  ttsDot.className = 'dot ' + (isSpeaking ? 'on-green' : 'off');
+  ttsStatus.textContent = isSpeaking ? 'Speaking' : 'Silent';
+
+  // STT channel
+  sttDot.className = 'dot ' + (sttActive ? 'on-blue' : 'off');
+  sttStatus.textContent = sttActive ? 'Listening' : 'Off';
+
+  // Signal channel
+  if (claudiaState === 'interrupted' || claudiaState === 'yielding') {
+    sigDot.className = 'dot on-gold';
+    sigStatus.textContent = 'Interrupt!';
+  } else {
+    sigDot.className = 'dot off';
+    sigStatus.textContent = 'None';
+  }
+}
+
+function log(who, text) {
+  const div = document.createElement('div');
+  div.className = who;
+  const prefix = who === 'claudia' ? 'Claudia: ' : who === 'human' ? 'You: ' : '';
+  div.textContent = prefix + text;
+  transcript.appendChild(div);
+  transcript.scrollTop = transcript.scrollHeight;
+}
+
+// --- Audio mode toggle ---
+function setAudioMode(mode) {
+  audioMode = mode;
+  const btnEar = document.getElementById('modeEarphones');
+  const btnSpk = document.getElementById('modeSpeakers');
+  const explainer = document.getElementById('modeExplainer');
+
+  btnEar.className = mode === 'earphones' ? 'active' : '';
+  btnSpk.className = mode === 'speakers' ? 'active' : '';
+
+  if (mode === 'earphones') {
+    explainer.innerHTML =
+      '<strong>Earphones mode:</strong> Best audio quality. Claudia\'s voice goes to your ears. ' +
+      'The mic mutes during her speech to prevent echo, then re-opens when she finishes. ' +
+      'Speak after she pauses — she\'ll hear you and respond.' +
+      '<br><span class="mode-feature on">Echo-safe</span>' +
+      '<span class="mode-feature on">Best quality</span>';
+  } else {
+    explainer.innerHTML =
+      '<strong>Speakers mode:</strong> Same behavior — mic mutes while Claudia talks. ' +
+      'Use earphones for better audio separation. ' +
+      'Wait for Claudia to finish, then speak clearly.' +
+      '<br><span class="mode-feature on">Echo cancellation ON</span>';
+  }
+
+  // If Claudia is currently speaking, update ignoreSTT immediately
+  if (isSpeaking) {
+    ignoreSTT = (mode === 'speakers');
+  }
+
+  log('system', 'Audio mode: ' + (mode === 'earphones'
+    ? 'Earphones — interrupts enabled'
+    : 'Speakers — echo cancellation enabled, interrupts disabled'));
+}
+
+// --- Voice selection ---
+function pickVoice() {
+  const v = speechSynthesis.getVoices();
+  claudiaVoice = v.find(x => /female/i.test(x.name) && /en.US/i.test(x.lang))
+    || v.find(x => /zira|eva|samantha|karen|susan/i.test(x.name))
+    || v.find(x => x.lang && x.lang.startsWith('en'));
+}
+speechSynthesis.onvoiceschanged = pickVoice;
+pickVoice();
+
+// --- TTS ---
+function claudiaSpeak(text, onDone) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.85;
+  u.pitch = 1.05;
+  if (claudiaVoice) u.voice = claudiaVoice;
+
+  u.onstart = () => {
+    isSpeaking = true;
+    ignoreSTT = true;   // ALWAYS mute mic during TTS — even earphones leak
+    claudiaState = 'speaking';
+    updateUI();
+  };
+
+  u.onend = () => {
+    isSpeaking = false;
+    // Re-enable mic after a short delay to catch tail-end echo
+    setTimeout(() => { ignoreSTT = false; }, 500);
+    if (claudiaState === 'speaking') {
+      claudiaState = 'idle';
+    }
+    updateUI();
+    if (onDone) onDone();
+  };
+
+  log('claudia', text);
+  speechSynthesis.speak(u);
+}
+
+function claudiaStop() {
+  speechSynthesis.cancel();
+  isSpeaking = false;
+  // Don't clear ignoreSTT here — let the yielding speech set it
+}
+
+// --- STT ---
+function startListening() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    log('system', 'SpeechRecognition not supported in this browser.');
+    return;
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = () => {
+    sttActive = true;
+    humanState = 'listening';
+    updateUI();
+    log('system', 'Microphone active — Claudia is listening.');
+  };
+
+  recognition.onresult = (event) => {
+    // Get the latest result
+    const result = event.results[event.results.length - 1];
+    const text = result[0].transcript.trim();
+
+    if (!text) return;
+
+    // Echo cancellation: ignore ALL STT while Claudia is speaking
+    // This prevents her own TTS output from being picked up as human speech
+    if (ignoreSTT) return;
+
+    // INTERRUPT: human spoke while Claudia was talking
+    // (ignoreSTT is false here, so this is genuine human speech, not echo)
+    if (isSpeaking && claudiaState === 'speaking') {
+      claudiaState = 'interrupted';
+      updateUI();
+      claudiaStop();
+
+      log('system', '— Interrupt detected — Claudia yields the floor.');
+
+      // Yield silently — do NOT speak "Go ahead" (mic picks it up → loop)
+      // Claudia going silent IS the signal. Human already knows.
+      claudiaState = 'idle';
+      humanState = 'speaking';
+      humanUtterance = '';
+      ignoreSTT = false;  // re-enable mic immediately for human
+      updateUI();
+      return;
+    }
+
+    // Human is talking (Claudia is not speaking)
+    if (!isSpeaking) {
+      humanState = 'speaking';
+      humanUtterance = text;
+      updateUI();
+
+      // Reset silence timer — wait for human to finish
+      clearTimeout(silenceTimer);
+      if (result.isFinal) {
+        // Final result — human finished this phrase
+        silenceTimer = setTimeout(() => {
+          humanFinished(humanUtterance);
+        }, 1500); // 1.5s silence = done talking
+      }
+    }
+  };
+
+  recognition.onerror = (event) => {
+    if (event.error === 'no-speech') return; // normal, just no input
+    log('system', 'STT error: ' + event.error);
+  };
+
+  recognition.onend = () => {
+    sttActive = false;
+    updateUI();
+    // Auto-restart if conversation is active
+    if (started) {
+      setTimeout(() => {
+        try { recognition.start(); } catch(e) {}
+      }, 200);
+    }
+  };
+
+  recognition.start();
+}
+
+// --- Human finished speaking → Claudia responds ---
+function humanFinished(text) {
+  humanState = 'idle';
+  log('human', text);
+  claudiaState = 'processing';
+  updateUI();
+
+  // Canned responses for POC — pattern match keywords
+  const lower = text.toLowerCase();
+  let response;
+
+  // --- Topic keywords first (most specific → least specific) ---
+
+  if (/golden rule/.test(lower)) {
+    response = "The Golden Rule is our foundation. Do to others what you would have them do to you. Five point nine billion people across ten religions share this principle.";
+  } else if (/people.?s branch|tpb|\bplatform\b/.test(lower)) {
+    response = "The People's Branch is a civic platform built on the Golden Rule. It gives every citizen a voice in their government, from their town all the way to the federal level. You can explore your state, join group discussions, and vote on ballots.";
+  } else if (/\bstate\b|explore/.test(lower)) {
+    response = "Each state has its own page with local representatives, town resources, and group discussions. You can set your home state and see what matters in your community.";
+  } else if (/\bvot(e|ing|es)\b|\bballot|\bpoll/.test(lower)) {
+    response = "On The People's Branch you can vote on ballots that matter to your community. Your vote rolls up from your town to your state to the federal level. Every voice counts.";
+  } else if (/\bgroup|\bdiscuss/.test(lower)) {
+    response = "Groups let citizens deliberate together on issues. A facilitator guides the conversation, and the group can issue declarations that represent their shared position.";
+  } else if (/\bvolunteer/.test(lower) || /\bjoin\b|\bsign up\b/.test(lower)) {
+    response = "You can volunteer to help build The People's Branch. We need people with all kinds of skills — technical, content, design, outreach, and more. Every contribution matters.";
+  } else if (/\belection|\bcandidat|\brepresentat/.test(lower)) {
+    response = "The elections section lets you see who represents you and hold them accountable. From your town selectman all the way to the President.";
+  } else if (/\bhelp system\b|\bguide\b|\btour\b/.test(lower)) {
+    response = "The help system walks you through everything step by step — how to set up your profile, explore your state, join groups, vote on ballots, and more. Just click Help in the navigation.";
+
+  // --- Conversational patterns ---
+
+  } else if (/\b(hello|hey)\b/.test(lower) || /^hi\b/.test(lower)) {
+    response = "Hello! Welcome to The People's Branch. How can I help you today?";
+  } else if (/make.*(this|it).*work|can we|will.*(this|it).*work/.test(lower)) {
+    response = "I think we just did. You interrupted me, I heard you, and now we're having a conversation. The protocol works.";
+  } else if (/loop|repeat|same thing|keeps saying/.test(lower)) {
+    response = "You're right, let me try to be more helpful. Ask me about the Golden Rule, the platform, elections, voting, groups, or volunteering.";
+  } else if (/stop|quit|bye|goodbye/.test(lower)) {
+    response = "It was nice talking with you. Come back anytime. Remember, your voice matters here.";
+  } else if (/wait|hold on|one second/.test(lower)) {
+    response = "Of course, take your time. I'm here when you're ready.";
+  } else if (/thank/.test(lower)) {
+    response = "You're welcome. That's what I'm here for.";
+
+  // --- Generic catch-alls (last resort) ---
+
+  } else if (/what is|what's|tell me about|tell me/.test(lower)) {
+    response = "I'm not sure about that one. Right now I can talk about the Golden Rule, the platform, your state, voting, groups, elections, and volunteering. Which of those interests you?";
+  } else if (/\bhow\b|\bhelp\b|\bwhere\b/.test(lower)) {
+    response = "That's outside what I know right now. I can help with your state, voting, groups, the Golden Rule, or volunteering. Want to try one of those?";
+  } else {
+    response = "I don't know about that yet. I'm still learning. Right now I can talk about the Golden Rule, the platform, voting, groups, elections, or volunteering.";
+  }
+
+  // Slight delay to feel natural
+  setTimeout(() => {
+    claudiaSpeak(response, () => {
+      claudiaState = 'idle';
+      updateUI();
+    });
+  }, 600);
+}
+
+// --- Start button ---
+startBtn.addEventListener('click', () => {
+  if (started) return;
+  started = true;
+  startBtn.disabled = true;
+  startBtn.textContent = 'Conversation Active';
+
+  // Start STT first so it's listening during Claudia's intro
+  startListening();
+
+  // Claudia's long intro — gives human time to interrupt
+  setTimeout(() => {
+    claudiaSpeak(
+      "Hi, my name is Claudia. I am your guide to The People's Branch. " +
+      "The People's Branch is a civic platform built on the Golden Rule. " +
+      "It gives every citizen a voice, from your town all the way up to the federal level. " +
+      "You can explore your state, join group discussions, and vote on the issues that matter to you. " +
+      "Feel free to interrupt me at any time. I'm listening.",
+      () => {
+        claudiaState = 'idle';
+        updateUI();
+        log('system', 'Claudia is done. Say something — or wait for her to continue.');
+
+        // If no human input after 5s, Claudia continues
+        setTimeout(() => {
+          if (claudiaState === 'idle' && humanState !== 'speaking') {
+            claudiaSpeak(
+              "You can also say things like 'tell me about the Golden Rule' or 'how can I help'. " +
+              "Or just say 'hello' and we can chat.",
+              () => {
+                claudiaState = 'idle';
+                updateUI();
+              }
+            );
+          }
+        }, 5000);
+      }
+    );
+  }, 500);
+});
+</script>
+
+</body>
+</html>
