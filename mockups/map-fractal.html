@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPB Fractal Zoom — Recursive Video Simulation</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  canvas { border-radius: 8px; }
+  .narration {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 1.1rem;
+    color: #b0b0b0;
+    min-height: 40px;
+  }
+  .narration .speaker { color: #d4af37; font-weight: 600; }
+  .hint { margin-top: 8px; font-size: 0.75rem; color: #444; }
+</style>
+</head>
+<body>
+
+<canvas id="c" width="900" height="560"></canvas>
+<div class="narration">
+  <span class="speaker">Claudia:</span> <span id="nText">Click to begin the journey.</span>
+</div>
+<div class="hint">Recursive fractal zoom · The structure repeats at every level</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 900, H = 560;
+const nText = document.getElementById('nText');
+
+const GOLD = '#d4af37';
+const BLUE = '#62a4d0';
+const BG = '#0d0d1a';
+const PANEL = '#1a1a2e';
+const DIM = '#333';
+
+// --- Voice ---
+let claudiaVoice = null;
+function pickVoice() {
+  const v = speechSynthesis.getVoices();
+  claudiaVoice = v.find(x => /female/i.test(x.name) && /en.US/i.test(x.lang))
+    || v.find(x => /zira|eva|samantha|karen|susan/i.test(x.name))
+    || v.find(x => x.lang && x.lang.startsWith('en'));
+}
+speechSynthesis.onvoiceschanged = pickVoice;
+pickVoice();
+
+function speak(text) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.92; u.pitch = 1.05;
+  if (claudiaVoice) u.voice = claudiaVoice;
+  speechSynthesis.speak(u);
+}
+
+// --- Helpers ---
+function drawText(text, x, y, size, color, align, weight, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha != null ? alpha : 1;
+  ctx.fillStyle = color;
+  ctx.font = (weight || '400') + ' ' + size + 'px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = align || 'center';
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function drawCircle(x, y, r, fill, stroke, lw, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha != null ? alpha : 1;
+  ctx.beginPath();
+  ctx.arc(x, y, Math.max(0.5, r), 0, Math.PI * 2);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 2; ctx.stroke(); }
+  ctx.restore();
+}
+
+function drawRoundRect(x, y, w, h, r, fill, stroke, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha != null ? alpha : 1;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+  ctx.restore();
+}
+
+function pulseR(base, t) {
+  return base + Math.sin(t * 3) * (base * 0.35);
+}
+
+function easeInOut(t) {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+// =====================
+// Scenes as functions that draw at a given scale/offset/alpha
+// =====================
+
+// --- Civic Engine mini (reusable at any level) ---
+function drawCivicEngine(cx, cy, scale, alpha, t, label) {
+  if (alpha < 0.01 || scale < 0.01) return;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = alpha;
+
+  // Label
+  drawText(label || "The Civic Engine", 0, -120, 16, GOLD, 'center', '600');
+
+  // Nodes in a circle
+  const nodes = ['Polls', 'Ballots', 'Groups', 'Mandates', 'Beam'];
+  const nodeR = 100;
+  const positions = [];
+  nodes.forEach((n, i) => {
+    const angle = -Math.PI / 2 + (i / nodes.length) * Math.PI * 2;
+    const nx = Math.cos(angle) * nodeR;
+    const ny = Math.sin(angle) * nodeR;
+    positions.push({ x: nx, y: ny });
+    drawCircle(nx, ny, 20, PANEL, BLUE, 2, alpha);
+    drawText(n, nx, ny + 4, 9, BLUE, 'center', '400', alpha);
+  });
+
+  // Roads between sequential nodes
+  for (let i = 0; i < positions.length; i++) {
+    const j = (i + 1) % positions.length;
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.4;
+    ctx.beginPath();
+    ctx.setLineDash([6, 6]);
+    ctx.lineDashOffset = -t * 40;
+    ctx.strokeStyle = BLUE;
+    ctx.lineWidth = 1.5;
+    ctx.moveTo(positions[i].x, positions[i].y);
+    ctx.lineTo(positions[j].x, positions[j].y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // Center: "The People"
+  drawCircle(0, 0, 28, BG, GOLD, 2, alpha);
+  drawText("People", 0, 4, 9, GOLD, 'center', '600', alpha);
+
+  ctx.restore();
+}
+
+// --- USA outline ---
+function drawUSAShape(cx, cy, scale, alpha) {
+  if (alpha < 0.01) return;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = alpha;
+
+  const pts = [
+    [-300,-75],[-260,-105],[-220,-125],[-180,-130],[-140,-135],[-100,-140],
+    [-60,-145],[-20,-143],[20,-147],[60,-145],[100,-140],[120,-135],
+    [140,-125],[160,-130],[180,-125],[200,-115],[220,-105],[240,-110],
+    [260,-105],[280,-95],[300,-85],[310,-65],[300,-45],[290,-25],
+    [280,-5],[270,15],[260,35],[250,55],[240,75],[220,85],[200,95],
+    [180,105],[160,115],[140,120],[120,115],[100,110],[80,115],
+    [60,125],[40,130],[20,135],[0,140],[-20,135],[-40,130],[-60,135],
+    [-80,140],[-100,135],[-120,130],[-140,135],[-160,145],[-180,150],
+    [-200,145],[-220,135],[-240,120],[-260,105],[-280,85],[-290,65],
+    [-300,45],[-305,25],[-310,5],[-305,-15],[-300,-35],[-290,-55]
+  ];
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath();
+  ctx.fillStyle = PANEL;
+  ctx.fill();
+  ctx.strokeStyle = DIM;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// --- CT shape ---
+function drawCTShape(cx, cy, scale, alpha, t) {
+  if (alpha < 0.01) return;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = alpha;
+
+  const pts = [
+    [-150,0],[-120,-30],[-70,-50],[0,-60],[80,-65],[160,-70],[240,-65],
+    [300,-55],[350,-40],[380,-20],[390,10],[385,40],[375,70],[360,100],
+    [340,130],[310,160],[270,180],[220,190],[160,195],[100,190],[40,185],
+    [-20,180],[-70,165],[-110,140],[-135,110],[-150,80],[-155,50],[-155,20]
+  ];
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath();
+  ctx.fillStyle = PANEL;
+  ctx.fill();
+  ctx.strokeStyle = GOLD;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Putnam dot
+  const pr = pulseR(8, t);
+  drawCircle(280, -30, pr, GOLD, null, 0, alpha);
+  drawText('Putnam', 280, -50, 14, GOLD, 'center', '700', alpha);
+
+  ctx.restore();
+}
+
+// =====================
+// Animation timeline
+// =====================
+// Phases:
+// 0-3s:   TPB title + civic engine (federal level)
+// 3-5s:   Zoom into USA map
+// 5-8s:   USA map with CT highlighted
+// 8-10s:  Zoom into CT
+// 10-13s: CT map with Putnam
+// 13-15s: Zoom into Putnam
+// 15-18s: Putnam civic engine (town level) — SAME STRUCTURE
+// 18-20s: Zoom into Putnam's engine center
+// 20-23s: Inside the engine — "The People" — SAME STRUCTURE again (fractal!)
+// 23-25s: Fade to title "The structure repeats at every level"
+// 25-28s: Hold, then loop
+
+const TOTAL = 28;
+const narrationCues = [
+  { t: 0, text: "The People's Branch. The civic engine." },
+  { t: 3, text: "One nation." },
+  { t: 5.5, text: "Fifty states. Citizens building." },
+  { t: 8, text: "Connecticut. Your home." },
+  { t: 10.5, text: "Putnam. Your town." },
+  { t: 13, text: "And inside your town — the same engine." },
+  { t: 15.5, text: "Polls. Ballots. Groups. Mandates. Beam." },
+  { t: 18, text: "Zoom deeper. The people at the center." },
+  { t: 20, text: "And inside that — the same structure. Again." },
+  { t: 23, text: "The fractal. The structure repeats at every level." },
+];
+
+let t = 0;
+let running = false;
+let lastCue = -1;
+
+function getPhaseAlpha(tNow, start, fadeIn, hold, fadeOut) {
+  const end = start + fadeIn + hold + fadeOut;
+  if (tNow < start) return 0;
+  if (tNow < start + fadeIn) return easeInOut((tNow - start) / fadeIn);
+  if (tNow < start + fadeIn + hold) return 1;
+  if (tNow < end) return 1 - easeInOut((tNow - start - fadeIn - hold) / fadeOut);
+  return 0;
+}
+
+function render() {
+  if (!running) return;
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  // Background subtle gradient
+  const grd = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, 400);
+  grd.addColorStop(0, '#0d0d1a');
+  grd.addColorStop(1, '#000');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, H);
+
+  // --- Phase 0-3: Federal civic engine ---
+  const a0 = getPhaseAlpha(t, 0, 0.5, 2, 0.8);
+  if (a0 > 0) {
+    drawText("The People's Branch", W/2, 80, 32, GOLD, 'center', '700', a0);
+    drawText("To build a more perfect union", W/2, 110, 14, '#888', 'center', '400', a0);
+    drawCivicEngine(W/2, H/2 + 30, 1.2, a0, t, "Federal");
+  }
+
+  // --- Phase 3-5: Zoom to USA ---
+  const a1t = getPhaseAlpha(t, 3, 0.8, 0, 0);
+  const a1 = getPhaseAlpha(t, 3, 0.8, 1.5, 0.8);
+  if (a1 > 0) {
+    const zoomS = lerp(0.3, 1, easeInOut(Math.min(1, (t - 3) / 1.5)));
+    drawUSAShape(W/2, H/2, zoomS, a1);
+    drawText("The United States", W/2, 50, 22, GOLD, 'center', '600', a1);
+
+    // CT highlight
+    if (t > 4) {
+      const ctA = Math.min(1, (t - 4) / 0.5) * a1;
+      drawCircle(W/2 + 270, H/2 - 80, pulseR(10, t), GOLD, null, 0, ctA);
+      drawText('CT', W/2 + 270, H/2 - 100, 12, GOLD, 'center', '700', ctA);
+    }
+  }
+
+  // --- Phase 5-8: USA with states ---
+  // (merged with above)
+
+  // --- Phase 8-10: Zoom into CT ---
+  const a2 = getPhaseAlpha(t, 8, 0.8, 2, 0.8);
+  if (a2 > 0) {
+    const zoomS = lerp(0.5, 1.1, easeInOut(Math.min(1, (t - 8) / 1.2)));
+    drawCTShape(W/2 - 40, H/2, zoomS, a2, t);
+    drawText("Connecticut", W/2, 45, 22, GOLD, 'center', '600', a2);
+    drawText("Your home state", W/2, 68, 12, '#666', 'center', '400', a2);
+  }
+
+  // --- Phase 13-18: Putnam civic engine (SAME STRUCTURE) ---
+  const a3 = getPhaseAlpha(t, 13, 0.8, 4, 0.8);
+  if (a3 > 0) {
+    const zoomS = lerp(0.4, 1.1, easeInOut(Math.min(1, (t - 13) / 1.5)));
+    drawText("Putnam", W/2, 55, 24, GOLD, 'center', '700', a3);
+    drawText("41.9148° N, 71.9009° W", W/2, 78, 10, '#888', 'center', '400', a3);
+    drawCivicEngine(W/2, H/2 + 20, zoomS, a3, t, "Town");
+
+    // Highlight: same structure!
+    if (t > 15) {
+      const sA = Math.min(1, (t - 15) / 0.5) * a3;
+      drawRoundRect(W/2 - 130, H - 65, 260, 30, 6, null, GOLD, sA * 0.5);
+      drawText("Same structure. Town level.", W/2, H - 45, 11, GOLD, 'center', '400', sA);
+    }
+  }
+
+  // --- Phase 18-23: Zoom into center — fractal recursion ---
+  const a4 = getPhaseAlpha(t, 18, 0.8, 4, 0.8);
+  if (a4 > 0) {
+    const zoomS = lerp(0.2, 0.7, easeInOut(Math.min(1, (t - 18) / 1.5)));
+    drawText("Inside the Engine", W/2, 60, 20, GOLD, 'center', '600', a4);
+
+    // Draw three nested engines getting smaller — the fractal
+    drawCivicEngine(W/2, H/2, zoomS * 1.4, a4 * 0.3, t, "Federal");
+    drawCivicEngine(W/2, H/2, zoomS * 1.0, a4 * 0.6, t, "State");
+    drawCivicEngine(W/2, H/2, zoomS * 0.6, a4 * 1.0, t, "Town");
+
+    if (t > 20.5) {
+      const rA = Math.min(1, (t - 20.5) / 0.8) * a4;
+      drawRoundRect(W/2 - 160, H - 80, 320, 45, 8, BG, GOLD, rA);
+      drawText("The same structure at every level", W/2, H - 63, 13, GOLD, 'center', '600', rA);
+      drawText("Town → State → Federal", W/2, H - 46, 11, '#b0b0b0', 'center', '400', rA);
+    }
+  }
+
+  // --- Phase 23-28: Closing ---
+  const a5 = getPhaseAlpha(t, 23, 0.8, 3.5, 0.8);
+  if (a5 > 0) {
+    drawText("The People's Branch", W/2, H/2 - 40, 36, GOLD, 'center', '700', a5);
+    drawText("The structure repeats at every level.", W/2, H/2 + 10, 16, '#b0b0b0', 'center', '400', a5);
+    drawText("The fractal of self-governance.", W/2, H/2 + 40, 14, '#888', 'center', '400', a5);
+
+    // Tiny recursive engines in background
+    for (let i = 0; i < 5; i++) {
+      const sx = 150 + i * 160;
+      const sy = H/2 + 120;
+      const ss = 0.15 + Math.sin(t + i) * 0.03;
+      drawCivicEngine(sx, sy, ss, a5 * 0.25, t, '');
+    }
+  }
+
+  // Narration cues
+  for (let i = narrationCues.length - 1; i >= 0; i--) {
+    if (t >= narrationCues[i].t && lastCue < i) {
+      lastCue = i;
+      nText.textContent = narrationCues[i].text;
+      speak(narrationCues[i].text);
+      break;
+    }
+  }
+
+  // Advance time
+  t += 1 / 30;
+  if (t >= TOTAL) {
+    t = 0;
+    lastCue = -1;
+  }
+}
+
+// --- Start on click ---
+document.addEventListener('click', function() {
+  if (!running) {
+    running = true;
+    t = 0;
+    lastCue = -1;
+    nText.textContent = narrationCues[0].text;
+    speak(narrationCues[0].text);
+    setInterval(render, 1000 / 30);
+  }
+}, { once: true });
+
+// Draw idle frame
+ctx.fillStyle = '#0d0d1a';
+ctx.fillRect(0, 0, W, H);
+drawText("Click to begin", W/2, H/2, 20, GOLD, 'center', '400', 0.6);
+drawText("The Fractal of Self-Governance", W/2, H/2 + 35, 14, '#555');
+</script>
+
+</body>
+</html>

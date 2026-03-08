@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPB 3D Civic Engine — Rotating Structure</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  canvas { border-radius: 8px; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  .narration {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 1.1rem;
+    color: #b0b0b0;
+    min-height: 40px;
+  }
+  .narration .speaker { color: #d4af37; font-weight: 600; }
+  .controls {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+  }
+  .controls button {
+    padding: 6px 16px;
+    border-radius: 16px;
+    border: 1px solid #d4af37;
+    background: transparent;
+    color: #d4af37;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .controls button:hover, .controls button.active {
+    background: #d4af37;
+    color: #000;
+  }
+  .hint { margin-top: 8px; font-size: 0.7rem; color: #444; }
+</style>
+</head>
+<body>
+
+<canvas id="c" width="900" height="600"></canvas>
+<div class="narration">
+  <span class="speaker">Claudia:</span> <span id="nText">The civic engine in three dimensions. Click to begin.</span>
+</div>
+<div class="controls">
+  <button onclick="setView('top')" id="bTop">Top</button>
+  <button onclick="setView('side')" id="bSide">Side</button>
+  <button onclick="setView('front')" id="bFront">Front</button>
+  <button onclick="toggleAuto()" id="bAuto" class="active">Auto-Rotate</button>
+</div>
+<div class="hint">Drag to rotate · Scroll to zoom · Click buttons for preset views</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 900, H = 600;
+const nText = document.getElementById('nText');
+
+const GOLD = '#d4af37';
+const BLUE = '#62a4d0';
+const GREEN = '#4caf50';
+const RED = '#e05555';
+const BG = '#0d0d1a';
+const PANEL = '#1a1a2e';
+
+// --- Voice ---
+let claudiaVoice = null;
+function pickVoice() {
+  const v = speechSynthesis.getVoices();
+  claudiaVoice = v.find(x => /female/i.test(x.name) && /en.US/i.test(x.lang))
+    || v.find(x => /zira|eva|samantha|karen|susan/i.test(x.name))
+    || v.find(x => x.lang && x.lang.startsWith('en'));
+}
+speechSynthesis.onvoiceschanged = pickVoice;
+pickVoice();
+
+function speak(text) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.92; u.pitch = 1.05;
+  if (claudiaVoice) u.voice = claudiaVoice;
+  speechSynthesis.speak(u);
+}
+
+// --- 3D Math ---
+let rotX = -0.4;  // pitch
+let rotY = 0;     // yaw
+let rotZ = 0;
+let zoom = 1;
+let autoRotate = true;
+let t = 0;
+
+function rot3d(x, y, z) {
+  // Rotate Y (yaw)
+  let x1 = x * Math.cos(rotY) - z * Math.sin(rotY);
+  let z1 = x * Math.sin(rotY) + z * Math.cos(rotY);
+  // Rotate X (pitch)
+  let y1 = y * Math.cos(rotX) - z1 * Math.sin(rotX);
+  let z2 = y * Math.sin(rotX) + z1 * Math.cos(rotX);
+  return { x: x1, y: y1, z: z2 };
+}
+
+function project(x, y, z) {
+  const p = rot3d(x, y, z);
+  const perspective = 600;
+  const scale = perspective / (perspective + p.z) * zoom;
+  return {
+    sx: W / 2 + p.x * scale,
+    sy: H / 2 + p.y * scale,
+    scale: scale,
+    z: p.z
+  };
+}
+
+// --- 3D Civic Engine Structure ---
+// Three tiers (rings): Federal (top), State (mid), Town (bottom)
+// Each tier has 5 nodes in a circle
+// Vertical pillars connect corresponding nodes
+// Center column: "The People" at each level
+
+const tiers = [
+  { y: -140, label: 'Federal', color: GOLD, r: 160 },
+  { y: 0,    label: 'State',   color: BLUE, r: 140 },
+  { y: 140,  label: 'Town',    color: GREEN, r: 120 },
+];
+
+const nodeLabels = ['Polls', 'Ballots', 'Groups', 'Mandates', 'Beam'];
+
+function buildNodes() {
+  const nodes = [];
+  const edges = [];
+
+  tiers.forEach((tier, ti) => {
+    // Center node
+    nodes.push({
+      x: 0, y: tier.y, z: 0,
+      label: tier.label,
+      color: tier.color,
+      size: 18,
+      type: 'center'
+    });
+
+    // Ring nodes
+    const ringStart = nodes.length;
+    nodeLabels.forEach((nl, ni) => {
+      const angle = (ni / nodeLabels.length) * Math.PI * 2 - Math.PI / 2;
+      nodes.push({
+        x: Math.cos(angle) * tier.r,
+        y: tier.y,
+        z: Math.sin(angle) * tier.r,
+        label: nl,
+        color: tier.color,
+        size: 12,
+        type: 'ring'
+      });
+
+      // Edge: center to ring node
+      edges.push({ from: ringStart - 1, to: ringStart + ni, color: tier.color, alpha: 0.2 });
+
+      // Edge: ring node to next ring node
+      const next = ringStart + (ni + 1) % nodeLabels.length;
+      edges.push({ from: ringStart + ni, to: next, color: tier.color, alpha: 0.4 });
+    });
+
+    // Vertical pillars to next tier
+    if (ti < tiers.length - 1) {
+      const nextRingStart = ringStart + nodeLabels.length + 1; // +1 for next center
+      // Center to center
+      edges.push({ from: ringStart - 1, to: nextRingStart - 1 + nodeLabels.length + 1, color: '#555', alpha: 0.3, pillar: true });
+      // Ring to ring
+      for (let ni = 0; ni < nodeLabels.length; ni++) {
+        edges.push({
+          from: ringStart + ni,
+          to: ringStart + ni + nodeLabels.length + 1,
+          color: '#444',
+          alpha: 0.15,
+          pillar: true
+        });
+      }
+    }
+  });
+
+  return { nodes, edges };
+}
+
+const structure = buildNodes();
+
+// Fix vertical pillar edges (recalculate indices properly)
+function rebuildEdges() {
+  const edges = [];
+  // Each tier: 1 center + 5 ring = 6 nodes
+  // Tier 0: indices 0-5, Tier 1: 6-11, Tier 2: 12-17
+  for (let ti = 0; ti < 3; ti++) {
+    const base = ti * 6;
+    const center = base;
+
+    for (let ni = 0; ni < 5; ni++) {
+      const ring = base + 1 + ni;
+      const nextRing = base + 1 + (ni + 1) % 5;
+
+      // Center to ring
+      edges.push({ from: center, to: ring, color: tiers[ti].color, alpha: 0.15 });
+      // Ring to ring
+      edges.push({ from: ring, to: nextRing, color: tiers[ti].color, alpha: 0.35 });
+    }
+
+    // Vertical pillars
+    if (ti < 2) {
+      const nextBase = (ti + 1) * 6;
+      edges.push({ from: center, to: nextBase, color: GOLD, alpha: 0.2, pillar: true });
+      for (let ni = 0; ni < 5; ni++) {
+        edges.push({ from: base + 1 + ni, to: nextBase + 1 + ni, color: '#555', alpha: 0.12, pillar: true });
+      }
+    }
+  }
+  return edges;
+}
+
+function rebuildNodes() {
+  const nodes = [];
+  for (let ti = 0; ti < 3; ti++) {
+    const tier = tiers[ti];
+    // Center
+    nodes.push({ x: 0, y: tier.y, z: 0, label: tier.label, color: tier.color, size: 20, type: 'center' });
+    // Ring
+    for (let ni = 0; ni < 5; ni++) {
+      const angle = (ni / 5) * Math.PI * 2 - Math.PI / 2;
+      nodes.push({
+        x: Math.cos(angle) * tier.r,
+        y: tier.y,
+        z: Math.sin(angle) * tier.r,
+        label: nodeLabels[ni],
+        color: tier.color,
+        size: 13,
+        type: 'ring'
+      });
+    }
+  }
+  return nodes;
+}
+
+const allNodes = rebuildNodes();
+const allEdges = rebuildEdges();
+
+// --- Render ---
+function drawScene() {
+  // BG
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+  const grd = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, 450);
+  grd.addColorStop(0, '#0a0a18');
+  grd.addColorStop(1, '#000');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, H);
+
+  // Title
+  ctx.globalAlpha = 0.7;
+  ctx.fillStyle = GOLD;
+  ctx.font = '600 18px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText("The Fractal of Self-Governance", W/2, 30);
+  ctx.font = '400 12px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#666';
+  ctx.fillText("The same structure at every level", W/2, 50);
+  ctx.globalAlpha = 1;
+
+  // Project all nodes
+  const projected = allNodes.map(n => {
+    const p = project(n.x, n.y, n.z);
+    return { ...n, ...p };
+  });
+
+  // Sort edges by average z for painter's algorithm
+  const projEdges = allEdges.map(e => {
+    const a = projected[e.from];
+    const b = projected[e.to];
+    return { ...e, ax: a.sx, ay: a.sy, bx: b.sx, by: b.sy, avgZ: (a.z + b.z) / 2, aScale: a.scale, bScale: b.scale };
+  }).sort((a, b) => b.avgZ - a.avgZ);
+
+  // Draw edges
+  projEdges.forEach(e => {
+    ctx.save();
+    ctx.globalAlpha = e.alpha * (0.5 + e.aScale * 0.3);
+    ctx.beginPath();
+    if (e.pillar) {
+      ctx.setLineDash([4, 6]);
+      ctx.lineDashOffset = -t * 30;
+    } else {
+      ctx.setLineDash([6, 6]);
+      ctx.lineDashOffset = -t * 50;
+    }
+    ctx.strokeStyle = e.color;
+    ctx.lineWidth = e.pillar ? 1 : 1.5;
+    ctx.moveTo(e.ax, e.ay);
+    ctx.lineTo(e.bx, e.by);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  });
+
+  // Sort nodes by z (far first)
+  const sortedNodes = [...projected].sort((a, b) => b.z - a.z);
+
+  // Draw nodes
+  sortedNodes.forEach(n => {
+    const r = n.size * n.scale;
+    if (r < 1) return;
+
+    const depthAlpha = Math.max(0.3, Math.min(1, 0.5 + n.scale * 0.5));
+
+    // Glow
+    ctx.save();
+    ctx.globalAlpha = depthAlpha * 0.3;
+    ctx.beginPath();
+    ctx.arc(n.sx, n.sy, r * 2, 0, Math.PI * 2);
+    const glowGrd = ctx.createRadialGradient(n.sx, n.sy, 0, n.sx, n.sy, r * 2);
+    glowGrd.addColorStop(0, n.color);
+    glowGrd.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGrd;
+    ctx.fill();
+    ctx.restore();
+
+    // Node body
+    ctx.save();
+    ctx.globalAlpha = depthAlpha;
+    ctx.beginPath();
+    ctx.arc(n.sx, n.sy, r, 0, Math.PI * 2);
+    ctx.fillStyle = n.type === 'center' ? '#111' : PANEL;
+    ctx.fill();
+    ctx.strokeStyle = n.color;
+    ctx.lineWidth = n.type === 'center' ? 2.5 : 1.5;
+    ctx.stroke();
+
+    // Label
+    if (r > 5) {
+      ctx.fillStyle = n.color;
+      ctx.font = (n.type === 'center' ? '700 ' : '400 ') + Math.max(7, r * 0.7) + 'px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.sx, n.sy);
+    }
+    ctx.restore();
+  });
+
+  // Tier labels on side
+  tiers.forEach(tier => {
+    const p = project(tier.r + 40, tier.y, 0);
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = tier.color;
+    ctx.font = '600 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(tier.label + ' Level', p.sx, p.sy);
+    ctx.restore();
+  });
+}
+
+// --- Interaction: drag to rotate ---
+let dragging = false;
+let lastMX = 0, lastMY = 0;
+
+canvas.addEventListener('mousedown', e => {
+  dragging = true;
+  lastMX = e.clientX;
+  lastMY = e.clientY;
+  autoRotate = false;
+  document.getElementById('bAuto').classList.remove('active');
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastMX;
+  const dy = e.clientY - lastMY;
+  rotY += dx * 0.008;
+  rotX += dy * 0.008;
+  rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotX));
+  lastMX = e.clientX;
+  lastMY = e.clientY;
+});
+
+canvas.addEventListener('mouseup', () => { dragging = false; });
+canvas.addEventListener('mouseleave', () => { dragging = false; });
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoom *= e.deltaY > 0 ? 0.95 : 1.05;
+  zoom = Math.max(0.3, Math.min(3, zoom));
+});
+
+// --- Preset views ---
+function setView(view) {
+  autoRotate = false;
+  document.getElementById('bAuto').classList.remove('active');
+  if (view === 'top') { rotX = -1.2; rotY = 0; speak("Looking down. Three concentric rings. Federal, state, town."); nText.textContent = "Three concentric rings. Federal, state, town."; }
+  if (view === 'side') { rotX = 0; rotY = 0; speak("From the side. Three tiers connected by pillars. The fractal stack."); nText.textContent = "Three tiers connected by pillars. The fractal stack."; }
+  if (view === 'front') { rotX = -0.3; rotY = Math.PI / 4; speak("The structure. Same engine at every level. Polls, ballots, groups, mandates, beam."); nText.textContent = "Same engine at every level."; }
+}
+
+function toggleAuto() {
+  autoRotate = !autoRotate;
+  document.getElementById('bAuto').classList.toggle('active', autoRotate);
+}
+
+// --- Main loop ---
+let started = false;
+document.addEventListener('click', function init() {
+  if (!started) {
+    started = true;
+    speak("The civic engine in three dimensions. Federal, state, and town — the same structure at every level.");
+    nText.textContent = "Federal, state, and town — the same structure at every level.";
+  }
+  document.removeEventListener('click', init);
+});
+
+function loop() {
+  t += 1 / 30;
+  if (autoRotate) {
+    rotY += 0.012;
+  }
+  drawScene();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>

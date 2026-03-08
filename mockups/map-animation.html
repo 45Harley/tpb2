@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPB Map Animation POC — 30fps</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d0d1a;
+    color: #fff;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  canvas {
+    border: 1px solid #1a1a2e;
+    border-radius: 8px;
+  }
+  .narration {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 1.15rem;
+    color: #b0b0b0;
+    min-height: 50px;
+  }
+  .narration .speaker { color: #d4af37; font-weight: 600; }
+  .controls {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+  }
+  .controls button {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1px solid #d4af37;
+    background: transparent;
+    color: #d4af37;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .controls button:hover, .controls button.active {
+    background: #d4af37;
+    color: #000;
+  }
+  .hint { margin-top: 10px; font-size: 0.8rem; color: #555; }
+</style>
+</head>
+<body>
+
+<canvas id="c" width="900" height="550"></canvas>
+
+<div class="narration">
+  <span class="speaker">Claudia:</span> <span id="nText">Click anywhere to begin.</span>
+</div>
+<div class="controls">
+  <button id="b0" onclick="jumpTo(0)">The Branch</button>
+  <button id="b1" onclick="jumpTo(1)">The Nation</button>
+  <button id="b2" onclick="jumpTo(2)">Your Home</button>
+</div>
+<div class="hint">30fps canvas animation · auto-advances · click to jump</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const nText = document.getElementById('nText');
+const btns = [document.getElementById('b0'), document.getElementById('b1'), document.getElementById('b2')];
+
+const GOLD = '#d4af37';
+const BLUE = '#62a4d0';
+const DIM = '#333';
+const BG = '#0d0d1a';
+const PANEL = '#1a1a2e';
+
+const narrations = [
+  "Welcome to The People's Branch.",
+  "Here's where citizens are building across the country.",
+  "And here's Putnam — your home. Let's see what's happening."
+];
+
+// --- State ---
+let scene = 0;          // 0=branch, 1=usa, 2=ct
+let transitioning = false;
+let transAlpha = 0;     // 0..1 fade progress
+let transFrom = 0;
+let transTo = 0;
+let time = 0;
+let autoTimer = 0;
+const AUTO_DELAY = 5;   // seconds per scene
+const TRANS_SPEED = 0.03; // fade speed per frame
+
+// --- Voice ---
+let claudiaVoice = null;
+function pickVoice() {
+  const v = speechSynthesis.getVoices();
+  claudiaVoice = v.find(x => /female/i.test(x.name) && /en.US/i.test(x.lang))
+    || v.find(x => /zira|eva|samantha|karen|susan/i.test(x.name))
+    || v.find(x => x.lang && x.lang.startsWith('en'));
+}
+speechSynthesis.onvoiceschanged = pickVoice;
+pickVoice();
+
+function speak(text) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95; u.pitch = 1.05;
+  if (claudiaVoice) u.voice = claudiaVoice;
+  speechSynthesis.speak(u);
+}
+
+// --- Drawing helpers ---
+function clear() {
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawText(text, x, y, size, color, align, weight) {
+  ctx.fillStyle = color;
+  ctx.font = (weight || '400') + ' ' + size + 'px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = align || 'center';
+  ctx.fillText(text, x, y);
+}
+
+function drawCircle(x, y, r, fill, stroke, lineW) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lineW || 2; ctx.stroke(); }
+}
+
+function drawLine(x1, y1, x2, y2, color, width, dash) {
+  ctx.beginPath();
+  ctx.setLineDash(dash || []);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width || 1.5;
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawRoundRect(x, y, w, h, r, fill, stroke) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+}
+
+function pulseR(base, amp, speed) {
+  return base + Math.sin(time * speed) * amp;
+}
+
+// --- Animated road dashes ---
+function drawAnimRoad(x1, y1, x2, y2, color, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha || 0.5;
+  ctx.beginPath();
+  ctx.setLineDash([10, 10]);
+  ctx.lineDashOffset = -time * 40;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// ========================
+// Scene 0: The Branch
+// ========================
+function drawBranch(alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Title
+  drawText("The People's Branch", W/2, 70, 38, GOLD, 'center', '700');
+  drawText("To build a more perfect union", W/2, 100, 15, '#b0b0b0');
+
+  // Row 1: Spirit / Thought / Instrument
+  const r1y = 200;
+  const nodes1 = [
+    { x: 220, label: 'Spirit' },
+    { x: 450, label: 'Thought' },
+    { x: 680, label: 'Instrument' }
+  ];
+  nodes1.forEach(n => {
+    drawCircle(n.x, r1y, 32, PANEL, GOLD, 2);
+    drawText(n.label, n.x, r1y + 5, 12, GOLD);
+  });
+
+  // Roads row 1
+  drawAnimRoad(252, r1y, 418, r1y, GOLD, 0.5);
+  drawAnimRoad(482, r1y, 648, r1y, GOLD, 0.5);
+
+  // Row 2: Polls > Ballots > Groups > Mandates > Beam
+  const r2y = 350;
+  const nodes2 = [
+    { x: 110, label: 'Polls' },
+    { x: 270, label: 'Ballots' },
+    { x: 450, label: 'Groups' },
+    { x: 630, label: 'Mandates' },
+    { x: 790, label: 'Beam' }
+  ];
+  nodes2.forEach(n => {
+    drawCircle(n.x, r2y, 26, PANEL, BLUE, 2);
+    drawText(n.label, n.x, r2y + 5, 11, BLUE);
+  });
+
+  // Roads row 2
+  drawAnimRoad(136, r2y, 244, r2y, BLUE, 0.4);
+  drawAnimRoad(296, r2y, 424, r2y, BLUE, 0.4);
+  drawAnimRoad(476, r2y, 604, r2y, BLUE, 0.4);
+  drawAnimRoad(656, r2y, 764, r2y, BLUE, 0.4);
+
+  // Vertical connectors
+  drawLine(450, 232, 450, 324, GOLD, 1, [4, 4]);
+  ctx.globalAlpha = alpha * 0.3;
+  drawLine(220, 232, 110, 324, GOLD, 1, [4, 4]);
+  drawLine(680, 232, 790, 324, GOLD, 1, [4, 4]);
+  ctx.globalAlpha = alpha;
+
+  drawText("The Civic Engine", W/2, 440, 14, '#555');
+
+  ctx.restore();
+}
+
+// ========================
+// Scene 1: USA Map
+// ========================
+const usaOutline = [
+  [120,150],[140,120],[180,100],[220,95],[260,90],[300,85],[340,80],[380,82],
+  [420,78],[460,80],[500,85],[520,90],[540,100],[560,95],[580,100],[600,110],
+  [620,120],[640,115],[660,120],[680,130],[700,140],[710,160],[700,180],
+  [690,200],[680,220],[670,240],[660,260],[650,280],[640,300],[620,310],
+  [600,320],[580,330],[560,340],[540,345],[520,340],[500,335],[480,340],
+  [460,350],[440,355],[420,360],[400,365],[380,360],[360,355],[340,360],
+  [320,365],[300,360],[280,355],[260,360],[240,370],[220,375],[200,370],
+  [180,360],[160,345],[140,330],[120,310],[110,290],[100,270],[95,250],
+  [90,230],[95,210],[100,190],[110,170]
+];
+
+const states = [
+  { x: 670, y: 155, label: 'CT', r: 8, color: GOLD, alpha: 1, pulse: true },
+  { x: 640, y: 170, label: 'NJ', r: 4, color: BLUE, alpha: 0.5 },
+  { x: 620, y: 155, label: 'NY', r: 4, color: BLUE, alpha: 0.5 },
+  { x: 600, y: 175, label: 'PA', r: 4, color: BLUE, alpha: 0.5 },
+  { x: 500, y: 200, label: 'OH', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 420, y: 210, label: 'IL', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 200, y: 220, label: 'CA', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 300, y: 300, label: 'TX', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 550, y: 280, label: 'GA', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 580, y: 310, label: 'FL', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 340, y: 170, label: 'MN', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 250, y: 140, label: 'MT', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 160, y: 160, label: 'WA', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 650, y: 190, label: 'VA', r: 4, color: BLUE, alpha: 0.4 },
+  { x: 560, y: 240, label: 'TN', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 440, y: 280, label: 'AR', r: 4, color: BLUE, alpha: 0.2 },
+  { x: 350, y: 240, label: 'MO', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 280, y: 200, label: 'CO', r: 4, color: BLUE, alpha: 0.3 },
+  { x: 200, y: 160, label: 'OR', r: 4, color: BLUE, alpha: 0.3 },
+];
+
+function drawUSA(alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  drawText("The United States of America", W/2, 40, 20, GOLD, 'center', '600');
+  drawText("Citizens building across the country", W/2, 62, 12, '#666');
+
+  // USA outline
+  ctx.save();
+  ctx.translate(100, 50);
+  ctx.scale(0.9, 0.9);
+  ctx.beginPath();
+  ctx.moveTo(usaOutline[0][0], usaOutline[0][1]);
+  for (let i = 1; i < usaOutline.length; i++) {
+    ctx.lineTo(usaOutline[i][0], usaOutline[i][1]);
+  }
+  ctx.closePath();
+  ctx.fillStyle = PANEL;
+  ctx.fill();
+  ctx.strokeStyle = DIM;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // State dots
+  states.forEach(s => {
+    ctx.globalAlpha = alpha * s.alpha;
+    const r = s.pulse ? pulseR(s.r, 3, 3) : s.r;
+    drawCircle(s.x, s.y, r, s.color, null);
+    drawText(s.label, s.x, s.y - s.r - 4, s.pulse ? 11 : 8, s.color, 'center', s.pulse ? '700' : '400');
+  });
+
+  ctx.restore();
+
+  // Legend
+  ctx.globalAlpha = alpha;
+  drawCircle(120, 500, 5, GOLD, null);
+  drawText('Your state', 135, 504, 11, '#b0b0b0', 'left');
+  drawCircle(240, 500, 4, BLUE, null);
+  drawText('Active', 252, 504, 11, '#b0b0b0', 'left');
+  ctx.globalAlpha = alpha * 0.4;
+  drawCircle(320, 500, 4, BLUE, null);
+  drawText('Building', 332, 504, 11, '#b0b0b0', 'left');
+
+  ctx.restore();
+}
+
+// ========================
+// Scene 2: CT Map
+// ========================
+const ctOutline = [
+  [50,100],[80,70],[130,50],[200,40],[280,35],[360,30],[440,35],[500,45],
+  [550,60],[580,80],[590,110],[585,140],[575,170],[560,200],[540,230],
+  [510,260],[470,280],[420,290],[360,295],[300,290],[240,285],[180,280],
+  [130,265],[90,240],[65,210],[50,180],[45,150],[45,120]
+];
+
+const ctTowns = [
+  { x: 120, y: 180, label: 'Danbury' },
+  { x: 280, y: 200, label: 'Hartford' },
+  { x: 440, y: 180, label: 'Norwich' },
+  { x: 200, y: 260, label: 'Bridgeport' },
+  { x: 340, y: 260, label: 'New Haven' },
+  { x: 510, y: 140, label: 'Willimantic' },
+];
+
+function drawCT(alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  drawText("Connecticut", W/2, 40, 22, GOLD, 'center', '600');
+  drawText("Your home state", W/2, 62, 12, '#666');
+
+  ctx.save();
+  ctx.translate(150, 70);
+  ctx.scale(1.05, 1.05);
+
+  // CT outline
+  ctx.beginPath();
+  ctx.moveTo(ctOutline[0][0], ctOutline[0][1]);
+  for (let i = 1; i < ctOutline.length; i++) {
+    ctx.lineTo(ctOutline[i][0], ctOutline[i][1]);
+  }
+  ctx.closePath();
+  ctx.fillStyle = PANEL;
+  ctx.fill();
+  ctx.strokeStyle = GOLD;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = alpha * 0.8;
+  ctx.stroke();
+
+  // County dividers
+  ctx.globalAlpha = alpha * 0.2;
+  drawLine(200, 40, 200, 290, DIM, 1);
+  drawLine(360, 30, 360, 295, DIM, 1);
+  drawLine(500, 45, 470, 280, DIM, 1);
+
+  // Town labels
+  ctx.globalAlpha = alpha * 0.5;
+  ctTowns.forEach(t => {
+    drawText(t.label, t.x, t.y, 10, '#888');
+  });
+
+  // PUTNAM — pulsing gold
+  ctx.globalAlpha = alpha;
+  const pr = pulseR(8, 3, 3);
+  drawCircle(520, 75, pr, GOLD, null);
+  drawText('Putnam', 520, 55, 16, GOLD, 'center', '700');
+  ctx.globalAlpha = alpha * 0.7;
+  drawText('41.9148° N, 71.9009° W', 520, 100, 9, '#b0b0b0');
+
+  ctx.restore();
+
+  // Delegation box
+  ctx.globalAlpha = alpha;
+  drawRoundRect(320, 410, 260, 75, 8, PANEL, GOLD);
+  drawText('Your Delegation', 450, 435, 12, GOLD);
+  drawText('CT-02 · U.S. Congress', 450, 455, 11, '#b0b0b0');
+  drawText('2 Senators · 1 Representative', 450, 475, 11, '#b0b0b0');
+
+  ctx.restore();
+}
+
+// ========================
+// Main loop — 30fps
+// ========================
+const FPS = 30;
+const FRAME_MS = 1000 / FPS;
+
+function updateButtons() {
+  btns.forEach((b, i) => {
+    b.classList.toggle('active', i === (transitioning ? transTo : scene));
+  });
+}
+
+function render() {
+  clear();
+  time += 1 / FPS;
+  autoTimer += 1 / FPS;
+
+  if (transitioning) {
+    transAlpha += TRANS_SPEED;
+    if (transAlpha >= 1) {
+      transAlpha = 1;
+      scene = transTo;
+      transitioning = false;
+      autoTimer = 0;
+    }
+    // Draw outgoing scene fading out
+    const outA = 1 - transAlpha;
+    if (transFrom === 0) drawBranch(outA);
+    else if (transFrom === 1) drawUSA(outA);
+    else drawCT(outA);
+
+    // Draw incoming scene fading in
+    if (transTo === 0) drawBranch(transAlpha);
+    else if (transTo === 1) drawUSA(transAlpha);
+    else drawCT(transAlpha);
+  } else {
+    if (scene === 0) drawBranch(1);
+    else if (scene === 1) drawUSA(1);
+    else drawCT(1);
+
+    // Auto-advance
+    if (autoTimer >= AUTO_DELAY) {
+      startTransition((scene + 1) % 3);
+    }
+  }
+
+  updateButtons();
+}
+
+function startTransition(to) {
+  if (transitioning || to === scene) return;
+  transFrom = scene;
+  transTo = to;
+  transAlpha = 0;
+  transitioning = true;
+  autoTimer = 0;
+  nText.textContent = narrations[to];
+  speak(narrations[to]);
+}
+
+function jumpTo(to) {
+  if (!started) {
+    started = true;
+  }
+  startTransition(to);
+}
+
+// Start loop
+let started = false;
+document.addEventListener('click', function() {
+  if (!started) {
+    started = true;
+    nText.textContent = narrations[0];
+    speak(narrations[0]);
+  }
+}, { once: true });
+
+setInterval(render, FRAME_MS);
+</script>
+
+</body>
+</html>
