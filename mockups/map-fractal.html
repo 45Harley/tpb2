@@ -59,11 +59,15 @@ function pickVoice() {
 speechSynthesis.onvoiceschanged = pickVoice;
 pickVoice();
 
+let ttsPlaying = false;
 function speak(text) {
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.rate = 0.92; u.pitch = 1.05;
   if (claudiaVoice) u.voice = claudiaVoice;
+  ttsPlaying = true;
+  u.onend = () => { ttsPlaying = false; };
+  u.onerror = () => { ttsPlaying = false; };
   speechSynthesis.speak(u);
 }
 
@@ -380,8 +384,12 @@ function render() {
     }
   }
 
-  // Advance time
-  t += 1 / 30;
+  // Advance time — pause while TTS is speaking so narration never clips
+  const nextCue = narrationCues[lastCue + 1];
+  const waitingForTTS = ttsPlaying && nextCue && t >= nextCue.t - 0.1;
+  if (!waitingForTTS) {
+    t += 1 / 30;
+  }
   if (t >= TOTAL) {
     t = 0;
     lastCue = -1;
