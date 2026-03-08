@@ -17,6 +17,29 @@
     font-family: 'Segoe UI', system-ui, sans-serif;
   }
   canvas { cursor: pointer; border-radius: 8px; }
+  .controls {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+  }
+  .controls button {
+    background: #1a1a2e;
+    border: 1px solid #333;
+    color: #888;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .controls button.active {
+    border-color: #d4af37;
+    color: #d4af37;
+  }
+  .controls button:hover { border-color: #555; color: #ccc; }
   .narration {
     margin-top: 14px;
     text-align: center;
@@ -27,14 +50,18 @@
   }
   .hint {
     margin-top: 6px;
-    font-size: 0.75rem;
-    color: #555;
+    font-size: 0.8rem;
+    color: #d4af37;
     text-align: center;
     min-height: 18px;
   }
 </style>
 </head>
 <body>
+
+<div class="controls">
+  <button id="audioBtn" onclick="toggleAudio()">Audio Off</button>
+</div>
 
 <canvas id="c" width="900" height="600"></canvas>
 <div class="narration" id="narration"></div>
@@ -45,6 +72,7 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const narrationEl = document.getElementById('narration');
 const hintEl = document.getElementById('hint');
+const audioBtn = document.getElementById('audioBtn');
 const W = 900, H = 600;
 
 const GOLD = '#d4af37';
@@ -56,10 +84,48 @@ const TEAL = '#45b5aa';
 const BG = '#0d0d1a';
 
 // ========================================
-// PHASE 1: CONSTRUCTION (animated timeline)
-// The People → Towns → 13 States → Government
+// AUDIO — off by default
 // ========================================
+let audioEnabled = false;
 
+function toggleAudio() {
+  audioEnabled = !audioEnabled;
+  audioBtn.textContent = audioEnabled ? 'Audio On' : 'Audio Off';
+  audioBtn.classList.toggle('active', audioEnabled);
+  if (!audioEnabled) speechSynthesis.cancel();
+}
+
+let claudiaVoice = null;
+function pickVoice() {
+  const v = speechSynthesis.getVoices();
+  claudiaVoice = v.find(x => /female/i.test(x.name) && /en.US/i.test(x.lang))
+    || v.find(x => /zira|eva|samantha|karen|susan/i.test(x.name))
+    || v.find(x => x.lang && x.lang.startsWith('en'));
+}
+speechSynthesis.onvoiceschanged = pickVoice;
+pickVoice();
+
+let ttsPlaying = false;
+function speak(text) {
+  if (!audioEnabled) { ttsPlaying = false; return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.92; u.pitch = 1.05;
+  if (claudiaVoice) u.voice = claudiaVoice;
+  ttsPlaying = true;
+  u.onend = () => { ttsPlaying = false; };
+  u.onerror = () => { ttsPlaying = false; };
+  speechSynthesis.speak(u);
+}
+
+function narrate(text) {
+  narrationEl.textContent = text;
+  speak(text);
+}
+
+// ========================================
+// DATA
+// ========================================
 const TOWNS = [
   { name: 'Boston', colony: 'MA' },
   { name: 'Philadelphia', colony: 'PA' },
@@ -81,16 +147,6 @@ const COLONIES = [
   'South Carolina', 'Connecticut', 'Rhode Island', 'Maryland',
   'Georgia', 'N. Carolina', 'N. Hampshire', 'Delaware', 'New Jersey',
 ];
-
-// Sphere object factory
-function makeBall(x, y, r, label, color) {
-  return { x, y, r, label, color, alpha: 1, vx: 0, vy: 0, targetX: x, targetY: y };
-}
-
-// ========================================
-// PHASE 2: DECONSTRUCTION (interactive)
-// Government → Branches + Jurisdictions → ...
-// ========================================
 
 const DECONSTRUCT_TREE = {
   label: 'Government', color: GOLD, children: [
@@ -119,27 +175,21 @@ const DECONSTRUCT_TREE = {
 };
 
 // ========================================
-// STATE MACHINE
+// STATE
 // ========================================
-// 'start'      — waiting for first click, show The People
-// 'scatter'    — People splits into towns
-// 'towns'      — towns visible, brief hold
-// 'coalesce1'  — towns merge into 13 states
-// 'states'     — 13 states visible, brief hold
-// 'coalesce2'  — states merge into Government
-// 'interactive'— Government sphere clickable, deconstruction tree
-
 let phase = 'start';
 let phaseT = 0;
 let lastTime = 0;
+let waitingForClick = false; // gate for click-to-continue
 
-// Construction balls
+function makeBall(x, y, r, label, color) {
+  return { x, y, r, label, color, alpha: 1, targetX: x, targetY: y };
+}
+
 let peopleBall = makeBall(W / 2, H / 2, 90, 'The People', GOLD);
 let townBalls = [];
 let stateBalls = [];
-let govBall = null;
 
-// Interactive deconstruction spheres
 let spheres = [];
 let dragging = null;
 let dragOffX = 0, dragOffY = 0;
@@ -150,7 +200,7 @@ const JITTER_DUR = 0.8;
 const SPLIT_DUR = 0.7;
 
 // ========================================
-// DRAWING HELPERS
+// DRAWING
 // ========================================
 function drawSphere(x, y, r, color, label, alpha, showPlus) {
   if (alpha < 0.01 || r < 1) return;
@@ -188,9 +238,9 @@ function drawSphere(x, y, r, color, label, alpha, showPlus) {
   ctx.arc(x - r * 0.25, y - r * 0.35, r * 0.4, 0, Math.PI * 2);
   ctx.fill();
 
-  // Label — dark text
+  // Label
   if (label && r > 8) {
-    const fontSize = Math.max(8, Math.min(r * 0.3, 20));
+    const fontSize = Math.max(8, Math.min(r * 0.28, 18));
     ctx.font = '700 ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -225,11 +275,10 @@ function easeOutBack(t) {
   return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
 }
 function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
-function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 function dist(x1, y1, x2, y2) { return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2); }
 function lerp(a, b, t) { return a + (b - a) * t; }
 
-function drawGrid(now) {
+function drawGrid() {
   ctx.save();
   ctx.globalAlpha = 0.03;
   ctx.strokeStyle = '#fff';
@@ -242,63 +291,20 @@ function drawGrid(now) {
 function drawTitle(text, alpha) {
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.font = '400 12px Segoe UI, system-ui, sans-serif';
-  ctx.fillStyle = '#555';
+  ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#666';
   ctx.textAlign = 'center';
-  ctx.fillText(text, W / 2, 22);
+  ctx.fillText(text, W / 2, 25);
   ctx.restore();
 }
 
-// Scatter towns in a rough circle
-function scatterTowns() {
-  townBalls = [];
-  const cx = W / 2, cy = H / 2;
-  TOWNS.forEach((t, i) => {
-    const angle = (i / TOWNS.length) * Math.PI * 2 - Math.PI / 2;
-    const radius = 140 + Math.random() * 80;
-    const tx = cx + Math.cos(angle) * radius;
-    const ty = cy + Math.sin(angle) * radius;
-    const ball = makeBall(cx, cy, 22, t.name, TEAL);
-    ball.targetX = tx;
-    ball.targetY = ty;
-    ball.colony = t.colony;
-    townBalls.push(ball);
-  });
-}
-
-// Place 13 states in a wider arc
-function placeStates() {
-  stateBalls = [];
-  const cx = W / 2, cy = H / 2;
-  COLONIES.forEach((name, i) => {
-    const angle = (i / COLONIES.length) * Math.PI * 2 - Math.PI / 2;
-    const radius = 170;
-    const tx = cx + Math.cos(angle) * radius;
-    const ty = cy + Math.sin(angle) * radius;
-    const ball = makeBall(cx, cy, 35, name, BLUE);
-    ball.targetX = tx;
-    ball.targetY = ty;
-    ball.alpha = 0;
-    stateBalls.push(ball);
-  });
-}
-
-// Map towns to their state index
-function townToStateIndex(colony) {
-  const map = { MA: 0, PA: 1, NY: 2, VA: 3, SC: 4, CT: 5, RI: 6, MD: 7, GA: 8, NC: 9, NH: 10, DE: 11, NJ: 12 };
-  return map[colony] || 0;
-}
-
-// Particles for bursts
+// Particles
 let particles = [];
 function spawnParticles(x, y, color, count) {
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
     const speed = 40 + Math.random() * 120;
-    particles.push({
-      x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-      life: 0.6 + Math.random() * 0.4, age: 0, color, r: 2 + Math.random() * 2,
-    });
+    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 0.6 + Math.random() * 0.4, age: 0, color, r: 2 + Math.random() * 2 });
   }
 }
 function updateParticles(dt) {
@@ -318,37 +324,67 @@ function drawParticles() {
 }
 
 // ========================================
-// VOICE
+// LAYOUT — organized, bigger spheres
 // ========================================
-let claudiaVoice = null;
-function pickVoice() {
-  const v = speechSynthesis.getVoices();
-  claudiaVoice = v.find(x => /female/i.test(x.name) && /en.US/i.test(x.lang))
-    || v.find(x => /zira|eva|samantha|karen|susan/i.test(x.name))
-    || v.find(x => x.lang && x.lang.startsWith('en'));
-}
-speechSynthesis.onvoiceschanged = pickVoice;
-pickVoice();
 
-let ttsPlaying = false;
-function speak(text) {
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.92; u.pitch = 1.05;
-  if (claudiaVoice) u.voice = claudiaVoice;
-  ttsPlaying = true;
-  u.onend = () => { ttsPlaying = false; };
-  u.onerror = () => { ttsPlaying = false; };
-  speechSynthesis.speak(u);
+// Towns: 3 rows of ~4-5, centered, bigger radius
+function scatterTowns() {
+  townBalls = [];
+  const cx = W / 2, cy = H / 2;
+  const cols = 5;
+  const spacingX = 130, spacingY = 100;
+  const startX = cx - (cols - 1) * spacingX / 2;
+  const startY = cy - spacingY;
+
+  TOWNS.forEach((t, i) => {
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    // Offset odd rows for visual interest
+    const rowCount = row < 2 ? cols : TOWNS.length - cols * 2;
+    const rowStartX = cx - (Math.min(cols, rowCount) - 1) * spacingX / 2;
+    const tx = rowStartX + col * spacingX;
+    const ty = startY + row * spacingY;
+    const ball = makeBall(cx, cy, 32, t.name, TEAL);
+    ball.targetX = tx;
+    ball.targetY = ty;
+    ball.colony = t.colony;
+    townBalls.push(ball);
+  });
 }
 
-function narrate(text) {
-  narrationEl.textContent = text;
-  speak(text);
+// States: 2 rows of 7 and 6, centered, bigger radius
+function placeStates() {
+  stateBalls = [];
+  const cx = W / 2, cy = H / 2;
+  const row1 = 7, row2 = 6;
+  const spacingX = 110, spacingY = 110;
+  const startY = cy - spacingY / 2;
+
+  COLONIES.forEach((name, i) => {
+    let tx, ty;
+    if (i < row1) {
+      tx = cx - (row1 - 1) * spacingX / 2 + i * spacingX;
+      ty = startY;
+    } else {
+      const j = i - row1;
+      tx = cx - (row2 - 1) * spacingX / 2 + j * spacingX;
+      ty = startY + spacingY;
+    }
+    const ball = makeBall(cx, cy, 45, name, BLUE);
+    ball.targetX = tx;
+    ball.targetY = ty;
+    ball.alpha = 0;
+    stateBalls.push(ball);
+  });
+}
+
+function townToStateIndex(colony) {
+  const map = { MA: 0, PA: 1, NY: 2, VA: 3, SC: 4, CT: 5, RI: 6, MD: 7, GA: 8, NC: 9, NH: 10, DE: 11, NJ: 12 };
+  return map[colony] || 0;
 }
 
 // ========================================
-// RENDER LOOP
+// RENDER
 // ========================================
 function render(now) {
   const dt = lastTime ? Math.min((now - lastTime) / 1000, 0.05) : 0;
@@ -356,23 +392,19 @@ function render(now) {
 
   ctx.fillStyle = BG;
   ctx.fillRect(0, 0, W, H);
-  drawGrid(now);
-
+  drawGrid();
   updateParticles(dt);
 
+  // --- START: The People ---
   if (phase === 'start') {
     drawTitle('The Origin of American Government', 0.5);
     const breathe = Math.sin(now / 600) * 4;
     drawSphere(peopleBall.x, peopleBall.y, peopleBall.r + breathe, peopleBall.color, peopleBall.label, 1);
-    // Year label
-    ctx.save();
-    ctx.globalAlpha = 0.4;
-    ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
-    ctx.fillStyle = '#888';
-    ctx.textAlign = 'center';
-    ctx.fillText('circa 1750', W / 2, H / 2 + 120);
-    ctx.restore();
+    ctx.save(); ctx.globalAlpha = 0.4; ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#888'; ctx.textAlign = 'center';
+    ctx.fillText('circa 1750', W / 2, H / 2 + 120); ctx.restore();
 
+  // --- JITTER PEOPLE ---
   } else if (phase === 'jitter-people') {
     drawTitle('The Origin of American Government', 0.5);
     phaseT += dt;
@@ -382,12 +414,9 @@ function render(now) {
     const jy = (Math.random() - 0.5) * intensity * 2;
     drawSphere(peopleBall.x + jx, peopleBall.y + jy, peopleBall.r, peopleBall.color, peopleBall.label, 1);
 
-    // Cracks
     if (progress > 0.3) {
-      ctx.save();
-      ctx.globalAlpha = (progress - 0.3) * 1.4;
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
+      ctx.save(); ctx.globalAlpha = (progress - 0.3) * 1.4;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
       const ox = peopleBall.x + jx, oy = peopleBall.y + jy, pr = peopleBall.r;
       ctx.beginPath(); ctx.moveTo(ox - 5, oy - pr * 0.6); ctx.lineTo(ox + 3, oy); ctx.lineTo(ox - 8, oy + pr * 0.5); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(ox + 12, oy - pr * 0.4); ctx.lineTo(ox - 2, oy + pr * 0.2); ctx.stroke();
@@ -399,39 +428,30 @@ function render(now) {
       phaseT = 0;
       scatterTowns();
       spawnParticles(peopleBall.x, peopleBall.y, GOLD, 20);
-      narrate('The people settled into towns.');
+      narrate('The people settled into towns and cities.');
     }
 
+  // --- SCATTER into towns ---
   } else if (phase === 'scatter') {
     drawTitle('The Origin of American Government', 0.5);
     phaseT += dt;
-    const progress = Math.min(1, phaseT / 1.2);
+    const progress = Math.min(1, phaseT / 1.5);
     const ease = easeOutBack(Math.min(1, progress));
 
-    // Fade out people sphere
     const pAlpha = 1 - easeInOut(Math.min(1, progress * 3));
-    if (pAlpha > 0) {
-      drawSphere(peopleBall.x, peopleBall.y, peopleBall.r * (1 - progress * 0.5), peopleBall.color, peopleBall.label, pAlpha);
-    }
+    if (pAlpha > 0) drawSphere(peopleBall.x, peopleBall.y, peopleBall.r * (1 - progress * 0.5), peopleBall.color, peopleBall.label, pAlpha);
 
     // Ghost label
     if (progress > 0.3) {
-      ctx.save();
-      ctx.globalAlpha = 0.25 * Math.min(1, (progress - 0.3) * 2);
-      ctx.font = '400 12px Segoe UI, system-ui, sans-serif';
-      ctx.fillStyle = '#888';
-      ctx.textAlign = 'center';
-      ctx.fillText('The People', W / 2, H / 2 - 5);
-      ctx.restore();
+      ctx.save(); ctx.globalAlpha = 0.2;
+      ctx.font = '400 12px Segoe UI, system-ui, sans-serif'; ctx.fillStyle = '#888'; ctx.textAlign = 'center';
+      ctx.fillText('The People', W / 2, H / 2 - 5); ctx.restore();
     }
 
-    // Animate towns outward
     townBalls.forEach(b => {
       b.x = lerp(peopleBall.x, b.targetX, ease);
       b.y = lerp(peopleBall.y, b.targetY, ease);
-      const a = easeInOut(Math.min(1, progress * 2));
-      const rr = b.r * Math.min(1, ease);
-      drawSphere(b.x, b.y, rr, b.color, b.label, a);
+      drawSphere(b.x, b.y, b.r * Math.min(1, ease), b.color, b.label, easeInOut(Math.min(1, progress * 2)));
     });
 
     drawParticles();
@@ -439,135 +459,109 @@ function render(now) {
     if (progress >= 1) {
       phase = 'towns';
       phaseT = 0;
+      townBalls.forEach(b => { b.x = b.targetX; b.y = b.targetY; });
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
     }
 
+  // --- TOWNS: wait for click ---
   } else if (phase === 'towns') {
-    drawTitle('circa 1750 — Colonial Towns', 0.5);
-    phaseT += dt;
+    drawTitle('Colonial Capital Cities — circa 1750', 0.5);
+    const breathe = Math.sin(now / 700) * 2;
 
-    // Ghost label
-    ctx.save(); ctx.globalAlpha = 0.2; ctx.font = '400 12px Segoe UI, system-ui, sans-serif';
+    ctx.save(); ctx.globalAlpha = 0.15; ctx.font = '400 12px Segoe UI, system-ui, sans-serif';
     ctx.fillStyle = '#888'; ctx.textAlign = 'center'; ctx.fillText('The People', W / 2, H / 2 - 5); ctx.restore();
 
-    const breathe = Math.sin(now / 700) * 2;
     townBalls.forEach(b => drawSphere(b.x, b.y, b.r + breathe, b.color, b.label, 1));
 
-    // Wait for TTS to finish, then auto-advance
-    if (phaseT > 1.5 && !ttsPlaying) {
-      phase = 'coalesce1';
-      phaseT = 0;
-      placeStates();
-      narrate('The towns coalesced into thirteen colonies.');
-    }
-
+  // --- COALESCE 1: towns → states (SLOW) ---
   } else if (phase === 'coalesce1') {
     drawTitle('Towns become Colonies', 0.5);
     phaseT += dt;
-    const progress = Math.min(1, phaseT / 1.8);
+    const progress = Math.min(1, phaseT / 3.5); // SLOW — 3.5 seconds
     const ease = easeInOut(progress);
 
-    // Towns shrink and move toward their state's target
     townBalls.forEach(b => {
       const si = townToStateIndex(b.colony);
       const target = stateBalls[si];
       b.x = lerp(b.targetX, target.targetX, ease);
       b.y = lerp(b.targetY, target.targetY, ease);
-      const shrink = 1 - ease * 0.8;
-      const a = 1 - ease;
-      drawSphere(b.x, b.y, b.r * shrink, b.color, b.label, a);
+      drawSphere(b.x, b.y, b.r * (1 - ease * 0.7), b.color, b.label, 1 - ease);
     });
 
-    // States fade in and grow
     stateBalls.forEach(s => {
-      s.x = lerp(W / 2, s.targetX, easeOutBack(Math.min(1, progress * 1.2)));
-      s.y = lerp(H / 2, s.targetY, easeOutBack(Math.min(1, progress * 1.2)));
-      s.alpha = easeInOut(Math.min(1, progress * 2));
-      const rr = s.r * Math.min(1, easeOutBack(Math.min(1, progress * 1.3)));
-      drawSphere(s.x, s.y, rr, s.color, s.label, s.alpha);
+      const p = Math.min(1, progress * 1.3);
+      s.x = lerp(W / 2, s.targetX, easeOutBack(p));
+      s.y = lerp(H / 2, s.targetY, easeOutBack(p));
+      s.alpha = easeInOut(Math.min(1, progress * 1.8));
+      drawSphere(s.x, s.y, s.r * Math.min(1, easeOutBack(p)), s.color, s.label, s.alpha);
     });
 
     if (progress >= 1) {
       phase = 'states';
       phaseT = 0;
       stateBalls.forEach(s => { s.x = s.targetX; s.y = s.targetY; s.alpha = 1; });
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
     }
 
+  // --- STATES: wait for click ---
   } else if (phase === 'states') {
     drawTitle('The Thirteen Colonies — 1776', 0.5);
-    phaseT += dt;
-
     const breathe = Math.sin(now / 700) * 2;
     stateBalls.forEach(s => drawSphere(s.x, s.y, s.r + breathe, s.color, s.label, 1));
 
-    if (phaseT > 1.5 && !ttsPlaying) {
-      phase = 'coalesce2';
-      phaseT = 0;
-      narrate('And they forged a Constitution, creating a Government of the people.');
-    }
-
+  // --- COALESCE 2: states → Government (SLOW) ---
   } else if (phase === 'coalesce2') {
     drawTitle('E Pluribus Unum', 0.5);
     phaseT += dt;
-    const progress = Math.min(1, phaseT / 2.0);
+    const progress = Math.min(1, phaseT / 4.0); // SLOW — 4 seconds
     const ease = easeInOut(progress);
 
-    // States shrink toward center
     stateBalls.forEach(s => {
       s.x = lerp(s.targetX, W / 2, ease);
       s.y = lerp(s.targetY, H / 2, ease);
-      const shrink = 1 - ease * 0.7;
-      const a = 1 - ease * 0.8;
-      drawSphere(s.x, s.y, s.r * shrink, s.color, s.label, a);
+      drawSphere(s.x, s.y, s.r * (1 - ease * 0.6), s.color, s.label, 1 - ease * 0.8);
     });
 
-    // Government sphere grows in
-    const govAlpha = easeInOut(Math.min(1, Math.max(0, (progress - 0.4) * 2.5)));
+    // Government sphere
+    const govAlpha = easeInOut(Math.max(0, (progress - 0.35) * 2.5));
     const govR = 90 * easeOutBack(Math.min(1, Math.max(0, (progress - 0.3) * 1.8)));
     if (govAlpha > 0) {
       drawSphere(W / 2, H / 2, govR, GOLD, 'Government', govAlpha, true);
     }
 
-    // "Constitution" subtitle
     if (progress > 0.6) {
       ctx.save();
-      ctx.globalAlpha = easeInOut(Math.min(1, (progress - 0.6) * 3)) * 0.6;
-      ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
-      ctx.fillStyle = '#d4af37';
-      ctx.textAlign = 'center';
-      ctx.fillText('We the People', W / 2, H / 2 + 110);
+      ctx.globalAlpha = easeInOut((progress - 0.6) * 3) * 0.6;
+      ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#d4af37'; ctx.textAlign = 'center';
+      ctx.fillText('We the People', W / 2, H / 2 + 115);
       ctx.restore();
     }
 
     if (progress >= 1) {
       phase = 'gov-arrive';
       phaseT = 0;
+      waitingForClick = true;
+      hintEl.textContent = 'Click to deconstruct';
     }
 
+  // --- GOV ARRIVE: wait for click to enter interactive ---
   } else if (phase === 'gov-arrive') {
-    // Brief hold on Government sphere before interactive mode
-    phaseT += dt;
     drawTitle('The United States Government', 0.5);
     const breathe = Math.sin(now / 600) * 4;
     drawSphere(W / 2, H / 2, 90 + breathe, GOLD, 'Government', 1, true);
 
-    ctx.save(); ctx.globalAlpha = 0.5; ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
+    ctx.save(); ctx.globalAlpha = 0.5; ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
     ctx.fillStyle = '#d4af37'; ctx.textAlign = 'center';
-    ctx.fillText('We the People', W / 2, H / 2 + 110); ctx.restore();
+    ctx.fillText('We the People', W / 2, H / 2 + 115); ctx.restore();
 
-    if (phaseT > 1 && !ttsPlaying) {
-      phase = 'interactive';
-      phaseT = 0;
-      // Create the interactive root sphere
-      const root = makeInteractiveSphere(DECONSTRUCT_TREE, W / 2, H / 2, 90);
-      spheres.push(root);
-      narrate('Now, click to deconstruct.');
-      hintEl.textContent = 'Click Government to take it apart';
-    }
-
+  // --- INTERACTIVE: deconstruction ---
   } else if (phase === 'interactive') {
     drawTitle('Deconstruction', 0.5);
 
-    // Draw connection lines
+    // Connection lines
     spheres.forEach(s => {
       if (s.children.length > 0 && s.state === 'done') {
         s.children.forEach(child => {
@@ -585,11 +579,10 @@ function render(now) {
       }
     });
 
-    // Update and draw spheres
     spheres.forEach(s => updateInteractiveSphere(s, dt, now));
-
     drawParticles();
 
+  // --- CLOSING ---
   } else if (phase === 'closing') {
     phaseT += dt;
     const progress = Math.min(1, phaseT / 3.5);
@@ -597,7 +590,6 @@ function render(now) {
 
     drawTitle('A More Perfect Union', 0.6);
 
-    // Draw ghost connection lines fading out
     spheres.forEach(s => {
       if (s.children.length > 0 && s.state === 'done') {
         s.children.forEach(child => {
@@ -610,35 +602,23 @@ function render(now) {
       }
     });
 
-    // Leaf spheres drift gently toward center and shrink
     leafSpheres.forEach(s => {
       s.x = lerp(s.originX, W / 2, ease * 0.6);
       s.y = lerp(s.originY, H / 2, ease * 0.6);
-      const shrink = 1 - ease * 0.5;
-      const a = 1 - ease * 0.7;
-      const breathe = Math.sin(now / 800 + s.originX * 0.01) * 2;
-      drawSphere(s.x, s.y, s.r * shrink + breathe, s.color, s.label, a);
+      drawSphere(s.x, s.y, s.r * (1 - ease * 0.5), s.color, s.label, 1 - ease * 0.7);
     });
 
-    // Central text fades in
     if (progress > 0.3) {
-      const textAlpha = easeInOut(Math.min(1, (progress - 0.3) * 2));
-
-      ctx.save();
-      ctx.globalAlpha = textAlpha * 0.9;
+      const ta = easeInOut((progress - 0.3) * 2);
+      ctx.save(); ctx.globalAlpha = ta * 0.9;
       ctx.font = '700 28px Segoe UI, system-ui, sans-serif';
-      ctx.fillStyle = GOLD;
-      ctx.textAlign = 'center';
-      ctx.fillText('A more perfect union.', W / 2, H / 2 - 15);
-      ctx.restore();
+      ctx.fillStyle = GOLD; ctx.textAlign = 'center';
+      ctx.fillText('A more perfect union.', W / 2, H / 2 - 15); ctx.restore();
 
-      ctx.save();
-      ctx.globalAlpha = textAlpha * 0.6;
+      ctx.save(); ctx.globalAlpha = ta * 0.6;
       ctx.font = '400 16px Segoe UI, system-ui, sans-serif';
-      ctx.fillStyle = '#b0b0b0';
-      ctx.textAlign = 'center';
-      ctx.fillText('The building continues.', W / 2, H / 2 + 18);
-      ctx.restore();
+      ctx.fillStyle = '#b0b0b0'; ctx.textAlign = 'center';
+      ctx.fillText('The building continues.', W / 2, H / 2 + 18); ctx.restore();
     }
 
     if (progress >= 1 && !ttsPlaying) {
@@ -647,38 +627,30 @@ function render(now) {
       hintEl.textContent = 'Click to begin again';
     }
 
+  // --- ENDED ---
   } else if (phase === 'ended') {
     phaseT += dt;
     drawTitle('A More Perfect Union', 0.5);
 
-    // Faded leaf spheres orbiting gently
     const drift = phaseT * 0.15;
     leafSpheres.forEach((s, i) => {
       const angle = drift + (i / leafSpheres.length) * Math.PI * 2;
       const orbitR = 80 + i * 12;
       s.x = W / 2 + Math.cos(angle) * orbitR;
       s.y = H / 2 + Math.sin(angle) * orbitR * 0.5;
-      const breathe = Math.sin(now / 900 + i) * 2;
-      drawSphere(s.x, s.y, s.r * 0.4 + breathe, s.color, '', 0.15);
+      drawSphere(s.x, s.y, s.r * 0.4, s.color, '', 0.15);
     });
 
-    // Central text
     const pulse = 0.85 + Math.sin(now / 1200) * 0.15;
-    ctx.save();
-    ctx.globalAlpha = 0.9 * pulse;
+    ctx.save(); ctx.globalAlpha = 0.9 * pulse;
     ctx.font = '700 28px Segoe UI, system-ui, sans-serif';
-    ctx.fillStyle = GOLD;
-    ctx.textAlign = 'center';
-    ctx.fillText('A more perfect union.', W / 2, H / 2 - 15);
-    ctx.restore();
+    ctx.fillStyle = GOLD; ctx.textAlign = 'center';
+    ctx.fillText('A more perfect union.', W / 2, H / 2 - 15); ctx.restore();
 
-    ctx.save();
-    ctx.globalAlpha = 0.55;
+    ctx.save(); ctx.globalAlpha = 0.55;
     ctx.font = '400 16px Segoe UI, system-ui, sans-serif';
-    ctx.fillStyle = '#b0b0b0';
-    ctx.textAlign = 'center';
-    ctx.fillText('The building continues.', W / 2, H / 2 + 18);
-    ctx.restore();
+    ctx.fillStyle = '#b0b0b0'; ctx.textAlign = 'center';
+    ctx.fillText('The building continues.', W / 2, H / 2 + 18); ctx.restore();
   }
 
   drawParticles();
@@ -708,7 +680,6 @@ function updateInteractiveSphere(s, dt, now) {
     const intensity = Math.sin(progress * Math.PI) * 12;
     const jx = (Math.random() - 0.5) * intensity * 2;
     const jy = (Math.random() - 0.5) * intensity * 2;
-
     drawSphere(s.x + jx, s.y + jy, s.r, s.color, s.label, 1);
 
     if (progress > 0.3) {
@@ -720,22 +691,16 @@ function updateInteractiveSphere(s, dt, now) {
     }
 
     if (progress >= 1) {
-      s.state = 'splitting';
-      s.stateT = 0;
+      s.state = 'splitting'; s.stateT = 0;
       const childDefs = s.treeDef.children;
       const childR = Math.max(28, s.r * 0.6);
       const targets = computeTargets(s, childDefs.length, childR);
       childDefs.forEach((def, i) => {
         const child = makeInteractiveSphere(def, s.x, s.y, childR);
-        child.targetX = targets[i].x;
-        child.targetY = targets[i].y;
-        child.splitOriginX = s.x;
-        child.splitOriginY = s.y;
-        child.parent = s;
-        child.state = 'appearing';
-        child.stateT = 0;
-        s.children.push(child);
-        spheres.push(child);
+        child.targetX = targets[i].x; child.targetY = targets[i].y;
+        child.splitOriginX = s.x; child.splitOriginY = s.y;
+        child.parent = s; child.state = 'appearing'; child.stateT = 0;
+        s.children.push(child); spheres.push(child);
       });
       spawnParticles(s.x, s.y, s.color, 12);
     }
@@ -745,10 +710,7 @@ function updateInteractiveSphere(s, dt, now) {
     const progress = Math.min(1, s.stateT / SPLIT_DUR);
     const parentAlpha = 1 - easeInOut(Math.min(1, progress * 3));
     if (parentAlpha > 0) drawSphere(s.x, s.y, s.r * (1 - progress * 0.5), s.color, s.label, parentAlpha);
-    if (progress >= 1) {
-      s.state = 'done';
-      updateHint();
-    }
+    if (progress >= 1) { s.state = 'done'; updateHint(); }
 
   } else if (s.state === 'appearing') {
     const parent = s.parent;
@@ -757,11 +719,9 @@ function updateInteractiveSphere(s, dt, now) {
     const ease = easeOutBack(Math.min(1, progress));
     s.x = lerp(s.splitOriginX, s.targetX, ease);
     s.y = lerp(s.splitOriginY, s.targetY, ease);
-    const childAlpha = easeInOut(Math.min(1, progress * 2));
-    drawSphere(s.x, s.y, s.r * Math.min(1, ease), s.color, s.label, childAlpha, s.treeDef.children.length > 0);
+    drawSphere(s.x, s.y, s.r * Math.min(1, ease), s.color, s.label, easeInOut(Math.min(1, progress * 2)), s.treeDef.children.length > 0);
     if (progress >= 1) { s.state = 'idle'; s.x = s.targetX; s.y = s.targetY; }
   }
-  // 'done' — ghost label handled in main loop
 }
 
 function computeTargets(parent, count, childR) {
@@ -786,20 +746,20 @@ function computeTargets(parent, count, childR) {
   return targets;
 }
 
+let closingQueued = false;
+let leafSpheres = [];
+
 function updateHint() {
   const clickable = spheres.filter(s => s.state === 'idle' && s.treeDef.children.length > 0);
   if (clickable.length > 0) {
-    hintEl.textContent = 'Click a sphere to deconstruct further. Drag to rearrange.';
+    hintEl.textContent = 'Click a sphere to deconstruct. Drag to rearrange.';
   } else {
-    // All deconstructed — trigger closing after a beat
     hintEl.textContent = '';
     if (!closingQueued) {
       closingQueued = true;
       setTimeout(() => {
         if (phase === 'interactive') {
-          phase = 'closing';
-          phaseT = 0;
-          // Snapshot leaf positions for drift animation
+          phase = 'closing'; phaseT = 0;
           leafSpheres = spheres.filter(s => s.state === 'idle');
           leafSpheres.forEach(s => { s.originX = s.x; s.originY = s.y; });
           narrate('A more perfect union. The building continues.');
@@ -808,8 +768,6 @@ function updateHint() {
     }
   }
 }
-let closingQueued = false;
-let leafSpheres = [];
 
 // ========================================
 // INPUT
@@ -819,26 +777,43 @@ function getMousePos(e) {
   return { x: (e.clientX - rect.left) * (W / rect.width), y: (e.clientY - rect.top) * (H / rect.height) };
 }
 
-// Phase 1: click to start / restart
+// Click handler for all phases
 canvas.addEventListener('click', function(e) {
+  // Start / restart
   if (phase === 'start' || phase === 'ended') {
-    // Reset everything
-    phase = 'jitter-people';
-    phaseT = 0;
-    spheres = [];
-    townBalls = [];
-    stateBalls = [];
-    leafSpheres = [];
-    closingQueued = false;
-    dragging = null;
+    phase = 'jitter-people'; phaseT = 0;
+    spheres = []; townBalls = []; stateBalls = []; leafSpheres = [];
+    closingQueued = false; dragging = null; waitingForClick = false;
     peopleBall = makeBall(W / 2, H / 2, 90, 'The People', GOLD);
-    hintEl.textContent = '';
-    narrationEl.textContent = '';
+    hintEl.textContent = ''; narrationEl.textContent = '';
     narrate('It began with the people.');
+    return;
+  }
+
+  // Click-to-continue gates
+  if (waitingForClick) {
+    waitingForClick = false;
+    hintEl.textContent = '';
+
+    if (phase === 'towns') {
+      phase = 'coalesce1'; phaseT = 0;
+      placeStates();
+      narrate('The towns coalesced into thirteen colonies.');
+    } else if (phase === 'states') {
+      phase = 'coalesce2'; phaseT = 0;
+      narrate('And they forged a Constitution, creating a Government of the people.');
+    } else if (phase === 'gov-arrive') {
+      phase = 'interactive'; phaseT = 0;
+      const root = makeInteractiveSphere(DECONSTRUCT_TREE, W / 2, H / 2, 90);
+      spheres.push(root);
+      narrate('Now, click to deconstruct.');
+      hintEl.textContent = 'Click Government to take it apart';
+    }
+    return;
   }
 });
 
-// Phase 2: interactive drag + click
+// Interactive: drag + click split
 canvas.addEventListener('mousedown', function(e) {
   if (phase !== 'interactive') return;
   const pos = getMousePos(e);
@@ -847,8 +822,7 @@ canvas.addEventListener('mousedown', function(e) {
     const s = spheres[i];
     if (s.state === 'idle' && dist(pos.x, pos.y, s.x, s.y) < s.r) {
       dragging = s;
-      dragOffX = s.x - pos.x;
-      dragOffY = s.y - pos.y;
+      dragOffX = s.x - pos.x; dragOffY = s.y - pos.y;
       canvas.style.cursor = 'grabbing';
       return;
     }
@@ -860,8 +834,7 @@ canvas.addEventListener('mousemove', function(e) {
   const pos = getMousePos(e);
   if (dragging) {
     if (dist(pos.x, pos.y, dragStartX, dragStartY) > 5) wasDrag = true;
-    dragging.x = pos.x + dragOffX;
-    dragging.y = pos.y + dragOffY;
+    dragging.x = pos.x + dragOffX; dragging.y = pos.y + dragOffY;
     return;
   }
   let found = false;
@@ -876,32 +849,29 @@ canvas.addEventListener('mousemove', function(e) {
 
 canvas.addEventListener('mouseup', function() {
   if (dragging && !wasDrag && dragging.treeDef.children.length > 0 && dragging.state === 'idle') {
-    dragging.state = 'jitter';
-    dragging.stateT = 0;
-    hintEl.textContent = '';
+    dragging.state = 'jitter'; dragging.stateT = 0; hintEl.textContent = '';
   }
-  dragging = null;
-  canvas.style.cursor = 'default';
+  dragging = null; canvas.style.cursor = 'default';
 });
 
 canvas.addEventListener('mouseleave', function() { dragging = null; canvas.style.cursor = 'default'; });
 
 // Touch
-let touchStartX2 = 0, touchStartY2 = 0, touchWasDrag2 = false;
 canvas.addEventListener('touchstart', function(e) {
   e.preventDefault();
   const pos = getMousePos(e.touches[0]);
 
-  if (phase === 'start') {
-    phase = 'jitter-people';
-    phaseT = 0;
-    hintEl.textContent = '';
-    narrate('It began with the people.');
+  if (phase === 'start' || phase === 'ended') {
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }));
+    return;
+  }
+  if (waitingForClick) {
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }));
     return;
   }
   if (phase !== 'interactive') return;
 
-  touchStartX2 = pos.x; touchStartY2 = pos.y; touchWasDrag2 = false;
+  dragStartX = pos.x; dragStartY = pos.y; wasDrag = false;
   for (let i = spheres.length - 1; i >= 0; i--) {
     const s = spheres[i];
     if (s.state === 'idle' && dist(pos.x, pos.y, s.x, s.y) < s.r) {
@@ -915,12 +885,12 @@ canvas.addEventListener('touchmove', function(e) {
   e.preventDefault();
   if (dragging) {
     const pos = getMousePos(e.touches[0]);
-    if (dist(pos.x, pos.y, touchStartX2, touchStartY2) > 10) touchWasDrag2 = true;
+    if (dist(pos.x, pos.y, dragStartX, dragStartY) > 10) wasDrag = true;
     dragging.x = pos.x + dragOffX; dragging.y = pos.y + dragOffY;
   }
 });
 canvas.addEventListener('touchend', function() {
-  if (dragging && !touchWasDrag2 && dragging.treeDef.children.length > 0 && dragging.state === 'idle') {
+  if (dragging && !wasDrag && dragging.treeDef.children.length > 0 && dragging.state === 'idle') {
     dragging.state = 'jitter'; dragging.stateT = 0; hintEl.textContent = '';
   }
   dragging = null;
