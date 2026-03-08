@@ -249,16 +249,16 @@ function drawCTShape(cx, cy, scale, alpha, t) {
 
 const TOTAL = 28;
 const narrationCues = [
-  { t: 0, text: "The People's Branch. The civic engine." },
-  { t: 3, text: "One nation." },
+  { t: 0.5, text: "The People's Branch. The civic engine." },
+  { t: 3.5, text: "One nation." },
   { t: 5.5, text: "Fifty states. Citizens building." },
-  { t: 8, text: "Connecticut. Your home." },
-  { t: 10.5, text: "Putnam. Your town." },
-  { t: 13, text: "And inside your town — the same engine." },
-  { t: 15.5, text: "Polls. Ballots. Groups. Mandates. Beam." },
-  { t: 18, text: "Zoom deeper. The people at the center." },
-  { t: 20, text: "And inside that — the same structure. Again." },
-  { t: 23, text: "The fractal. The structure repeats at every level." },
+  { t: 8.5, text: "Connecticut. Your home." },
+  { t: 11, text: "Putnam. Your town." },
+  { t: 13.5, text: "And inside your town, the same engine." },
+  { t: 16, text: "Polls. Ballots. Groups. Mandates. Beam." },
+  { t: 18.5, text: "Zoom deeper. The people at the center." },
+  { t: 20.5, text: "And inside that, the same structure. Again." },
+  { t: 23.5, text: "The fractal. The structure repeats at every level." },
 ];
 
 let t = 0;
@@ -384,10 +384,8 @@ function render() {
     }
   }
 
-  // Advance time — pause while TTS is speaking so narration never clips
-  const nextCue = narrationCues[lastCue + 1];
-  const waitingForTTS = ttsPlaying && nextCue && t >= nextCue.t - 0.1;
-  if (!waitingForTTS) {
+  // Advance time — freeze while TTS is speaking so narration never clips
+  if (!ttsPlaying) {
     t += 1 / 30;
   }
   if (t >= TOTAL) {
