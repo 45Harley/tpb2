@@ -764,8 +764,9 @@ let leafSpheres = [];
 
 function updateHint() {
   const clickable = spheres.filter(s => s.state === 'idle' && s.treeDef.children.length > 0);
-  if (clickable.length > 0) {
-    hintEl.textContent = 'Click a sphere to deconstruct. Drag to rearrange.';
+  const pending = spheres.filter(s => s.state === 'appearing' || s.state === 'splitting');
+  if (clickable.length > 0 || pending.length > 0) {
+    if (clickable.length > 0) hintEl.textContent = 'Click a sphere to deconstruct. Drag to rearrange.';
   } else {
     hintEl.textContent = '';
     if (!closingQueued) {
@@ -819,8 +820,9 @@ canvas.addEventListener('click', function(e) {
       phase = 'interactive'; phaseT = 0;
       const root = makeInteractiveSphere(DECONSTRUCT_TREE, W / 2, H / 2, 95);
       spheres.push(root);
-      narrate('Now, click to deconstruct.');
-      hintEl.textContent = 'Click Government to take it apart';
+      // Auto-start the first split — the click that got us here IS the deconstruct click
+      root.state = 'jitter'; root.stateT = 0;
+      narrate('Deconstructing.');
     }
     return;
   }
