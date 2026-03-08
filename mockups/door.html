@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPB — The Door</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  canvas { cursor: pointer; }
+  .narration {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 1.05rem;
+    color: #b0b0b0;
+    min-height: 36px;
+  }
+  .narration .speaker { color: #d4af37; font-weight: 600; }
+  .hint { margin-top: 6px; font-size: 0.7rem; color: #666; }
+</style>
+</head>
+<body>
+
+<canvas id="c" width="900" height="520"></canvas>
+<div class="narration">
+  <span class="speaker">Claudia:</span> <span id="nText">Click to approach the door.</span>
+</div>
+<div class="hint">Click to walk forward · Click the knob to open · Mouse to look around · Scroll to zoom · Click banner to enter</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const canvas = document.getElementById('c');
+const nText = document.getElementById('nText');
+const GOLD = 0xd4af37;
+
+// --- Voice ---
+let claudiaVoice = null;
+function pickVoice() {
+  const v = speechSynthesis.getVoices();
+  claudiaVoice = v.find(x => /female/i.test(x.name) && /en.US/i.test(x.lang))
+    || v.find(x => /zira|eva|samantha|karen|susan/i.test(x.name))
+    || v.find(x => x.lang && x.lang.startsWith('en'));
+}
+speechSynthesis.onvoiceschanged = pickVoice;
+pickVoice();
+
+let speaking = false;
+function speak(text, delay) {
+  if (delay) {
+    setTimeout(() => speak(text), delay);
+    return;
+  }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.85; u.pitch = 1.05;
+  if (claudiaVoice) u.voice = claudiaVoice;
+  u.onstart = () => { speaking = true; };
+  u.onend = () => { speaking = false; };
+  speechSynthesis.speak(u);
+}
+
+// Wait for current speech to finish, then speak next
+function speakAfter(text) {
+  const check = () => {
+    if (!speaking && !speechSynthesis.speaking) {
+      speak(text);
+    } else {
+      setTimeout(check, 200);
+    }
+  };
+  setTimeout(check, 300);
+}
+
+// --- Background crowd murmur (procedural via Web Audio) ---
+let audioCtx = null;
+let crowdGain = null;
+function startCrowdMurmur() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  crowdGain = audioCtx.createGain();
+  crowdGain.gain.value = 0;
+  crowdGain.connect(audioCtx.destination);
+
+  // Layer filtered noise streams to simulate distant crowd
+  for (let i = 0; i < 4; i++) {
+    const bufSize = audioCtx.sampleRate * 2;
+    const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let j = 0; j < bufSize; j++) {
+      data[j] = (Math.random() * 2 - 1) * 0.5;
+    }
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+
+    // Bandpass to sound like muffled voices
+    const bp = audioCtx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 300 + i * 200; // 300-900 Hz range
+    bp.Q.value = 0.8 + i * 0.3;
+
+    // Slow amplitude modulation for natural pulsing
+    const modGain = audioCtx.createGain();
+    const lfo = audioCtx.createOscillator();
+    lfo.frequency.value = 0.15 + i * 0.08;
+    const lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = 0.3;
+    lfo.connect(lfoGain);
+    lfoGain.connect(modGain.gain);
+
+    src.connect(bp);
+    bp.connect(modGain);
+    modGain.connect(crowdGain);
+    src.start(0, Math.random() * 2);
+    lfo.start();
+  }
+}
+
+function fadeCrowdIn(targetVol, duration) {
+  if (!crowdGain) return;
+  crowdGain.gain.linearRampToValueAtTime(targetVol, audioCtx.currentTime + duration);
+}
+
+// --- "America the Beautiful" — soft sine melody (public domain, MATERNA 1882) ---
+let melodyGain = null;
+function startMelody() {
+  if (!audioCtx) return;
+  melodyGain = audioCtx.createGain();
+  melodyGain.gain.value = 0;
+  melodyGain.connect(audioCtx.destination);
+
+  // Notes: [frequency, duration in beats] — key of C, tempo ~72bpm (0.83s per beat)
+  const C4=261.63, D4=293.66, E4=329.63, F4=349.23, G4=392, A4=440;
+  const melody = [
+    // "O beautiful for spacious skies"
+    [C4,1],[C4,1],[E4,1],[G4,1], [G4,1.5],[F4,0.5],[E4,1],[0,1],
+    // "For amber waves of grain"
+    [E4,1],[D4,1],[C4,1],[D4,1], [E4,2],[0,1],[0,1],
+    // "For purple mountain majesties"
+    [C4,1],[C4,1],[E4,1],[G4,1], [G4,1.5],[F4,0.5],[E4,1],[0,1],
+    // "Above the fruited plain"
+    [D4,1],[E4,1],[F4,1],[E4,1], [D4,2],[0,1],[0,1],
+    // "America! America!"
+    [E4,1],[E4,1],[E4,1],[F4,1], [G4,2],[G4,1],[A4,1],
+    // "God shed His grace on thee"
+    [A4,1],[G4,1],[F4,1],[E4,1], [F4,2],[0,1],[0,1],
+    // "And crown thy good with brotherhood"
+    [E4,1],[E4,1],[E4,1],[F4,1], [G4,1.5],[E4,0.5],[C4,1],[0,1],
+    // "From sea to shining sea"
+    [D4,1],[E4,1],[F4,0.5],[E4,0.5],[D4,1], [C4,3],[0,2],
+  ];
+
+  const beatLen = 0.85; // seconds per beat
+  let totalBeats = 0;
+  melody.forEach(n => totalBeats += n[1]);
+  const loopLen = totalBeats * beatLen;
+
+  function playCelloNote(freq, time, dur) {
+    // --- Primary: sawtooth (rich bowed-string harmonics) ---
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = freq;
+
+    // Vibrato — slow pitch wobble like a bowed string
+    const vibrato = audioCtx.createOscillator();
+    vibrato.type = 'sine';
+    vibrato.frequency.value = 5.5; // ~5.5Hz vibrato rate
+    const vibGain = audioCtx.createGain();
+    vibGain.gain.value = freq * 0.006; // subtle pitch bend
+    vibrato.connect(vibGain);
+    vibGain.connect(osc.frequency);
+
+    // Low-pass filter — tames harshness, gives warmth
+    const lpf = audioCtx.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.value = freq * 3; // allow first few harmonics through
+    lpf.Q.value = 0.7;
+
+    // Slow bow attack, sustained, gentle release
+    const env = audioCtx.createGain();
+    env.gain.setValueAtTime(0, time);
+    env.gain.linearRampToValueAtTime(0.7, time + 0.18); // slow bow attack
+    env.gain.setValueAtTime(0.7, time + dur - 0.2);
+    env.gain.linearRampToValueAtTime(0, time + dur); // bow lift
+
+    // --- Second voice: triangle one octave lower for body ---
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = 'triangle';
+    osc2.frequency.value = freq * 0.5;
+    const env2 = audioCtx.createGain();
+    env2.gain.setValueAtTime(0, time);
+    env2.gain.linearRampToValueAtTime(0.25, time + 0.2);
+    env2.gain.setValueAtTime(0.25, time + dur - 0.2);
+    env2.gain.linearRampToValueAtTime(0, time + dur);
+
+    // --- Third voice: sine at pitch for core tone ---
+    const osc3 = audioCtx.createOscillator();
+    osc3.type = 'sine';
+    osc3.frequency.value = freq;
+    const env3 = audioCtx.createGain();
+    env3.gain.setValueAtTime(0, time);
+    env3.gain.linearRampToValueAtTime(0.35, time + 0.15);
+    env3.gain.setValueAtTime(0.35, time + dur - 0.15);
+    env3.gain.linearRampToValueAtTime(0, time + dur);
+
+    // Wire up
+    osc.connect(lpf);
+    lpf.connect(env);
+    env.connect(melodyGain);
+    osc2.connect(env2);
+    env2.connect(melodyGain);
+    osc3.connect(env3);
+    env3.connect(melodyGain);
+
+    osc.start(time); osc.stop(time + dur + 0.05);
+    vibrato.start(time); vibrato.stop(time + dur + 0.05);
+    osc2.start(time); osc2.stop(time + dur + 0.05);
+    osc3.start(time); osc3.stop(time + dur + 0.05);
+  }
+
+  function scheduleLoop(startTime) {
+    let time = startTime;
+    melody.forEach(([freq, beats]) => {
+      if (freq > 0) {
+        const dur = beats * beatLen * 0.9;
+        playCelloNote(freq, time, dur);
+      }
+      time += beats * beatLen;
+    });
+
+    // Schedule next loop
+    setTimeout(() => scheduleLoop(audioCtx.currentTime + 0.5), (loopLen - 2) * 1000);
+  }
+
+  scheduleLoop(audioCtx.currentTime + 0.5);
+}
+
+function fadeMelodyIn(targetVol, duration) {
+  if (!melodyGain) return;
+  melodyGain.gain.linearRampToValueAtTime(targetVol, audioCtx.currentTime + duration);
+}
+
+// --- Three.js scene ---
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(900, 520);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a12);
+scene.fog = new THREE.Fog(0x0a0a12, 8, 25);
+
+const camera = new THREE.PerspectiveCamera(60, 900/520, 0.1, 100);
+camera.position.set(0, 1.6, 8);
+camera.lookAt(0, 1.5, 0);
+
+// --- Lighting ---
+const ambient = new THREE.AmbientLight(0x222233, 0.4);
+scene.add(ambient);
+
+const torch1 = new THREE.PointLight(0xff8833, 1.2, 10);
+torch1.position.set(-2.5, 3, 0.5);
+torch1.castShadow = true;
+scene.add(torch1);
+
+const torch2 = new THREE.PointLight(0xff8833, 1.2, 10);
+torch2.position.set(2.5, 3, 0.5);
+torch2.castShadow = true;
+scene.add(torch2);
+
+// Subtle gold light from above door
+const goldLight = new THREE.PointLight(0xd4af37, 0.5, 6);
+goldLight.position.set(0, 4, 0.3);
+scene.add(goldLight);
+
+// --- Procedural brick texture ---
+function makeBrickTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 512;
+  const c = cv.getContext('2d');
+
+  // Base color
+  c.fillStyle = '#5a3a2a';
+  c.fillRect(0, 0, 512, 512);
+
+  const bw = 64, bh = 28, gap = 3;
+  for (let row = 0; row < 20; row++) {
+    const offset = (row % 2) * (bw / 2);
+    for (let col = -1; col < 9; col++) {
+      const x = col * (bw + gap) + offset;
+      const y = row * (bh + gap);
+
+      // Brick color variation
+      const r = 140 + Math.random() * 40 - 20;
+      const g = 60 + Math.random() * 30 - 15;
+      const b = 40 + Math.random() * 20 - 10;
+      c.fillStyle = `rgb(${r},${g},${b})`;
+      c.fillRect(x, y, bw, bh);
+
+      // Slight texture noise
+      for (let i = 0; i < 20; i++) {
+        c.fillStyle = `rgba(0,0,0,${Math.random()*0.15})`;
+        c.fillRect(x + Math.random()*bw, y + Math.random()*bh, 2, 2);
+      }
+    }
+  }
+
+  // Mortar color
+  c.globalCompositeOperation = 'destination-over';
+  c.fillStyle = '#3a3a3a';
+  c.fillRect(0, 0, 512, 512);
+  c.globalCompositeOperation = 'source-over';
+
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(3, 3);
+  return tex;
+}
+
+function makeWoodTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 512;
+  const c = cv.getContext('2d');
+
+  // Base wood
+  c.fillStyle = '#6b4226';
+  c.fillRect(0, 0, 256, 512);
+
+  // Wood grain lines
+  for (let i = 0; i < 60; i++) {
+    const y = Math.random() * 512;
+    c.strokeStyle = `rgba(${80+Math.random()*40}, ${40+Math.random()*20}, ${20+Math.random()*15}, ${0.2+Math.random()*0.3})`;
+    c.lineWidth = 1 + Math.random() * 2;
+    c.beginPath();
+    c.moveTo(0, y);
+    for (let x = 0; x < 256; x += 20) {
+      c.lineTo(x, y + Math.sin(x * 0.05) * 3 + (Math.random()-0.5)*2);
+    }
+    c.stroke();
+  }
+
+  // Panel grooves
+  c.strokeStyle = 'rgba(0,0,0,0.3)';
+  c.lineWidth = 2;
+  c.strokeRect(30, 40, 196, 180);
+  c.strokeRect(30, 260, 196, 180);
+
+  // Panel highlights
+  c.strokeStyle = 'rgba(255,200,100,0.08)';
+  c.lineWidth = 1;
+  c.strokeRect(32, 42, 192, 176);
+  c.strokeRect(32, 262, 192, 176);
+
+  return new THREE.CanvasTexture(cv);
+}
+
+const brickTex = makeBrickTexture();
+const woodTex = makeWoodTexture();
+
+// --- Floor ---
+const floorGeo = new THREE.PlaneGeometry(20, 20);
+const floorMat = new THREE.MeshStandardMaterial({
+  color: 0x2a2a2a,
+  roughness: 0.9,
+  metalness: 0.1
+});
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = 0;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// --- Ceiling ---
+const ceiling = new THREE.Mesh(
+  new THREE.PlaneGeometry(20, 20),
+  new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 1 })
+);
+ceiling.rotation.x = Math.PI / 2;
+ceiling.position.y = 5;
+scene.add(ceiling);
+
+// --- Brick wall (3 pieces with doorway cutout) ---
+const wallMat = new THREE.MeshStandardMaterial({
+  map: brickTex,
+  roughness: 0.85,
+  metalness: 0.05,
+  bumpMap: brickTex,
+  bumpScale: 0.03,
+  side: THREE.DoubleSide
+});
+
+// Left of door: from x=-5 to x=-0.85, full height
+const wallLeft = new THREE.Mesh(new THREE.PlaneGeometry(4.15, 5), wallMat);
+wallLeft.position.set(-2.925, 2.5, 0);
+wallLeft.receiveShadow = true;
+scene.add(wallLeft);
+
+// Right of door: from x=0.85 to x=5, full height
+const wallRight = new THREE.Mesh(new THREE.PlaneGeometry(4.15, 5), wallMat.clone());
+wallRight.position.set(2.925, 2.5, 0);
+wallRight.receiveShadow = true;
+scene.add(wallRight);
+
+// Above door: from x=-0.85 to x=0.85, from y=3.2 to y=5
+const wallAbove = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.8), wallMat.clone());
+wallAbove.position.set(0, 4.1, 0);
+wallAbove.receiveShadow = true;
+scene.add(wallAbove);
+
+// Side walls
+const sideWallL = new THREE.Mesh(
+  new THREE.PlaneGeometry(16, 5),
+  wallMat.clone()
+);
+sideWallL.position.set(-5, 2.5, 4);
+sideWallL.rotation.y = Math.PI / 2;
+scene.add(sideWallL);
+
+const sideWallR = new THREE.Mesh(
+  new THREE.PlaneGeometry(16, 5),
+  wallMat.clone()
+);
+sideWallR.position.set(5, 2.5, 4);
+sideWallR.rotation.y = -Math.PI / 2;
+scene.add(sideWallR);
+
+// --- Door frame ---
+const frameMat = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.7 });
+
+// Left frame
+const frameL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 3.2, 0.15), frameMat);
+frameL.position.set(-0.85, 1.6, 0.08);
+scene.add(frameL);
+
+// Right frame
+const frameR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 3.2, 0.15), frameMat);
+frameR.position.set(0.85, 1.6, 0.08);
+scene.add(frameR);
+
+// Top frame
+const frameT = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.15, 0.15), frameMat);
+frameT.position.set(0, 3.2, 0.08);
+scene.add(frameT);
+
+// --- Door (pivots on left edge) ---
+const doorGroup = new THREE.Group();
+doorGroup.position.set(-0.75, 0, 0.08);
+
+const doorGeo = new THREE.BoxGeometry(1.5, 3, 0.08);
+const doorMat = new THREE.MeshStandardMaterial({
+  map: woodTex,
+  roughness: 0.6,
+  metalness: 0.05,
+  bumpMap: woodTex,
+  bumpScale: 0.02
+});
+const door = new THREE.Mesh(doorGeo, doorMat);
+door.position.set(0.75, 1.5, 0);
+door.castShadow = true;
+doorGroup.add(door);
+
+// --- Door knob ---
+const knobGeo = new THREE.SphereGeometry(0.06, 16, 16);
+const knobMat = new THREE.MeshStandardMaterial({
+  color: GOLD,
+  roughness: 0.2,
+  metalness: 0.9
+});
+const knob = new THREE.Mesh(knobGeo, knobMat);
+knob.position.set(1.3, 1.5, 0.06);
+doorGroup.add(knob);
+
+// Knob base plate
+const plateMat = new THREE.MeshStandardMaterial({ color: GOLD, roughness: 0.3, metalness: 0.85 });
+const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.03, 16), plateMat);
+plate.rotation.x = Math.PI / 2;
+plate.position.set(1.3, 1.5, 0.045);
+doorGroup.add(plate);
+
+scene.add(doorGroup);
+
+// --- Gold sign above door (large, readable) ---
+const signCv = document.createElement('canvas');
+signCv.width = 1024; signCv.height = 128;
+const signCtx = signCv.getContext('2d');
+signCtx.fillStyle = 'rgba(10,10,20,0.85)';
+signCtx.fillRect(0, 0, 1024, 128);
+// Gold border
+signCtx.strokeStyle = '#d4af37';
+signCtx.lineWidth = 4;
+signCtx.strokeRect(8, 8, 1008, 112);
+// Text
+signCtx.fillStyle = '#d4af37';
+signCtx.font = '700 56px Segoe UI, sans-serif';
+signCtx.textAlign = 'center';
+signCtx.textBaseline = 'middle';
+signCtx.fillText("The People's Branch", 512, 68);
+const signTex = new THREE.CanvasTexture(signCv);
+const signMesh = new THREE.Mesh(
+  new THREE.PlaneGeometry(3.5, 0.45),
+  new THREE.MeshBasicMaterial({ map: signTex, transparent: true })
+);
+signMesh.position.set(0, 3.7, 0.12);
+scene.add(signMesh);
+
+// --- Alcove: wood-paneled inner walls behind the door ---
+const alcoveWoodTex = makeWoodTexture();
+alcoveWoodTex.wrapS = alcoveWoodTex.wrapT = THREE.RepeatWrapping;
+const alcoveWoodMat = new THREE.MeshStandardMaterial({
+  map: alcoveWoodTex,
+  roughness: 0.65,
+  metalness: 0.05,
+  color: 0x8b6914
+});
+
+// Left alcove wall (z from 0 to -4, at x=-3)
+const alcoveL = new THREE.Mesh(new THREE.PlaneGeometry(4, 5), alcoveWoodMat);
+alcoveL.position.set(-3, 2.5, -2);
+alcoveL.rotation.y = Math.PI / 2;
+scene.add(alcoveL);
+
+// Right alcove wall
+const alcoveR = new THREE.Mesh(new THREE.PlaneGeometry(4, 5), alcoveWoodMat.clone());
+alcoveR.position.set(3, 2.5, -2);
+alcoveR.rotation.y = -Math.PI / 2;
+scene.add(alcoveR);
+
+// --- Declaration of Independence (left wall) ---
+function makeDocTexture(title, lines, accent) {
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 640;
+  const c = cv.getContext('2d');
+
+  // Parchment background
+  c.fillStyle = '#f4e8c1';
+  c.fillRect(0, 0, 512, 640);
+  // Aged edges
+  for (let i = 0; i < 200; i++) {
+    c.fillStyle = `rgba(180,150,100,${Math.random()*0.15})`;
+    c.fillRect(Math.random()*512, Math.random()*640, Math.random()*30+2, Math.random()*3+1);
+  }
+
+  // Gold ornamental border
+  c.strokeStyle = accent || '#8b6914';
+  c.lineWidth = 6;
+  c.strokeRect(16, 16, 480, 608);
+  c.strokeStyle = accent || '#8b6914';
+  c.lineWidth = 2;
+  c.strokeRect(24, 24, 464, 592);
+
+  // Title
+  c.fillStyle = '#000000';
+  c.font = '700 28px Georgia, serif';
+  c.textAlign = 'center';
+  c.fillText(title, 256, 60);
+
+  // Decorative line under title
+  c.strokeStyle = '#8b6914';
+  c.lineWidth = 1.5;
+  c.beginPath();
+  c.moveTo(100, 75); c.lineTo(412, 75);
+  c.stroke();
+
+  // Body text
+  c.font = '400 16px Georgia, serif';
+  c.fillStyle = '#1a0a00';
+  c.textAlign = 'left';
+  let y = 100;
+  lines.forEach(line => {
+    // Word wrap
+    const words = line.split(' ');
+    let current = '';
+    words.forEach(w => {
+      const test = current + w + ' ';
+      if (c.measureText(test).width > 440) {
+        c.fillText(current.trim(), 40, y);
+        y += 20;
+        current = w + ' ';
+      } else {
+        current = test;
+      }
+    });
+    if (current.trim()) { c.fillText(current.trim(), 40, y); y += 20; }
+    y += 8; // paragraph spacing
+  });
+
+  return new THREE.CanvasTexture(cv);
+}
+
+const doiTex = makeDocTexture('Declaration of Independence', [
+  'IN CONGRESS, July 4, 1776.',
+  'The unanimous Declaration of the thirteen united States of America,',
+  'When in the Course of human events, it becomes necessary for one people to dissolve the political bands which have connected them with another, and to assume among the powers of the earth, the separate and equal station to which the Laws of Nature and of Nature\'s God entitle them, a decent respect to the opinions of mankind requires that they should declare the causes which impel them to the separation.',
+  'We hold these truths to be self-evident, that all men are created equal, that they are endowed by their Creator with certain unalienable Rights, that among these are Life, Liberty and the pursuit of Happiness.',
+  'That to secure these rights, Governments are instituted among Men, deriving their just powers from the consent of the governed.',
+]);
+
+const doiFrame = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.2, 2.8),
+  new THREE.MeshBasicMaterial({ map: doiTex })
+);
+doiFrame.position.set(-2.99, 2.2, -2);
+doiFrame.rotation.y = Math.PI / 2;
+scene.add(doiFrame);
+
+// Gold frame border (left document)
+const doiBorder = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.4, 3.0),
+  new THREE.MeshStandardMaterial({ color: 0x8b6914, roughness: 0.4, metalness: 0.6 })
+);
+doiBorder.position.set(-2.995, 2.2, -2);
+doiBorder.rotation.y = Math.PI / 2;
+scene.add(doiBorder);
+
+// --- The Golden Rule (right wall) ---
+const grTex = makeDocTexture('The Golden Rule', [
+  'Total Population: 5.9 Billion',
+  '',
+  'Christianity: Do to others what you would have them do to you.',
+  'Judaism: Love your neighbor as yourself.',
+  'Islam: None of you truly believes until he loves for his brother what he loves for himself.',
+  'Hinduism: This is the sum of duty; do nothing to others which would cause you pain if done to you.',
+  'Buddhism: Hurt not others in ways that you yourself would find hurtful.',
+  'Confucianism: Do not impose on others what you do not wish for yourself.',
+  'Zoroastrianism: That nature alone is good which refrains from doing unto another whatsoever is not good for itself.',
+  'Taoism: Treat all with goodness and faithfulness.',
+  'Sikhism: Speak sweetly to all and never in anger.',
+  "Baha'i Faith: Choose for your neighbor that which you choose for yourself.",
+  '',
+  'Total Population: 5.9 Billion',
+], '#d4af37');
+
+const grFrame = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.2, 2.8),
+  new THREE.MeshBasicMaterial({ map: grTex })
+);
+grFrame.position.set(2.99, 2.2, -2);
+grFrame.rotation.y = -Math.PI / 2;
+scene.add(grFrame);
+
+// Gold frame border (right document)
+const grBorder = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.4, 3.0),
+  new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 0.7 })
+);
+grBorder.position.set(2.995, 2.2, -2);
+grBorder.rotation.y = -Math.PI / 2;
+scene.add(grBorder);
+
+// Alcove lights to illuminate the documents
+const docLightL = new THREE.PointLight(0xffeedd, 0.8, 5);
+docLightL.position.set(-2.5, 3.5, -2);
+scene.add(docLightL);
+const docLightR = new THREE.PointLight(0xffeedd, 0.8, 5);
+docLightR.position.set(2.5, 3.5, -2);
+scene.add(docLightR);
+
+// --- Torch sconces (simple geometry) ---
+function addTorch(x) {
+  const sconce = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.06, 0.3, 8),
+    new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.4 })
+  );
+  sconce.position.set(x, 2.8, 0.15);
+  scene.add(sconce);
+
+  // Flame (glowing sphere)
+  const flame = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xff6600 })
+  );
+  flame.position.set(x, 3.0, 0.15);
+  flame.name = x < 0 ? 'flameL' : 'flameR';
+  scene.add(flame);
+}
+addTorch(-2.5);
+addTorch(2.5);
+
+// --- State machine ---
+let state = 'idle';     // idle, introducing, approaching, arrived, opening, open, entering, looking, inside
+let camZ = 8;
+let doorAngle = 0;
+let lookPhase = 0;
+let lookNarration = 0;
+let lookX = 0, lookY = 1.8;
+let t = 0;
+
+// --- Mouse free-look + zoom (active in 'inside' state) ---
+canvas.addEventListener('mousemove', (e) => {
+  if (state !== 'inside') return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = ((e.clientX - rect.left) / 900) * 2 - 1;  // -1 to 1
+  const my = ((e.clientY - rect.top) / 520) * 2 - 1;
+  lookX = mx * 3;           // pan left/right up to 3 units
+  lookY = 1.8 - my * 1.5;   // pan up/down
+});
+
+canvas.addEventListener('wheel', (e) => {
+  if (state !== 'inside') return;
+  e.preventDefault();
+  camZ += e.deltaY > 0 ? 0.15 : -0.15;
+  camZ = Math.max(-4, Math.min(0, camZ));
+  camera.position.z = camZ;
+});
+
+// --- Raycaster for knob click ---
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / 900) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / 520) * 2 + 1;
+
+  if (state === 'idle') {
+    state = 'introducing';
+    nText.textContent = "Hi, my name is Claudia. I am your guide to The People's Branch.";
+    speak("Hi, my name is Claudia. I am your guide to The People's Branch.");
+  } else if (state === 'arrived') {
+    // Check if clicked on knob
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects([knob, plate, door]);
+    if (hits.length > 0) {
+      state = 'opening';
+      nText.textContent = "Opening the door...";
+      speak("Welcome to The People's Branch.");
+    }
+  } else if (state === 'open') {
+    // Walk through
+    state = 'entering';
+    nText.textContent = "Entering...";
+    speak("Step inside. Your voice matters here.");
+  } else if (state === 'inside') {
+    raycaster.setFromCamera(mouse, camera);
+    // Check documents first
+    const docHits = raycaster.intersectObjects([doiFrame, grFrame]);
+    if (docHits.length > 0) {
+      const hit = docHits[0].object;
+      if (hit === doiFrame) {
+        nText.textContent = "Opening the Declaration of Independence...";
+        speak("The Declaration of Independence.");
+        window.open('/usa/docs/declaration.php', '_blank');
+      } else if (hit === grFrame) {
+        nText.textContent = "Opening the Golden Rule...";
+        speak("The Golden Rule.");
+        window.open('/goldenrule.html', '_blank');
+      }
+      return;
+    }
+    // Click banner to go to TPB home
+    const hits = raycaster.intersectObjects([pbPlane, glowPlane]);
+    if (hits.length > 0) {
+      nText.textContent = "Entering The People's Branch...";
+      speak("Welcome home.");
+      setTimeout(() => { window.location.href = '/index.php'; }, 2000);
+    }
+  }
+});
+
+// --- Behind the door: PeoplesBranch.png on a lit plane ---
+const behindLight = new THREE.PointLight(0xd4af37, 0, 15);
+behindLight.position.set(0, 2, -2);
+scene.add(behindLight);
+
+const pbLoader = new THREE.TextureLoader();
+const pbTex = pbLoader.load('/0media/PeoplesBranch.png');
+const pbPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(4, 3),
+  new THREE.MeshBasicMaterial({ map: pbTex, transparent: false })
+);
+pbPlane.position.set(0, 1.8, -3);
+scene.add(pbPlane);
+
+// Glow frame around PB image
+const glowPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(4.3, 3.3),
+  new THREE.MeshBasicMaterial({ color: 0xd4af37, transparent: true, opacity: 0 })
+);
+glowPlane.position.set(0, 1.8, -3.01);
+scene.add(glowPlane);
+
+// --- Animate ---
+function animate() {
+  requestAnimationFrame(animate);
+  t += 0.016;
+
+  // Torch flicker
+  const flameL = scene.getObjectByName('flameL');
+  const flameR = scene.getObjectByName('flameR');
+  if (flameL) {
+    flameL.scale.setScalar(0.8 + Math.sin(t*15)*0.3 + Math.sin(t*23)*0.15);
+    torch1.intensity = 1.0 + Math.sin(t*12)*0.3;
+  }
+  if (flameR) {
+    flameR.scale.setScalar(0.8 + Math.sin(t*17+1)*0.3 + Math.sin(t*19)*0.15);
+    torch2.intensity = 1.0 + Math.sin(t*14+2)*0.3;
+  }
+
+  // State transitions
+  if (state === 'introducing') {
+    // Wait for Claudia's intro to finish, then start walking
+    if (!speaking && !speechSynthesis.speaking) {
+      state = 'approaching';
+      nText.textContent = "Walking forward...";
+      speak("Let me walk you to the door.");
+    }
+  }
+
+  if (state === 'approaching') {
+    camZ -= 0.02;  // slower walk
+    camera.position.z = camZ;
+    camera.lookAt(0, 1.5, 0);
+    if (camZ <= 3) {
+      state = 'arrived';
+      nText.textContent = "Click the door knob to open.";
+      speak("Click the knob.");
+    }
+  }
+
+  if (state === 'opening') {
+    doorAngle += 0.006;  // very slow door swing
+    doorGroup.rotation.y = -doorAngle;
+    behindLight.intensity = doorAngle * 2;
+    glowPlane.material.opacity = Math.min(0.25, doorAngle * 0.3);
+
+    // Start crowd murmur as door cracks open
+    if (doorAngle > 0.3 && !audioCtx) {
+      startCrowdMurmur();
+      fadeCrowdIn(0.06, 4);
+      startMelody();
+      fadeMelodyIn(0.04, 6);
+    }
+
+    if (doorAngle >= Math.PI * 0.45) {
+      state = 'open';
+      nText.textContent = "Come on in. Click to walk through.";
+      speak("Come on in.");
+      fadeCrowdIn(0.1, 3);
+      fadeMelodyIn(0.06, 3);
+    }
+  }
+
+  if (state === 'entering') {
+    camZ -= 0.008;  // very slow walk through doorway
+    camera.position.z = camZ;
+    camera.lookAt(0, 1.8, -3);
+    behindLight.intensity = Math.min(5, behindLight.intensity + 0.03);
+    glowPlane.material.opacity = Math.min(0.4, glowPlane.material.opacity + 0.003);
+    fadeCrowdIn(0.15, 2);
+
+    if (camZ <= -1.5) {
+      state = 'looking';
+      lookPhase = 0;
+      lookNarration = 0;
+      nText.textContent = "Looking around...";
+      speak("Welcome. Let me show you around.");
+      scene.fog.near = 20;
+      scene.fog.far = 50;
+      fadeCrowdIn(0.2, 3);
+      fadeMelodyIn(0.08, 4);
+    }
+  }
+
+  // Look around the room — slow, cinematic panning with narration
+  if (state === 'looking') {
+    lookPhase += 0.0018;  // ultra slow — full sequence ~55 seconds
+
+    // At 0.0018/frame @ 60fps:
+    // Phase 0-1 = ~9s, 1-1.8 = ~7s pause, 1.8-3.5 = ~16s pan, 3.5-4.3 = ~7s pause
+    // Phase 4.3-5.5 = ~11s up+center, 5.5-6.5 = ~9s settle, 6.5-7.5 = ~9s hold
+
+    // Phase 0-1: Slow pan left (~9s — speech "This is where the people gather" ~2.5s fits)
+    if (lookPhase < 1) {
+      const ease = Math.sin(lookPhase * Math.PI * 0.5);
+      camera.lookAt(ease * -2.5, 1.8, -3);
+      if (lookNarration === 0) {
+        lookNarration = 1;
+        nText.textContent = "The Declaration of Independence. Where it all began.";
+        speakAfter("The Declaration of Independence. Where it all began.");
+      }
+    }
+    // Phase 1-1.8: Pause left (~7s — silence, let crowd murmur breathe)
+    else if (lookPhase < 1.8) {
+      camera.lookAt(-2.5, 1.8, -3);
+    }
+    // Phase 1.8-3.5: Pan left to right (~16s — speech "Every voice matters" ~4s, rest is visual)
+    else if (lookPhase < 3.5) {
+      const p = (lookPhase - 1.8) / 1.7;
+      const ease = Math.sin(p * Math.PI);
+      camera.lookAt(-2.5 + ease * 5, 1.8, -3);
+      if (lookNarration === 1) {
+        lookNarration = 2;
+        nText.textContent = "The Golden Rule. The foundation of it all.";
+        speakAfter("The Golden Rule. Do to others what you would have them do to you. The foundation of it all.");
+      }
+    }
+    // Phase 3.5-4.3: Pause right (~7s — silence)
+    else if (lookPhase < 4.3) {
+      camera.lookAt(2.5, 1.8, -3);
+    }
+    // Phase 4.3-5.5: Pan back to center, look up (~11s — speech "The fractal" ~5s)
+    else if (lookPhase < 5.5) {
+      const p = (lookPhase - 4.3) / 1.2;
+      camera.lookAt(2.5 - p * 2.5, 1.8 + Math.sin(p * Math.PI) * 2, -3);
+      if (lookNarration === 2) {
+        lookNarration = 3;
+        nText.textContent = "The same structure at every level.";
+        speakAfter("The same structure at every level. The fractal of self governance.");
+      }
+    }
+    // Phase 5.5-6.5: Slowly settle back to PB image (~9s — silence)
+    else if (lookPhase < 6.5) {
+      const p = (lookPhase - 5.5);
+      const ly = 1.8 + (1 - p) * 0.5;
+      camera.lookAt(0, ly, -3);
+    }
+    // Phase 6.5-7.5: Hold on PB image (~9s — speech "To build" ~2.5s then silence)
+    else if (lookPhase < 7.5) {
+      camera.lookAt(0, 1.8, -3);
+      if (lookNarration === 3) {
+        lookNarration = 4;
+        nText.textContent = "To build a more perfect union.";
+        speakAfter("To build a more perfect union.");
+      }
+    }
+    else {
+      state = 'inside';
+      nText.textContent = "Welcome to The People's Branch. Click the banner to enter.";
+      speakAfter("Click the banner to enter The People's Branch.");
+      fadeCrowdIn(0.1, 4);
+      fadeMelodyIn(0.06, 4);
+    }
+  }
+
+  // Free look when inside — mouse controls camera direction
+  if (state === 'inside') {
+    camera.lookAt(
+      lookX + Math.sin(t * 0.2) * 0.02,
+      lookY + Math.sin(t * 0.15) * 0.01,
+      -3
+    );
+  }
+
+  renderer.render(scene, camera);
+}
+
+animate();
+</script>
+
+</body>
+</html>
