@@ -87,8 +87,12 @@ function buildEraSidebar() {
   makePanelZoomable(leftEl);
   makePanelZoomable(rightEl);
 
+  // Block wheel zoom on center panel so browser doesn't zoom page
   const centerEl = document.getElementById('center-panel');
-  if (centerEl) makePanelZoomable(centerEl);
+  if (centerEl) centerEl.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false });
 }
 
 // ========================================
