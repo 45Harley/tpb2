@@ -1734,7 +1734,7 @@ function updateInteractiveSphere(s, dt, now) {
     s.x = lerp(s.splitOriginX, s.targetX, ease);
     s.y = lerp(s.splitOriginY, s.targetY, ease);
     drawSphere(s.x, s.y, s.r * Math.min(1, ease), s.color, s.label, easeInOut(Math.min(1, progress * 2)), s.treeDef.children.length > 0);
-    if (progress >= 1) { s.state = 'idle'; s.x = s.targetX; s.y = s.targetY; }
+    if (progress >= 1) { s.state = 'idle'; s.x = s.targetX; s.y = s.targetY; updateHint(); }
   }
 }
 
