@@ -805,6 +805,12 @@ canvas.addEventListener('click', function(e) {
     closingQueued = false; dragging = null; waitingForClick = false;
     peopleBall = makeBall(W / 2, H / 2, 90, 'The People', GOLD);
     hintEl.textContent = ''; narrationEl.textContent = '';
+    // Plant gold seeds at the top edge
+    SEED_DEFS.filter(d => d.positive).forEach(d => {
+      const s = makeSeed(d);
+      s.state = 'dormant'; s.alpha = 0.3;
+      seeds.push(s);
+    });
     return;
   }
 

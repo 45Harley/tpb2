@@ -504,13 +504,21 @@ function drawWords() {
 let seeds = [];
 
 const SEED_DEFS = [
-  { label: 'Tyranny', color: '#ff6666', seedX: 60, seedY: H-20, sproutPhase: null, childSeed: null },
-  { label: 'Slavery', color: '#ff5555', seedX: 150, seedY: H-18, sproutPhase: 'swirl-civil-war',
-    childSeed: { label: 'Inequality', color: '#ff7777', seedX: 180, seedY: H-22, sproutPhase: 'swirl-civil-rights', childSeed: null }},
-  { label: 'Property over People', color: '#ffaa55', seedX: 300, seedY: H-20, sproutPhase: 'swirl-robber-barons', childSeed: null },
-  { label: 'Men Only', color: '#ffbb77', seedX: 450, seedY: H-18, sproutPhase: 'swirl-suffrage', childSeed: null },
-  { label: "King's Rule", color: '#ff8888', seedX: 600, seedY: H-20, sproutPhase: null, childSeed: null },
-  { label: 'Landed Gentry', color: '#ffcc88', seedX: 750, seedY: H-18, sproutPhase: null, childSeed: null },
+  // Dark seeds (negative — red tones, bottom edge)
+  { label: 'Tyranny', color: '#ff6666', seedX: 60, seedY: H-20, sproutPhase: null, childSeed: null, positive: false, tooltip: 'The impulse to control others by force' },
+  { label: 'Slavery', color: '#ff5555', seedX: 150, seedY: H-18, sproutPhase: 'swirl-civil-war', positive: false, tooltip: 'The original sin — owning human beings',
+    childSeed: { label: 'Inequality', color: '#ff7777', seedX: 180, seedY: H-22, sproutPhase: 'swirl-civil-rights', childSeed: null, positive: false, tooltip: 'The scar that slavery left behind' }},
+  { label: 'Property over People', color: '#ffaa55', seedX: 300, seedY: H-20, sproutPhase: 'swirl-robber-barons', childSeed: null, positive: false, tooltip: 'Wealth valued above human dignity' },
+  { label: 'Men Only', color: '#ffbb77', seedX: 450, seedY: H-18, sproutPhase: 'swirl-suffrage', childSeed: null, positive: false, tooltip: 'Half the people excluded from self-governance' },
+  { label: "King's Rule", color: '#ff8888', seedX: 600, seedY: H-20, sproutPhase: null, childSeed: null, positive: false, tooltip: 'One person ruling over many — the old way' },
+  { label: 'Landed Gentry', color: '#ffcc88', seedX: 750, seedY: H-18, sproutPhase: null, childSeed: null, positive: false, tooltip: 'Only property owners get a voice' },
+  // Gold seeds (positive — planted at founding, bloom across eras)
+  { label: 'Unselfish', color: '#f0d060', seedX: 100, seedY: 18, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Service to others above self-interest' },
+  { label: 'Golden Rule', color: '#e8c840', seedX: 250, seedY: 20, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Do to others as you would have them do to you' },
+  { label: 'Education', color: '#f0d060', seedX: 400, seedY: 18, sproutPhase: null, childSeed: null, positive: true, tooltip: 'An informed citizenry is the foundation of democracy' },
+  { label: 'Common Good', color: '#e8c840', seedX: 550, seedY: 20, sproutPhase: null, childSeed: null, positive: true, tooltip: 'What benefits everyone, not just the few' },
+  { label: 'Truth', color: '#ffe088', seedX: 700, seedY: 18, sproutPhase: null, childSeed: null, positive: true, tooltip: 'The light that darkness cannot overcome' },
+  { label: 'Love', color: '#f0d060', seedX: 830, seedY: 20, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Love is the liberator' },
 ];
 
 function makeSeed(def) {
@@ -521,6 +529,8 @@ function makeSeed(def) {
     state: 'dormant',
     sproutPhase: def.sproutPhase,
     childSeed: def.childSeed,
+    positive: def.positive || false,
+    tooltip: def.tooltip || '',
     sproutT: 0,
   };
 }
@@ -559,6 +569,8 @@ function updateSeeds(dt) {
   });
 }
 
+let hoveredSeed = null;
+
 function drawSeeds() {
   seeds.forEach(s => {
     if (s.alpha < 0.02 || s.state === 'popped') return;
@@ -571,6 +583,17 @@ function drawSeeds() {
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 2.5, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = s.color;
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+
+    // Dormant label — small text near the seed
+    if (s.state === 'dormant') {
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.font = '400 11px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = s.color; ctx.textAlign = 'center';
+      ctx.fillText(s.label, s.x, s.positive ? s.y + 16 : s.y - 10);
+      ctx.restore();
+    }
+
     if (s.state === 'sprouting') {
       const labelSize = Math.min(22, 8 + s.sproutT * 8);
       const labelAlpha = Math.min(1, s.sproutT * 0.6);
@@ -585,6 +608,29 @@ function drawSeeds() {
     }
     ctx.restore();
   });
+
+  // Tooltip for hovered seed
+  if (hoveredSeed && hoveredSeed.tooltip && hoveredSeed.state !== 'popped') {
+    const s = hoveredSeed;
+    const tipY = s.positive ? s.y + 30 : s.y - 28;
+    ctx.save();
+    // Background pill
+    ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
+    const tw = ctx.measureText(s.tooltip).width + 16;
+    const tx = Math.max(tw/2 + 5, Math.min(W - tw/2 - 5, s.x));
+    ctx.fillStyle = '#222';
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.roundRect(tx - tw/2, tipY - 10, tw, 22, 4);
+    ctx.fill();
+    ctx.strokeStyle = s.color; ctx.lineWidth = 1; ctx.globalAlpha = 0.6;
+    ctx.stroke();
+    // Text
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#ddd'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(s.tooltip, tx, tipY + 1);
+    ctx.restore();
+  }
 }
 
 function sproutSeedsForPhase(phaseName) {
@@ -837,6 +883,23 @@ function endFrame(now) {
   drawParticles();
   requestAnimationFrame(render);
 }
+
+// Seed tooltip hover detection
+canvas.addEventListener('mousemove', function(e) {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (W / rect.width);
+  const my = (e.clientY - rect.top) * (H / rect.height);
+  hoveredSeed = null;
+  for (let i = seeds.length - 1; i >= 0; i--) {
+    const s = seeds[i];
+    if (s.state === 'popped' || s.alpha < 0.02) continue;
+    const dx = mx - s.x, dy = my - s.y;
+    if (Math.sqrt(dx*dx + dy*dy) < Math.max(s.r * 3, 15)) {
+      hoveredSeed = s;
+      break;
+    }
+  }
+});
 
 // ========================================
 // SHARED HTML TEMPLATE
