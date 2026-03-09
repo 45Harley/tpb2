@@ -317,39 +317,15 @@ function render(now) {
   const dt = beginFrame(now);
   updateTimeline(phase);
 
-  // --- Opening — MBE Quote (two lines, sequential) ---
+  // --- Opening — MBE Quote (fade in) ---
   if (phase === 'opening') {
     phaseT += dt;
-    const line1 = 'The focus of ideas';
-    const line2 = 'brings light instantaneously,';
-    const line3 = 'whereas a thousand years of human doctrines,';
-    const line4 = 'hypotheses, and vague conjectures';
-    const line5 = 'emit no such effulgence.';
-
-    // Line 1 types in first
-    const line1Chars = Math.min(line1.length, Math.floor(phaseT * 6));
-    const line1Done = line1Chars >= line1.length;
-    const line1DoneT = line1.length / 6; // time when line1 finishes
-
-    // Lines 2-5 start after line1 + 1s pause
-    const subStartT = line1DoneT + 1.0;
-    const subText = line2 + ' ' + line3 + ' ' + line4 + ' ' + line5;
-    const subChars = line1Done ? Math.min(subText.length, Math.floor((phaseT - subStartT) * 10)) : 0;
-    const allDone = subChars >= subText.length;
-
-    // Scale grows from small to full
-    const scaleT = Math.min(1, phaseT / 3.5);
-    const scale = 0.5 + easeOutBack(scaleT) * 0.5;
-    const fontSize = 20 + scale * 14; // 20 → 34px
-
-    // Glow intensifies as text completes
-    const glowIntensity = easeInOut(Math.min(1, line1Chars / line1.length));
+    const fadeIn = easeInOut(Math.min(1, phaseT / 2.5));
 
     // Light green "The New World" sphere — breathing in center
-    const sphereAlpha = easeInOut(Math.min(1, phaseT * 0.8));
     const breathe = Math.sin(phaseT * 1.5) * 5;
     ctx.save();
-    ctx.globalAlpha = sphereAlpha * 0.7;
+    ctx.globalAlpha = fadeIn * 0.7;
     const sr = 95 + breathe;
     const grd = ctx.createRadialGradient(W/2, H/2, sr*0.1, W/2, H/2, sr);
     grd.addColorStop(0, '#a8e6a0');
@@ -362,41 +338,34 @@ function render(now) {
     ctx.fillText('The New World', W/2, H/2);
     ctx.restore();
 
-    // Header — "How darkness is destroyed..." above sphere
-    const headerAlpha = easeInOut(Math.min(1, phaseT * 1.2));
+    // Header
     ctx.save();
-    ctx.globalAlpha = headerAlpha * 0.6;
+    ctx.globalAlpha = fadeIn * 0.6;
     ctx.font = '400 28px Segoe UI, system-ui, sans-serif';
     ctx.fillStyle = '#b0b0b0'; ctx.textAlign = 'center';
     ctx.fillText('How darkness is destroyed...', W/2, 55);
     ctx.restore();
 
-    // Line 1 — big, gold, italic
-    const bigFont = 28 + scale * 26; // 28 → 54px
+    // Main quote — big, gold
     ctx.save();
-    ctx.translate(W/2, H/2 - sr - 50);
-    ctx.scale(scale, scale);
-    ctx.globalAlpha = Math.min(1, phaseT * 1.5) * 0.9;
-    ctx.font = 'italic ' + bigFont + 'px Segoe UI, system-ui, sans-serif';
+    ctx.globalAlpha = fadeIn * 0.9;
+    ctx.font = 'italic 48px Segoe UI, system-ui, sans-serif';
     ctx.fillStyle = GOLD; ctx.textAlign = 'center';
-    ctx.shadowColor = GOLD; ctx.shadowBlur = glowIntensity * 30;
-    ctx.fillText('"' + line1.slice(0, line1Chars) + (line1Done ? '"' : ''), 0, 0);
+    ctx.shadowColor = GOLD; ctx.shadowBlur = fadeIn * 25;
+    ctx.fillText('"The focus of ideas"', W/2, H/2 - sr - 30);
     ctx.shadowBlur = 0;
     ctx.restore();
 
-    // Lines 2-5 — below sphere, measureText wrapping to fit canvas
-    if (subChars > 0) {
-      const subAlpha = easeInOut(Math.min(1, (phaseT - subStartT) * 0.8));
-      const visible = subText.slice(0, Math.max(0, subChars));
-      const maxW = W - 60; // 30px margin each side
-
+    // Sub-quote — below sphere, measureText wrapping
+    const subFade = easeInOut(Math.min(1, Math.max(0, (phaseT - 1.5) / 2)));
+    if (subFade > 0) {
+      const fullText = 'brings light instantaneously, whereas a thousand years of human doctrines, hypotheses, and vague conjectures emit no such effulgence.';
+      const maxW = W - 80;
       ctx.save();
-      ctx.globalAlpha = subAlpha * 0.8;
+      ctx.globalAlpha = subFade * 0.8;
       ctx.font = 'italic 24px Segoe UI, system-ui, sans-serif';
       ctx.fillStyle = '#ccc'; ctx.textAlign = 'center';
-
-      // Word-wrap using measureText
-      const words = visible.split(' ');
+      const words = fullText.split(' ');
       const lines = []; let cur = '';
       words.forEach(w => {
         const test = cur ? cur + ' ' + w : w;
@@ -404,18 +373,16 @@ function render(now) {
         else cur = test;
       });
       if (cur) lines.push(cur);
-
       lines.forEach((ln, i) => {
-        ctx.fillText(ln, W/2, H/2 + sr + 30 + i * 30);
+        ctx.fillText(ln, W/2, H/2 + sr + 25 + i * 30);
       });
       ctx.restore();
     }
 
-    // Attribution at bottom
-    if (allDone) {
-      const attrDelay = subStartT + subText.length / 10;
-      const attrAlpha = easeInOut(Math.min(1, (phaseT - attrDelay) * 1.5));
-      ctx.save(); ctx.globalAlpha = attrAlpha * 0.5;
+    // Attribution
+    const attrFade = easeInOut(Math.min(1, Math.max(0, (phaseT - 3) / 2)));
+    if (attrFade > 0) {
+      ctx.save(); ctx.globalAlpha = attrFade * 0.5;
       ctx.font = '400 18px Segoe UI, system-ui, sans-serif';
       ctx.fillStyle = '#ccc'; ctx.textAlign = 'center';
       ctx.fillText('— Mary Baker Eddy, Science and Health 504:23', W/2, H - 25);
