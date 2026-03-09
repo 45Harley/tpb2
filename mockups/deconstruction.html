@@ -638,8 +638,8 @@ function updateWords(dt) {
         spawnParticles(w.x, w.y, w.color, 6);
       }
     }
-    // Repulsion — words push each other apart so they don't clump
-    floatingWords.forEach(other => {
+    // Repulsion — words push each other apart so they don't clump (skip orbiting words)
+    if (!w.orbiting) floatingWords.forEach(other => {
       if (other === w) return;
       const dx = w.x - other.x, dy = w.y - other.y;
       const distW = Math.sqrt(dx*dx + dy*dy) || 1;
@@ -1677,9 +1677,9 @@ function render(now) {
     phaseT += dt;
 
     // Spawn tech words from all different edges — inflow toward center
-    if (phaseT < 5) {
-      const spawnInterval = 5 / TECH_WORDS.length;
-      const shouldHave = Math.floor(phaseT / spawnInterval);
+    if (phaseT < 6) {
+      const spawnInterval = 5 / (TECH_WORDS.length - 1);
+      const shouldHave = Math.min(TECH_WORDS.length, Math.floor(phaseT / spawnInterval) + 1);
       while (floatingWords.length < shouldHave && floatingWords.length < TECH_WORDS.length) {
         const def = TECH_WORDS[floatingWords.length];
         const w = makeWord(def.label, false, def.color);
