@@ -623,8 +623,9 @@ function updateWords(dt) {
     }
     // Attacking words — drift toward center aggressively
     if (w.attacking && (w.phase === 'drifting' || w.phase === 'entering')) {
-      w.vx += (W/2 - w.x) * 0.15 * dt;
-      w.vy += (H/2 - w.y) * 0.15 * dt;
+      const atkForce = w.positive ? 0.06 : 0.12; // positive words already have 0.08 drift
+      w.vx += (W/2 - w.x) * atkForce * dt;
+      w.vy += (H/2 - w.y) * atkForce * dt;
       // Check proximity to government sphere center — melt when close
       const d = Math.sqrt((w.x - W/2)**2 + (w.y - H/2)**2);
       if (d < 110 && w.phase !== 'melting') {
@@ -1954,7 +1955,7 @@ function render(now) {
 
     // Continuously spawn fight words from all edges — the people's answer
     fightSpawnT += dt;
-    if (fightSpawnT > 0.35 && floatingWords.length < 25) {
+    if (fightSpawnT > 0.7 && floatingWords.length < 25) {
       fightSpawnT = 0;
       const def = FIGHT_WORDS[Math.floor(Math.random() * FIGHT_WORDS.length)];
       const w = makeWord(def.label, true, def.color);
