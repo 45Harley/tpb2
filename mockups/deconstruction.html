@@ -1713,21 +1713,56 @@ function render(now) {
       narrate('A new kind of power. Not concentrated. Connected.');
     }
 
-  // --- ACT III / Phase 3.2: People Power — Sphere cracks from inside ---
+  // --- ACT III / Phase 3.2: People Power — Sphere cracks from inside, words radiate out ---
   } else if (phase === 'people-power') {
     drawTitle('People Power', 0.5);
     phaseT += dt;
-    const progress = Math.min(1, phaseT / 7);
+    const progress = Math.min(1, phaseT / 10);
 
-    if (progress < 0.4) {
+    const POWER_WORDS = [
+      { label: 'Love', color: '#ffe066', size: 22 },
+      { label: 'Truth', color: '#ffe077', size: 20 },
+      { label: 'Life', color: '#ffdd55', size: 21 },
+      { label: 'Spirit', color: '#ffd044', size: 19 },
+      { label: 'Soul', color: '#ffcc55', size: 20 },
+      { label: 'Mind', color: '#ffe088', size: 18 },
+      { label: 'Justice', color: '#ffdd66', size: 20 },
+      { label: 'Laws', color: '#ffcc44', size: 17 },
+    ];
+
+    // Spawn words from center radiating outward — power bursting from within
+    if (phaseT < 5) {
+      const spawnInterval = 5 / POWER_WORDS.length;
+      const shouldHave = Math.floor(phaseT / spawnInterval);
+      while (floatingWords.length < shouldHave && floatingWords.length < POWER_WORDS.length) {
+        const def = POWER_WORDS[floatingWords.length];
+        const angle = (floatingWords.length / POWER_WORDS.length) * Math.PI * 2;
+        const w = makeWord(def.label, true, def.color);
+        w.x = W/2; w.y = H/2;
+        w.vx = Math.cos(angle) * 25;
+        w.vy = Math.sin(angle) * 20;
+        w.fontSize = def.size;
+        floatingWords.push(w);
+      }
+    }
+
+    // Words pulse with warm glow
+    if (phaseT > 3) {
+      floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
+    }
+
+    updateWords(dt);
+    drawWords();
+
+    if (progress < 0.3) {
       // Sphere cracks from inside — golden light radiating out
-      const crackIntensity = progress / 0.4;
+      const crackIntensity = progress / 0.3;
       drawSphere(W/2, H/2, 95, GOLD, 'Constitutional Government', 1 - crackIntensity * 0.3);
       // Golden light through cracks
       ctx.save(); ctx.globalAlpha = crackIntensity * 0.6;
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2;
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
         ctx.beginPath();
         ctx.moveTo(W/2 + Math.cos(angle) * 30, H/2 + Math.sin(angle) * 30);
         ctx.lineTo(W/2 + Math.cos(angle) * 95 * crackIntensity, H/2 + Math.sin(angle) * 95 * crackIntensity);
@@ -1736,7 +1771,7 @@ function render(now) {
       ctx.restore();
     } else {
       // Small connected spheres emerge
-      const emergeT = (progress - 0.4) / 0.6;
+      const emergeT = (progress - 0.3) / 0.7;
       const ease = easeOutBack(Math.min(1, emergeT));
       const nodeCount = 12;
       const nodes = [];
