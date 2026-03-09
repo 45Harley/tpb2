@@ -1743,37 +1743,58 @@ function render(now) {
     phaseT += dt;
 
     const THREAT_WORDS = [
-      { label: 'Kings', color: '#ff4444' }, { label: 'Mobs', color: '#ff5533' },
-      { label: 'Gangs', color: '#ff6644' }, { label: 'Wars', color: '#ff3333' },
-      { label: 'Tyranny', color: '#ff5555' }, { label: 'Corruption', color: '#ff7744' },
-      { label: 'Oligarchy', color: '#ff6655' }, { label: 'Apathy', color: '#ff8866' },
+      { label: 'Kings', color: '#ffaa33', size: 18 },
+      { label: 'Mobs', color: '#ff9922', size: 16 },
+      { label: 'Gangs', color: '#ffbb44', size: 20 },
+      { label: 'Wars', color: '#ff8811', size: 22 },
+      { label: 'Tyranny', color: '#ffcc55', size: 17 },
+      { label: 'Corruption', color: '#ffaa22', size: 19 },
+      { label: 'Oligarchy', color: '#ffbb33', size: 16 },
+      { label: 'Apathy', color: '#ffcc44', size: 15 },
+      { label: 'Fear', color: '#ff9933', size: 14 },
+      { label: 'FEAR', color: '#ffbb22', size: 28 },
+      { label: 'fear', color: '#ffaa44', size: 11 },
+      { label: 'F E A R', color: '#ffdd55', size: 24 },
+      { label: 'FEAR', color: '#ff8822', size: 20 },
     ];
 
     // Spawn threat words drifting in from edges
-    if (phaseT < 5) {
-      const spawnInterval = 5 / THREAT_WORDS.length;
+    if (phaseT < 7) {
+      const spawnInterval = 7 / THREAT_WORDS.length;
       const shouldHave = Math.floor(phaseT / spawnInterval);
       while (floatingWords.length < shouldHave && floatingWords.length < THREAT_WORDS.length) {
         const def = THREAT_WORDS[floatingWords.length];
-        floatingWords.push(makeWord(def.label, false, def.color));
+        const w = makeWord(def.label, false, def.color);
+        w.fontSize = def.size;
+        floatingWords.push(w);
       }
     }
 
-    // After 6s, words start shrinking
-    if (phaseT > 6) {
+    // Drum-beat pulse — all words throb in unison like a heartbeat
+    const drumBeat = Math.pow(Math.max(0, Math.sin(phaseT * 2.5)), 4); // sharp pulse
+    floatingWords.forEach(w => {
+      if (w.phase === 'drifting' || w.phase === 'entering') {
+        w.targetAlpha = 0.6 + drumBeat * 0.4;
+        w.fontSize = (THREAT_WORDS.find(t => t.label === w.label)?.size || 16) * (1 + drumBeat * 0.25);
+      }
+    });
+
+    // After 8s, words start shrinking
+    if (phaseT > 8) {
       floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'shrinking'; });
     }
 
     updateWords(dt);
     drawWords();
 
-    // Government sphere under pressure — subtle jitter
-    const breathe = Math.sin(now / 400) * 4;
-    const jx = (Math.random()-0.5) * (phaseT > 3 ? 6 : 2);
-    const jy = (Math.random()-0.5) * (phaseT > 3 ? 6 : 2);
-    drawSphere(W/2 + jx, H/2 + jy, 95 + breathe, GOLD, 'Constitutional Government', 0.7);
+    // Government sphere under pressure — jitters with the drum beat
+    const jitterAmt = 2 + drumBeat * 10;
+    const jx = (Math.random()-0.5) * jitterAmt;
+    const jy = (Math.random()-0.5) * jitterAmt;
+    const sphereR = 95 + drumBeat * 5;
+    drawSphere(W/2 + jx, H/2 + jy, sphereR, GOLD, 'Constitutional Government', 0.6 + drumBeat * 0.2);
 
-    if (phaseT > 8 && !waitingForClick) {
+    if (phaseT > 10 && !waitingForClick) {
       waitingForClick = true;
       hintEl.textContent = 'Click to continue';
       narrate('No kings. No mobs. No gangs. No wars.');
