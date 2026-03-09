@@ -505,6 +505,84 @@ function popSeed(label, dropChild) {
 }
 
 // ========================================
+// NEBULA BLOBS — fuzzy idea clusters
+// ========================================
+let nebulae = [];
+
+function makeNebula(x, y, r, color, label) {
+  return {
+    x, y, r, color, label, alpha: 0,
+    targetX: x, targetY: y, targetR: r,
+    lobes: Array.from({length: 5}, () => ({
+      angle: Math.random() * Math.PI * 2,
+      dist: 0.3 + Math.random() * 0.5,
+      size: 0.4 + Math.random() * 0.4,
+      speed: 0.3 + Math.random() * 0.4,
+    })),
+    phase: 'forming', // forming | stable | condensing
+    life: 0,
+  };
+}
+
+function updateNebulae(dt) {
+  nebulae.forEach(n => {
+    n.life += dt;
+    if (n.phase === 'forming') {
+      n.alpha = Math.min(0.6, n.life * 0.3);
+      n.r = n.targetR * Math.min(1, n.life * 0.5);
+      if (n.alpha >= 0.6) n.phase = 'stable';
+    } else if (n.phase === 'condensing') {
+      n.x = lerp(n.x, n.targetX, dt * 1.5);
+      n.y = lerp(n.y, n.targetY, dt * 1.5);
+      n.r = Math.max(10, n.r - dt * 30);
+      // Lobes shrink as it condenses
+      n.lobes.forEach(l => { l.dist = Math.max(0.05, l.dist - dt * 0.3); l.size = Math.max(0.1, l.size - dt * 0.2); });
+    }
+  });
+}
+
+function drawNebulae(now) {
+  nebulae.forEach(n => {
+    if (n.alpha < 0.02) return;
+    ctx.save();
+    ctx.globalAlpha = n.alpha;
+
+    // Core cloud
+    const coreGrad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
+    coreGrad.addColorStop(0, n.color + '44');
+    coreGrad.addColorStop(0.6, n.color + '22');
+    coreGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI*2); ctx.fill();
+
+    // Undulating lobes (layered sine-wave approximation of organic edges)
+    n.lobes.forEach(l => {
+      const lx = n.x + Math.cos(l.angle + now/1000 * l.speed) * n.r * l.dist;
+      const ly = n.y + Math.sin(l.angle + now/1000 * l.speed) * n.r * l.dist;
+      const lr = n.r * l.size;
+      const lobeGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, lr);
+      lobeGrad.addColorStop(0, n.color + '33');
+      lobeGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = lobeGrad;
+      ctx.beginPath(); ctx.arc(lx, ly, lr, 0, Math.PI*2); ctx.fill();
+    });
+
+    // Label
+    if (n.label && n.r > 20) {
+      ctx.globalAlpha = n.alpha * 0.8;
+      ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ddd';
+      ctx.shadowColor = n.color; ctx.shadowBlur = 6;
+      ctx.fillText(n.label, n.x, n.y);
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.restore();
+  });
+}
+
+// ========================================
 // LAYOUT — organized, bigger spheres
 // ========================================
 
@@ -576,6 +654,7 @@ function render(now) {
   drawGrid();
   updateParticles(dt);
   updateSeeds(dt);
+  updateNebulae(dt);
 
   // =====================================================================
   // ACT I: THE FOUNDING
@@ -864,6 +943,7 @@ function render(now) {
   }
 
   drawSeeds();
+  drawNebulae(now);
   drawParticles();
   requestAnimationFrame(render);
 }
