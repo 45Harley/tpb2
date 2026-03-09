@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>More Perfect — Type Size Guide</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0d1a; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; }
+  canvas { border-radius: 8px; margin-top: 20px; }
+  .hint { margin-top: 12px; color: #d4af37; font-size: 14px; }
+</style>
+</head>
+<body>
+<canvas id="c" width="900" height="480"></canvas>
+<div class="hint">Scroll wheel to cycle sizes. Click a row to toggle bold/italic.</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 900, H = 480;
+const GOLD = '#d4af37';
+const BG = '#0d0d1a';
+
+const roles = [
+  { label: 'Hero Quote', example: '"The focus of ideas"', size: 48, color: GOLD, style: 'italic' },
+  { label: 'Section Title', example: 'Civil War — 1861–1870', size: 28, color: '#ffffff', style: '600' },
+  { label: 'Floating Words', example: 'Liberty  Slavery  Abolition  Freedom', size: 30, color: '#f0d060', style: '600' },
+  { label: 'Body Quote', example: '"Man is properly self-governed only when..."', size: 22, color: '#cccccc', style: 'italic' },
+  { label: 'Subtitle', example: 'We the People  ·  circa 1750', size: 18, color: '#b0b0b0', style: '400' },
+  { label: 'Attribution', example: '— Mary Baker Eddy, Science and Health 106:9', size: 15, color: '#999999', style: '400' },
+  { label: 'Sphere Label', example: 'Constitutional Government', size: 22, color: '#ffffff', style: '700' },
+  { label: 'Hint Text', example: 'Click to continue →', size: 14, color: GOLD, style: '400' },
+];
+
+let selected = -1;
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, W, H);
+
+  // Title
+  ctx.save();
+  ctx.font = '700 16px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#666';
+  ctx.textAlign = 'left';
+  ctx.fillText('TYPE SIZE GUIDE — 900×480 canvas', 20, 25);
+  ctx.textAlign = 'right';
+  ctx.fillText('scroll wheel on row to resize', W - 20, 25);
+  ctx.restore();
+
+  const startY = 55;
+  const rowH = (H - startY - 10) / roles.length;
+
+  roles.forEach((r, i) => {
+    const y = startY + i * rowH;
+    const centerY = y + rowH / 2;
+
+    // Hover highlight
+    if (i === selected) {
+      ctx.save();
+      ctx.fillStyle = '#1a1a3e';
+      ctx.fillRect(0, y, W, rowH);
+      ctx.restore();
+    }
+
+    // Divider
+    ctx.save();
+    ctx.strokeStyle = '#222';
+    ctx.beginPath(); ctx.moveTo(20, y); ctx.lineTo(W - 20, y); ctx.stroke();
+    ctx.restore();
+
+    // Role label + size (left column)
+    ctx.save();
+    ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#888';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(r.label, 20, centerY - 8);
+    ctx.font = '700 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = GOLD;
+    ctx.fillText(r.size + 'px', 20, centerY + 10);
+    ctx.restore();
+
+    // Example text (right area)
+    ctx.save();
+    ctx.font = r.style + ' ' + r.size + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = r.color;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    // Truncate if needed
+    let text = r.example;
+    const maxW = W - 180;
+    while (ctx.measureText(text).width > maxW && text.length > 3) {
+      text = text.slice(0, -4) + '...';
+    }
+    ctx.fillText(text, 160, centerY);
+    ctx.restore();
+  });
+}
+
+// Track mouse for hover
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const y = (e.clientY - rect.top) * (H / rect.height);
+  const startY = 55;
+  const rowH = (H - startY - 10) / roles.length;
+  const idx = Math.floor((y - startY) / rowH);
+  selected = (idx >= 0 && idx < roles.length) ? idx : -1;
+  draw();
+});
+
+// Scroll to resize
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (selected < 0) return;
+  roles[selected].size += e.deltaY < 0 ? 1 : -1;
+  roles[selected].size = Math.max(8, Math.min(72, roles[selected].size));
+  draw();
+}, { passive: false });
+
+// Click to cycle style
+canvas.addEventListener('click', () => {
+  if (selected < 0) return;
+  const styles = ['400', '600', '700', 'italic', 'italic 600'];
+  const cur = roles[selected].style;
+  const idx = styles.indexOf(cur);
+  roles[selected].style = styles[(idx + 1) % styles.length];
+  draw();
+});
+
+draw();
+</script>
+</body>
+</html>
