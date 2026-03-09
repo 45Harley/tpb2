@@ -399,11 +399,15 @@ const CIVIL_RIGHTS_WORDS = [
 
 // Act III word list
 const TECH_WORDS = [
-  { label: 'Internet', color: '#62a4d0', positive: true },
-  { label: 'Open Data', color: '#62a4d0', positive: true },
-  { label: 'Transparency', color: '#6af', positive: true },
-  { label: 'Connection', color: '#6af', positive: true },
-  { label: 'Every Voice', color: '#62a4d0', positive: true },
+  { label: 'Internet', color: '#62a4d0', size: 16 },
+  { label: 'Open Data', color: '#62a4d0', size: 15 },
+  { label: 'Transparency', color: '#6af', size: 14 },
+  { label: 'Connection', color: '#6af', size: 15 },
+  { label: 'Every Voice', color: '#62a4d0', size: 15 },
+  { label: 'AI', color: '#88ccff', size: 14 },
+  { label: 'AI', color: '#99ddff', size: 20 },
+  { label: 'AI', color: '#aaeeff', size: 28 },
+  { label: 'Fusion', color: '#88ccff', size: 17 },
 ];
 
 // ========================================
@@ -1672,18 +1676,37 @@ function render(now) {
     drawTitle('A New Kind of Power', 0.5);
     phaseT += dt;
 
-    // Spawn tech words (blue, not gold)
-    if (phaseT < 2) {
-      const spawnInterval = 2 / TECH_WORDS.length;
+    // Spawn tech words from edges — they orbit, never touch the sphere
+    if (phaseT < 5) {
+      const spawnInterval = 5 / TECH_WORDS.length;
       const shouldHave = Math.floor(phaseT / spawnInterval);
       while (floatingWords.length < shouldHave && floatingWords.length < TECH_WORDS.length) {
         const def = TECH_WORDS[floatingWords.length];
-        floatingWords.push(makeWord(def.label, def.positive, def.color));
+        const w = makeWord(def.label, false, def.color); // not positive — no center drift
+        w.fontSize = def.size || 16;
+        w.orbiting = true; // special flag for orbit behavior
+        floatingWords.push(w);
       }
     }
 
-    if (phaseT > 3) {
-      floatingWords.filter(w => w.positive && w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
+    // Orbit behavior — words circle the sphere at safe distance
+    floatingWords.forEach(w => {
+      if (w.orbiting && (w.phase === 'drifting' || w.phase === 'entering')) {
+        const dx = w.x - W/2, dy = w.y - H/2;
+        const d = Math.sqrt(dx*dx + dy*dy) || 1;
+        const targetR = 150; // orbit radius — outside the sphere
+        // Pull toward orbit radius
+        const radialForce = (targetR - d) * 0.03;
+        w.vx += (dx / d) * radialForce;
+        w.vy += (dy / d) * radialForce;
+        // Tangential push — makes them circle
+        w.vx += (-dy / d) * 1.5;
+        w.vy += (dx / d) * 1.5;
+      }
+    });
+
+    if (phaseT > 4) {
+      floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
     }
 
     updateWords(dt);
@@ -1708,7 +1731,7 @@ function render(now) {
       ctx.restore();
     }
 
-    if (phaseT > 6 && !waitingForClick) {
+    if (phaseT > 9 && !waitingForClick) {
       waitingForClick = true;
       hintEl.textContent = 'Click to continue';
       narrate('A new kind of power. Not concentrated. Connected.');
