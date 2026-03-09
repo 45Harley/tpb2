@@ -1701,8 +1701,8 @@ function render(now) {
           w.vx += (W/2 - w.x) * 0.06 * dt;
           w.vy += (H/2 - w.y) * 0.06 * dt;
           w.fontSize = Math.min(w.baseFontSize * 1.4, w.fontSize + dt * 3);
-          // When close enough, switch to orbiting
-          if (d < 170) {
+          // Switch to orbiting when close enough OR after 3 seconds
+          if (d < 180 || w.life > 3) {
             w.orbitReady = true;
             w.orbiting = true;
           }
@@ -1710,13 +1710,15 @@ function render(now) {
 
         if (w.orbiting) {
           // Phase 2: Orbit — circle the sphere, never touch
-          const targetR = 150;
-          const radialForce = (targetR - d) * 0.04;
+          const targetR = 155;
+          const radialForce = (targetR - d) * 0.06;
           w.vx += (dx / d) * radialForce;
           w.vy += (dy / d) * radialForce;
-          // Slow tangential push — gentle orbit
-          w.vx += (-dy / d) * 0.8;
-          w.vy += (dx / d) * 0.8;
+          // Tangential push — makes them circle
+          w.vx += (-dy / d) * 1.2;
+          w.vy += (dx / d) * 1.2;
+          // Extra damping in orbit for smooth motion
+          w.vx *= 0.98; w.vy *= 0.98;
         }
       }
     });
