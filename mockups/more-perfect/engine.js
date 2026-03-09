@@ -584,17 +584,7 @@ function drawSeeds() {
     ctx.fillStyle = s.color;
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
 
-    // Dormant label — left seeds label right, right seeds label left
-    if (s.state === 'dormant') {
-      ctx.save();
-      ctx.globalAlpha = 0.7;
-      ctx.font = '600 16px Segoe UI, system-ui, sans-serif';
-      ctx.fillStyle = s.color;
-      ctx.textAlign = s.positive ? 'left' : 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(s.label, s.positive ? s.x + 12 : s.x - 12, s.y);
-      ctx.restore();
-    }
+    // No dormant labels — hover tooltips only
 
     if (s.state === 'sprouting') {
       const labelSize = Math.min(22, 8 + s.sproutT * 8);
