@@ -345,19 +345,36 @@ function render(now) {
     // Glow intensifies as text completes
     const glowIntensity = easeInOut(Math.min(1, line1Chars / line1.length));
 
-    // Header — "How darkness is destroyed..." fades in immediately
+    // Light green "The New World" sphere — breathing in center
+    const sphereAlpha = easeInOut(Math.min(1, phaseT * 0.8));
+    const breathe = Math.sin(phaseT * 1.5) * 4;
+    ctx.save();
+    ctx.globalAlpha = sphereAlpha * 0.7;
+    const sr = 70 + breathe;
+    const grd = ctx.createRadialGradient(W/2, H/2, sr*0.1, W/2, H/2, sr);
+    grd.addColorStop(0, '#a8e6a0');
+    grd.addColorStop(0.7, '#5cb85c');
+    grd.addColorStop(1, '#3a8a3a');
+    ctx.fillStyle = grd;
+    ctx.beginPath(); ctx.arc(W/2, H/2, sr, 0, Math.PI*2); ctx.fill();
+    ctx.font = '700 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('The New World', W/2, H/2);
+    ctx.restore();
+
+    // Header — "How darkness is destroyed..." above sphere
     const headerAlpha = easeInOut(Math.min(1, phaseT * 1.2));
     ctx.save();
     ctx.globalAlpha = headerAlpha * 0.6;
     ctx.font = '400 28px Segoe UI, system-ui, sans-serif';
     ctx.fillStyle = '#b0b0b0'; ctx.textAlign = 'center';
-    ctx.fillText('How darkness is destroyed...', W/2, 80);
+    ctx.fillText('How darkness is destroyed...', W/2, 55);
     ctx.restore();
 
-    // Line 1 — big, gold, italic — FILL the canvas
+    // Line 1 — big, gold, italic
     const bigFont = 28 + scale * 26; // 28 → 54px
     ctx.save();
-    ctx.translate(W/2, H/2 - 50);
+    ctx.translate(W/2, H/2 - sr - 50);
     ctx.scale(scale, scale);
     ctx.globalAlpha = Math.min(1, phaseT * 1.5) * 0.9;
     ctx.font = 'italic ' + bigFont + 'px Segoe UI, system-ui, sans-serif';
@@ -367,11 +384,10 @@ function render(now) {
     ctx.shadowBlur = 0;
     ctx.restore();
 
-    // Lines 2-5 — generous size, fill the space below
+    // Lines 2-5 — below sphere
     if (subChars > 0) {
       const subAlpha = easeInOut(Math.min(1, (phaseT - subStartT) * 0.8));
       const visible = subText.slice(0, Math.max(0, subChars));
-      // Word-wrap into lines
       const words = visible.split(' ');
       const lines = []; let cur = '';
       words.forEach(w => {
@@ -383,28 +399,28 @@ function render(now) {
 
       ctx.save();
       ctx.globalAlpha = subAlpha * 0.8;
-      ctx.font = 'italic 26px Segoe UI, system-ui, sans-serif';
+      ctx.font = 'italic 24px Segoe UI, system-ui, sans-serif';
       ctx.fillStyle = '#ccc'; ctx.textAlign = 'center';
       lines.forEach((ln, i) => {
-        ctx.fillText(ln, W/2, H/2 + 20 + i * 34);
+        ctx.fillText(ln, W/2, H/2 + sr + 30 + i * 30);
       });
       ctx.restore();
     }
 
-    // Attribution fades in after all text completes
+    // Attribution at bottom
     if (allDone) {
       const attrDelay = subStartT + subText.length / 10;
       const attrAlpha = easeInOut(Math.min(1, (phaseT - attrDelay) * 1.5));
       ctx.save(); ctx.globalAlpha = attrAlpha * 0.5;
       ctx.font = '400 18px Segoe UI, system-ui, sans-serif';
       ctx.fillStyle = '#ccc'; ctx.textAlign = 'center';
-      ctx.fillText('— Mary Baker Eddy, Science and Health 504:23', W/2, H - 40);
+      ctx.fillText('— Mary Baker Eddy, Science and Health 504:23', W/2, H - 25);
       ctx.restore();
     }
 
   // --- Idea Swirl — The Enlightenment ---
   } else if (phase === 'swirl-founding') {
-    drawTitle('The Enlightenment', 0.5);
+    drawTitle('The Enlightenment — 1770s', 0.5);
     phaseT += dt;
 
     // Spawn words over first 6 seconds (slower, more readable)
@@ -449,7 +465,7 @@ function render(now) {
 
   // --- Condense — Nebula Formation ---
   } else if (phase === 'condense-founding') {
-    drawTitle('Principles Form', 0.5);
+    drawTitle('Principles Form — 1770s', 0.5);
     phaseT += dt;
 
     // Fade out individual words
@@ -468,7 +484,7 @@ function render(now) {
 
   // --- Form People — Blobs condense into sphere ---
   } else if (phase === 'form-people') {
-    drawTitle('The People', 0.5);
+    drawTitle('The People — 1750s', 0.5);
     phaseT += dt;
     const progress = Math.min(1, phaseT / 3);
     const ease = easeInOut(progress);
@@ -499,7 +515,7 @@ function render(now) {
 
   // --- People Ready (click to continue) ---
   } else if (phase === 'people-ready') {
-    drawTitle('The Origin of American Government', 0.5);
+    drawTitle('The Origin of American Government — 1770–1790', 0.5);
     const breathe = Math.sin(now / 600) * 4;
     drawSphere(peopleBall.x, peopleBall.y, peopleBall.r + breathe, peopleBall.color, peopleBall.label, 1);
     ctx.save(); ctx.globalAlpha = 0.4; ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
@@ -508,7 +524,7 @@ function render(now) {
 
   // --- Jitter People (auto-transition) ---
   } else if (phase === 'jitter-people') {
-    drawTitle('The Origin of American Government', 0.5);
+    drawTitle('The Origin of American Government — 1770–1790', 0.5);
     phaseT += dt;
     const progress = Math.min(1, phaseT / JITTER_DUR);
     const intensity = Math.sin(progress * Math.PI) * 14;
@@ -535,7 +551,7 @@ function render(now) {
 
   // --- Scatter into Towns (auto-transition) ---
   } else if (phase === 'scatter') {
-    drawTitle('The Origin of American Government', 0.5);
+    drawTitle('The Origin of American Government — 1770–1790', 0.5);
     phaseT += dt;
     const progress = Math.min(1, phaseT / 1.5);
     const ease = easeOutBack(Math.min(1, progress));
@@ -568,7 +584,7 @@ function render(now) {
 
   // --- Towns — Colonial Capitals (click to continue) ---
   } else if (phase === 'towns') {
-    drawTitle('Colonial Capital Cities — circa 1750', 0.5);
+    drawTitle('Colonial Capital Cities — 1750', 0.5);
     const breathe = Math.sin(now / 700) * 2;
 
     ctx.save(); ctx.globalAlpha = 0.15; ctx.font = '400 12px Segoe UI, system-ui, sans-serif';
@@ -578,7 +594,7 @@ function render(now) {
 
   // --- Coalesce Towns → Colonies (auto, 3.5s) ---
   } else if (phase === 'coalesce1') {
-    drawTitle('Towns become Colonies', 0.5);
+    drawTitle('Towns Become Colonies — 1770s', 0.5);
     phaseT += dt;
     const progress = Math.min(1, phaseT / 3.5); // SLOW — 3.5 seconds
     const ease = easeInOut(progress);
@@ -615,7 +631,7 @@ function render(now) {
 
   // --- Forge Constitutional Government (auto, 4s) ---
   } else if (phase === 'coalesce2') {
-    drawTitle('E Pluribus Unum', 0.5);
+    drawTitle('E Pluribus Unum — 1787', 0.5);
     phaseT += dt;
     const progress = Math.min(1, phaseT / 4.0); // SLOW — 4 seconds
     const ease = easeInOut(progress);
@@ -651,7 +667,7 @@ function render(now) {
 
   // --- Government Arrived (click to deconstruct) ---
   } else if (phase === 'gov-arrive') {
-    drawTitle('The United States Constitutional Government', 0.5);
+    drawTitle('Constitutional Government — 1789', 0.5);
     const breathe = Math.sin(now / 600) * 4;
     drawSphere(W / 2, H / 2, 95 + breathe, GOLD, 'Constitutional Government', 1, true);
 
@@ -661,7 +677,7 @@ function render(now) {
 
   // --- Interactive Deconstruction (user-driven) ---
   } else if (phase === 'interactive') {
-    drawTitle('Deconstruction', 0.5);
+    drawTitle('Deconstruction — 1789', 0.5);
 
     // Connection lines
     spheres.forEach(s => {
@@ -690,7 +706,7 @@ function render(now) {
     const progress = Math.min(1, phaseT / 3.5);
     const ease = easeInOut(progress);
 
-    drawTitle('A More Perfect Union', 0.6);
+    drawTitle('A More Perfect Union — 1770–1790', 0.6);
 
     spheres.forEach(s => {
       if (s.children.length > 0 && s.state === 'done') {
@@ -732,7 +748,7 @@ function render(now) {
 
   // --- Post-Deconstruct: Bridge to next era ---
   } else if (phase === 'post-deconstruct') {
-    drawTitle('A More Perfect Union', 0.5);
+    drawTitle('A More Perfect Union — 1770–1790', 0.5);
     const breathe = Math.sin(now / 600) * 4;
     drawSphere(W/2, H/2, 95 + breathe, GOLD, 'Constitutional Government', 1);
     ctx.save(); ctx.globalAlpha = 0.5; ctx.font = '400 14px Segoe UI, system-ui, sans-serif';

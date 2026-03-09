@@ -86,7 +86,7 @@ function render(now) {
 
   // --- Swirl: 3 vines entangle the sphere, orbiting reform words ---
   if (phase === 'swirl-robber-barons') {
-    drawTitle('Concentrated Power', 0.5);
+    drawTitle('Concentrated Power — 1870–1900', 0.5);
     phaseT += dt;
 
     // Draw vines growing toward and entangling the sphere
@@ -220,7 +220,7 @@ function render(now) {
 
   // --- Friction: Vines dissolve, reform wins ---
   } else if (phase === 'friction-robber-barons') {
-    drawTitle('The Gilded Age — 1870s', 0.5);
+    drawTitle('The Gilded Age — 1870–1900', 0.5);
     phaseT += dt;
     const progress = Math.min(1, phaseT / 10);
 

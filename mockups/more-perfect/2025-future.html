@@ -75,7 +75,7 @@ function render(now) {
 
   // --- ACT III / Phase 3.1: Technology — Network tendrils ---
   if (phase === 'swirl-technology') {
-    drawTitle('A New Kind of Power', 0.5);
+    drawTitle('A New Kind of Power — 2025+', 0.5);
     phaseT += dt;
 
     // Spawn tech words from all different edges — inflow toward center
@@ -159,7 +159,7 @@ function render(now) {
 
   // --- ACT III / Phase 3.2: People Power — Sphere cracks from inside, words radiate out ---
   } else if (phase === 'people-power') {
-    drawTitle('People Power', 0.5);
+    drawTitle('People Power — 2025+', 0.5);
     phaseT += dt;
     const progress = Math.min(1, phaseT / 10);
 
@@ -250,7 +250,7 @@ function render(now) {
 
   // --- ACT IV / Phase 4.1: Threats — No Kings, No Mobs, No Gangs, No Wars ---
   } else if (phase === 'threats') {
-    drawTitle('The Threats', 0.8);
+    drawTitle('The Threats — 2025+', 0.8);
     phaseT += dt;
 
     const THREAT_WORDS = [
@@ -327,7 +327,7 @@ function render(now) {
 
   // --- ACT IV / Phase 4.2: The Fight — The People's Weapons ---
   } else if (phase === 'the-fight') {
-    drawTitle('The Fight', 0.8);
+    drawTitle('The Fight — 2025+', 0.8);
     phaseT += dt;
 
     const FIGHT_WORDS = [
@@ -522,7 +522,7 @@ function render(now) {
   // --- ACT IV / Phase 4.4: Final — The Building Continues ---
   } else if (phase === 'final') {
     phaseT += dt;
-    drawTitle('A More Perfect Union', 0.8);
+    drawTitle('A More Perfect Union — 2025+', 0.8);
 
     // Pulsing network of people-spheres
     const nodeCount = 12;

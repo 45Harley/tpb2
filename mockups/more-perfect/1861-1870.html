@@ -82,7 +82,7 @@ function render(now) {
 
   // --- Swirl: 3 vines entangle the sphere, orbiting protector words ---
   if (phase === 'swirl-civil-war') {
-    drawTitle('From the Seeds of Slavery', 0.5);
+    drawTitle('From the Seeds of Slavery — 1861–1870', 0.5);
     phaseT += dt;
 
     // Draw vines growing toward and entangling the sphere
@@ -226,7 +226,7 @@ function render(now) {
 
   // --- Friction: Vines dissolve, ideas win ---
   } else if (phase === 'friction-civil-war') {
-    drawTitle('Civil War — 1861', 0.5);
+    drawTitle('Civil War — 1861–1870', 0.5);
     phaseT += dt;
     const progress = Math.min(1, phaseT / 10);
 

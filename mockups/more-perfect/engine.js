@@ -424,7 +424,7 @@ function makeWord(label, positive, color) {
   return {
     label, positive, color, x, y, vx, vy,
     alpha: 0, targetAlpha: 1,
-    fontSize: positive ? 16 + Math.random()*8 : 15 + Math.random()*7,
+    fontSize: positive ? 26 + Math.random()*10 : 22 + Math.random()*8,
     phase: 'entering',
     life: 0,
     pulseOffset: Math.random() * Math.PI * 2,
@@ -453,8 +453,8 @@ function updateWords(dt) {
       if (other === w) return;
       const dx = w.x - other.x, dy = w.y - other.y;
       const distW = Math.sqrt(dx*dx + dy*dy) || 1;
-      if (distW < 80) {
-        const force = (80 - distW) * 0.02;
+      if (distW < 130) {
+        const force = (130 - distW) * 0.03;
         w.vx += (dx / distW) * force;
         w.vy += (dy / distW) * force;
       }
