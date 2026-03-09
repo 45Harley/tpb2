@@ -1062,13 +1062,28 @@ function render(now) {
     }
 
     if (progress >= 1 && !ttsPlaying) {
-      phase = 'ended';
+      phase = 'post-deconstruct';
       phaseT = 0;
-      reportDwell();
-      hintEl.textContent = 'Click to begin again';
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
     }
 
-  // --- ENDED (click to restart) — future: replaced by Act II transition ---
+  // =====================================================================
+  // TRANSITION: Post-Deconstruction — Government reassembles
+  //   Seeds from Act I visible at edges. Bridge to Act II.
+  // =====================================================================
+
+  // --- Post-Deconstruct: Government reassembled (click to continue) ---
+  } else if (phase === 'post-deconstruct') {
+    drawTitle('A More Perfect Union', 0.5);
+    const breathe = Math.sin(now / 600) * 4;
+    drawSphere(W/2, H/2, 95 + breathe, GOLD, 'Constitutional Government', 1);
+    ctx.save(); ctx.globalAlpha = 0.5; ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = GOLD; ctx.textAlign = 'center';
+    ctx.fillText('We the People', W/2, H/2 + 115); ctx.restore();
+    // Seeds visible at edges (drawn by drawSeeds in main render loop)
+
+  // --- ENDED (click to restart) ---
   } else if (phase === 'ended') {
     phaseT += dt;
     drawTitle('A More Perfect Union', 0.5);
@@ -1272,6 +1287,9 @@ canvas.addEventListener('click', function(e) {
       // Auto-start the first split — the click that got us here IS the deconstruct click
       root.state = 'jitter'; root.stateT = 0;
       narrate('Deconstructing.');
+    } else if (phase === 'post-deconstruct') {
+      phase = 'swirl-civil-war'; phaseT = 0;
+      floatingWords = [];
     }
     return;
   }
