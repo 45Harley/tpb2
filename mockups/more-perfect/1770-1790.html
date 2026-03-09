@@ -497,7 +497,23 @@ function render(now) {
     updateNebulae(dt);
     drawNebulae(now);
 
-    if (phaseT > 4 && !waitingForClick) {
+    // MBE good soil quote — fades in as nebulae form
+    if (phaseT > 2) {
+      const qAlpha = easeInOut(Math.min(1, (phaseT - 2) * 0.5));
+      ctx.save();
+      ctx.globalAlpha = qAlpha * 0.6;
+      ctx.font = 'italic 20px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#ccc'; ctx.textAlign = 'center';
+      ctx.fillText('"The life of Christ Jesus was not miraculous,', W/2, H - 100);
+      ctx.fillText('but it was indigenous to his spirituality, — the good soil', W/2, H - 76);
+      ctx.fillText('wherein the seed of Truth springs up and bears much fruit."', W/2, H - 52);
+      ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
+      ctx.globalAlpha = qAlpha * 0.4;
+      ctx.fillText('— Mary Baker Eddy, Science and Health 270:31', W/2, H - 28);
+      ctx.restore();
+    }
+
+    if (phaseT > 6 && !waitingForClick) {
       waitingForClick = true;
       hintEl.textContent = 'Click to continue';
     }
