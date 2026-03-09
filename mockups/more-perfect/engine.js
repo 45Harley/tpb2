@@ -46,6 +46,17 @@ function navigateToEra(file) {
   window.location.href = file;
 }
 
+function makePanelZoomable(panel) {
+  let scale = 1;
+  panel.style.transformOrigin = 'top center';
+  panel.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    scale += e.deltaY < 0 ? 0.1 : -0.1;
+    scale = Math.max(0.6, Math.min(2.0, scale));
+    panel.style.transform = `scale(${scale})`;
+  }, { passive: false });
+}
+
 function buildEraSidebar() {
   const leftEl = document.getElementById('timeline-left');
   const rightEl = document.getElementById('timeline-right');
@@ -70,6 +81,9 @@ function buildEraSidebar() {
     node.addEventListener('click', () => navigateToEra(era.file));
     panel.appendChild(node);
   });
+
+  makePanelZoomable(leftEl);
+  makePanelZoomable(rightEl);
 }
 
 // ========================================
