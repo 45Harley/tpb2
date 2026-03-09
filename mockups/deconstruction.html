@@ -125,7 +125,7 @@ function buildTimeline() {
     const node = document.createElement('div');
     node.id = 'tl-' + p.id;
     node.textContent = p.label;
-    node.style.cssText = 'padding:2px 5px;border-radius:3px;white-space:nowrap;color:#ccc;border:1px solid #888;cursor:default;transition:all 0.3s;';
+    node.style.cssText = 'padding:2px 5px;border-radius:3px;white-space:nowrap;color:#fff;border:1px solid #888;cursor:default;transition:all 0.3s;';
     el.appendChild(node);
   });
   timelineBuilt = true;
@@ -146,11 +146,11 @@ function updateTimeline(currentPhase) {
       node.style.borderColor = ACT_COLORS[p.act];
       node.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     } else if (i < currentIdx) {
-      node.style.color = '#ddd';
+      node.style.color = '#fff';
       node.style.background = '#2a2a3e';
       node.style.borderColor = '#888';
     } else {
-      node.style.color = '#aaa';
+      node.style.color = '#fff';
       node.style.background = 'transparent';
       node.style.borderColor = '#666';
     }
