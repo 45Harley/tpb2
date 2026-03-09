@@ -49,10 +49,12 @@ function navigateToEra(file) {
 function makePanelZoomable(panel) {
   let scale = 1;
   panel.style.transformOrigin = 'top center';
+  panel.style.overflow = 'hidden';
   panel.addEventListener('wheel', (e) => {
     e.preventDefault();
+    e.stopPropagation();
     scale += e.deltaY < 0 ? 0.1 : -0.1;
-    scale = Math.max(0.6, Math.min(2.0, scale));
+    scale = Math.max(0.6, Math.min(2.5, scale));
     panel.style.transform = `scale(${scale})`;
   }, { passive: false });
 }
@@ -84,6 +86,9 @@ function buildEraSidebar() {
 
   makePanelZoomable(leftEl);
   makePanelZoomable(rightEl);
+
+  const centerEl = document.getElementById('center-panel');
+  if (centerEl) makePanelZoomable(centerEl);
 }
 
 // ========================================
