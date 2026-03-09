@@ -262,12 +262,12 @@ const FOUNDING_POSITIVE = [
 ];
 
 const FOUNDING_NEGATIVE = [
-  { label: 'Tyranny', color: '#aa4444' },
-  { label: 'Slavery', color: '#aa3333' },
-  { label: 'Property over People', color: '#996633' },
-  { label: 'Men Only', color: '#997755' },
-  { label: "King's Rule", color: '#885555' },
-  { label: 'Landed Gentry', color: '#887766' },
+  { label: 'Tyranny', color: '#ff6666' },
+  { label: 'Slavery', color: '#ff5555' },
+  { label: 'Property over People', color: '#ffaa55' },
+  { label: 'Men Only', color: '#ffbb77' },
+  { label: "King's Rule", color: '#ff8888' },
+  { label: 'Landed Gentry', color: '#ffcc88' },
 ];
 
 // Act II word lists
@@ -496,14 +496,14 @@ let floatingWords = [];
 function makeWord(label, positive, color) {
   const edge = Math.floor(Math.random() * 4); // 0=top,1=right,2=bottom,3=left
   let x, y, vx, vy;
-  if (edge === 0) { x = Math.random() * W; y = -20; vx = (Math.random()-0.5)*30; vy = 15+Math.random()*20; }
-  else if (edge === 1) { x = W+20; y = Math.random()*H; vx = -(15+Math.random()*20); vy = (Math.random()-0.5)*30; }
-  else if (edge === 2) { x = Math.random()*W; y = H+20; vx = (Math.random()-0.5)*30; vy = -(15+Math.random()*20); }
-  else { x = -20; y = Math.random()*H; vx = 15+Math.random()*20; vy = (Math.random()-0.5)*30; }
+  if (edge === 0) { x = Math.random() * W; y = -20; vx = (Math.random()-0.5)*10; vy = 5+Math.random()*7; }
+  else if (edge === 1) { x = W+20; y = Math.random()*H; vx = -(5+Math.random()*7); vy = (Math.random()-0.5)*10; }
+  else if (edge === 2) { x = Math.random()*W; y = H+20; vx = (Math.random()-0.5)*10; vy = -(5+Math.random()*7); }
+  else { x = -20; y = Math.random()*H; vx = 5+Math.random()*7; vy = (Math.random()-0.5)*10; }
   return {
     label, positive, color, x, y, vx, vy,
     alpha: 0, targetAlpha: 1,
-    fontSize: positive ? 16 + Math.random()*8 : 12 + Math.random()*6,
+    fontSize: positive ? 16 + Math.random()*8 : 15 + Math.random()*7,
     phase: 'entering', // entering | drifting | winning | shrinking | seeding
     life: 0,
     pulseOffset: Math.random() * Math.PI * 2,
@@ -515,11 +515,22 @@ function updateWords(dt) {
     w.life += dt;
     // Drift toward center if positive, slow down if negative
     if (w.positive && (w.phase === 'drifting' || w.phase === 'winning')) {
-      w.vx += (W/2 - w.x) * 0.3 * dt;
-      w.vy += (H/2 - w.y) * 0.3 * dt;
+      w.vx += (W/2 - w.x) * 0.08 * dt;
+      w.vy += (H/2 - w.y) * 0.08 * dt;
     }
+    // Repulsion — words push each other apart so they don't clump
+    floatingWords.forEach(other => {
+      if (other === w) return;
+      const dx = w.x - other.x, dy = w.y - other.y;
+      const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      if (dist < 80) {
+        const force = (80 - dist) * 0.02;
+        w.vx += (dx / dist) * force;
+        w.vy += (dy / dist) * force;
+      }
+    });
     // Damping
-    w.vx *= 0.995; w.vy *= 0.995;
+    w.vx *= 0.99; w.vy *= 0.99;
     w.x += w.vx * dt; w.y += w.vy * dt;
 
     // Phase transitions
@@ -546,7 +557,7 @@ function drawWords() {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     // Glow
     ctx.shadowColor = w.color;
-    ctx.shadowBlur = w.positive ? 12 : 4;
+    ctx.shadowBlur = w.positive ? 12 : 14;
     ctx.fillStyle = w.color;
     ctx.fillText(w.label, w.x, w.y);
     ctx.shadowBlur = 0;
@@ -560,13 +571,13 @@ function drawWords() {
 let seeds = [];
 
 const SEED_DEFS = [
-  { label: 'Tyranny', color: '#aa4444', seedX: 60, seedY: H-20, sproutPhase: null, childSeed: null },
-  { label: 'Slavery', color: '#aa3333', seedX: 150, seedY: H-18, sproutPhase: 'swirl-civil-war',
-    childSeed: { label: 'Inequality', color: '#994444', seedX: 180, seedY: H-22, sproutPhase: 'swirl-civil-rights', childSeed: null }},
-  { label: 'Property over People', color: '#996633', seedX: 300, seedY: H-20, sproutPhase: 'swirl-robber-barons', childSeed: null },
-  { label: 'Men Only', color: '#997755', seedX: 450, seedY: H-18, sproutPhase: 'swirl-suffrage', childSeed: null },
-  { label: "King's Rule", color: '#885555', seedX: 600, seedY: H-20, sproutPhase: null, childSeed: null },
-  { label: 'Landed Gentry', color: '#887766', seedX: 750, seedY: H-18, sproutPhase: null, childSeed: null },
+  { label: 'Tyranny', color: '#ff6666', seedX: 60, seedY: H-20, sproutPhase: null, childSeed: null },
+  { label: 'Slavery', color: '#ff5555', seedX: 150, seedY: H-18, sproutPhase: 'swirl-civil-war',
+    childSeed: { label: 'Inequality', color: '#ff7777', seedX: 180, seedY: H-22, sproutPhase: 'swirl-civil-rights', childSeed: null }},
+  { label: 'Property over People', color: '#ffaa55', seedX: 300, seedY: H-20, sproutPhase: 'swirl-robber-barons', childSeed: null },
+  { label: 'Men Only', color: '#ffbb77', seedX: 450, seedY: H-18, sproutPhase: 'swirl-suffrage', childSeed: null },
+  { label: "King's Rule", color: '#ff8888', seedX: 600, seedY: H-20, sproutPhase: null, childSeed: null },
+  { label: 'Landed Gentry', color: '#ffcc88', seedX: 750, seedY: H-18, sproutPhase: null, childSeed: null },
 ];
 
 function makeSeed(def) {
@@ -862,10 +873,10 @@ function render(now) {
     drawTitle('The Enlightenment', 0.5);
     phaseT += dt;
 
-    // Spawn words over first 3 seconds
-    if (phaseT < 3) {
+    // Spawn words over first 6 seconds (slower, more readable)
+    if (phaseT < 6) {
       const allWords = [...FOUNDING_POSITIVE.map(w=>({...w,positive:true})), ...FOUNDING_NEGATIVE.map(w=>({...w,positive:false}))];
-      const spawnInterval = 3 / allWords.length;
+      const spawnInterval = 6 / allWords.length;
       const shouldHave = Math.floor(phaseT / spawnInterval);
       while (floatingWords.length < shouldHave && floatingWords.length < allWords.length) {
         const def = allWords[floatingWords.length];
@@ -873,15 +884,15 @@ function render(now) {
       }
     }
 
-    // After 4 seconds, negative words start shrinking
-    if (phaseT > 4) {
+    // After 8 seconds, negative words start shrinking
+    if (phaseT > 8) {
       floatingWords.filter(w => !w.positive && w.phase === 'drifting').forEach(w => {
         w.phase = 'shrinking';
       });
     }
 
-    // After 5 seconds, positive words start winning
-    if (phaseT > 5) {
+    // After 9 seconds, positive words start winning
+    if (phaseT > 9) {
       floatingWords.filter(w => w.positive && w.phase === 'drifting').forEach(w => {
         w.phase = 'winning';
       });
@@ -895,8 +906,8 @@ function render(now) {
     updateWords(dt);
     drawWords();
 
-    // Once swirl stabilizes (~7s), show click-to-continue
-    if (phaseT > 7 && !waitingForClick) {
+    // Once swirl stabilizes (~12s), show click-to-continue
+    if (phaseT > 12 && !waitingForClick) {
       waitingForClick = true;
       hintEl.textContent = 'Click to continue';
       narrate('Ideas take hold. Not all survive.');
