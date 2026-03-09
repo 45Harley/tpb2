@@ -434,6 +434,7 @@ let phase = 'opening';
 let phaseT = 0;
 let lastTime = 0;
 let threatSpawnT = 0;
+let fightSpawnT = 0;
 let waitingForClick = false; // gate for click-to-continue
 
 function makeBall(x, y, r, label, color) {
@@ -1826,41 +1827,107 @@ function render(now) {
       narrate('No kings. No mobs. No gangs. No wars.');
     }
 
-  // --- ACT IV / Phase 4.2: The Fight — Elections, Pledges, The War ---
+  // --- ACT IV / Phase 4.2: The Fight — The People's Weapons ---
   } else if (phase === 'the-fight') {
     drawTitle('The Fight', 0.8);
     phaseT += dt;
 
     const FIGHT_WORDS = [
-      { label: 'Elections', color: '#50c878', positive: true },
-      { label: 'Amendment 28', color: '#50c878', positive: true },
-      { label: 'Ballot Initiatives', color: '#66ddaa', positive: true },
-      { label: 'The Pledge', color: '#55cc88', positive: true },
-      { label: 'Transparency', color: '#44bb77', positive: true },
-      { label: 'Accountability', color: '#55cc88', positive: true },
+      // Escalating core actions
+      { label: 'protest', color: '#44cc77', size: 11 },
+      { label: 'Protest', color: '#50cc88', size: 16 },
+      { label: 'PROTEST', color: '#55dd88', size: 22 },
+      { label: 'PROTEST', color: '#66eea0', size: 28 },
+      { label: 'vote', color: '#44cc77', size: 11 },
+      { label: 'Vote', color: '#50cc88', size: 16 },
+      { label: 'VOTE', color: '#55dd88', size: 22 },
+      { label: 'VOTE', color: '#66eea0', size: 28 },
+      { label: 'march', color: '#44bb77', size: 12 },
+      { label: 'March', color: '#50cc88', size: 18 },
+      { label: 'MARCH', color: '#66dd99', size: 26 },
+      { label: 'organize', color: '#44bb77', size: 12 },
+      { label: 'Organize', color: '#50cc88', size: 18 },
+      { label: 'ORGANIZE', color: '#66dd99', size: 24 },
+      { label: 'speak up', color: '#44bb77', size: 12 },
+      { label: 'Speak Up', color: '#55cc88', size: 18 },
+      { label: 'SPEAK UP', color: '#66ee99', size: 26 },
+      { label: 'stand up', color: '#44bb77', size: 12 },
+      { label: 'Stand Up', color: '#55cc88', size: 20 },
+      { label: 'STAND UP', color: '#66ee99', size: 26 },
+      // Escalating pairs
+      { label: 'Petition', color: '#50c878', size: 14 },
+      { label: 'PETITION', color: '#66dd99', size: 20 },
+      { label: 'Boycott', color: '#50c878', size: 14 },
+      { label: 'BOYCOTT', color: '#66dd99', size: 20 },
+      { label: 'Strike', color: '#50c878', size: 14 },
+      { label: 'STRIKE', color: '#66ee99', size: 22 },
+      { label: 'Recall', color: '#50c878', size: 14 },
+      { label: 'RECALL', color: '#66dd99', size: 20 },
+      { label: 'Dissent', color: '#50c878', size: 14 },
+      { label: 'DISSENT', color: '#66dd99', size: 20 },
+      { label: 'No Kings', color: '#55cc88', size: 14 },
+      { label: 'NO KINGS', color: '#77eea0', size: 22 },
+      { label: 'We the People', color: '#55cc88', size: 14 },
+      { label: 'WE THE PEOPLE', color: '#77eea0', size: 24 },
+      { label: 'The War', color: '#50c878', size: 14 },
+      { label: 'THE WAR', color: '#66ee99', size: 22 },
+      { label: 'Elections', color: '#50c878', size: 14 },
+      { label: 'ELECTIONS', color: '#66dd99', size: 20 },
+      { label: 'Amendment 28', color: '#55cc88', size: 16 },
+      { label: 'AMENDMENT 28', color: '#77eea0', size: 22 },
+      // Single mentions
+      { label: 'Register', color: '#50c878', size: 14 },
+      { label: 'Canvass', color: '#44bb77', size: 13 },
+      { label: 'Town Hall', color: '#50c878', size: 14 },
+      { label: 'Run for Office', color: '#55cc88', size: 15 },
+      { label: 'Impeach', color: '#50c878', size: 16 },
+      { label: 'Free Press', color: '#50c878', size: 14 },
+      { label: 'Whistleblow', color: '#44bb77', size: 13 },
+      { label: 'Civil Disobedience', color: '#50c878', size: 14 },
+      { label: 'Grassroots', color: '#44bb77', size: 13 },
+      { label: 'Term Limits', color: '#50c878', size: 14 },
+      { label: 'Civic Duty', color: '#44bb77', size: 13 },
+      { label: 'Volunteer', color: '#44bb77', size: 13 },
+      { label: 'Solidarity', color: '#55cc88', size: 15 },
+      { label: 'Golden Rule', color: '#55cc88', size: 15 },
+      { label: 'The Mandate', color: '#55cc88', size: 16 },
+      { label: 'Knockout', color: '#50c878', size: 14 },
+      { label: 'Ballot Initiatives', color: '#50c878', size: 14 },
+      { label: 'The Pledge', color: '#55cc88', size: 15 },
+      { label: 'Transparency', color: '#50c878', size: 14 },
+      { label: 'Accountability', color: '#50c878', size: 14 },
     ];
 
-    if (phaseT < 4) {
-      const spawnInterval = 4 / FIGHT_WORDS.length;
-      const shouldHave = Math.floor(phaseT / spawnInterval);
-      while (floatingWords.length < shouldHave && floatingWords.length < FIGHT_WORDS.length) {
-        const def = FIGHT_WORDS[floatingWords.length];
-        floatingWords.push(makeWord(def.label, true, def.color));
-      }
+    // Continuously spawn fight words from all edges — the people's answer
+    fightSpawnT += dt;
+    if (fightSpawnT > 0.35 && floatingWords.length < 25) {
+      fightSpawnT = 0;
+      const def = FIGHT_WORDS[Math.floor(Math.random() * FIGHT_WORDS.length)];
+      const w = makeWord(def.label, true, def.color);
+      w.fontSize = def.size;
+      w.attacking = true; // rush toward center — the people fight back
+      floatingWords.push(w);
     }
 
-    if (phaseT > 5) {
-      floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
-    }
+    // Heartbeat pulse — faster than threats, building energy
+    const fightBeat = Math.pow(Math.max(0, Math.sin(phaseT * 3.2)), 4);
+    floatingWords.forEach(w => {
+      if (w.phase !== 'melting') {
+        w.targetAlpha = 0.6 + fightBeat * 0.4;
+        const baseSz = FIGHT_WORDS.find(t => t.label === w.label)?.size || 14;
+        w.fontSize = baseSz * (1 + fightBeat * 0.2);
+      }
+    });
 
     updateWords(dt);
     drawWords();
 
-    // Healing sphere — grows brighter
-    const brightness = Math.min(1, phaseT / 7) * 30;
-    drawSphere(W/2, H/2, 95, lighten(GOLD, brightness), 'Constitutional Government', 0.9);
+    // Government sphere — heals brighter as the fight builds
+    const brightness = Math.min(1, phaseT / 12) * 30;
+    const healBeat = 95 + fightBeat * 4;
+    drawSphere(W/2, H/2, healBeat, lighten(GOLD, brightness), 'Constitutional Government', 0.85 + fightBeat * 0.15);
 
-    if (phaseT > 8 && !waitingForClick) {
+    if (phaseT > 14 && !waitingForClick) {
       waitingForClick = true;
       hintEl.textContent = 'Click to continue';
       narrate('The war for democracy is fought at the ballot box.');
@@ -2192,7 +2259,7 @@ canvas.addEventListener('click', function(e) {
       floatingWords = []; threatSpawnT = 0;
     } else if (phase === 'threats') {
       phase = 'the-fight'; phaseT = 0;
-      floatingWords = [];
+      floatingWords = []; fightSpawnT = 0;
     } else if (phase === 'the-fight') {
       phase = 'fourth-branch'; phaseT = 0;
       floatingWords = [];
