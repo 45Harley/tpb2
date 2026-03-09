@@ -966,6 +966,18 @@ function jumpToPhase(targetId) {
   peopleBall = makeBall(W / 2, H / 2, 90, 'The People', GOLD);
   hintEl.textContent = ''; narrationEl.textContent = '';
   phase = targetId; phaseT = 0;
+
+  // Spawn required state for phases that depend on prior transitions
+  if (targetId === 'condense-founding' || targetId === 'form-people') {
+    [
+      { x: W/2 - 150, y: H/2 - 30, r: 80, color: '#f0d060', label: 'Rights of Man' },
+      { x: W/2 + 120, y: H/2 - 50, r: 70, color: '#e8c840', label: 'Social Contract' },
+      { x: W/2, y: H/2 + 60, r: 75, color: '#f0d060', label: 'Self-Governance' },
+    ].forEach(c => nebulae.push(makeNebula(c.x, c.y, c.r, c.color, c.label)));
+  }
+  if (targetId === 'towns' || targetId === 'coalesce1') { scatterTowns(); }
+  if (targetId === 'states' || targetId === 'coalesce2') { scatterTowns(); placeStates(); stateBalls.forEach(s => { s.x = s.targetX; s.y = s.targetY; s.alpha = 1; }); }
+  if (targetId === 'gov-arrive' || targetId === 'post-deconstruct') { /* sphere drawn inline */ }
 }
 
 // Build timeline and start
