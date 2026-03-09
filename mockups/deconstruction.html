@@ -376,7 +376,11 @@ const CIVIL_WAR_WORDS = [
   { label: 'Abolition', color: '#f0d060', positive: true },
   { label: 'Freedom', color: '#f0d060', positive: true },
   { label: 'Union', color: '#e8c840', positive: true },
-  { label: 'All Men', color: '#f0d060', positive: true },
+  { label: 'All Men Created Equal', color: '#f0d060', positive: true },
+  { label: 'Divine Justice', color: '#ffe088', positive: true },
+  { label: 'Immortal Sentences', color: '#ffe077', positive: true },
+  { label: 'Liberty', color: '#f0d060', positive: true },
+  { label: 'Emancipation', color: '#e8c840', positive: true },
 ];
 
 const ROBBER_BARON_WORDS = [
@@ -1371,26 +1375,97 @@ function render(now) {
   // ACT II: THE FRICTION
   // =====================================================================
 
-  // --- ACT II / Phase 2.1: Civil War Swirl — Slavery seed sprouts ---
+  // --- ACT II / Phase 2.1: Civil War Swirl — 3 vines entangle the sphere ---
   } else if (phase === 'swirl-civil-war') {
     drawTitle('From the Seeds of Slavery', 0.5);
     phaseT += dt;
 
-    // Sprout the slavery seed (once)
+    // Sprout the slavery seed
     if (phaseT < 0.1) sproutSeedsForPhase('swirl-civil-war');
 
-    // Spawn positive words
-    if (phaseT < 2) {
-      const spawnInterval = 2 / CIVIL_WAR_WORDS.length;
-      const shouldHave = Math.floor(phaseT / spawnInterval);
+    // 3 vine sources — sprouting from seed positions at bottom
+    const VINE_SEEDS = [
+      { label: 'Slavery', color: '#ff5555', startX: 150, startY: H - 18, angle: -Math.PI * 0.4 },
+      { label: 'Oppression', color: '#ff7744', startX: 450, startY: H - 18, angle: -Math.PI * 0.55 },
+      { label: 'Despotism', color: '#ff6633', startX: 700, startY: H - 20, angle: -Math.PI * 0.65 },
+    ];
+
+    // Draw vines growing toward and entangling the sphere
+    const vineGrowth = Math.min(1, phaseT / 6); // vines take 6s to fully entangle
+    VINE_SEEDS.forEach((vine, vi) => {
+      if (phaseT < vi * 1.2) return; // stagger vine starts
+      const vProgress = Math.min(1, (phaseT - vi * 1.2) / 5);
+      const segments = 20;
+      const reached = Math.floor(vProgress * segments);
+
+      ctx.save();
+      ctx.strokeStyle = vine.color;
+      ctx.lineWidth = 2 + vProgress * 2;
+      ctx.shadowColor = vine.color;
+      ctx.shadowBlur = 8;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+
+      for (let s = 0; s <= reached; s++) {
+        const t = s / segments;
+        // Bezier-like path from seed to sphere, with organic waviness
+        const cx1 = vine.startX + (W/2 - vine.startX) * 0.3;
+        const cy1 = vine.startY - 100 - vi * 40;
+        const px = vine.startX * (1-t)*(1-t) + cx1 * 2*t*(1-t) + W/2 * t*t;
+        const py = vine.startY * (1-t)*(1-t) + cy1 * 2*t*(1-t) + H/2 * t*t;
+        // Add organic waviness
+        const wave = Math.sin(t * 8 + vi * 2 + now/800) * (12 - t * 10);
+        if (s === 0) ctx.moveTo(px + wave, py);
+        else ctx.lineTo(px + wave, py);
+      }
+      ctx.stroke();
+
+      // Vine label at the root
+      if (vProgress > 0.1) {
+        const labelAlpha = Math.min(0.8, vProgress);
+        ctx.globalAlpha = labelAlpha;
+        ctx.font = '700 ' + (10 + vProgress * 6) + 'px Segoe UI, system-ui, sans-serif';
+        ctx.fillStyle = vine.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(vine.label, vine.startX, vine.startY - 10);
+      }
+
+      // Entangling tendrils when vine reaches the sphere (t > 0.8)
+      if (vProgress > 0.8) {
+        const wrapT = (vProgress - 0.8) / 0.2;
+        ctx.globalAlpha = wrapT * 0.5;
+        ctx.lineWidth = 1.5;
+        for (let t = 0; t < 3; t++) {
+          const wAngle = (vi * 2.1 + t * 1.5) + now/1200;
+          const wr = 95 + 5;
+          ctx.beginPath();
+          ctx.arc(W/2, H/2, wr, wAngle, wAngle + wrapT * 1.2);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    });
+
+    // Government sphere — vibrating, resisting the vines
+    const resistance = Math.min(1, phaseT / 4);
+    const jitter = resistance * 6;
+    const jx = (Math.random()-0.5) * jitter;
+    const jy = (Math.random()-0.5) * jitter;
+    const breathe = Math.sin(now / 300) * (2 + resistance * 4);
+    drawSphere(W/2 + jx, H/2 + jy, 95 + breathe, GOLD, 'Constitutional Government', 0.8);
+
+    // Spawn positive words — the immortal sentences that break the fetters
+    if (phaseT < 5) {
+      const spawnInterval = 5 / (CIVIL_WAR_WORDS.length - 1);
+      const shouldHave = Math.min(CIVIL_WAR_WORDS.length, Math.floor(phaseT / spawnInterval) + 1);
       while (floatingWords.length < shouldHave && floatingWords.length < CIVIL_WAR_WORDS.length) {
         const def = CIVIL_WAR_WORDS[floatingWords.length];
         floatingWords.push(makeWord(def.label, def.positive, def.color));
       }
     }
 
-    // After 3s, words start winning
-    if (phaseT > 3) {
+    // After 5s, words start glowing brighter — the ideas overcome
+    if (phaseT > 5) {
       floatingWords.filter(w => w.positive && w.phase === 'drifting').forEach(w => {
         w.phase = 'winning';
       });
@@ -1399,50 +1474,97 @@ function render(now) {
     updateWords(dt);
     drawWords();
 
-    // Government sphere visible
-    const breathe = Math.sin(now / 600) * 3;
-    drawSphere(W/2, H/2, 95 + breathe, GOLD, 'Constitutional Government', 0.8);
-
-    if (phaseT > 5 && !waitingForClick) {
+    if (phaseT > 8 && !waitingForClick) {
       waitingForClick = true;
       hintEl.textContent = 'Click to continue';
       narrate('The seeds of slavery were never truly gone.');
     }
 
-  // --- ACT II / Phase 2.2: Civil War Friction — Sphere cracks, splits, repairs ---
+  // --- ACT II / Phase 2.2: Civil War Friction — Vines dissolve, ideas win ---
   } else if (phase === 'friction-civil-war') {
     drawTitle('Civil War — 1861', 0.5);
     phaseT += dt;
-    const progress = Math.min(1, phaseT / 8);
-    floatingWords = [];
+    const progress = Math.min(1, phaseT / 10);
 
-    if (progress < 0.4) {
-      // Violent jitter
-      const intensity = Math.sin(progress / 0.4 * Math.PI) * 20;
+    // Vine remnants — fading away as light overcomes them
+    const VINE_SEEDS_2 = [
+      { color: '#ff5555', startX: 150, startY: H - 18 },
+      { color: '#ff7744', startX: 450, startY: H - 18 },
+      { color: '#ff6633', startX: 700, startY: H - 20 },
+    ];
+
+    if (progress < 0.5) {
+      // Phase A: Sphere strains under vines, cracks appear
+      const intensity = Math.sin(progress / 0.5 * Math.PI) * 20;
       const jx = (Math.random()-0.5) * intensity * 2;
       const jy = (Math.random()-0.5) * intensity * 2;
       drawSphere(W/2 + jx, H/2 + jy, 95, GOLD, 'Constitutional Government', 1);
-      // Crack lines (red)
+
+      // Vines still clinging — but dissolving
+      const vineAlpha = Math.max(0, 1 - progress * 2.5);
+      VINE_SEEDS_2.forEach((vine, vi) => {
+        ctx.save();
+        ctx.strokeStyle = vine.color;
+        ctx.lineWidth = 3 - progress * 4;
+        ctx.globalAlpha = vineAlpha * 0.6;
+        ctx.shadowColor = vine.color; ctx.shadowBlur = 6;
+        const segments = 20;
+        ctx.beginPath();
+        for (let s = 0; s <= segments; s++) {
+          const t = s / segments;
+          const cx1 = vine.startX + (W/2 - vine.startX) * 0.3;
+          const cy1 = vine.startY - 100 - vi * 40;
+          const px = vine.startX * (1-t)*(1-t) + cx1 * 2*t*(1-t) + W/2 * t*t;
+          const py = vine.startY * (1-t)*(1-t) + cy1 * 2*t*(1-t) + H/2 * t*t;
+          const wave = Math.sin(t * 8 + vi * 2 + now/800) * (12 - t * 10);
+          if (s === 0) ctx.moveTo(px + wave, py);
+          else ctx.lineTo(px + wave, py);
+        }
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      // Crack lines on sphere
       ctx.save(); ctx.globalAlpha = progress * 2;
       ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(W/2 - 20 + jx, H/2 - 60 + jy); ctx.lineTo(W/2 + 5 + jx, H/2 + jy); ctx.lineTo(W/2 - 10 + jx, H/2 + 50 + jy); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(W/2 - 20 + jx, H/2 - 60 + jy);
+      ctx.lineTo(W/2 + 5 + jx, H/2 + jy);
+      ctx.lineTo(W/2 - 10 + jx, H/2 + 50 + jy);
+      ctx.stroke();
       ctx.restore();
-    } else if (progress < 0.6) {
-      // Nearly splits — two halves
-      const splitDist = Math.sin((progress - 0.4) / 0.2 * Math.PI) * 30;
+
+      // Words glow brighter — the immortal sentences burning through
+      if (phaseT > 1 && floatingWords.length === 0) {
+        const burnWords = ['Divine Justice', 'Abolition', 'Freedom', 'All Men Created Equal'];
+        burnWords.forEach((label, i) => {
+          const angle = (i / burnWords.length) * Math.PI * 2 - Math.PI/2;
+          const w = makeWord(label, true, '#ffe088');
+          w.x = W/2 + Math.cos(angle) * 130;
+          w.y = H/2 + Math.sin(angle) * 100;
+          w.vx = 0; w.vy = 0;
+          w.fontSize = 16;
+          w.phase = 'winning';
+          floatingWords.push(w);
+        });
+      }
+
+    } else if (progress < 0.7) {
+      // Phase B: Nearly splits — but the words hold it together
+      const splitDist = Math.sin((progress - 0.5) / 0.2 * Math.PI) * 30;
       drawSphere(W/2 - splitDist, H/2, 95 * 0.55, '#6688cc', 'North', 0.7);
       drawSphere(W/2 + splitDist, H/2, 95 * 0.55, '#cc8866', 'South', 0.7);
       ctx.save(); ctx.globalAlpha = 0.5; ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 3;
       ctx.setLineDash([8,4]); ctx.beginPath(); ctx.moveTo(W/2, H/2 - 80); ctx.lineTo(W/2, H/2 + 80); ctx.stroke();
       ctx.setLineDash([]); ctx.restore();
     } else {
-      // Repair — come back together, brighter but scarred
-      const repairT = (progress - 0.6) / 0.4;
+      // Phase C: Repair — vines gone, sphere heals, scars remain
+      const repairT = (progress - 0.7) / 0.3;
       const ease = easeInOut(repairT);
-      const brightness = ease * 20;
+      const brightness = ease * 25;
       drawSphere(W/2, H/2, 95, lighten(GOLD, brightness), 'Constitutional Government', 1);
-      // Scar line (fading)
-      if (repairT < 0.8) {
+      // Scar line (fading slowly)
+      if (repairT < 0.9) {
         ctx.save(); ctx.globalAlpha = 0.3 * (1 - repairT);
         ctx.strokeStyle = '#ff6666'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(W/2 - 5, H/2 - 50); ctx.lineTo(W/2 + 3, H/2); ctx.lineTo(W/2 - 3, H/2 + 45); ctx.stroke();
@@ -1450,11 +1572,14 @@ function render(now) {
       }
     }
 
+    updateWords(dt);
+    drawWords();
+
     if (progress >= 1 && !waitingForClick) {
       popSeed('Slavery', true); // pops slavery, drops Inequality child seed
       waitingForClick = true;
       hintEl.textContent = 'Click to continue';
-      narrate('The freedom slog begins.');
+      narrate('Oppression neither went down in blood, nor did the breath of freedom come from the cannon\u2019s mouth. \u2014 Mary Baker Eddy');
     }
 
   // --- ACT II / Phase 2.3a: Robber Barons Swirl ---
