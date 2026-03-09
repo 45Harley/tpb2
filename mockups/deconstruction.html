@@ -1399,8 +1399,14 @@ function render(now) {
     drawTitle('From the Seeds of Slavery', 0.5);
     phaseT += dt;
 
-    // Sprout the slavery seed
-    if (phaseT < 0.1) sproutSeedsForPhase('swirl-civil-war');
+    // Mark slavery seed as popped — vines replaced the sprouting blob
+    if (phaseT < 0.1) {
+      seeds.forEach(s => {
+        if (s.state === 'dormant' && s.sproutPhase === 'swirl-civil-war') {
+          s.state = 'popped';
+        }
+      });
+    }
 
     // 3 vine sources — sprouting from seed positions at bottom
     const VINE_SEEDS = [
