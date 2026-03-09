@@ -174,6 +174,28 @@ const DECONSTRUCT_TREE = {
   ]
 };
 
+// Founding idea swirl words
+const FOUNDING_POSITIVE = [
+  { label: 'Liberty', color: '#f0d060' },
+  { label: 'Equality', color: '#f0d060' },
+  { label: 'Consent', color: '#e8c840' },
+  { label: 'Self-Governance', color: '#f0d060' },
+  { label: 'Natural Rights', color: '#e8c840' },
+  { label: 'Social Contract', color: '#f0d060' },
+  { label: 'Common Good', color: '#e8c840' },
+  { label: 'Justice', color: '#f0d060' },
+  { label: 'Representation', color: '#e8c840' },
+];
+
+const FOUNDING_NEGATIVE = [
+  { label: 'Tyranny', color: '#aa4444' },
+  { label: 'Slavery', color: '#aa3333' },
+  { label: 'Property over People', color: '#996633' },
+  { label: 'Men Only', color: '#997755' },
+  { label: "King's Rule", color: '#885555' },
+  { label: 'Landed Gentry', color: '#887766' },
+];
+
 // ========================================
 // STATE
 // ========================================
@@ -198,7 +220,7 @@ function reportDwell() {
   console.log('=========================');
 }
 
-let phase = 'start';
+let phase = 'opening';
 let phaseT = 0;
 let lastTime = 0;
 let waitingForClick = false; // gate for click-to-continue
@@ -687,14 +709,63 @@ function render(now) {
   //     1.3  Form People    — Nebula blobs condense into "The People" sphere
   // =====================================================================
 
-  // --- ACT I / Phase 1.0: The People ---
-  if (phase === 'start') {
-    drawTitle('The Origin of American Government', 0.5);
-    const breathe = Math.sin(now / 600) * 4;
-    drawSphere(peopleBall.x, peopleBall.y, peopleBall.r + breathe, peopleBall.color, peopleBall.label, 1);
-    ctx.save(); ctx.globalAlpha = 0.4; ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
-    ctx.fillStyle = '#888'; ctx.textAlign = 'center';
-    ctx.fillText('circa 1750', W / 2, H / 2 + 120); ctx.restore();
+  // --- ACT I / Phase 1.0: Opening — MBE Quote ---
+  if (phase === 'opening') {
+    phaseT += dt;
+    const quoteAlpha = easeInOut(Math.min(1, phaseT / 2));
+    ctx.save(); ctx.globalAlpha = quoteAlpha * 0.8;
+    ctx.font = 'italic 20px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = GOLD; ctx.textAlign = 'center';
+    ctx.fillText('"The focus of ideas"', W/2, H/2 - 15);
+    ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#888';
+    ctx.fillText('— Mary Baker Eddy', W/2, H/2 + 15);
+    ctx.restore();
+
+  // --- ACT I / Phase 1.1: Idea Swirl — The Enlightenment ---
+  } else if (phase === 'swirl-founding') {
+    drawTitle('The Enlightenment', 0.5);
+    phaseT += dt;
+
+    // Spawn words over first 3 seconds
+    if (phaseT < 3) {
+      const allWords = [...FOUNDING_POSITIVE.map(w=>({...w,positive:true})), ...FOUNDING_NEGATIVE.map(w=>({...w,positive:false}))];
+      const spawnInterval = 3 / allWords.length;
+      const shouldHave = Math.floor(phaseT / spawnInterval);
+      while (floatingWords.length < shouldHave && floatingWords.length < allWords.length) {
+        const def = allWords[floatingWords.length];
+        floatingWords.push(makeWord(def.label, def.positive, def.color));
+      }
+    }
+
+    // After 4 seconds, negative words start shrinking
+    if (phaseT > 4) {
+      floatingWords.filter(w => !w.positive && w.phase === 'drifting').forEach(w => {
+        w.phase = 'shrinking';
+      });
+    }
+
+    // After 5 seconds, positive words start winning
+    if (phaseT > 5) {
+      floatingWords.filter(w => w.positive && w.phase === 'drifting').forEach(w => {
+        w.phase = 'winning';
+      });
+    }
+
+    // Drop seeds when negative words fade out
+    floatingWords.filter(w => !w.positive && w.phase === 'shrinking' && w.alpha < 0.05).forEach(w => {
+      if (w.phase !== 'seeding') { w.phase = 'seeding'; dropSeed(w); }
+    });
+
+    updateWords(dt);
+    drawWords();
+
+    // Once swirl stabilizes (~7s), show click-to-continue
+    if (phaseT > 7 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('Ideas take hold. Not all survive.');
+    }
 
   // --- ACT I / Phase 1.4a: Jitter People (auto-transition) ---
   } else if (phase === 'jitter-people') {
@@ -1094,15 +1165,15 @@ function getMousePos(e) {
 // Click handler for all phases
 canvas.addEventListener('click', function(e) {
   // Start / restart
-  if (phase === 'start' || phase === 'ended') {
+  if (phase === 'opening' || phase === 'ended') {
     logDwell(phase);
     dwellLog = []; phaseStartTime = Date.now();
-    phase = 'jitter-people'; phaseT = 0;
+    phase = 'swirl-founding'; phaseT = 0;
+    floatingWords = []; seeds = []; nebulae = [];
     spheres = []; townBalls = []; stateBalls = []; leafSpheres = [];
     closingQueued = false; dragging = null; waitingForClick = false;
     peopleBall = makeBall(W / 2, H / 2, 90, 'The People', GOLD);
     hintEl.textContent = ''; narrationEl.textContent = '';
-    narrate('It began with the people.');
     return;
   }
 
@@ -1112,7 +1183,17 @@ canvas.addEventListener('click', function(e) {
     logDwell(phase);
     hintEl.textContent = '';
 
-    if (phase === 'towns') {
+    if (phase === 'swirl-founding') {
+      phase = 'condense-founding'; phaseT = 0;
+      // Create 3 nebulae from the winning words
+      const nebulaConfigs = [
+        { x: W/2 - 150, y: H/2 - 30, r: 80, color: '#f0d060', label: 'Rights of Man' },
+        { x: W/2 + 120, y: H/2 - 50, r: 70, color: '#e8c840', label: 'Social Contract' },
+        { x: W/2, y: H/2 + 60, r: 75, color: '#f0d060', label: 'Self-Governance' },
+      ];
+      nebulaConfigs.forEach(c => nebulae.push(makeNebula(c.x, c.y, c.r, c.color, c.label)));
+      narrate('Principles form. Still rough. Still unfinished.');
+    } else if (phase === 'towns') {
       phase = 'coalesce1'; phaseT = 0;
       placeStates();
       narrate('The towns coalesced into thirteen colonies.');
@@ -1179,7 +1260,7 @@ canvas.addEventListener('touchstart', function(e) {
   e.preventDefault();
   const pos = getMousePos(e.touches[0]);
 
-  if (phase === 'start' || phase === 'ended') {
+  if (phase === 'opening' || phase === 'ended') {
     canvas.dispatchEvent(new MouseEvent('click', { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }));
     return;
   }
