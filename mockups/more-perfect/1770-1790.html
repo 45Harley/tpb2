@@ -460,24 +460,40 @@ function render(now) {
     updateWords(dt);
     drawWords();
 
-    // MBE seed quote — fades in after seeds settle (~10s)
-    if (phaseT > 10) {
-      const seedQuoteAlpha = easeInOut(Math.min(1, (phaseT - 10) * 0.5));
+    // MBE superstition quote — as dark seeds fall (~8s)
+    if (phaseT > 8 && phaseT < 13) {
+      const q1Alpha = easeInOut(Math.min(1, (phaseT - 8) * 0.5)) * (phaseT < 12 ? 1 : 1 - (phaseT - 12));
       ctx.save();
-      ctx.globalAlpha = seedQuoteAlpha * 0.6;
+      ctx.globalAlpha = q1Alpha * 0.6;
+      ctx.font = 'italic 20px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#ff9999'; ctx.textAlign = 'center';
+      ctx.fillText('"Superstition, like the fowls of the air,', W/2, H/2 + 70);
+      ctx.fillText('snatches away the good seed before it has sprouted."', W/2, H/2 + 96);
+      ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
+      ctx.globalAlpha = q1Alpha * 0.4;
+      ctx.fillStyle = '#cc8888';
+      ctx.fillText('— Mary Baker Eddy, Science and Health 237:12', W/2, H/2 + 124);
+      ctx.restore();
+    }
+
+    // MBE honest heart quote — after superstition fades (~13s)
+    if (phaseT > 13) {
+      const q2Alpha = easeInOut(Math.min(1, (phaseT - 13) * 0.5));
+      ctx.save();
+      ctx.globalAlpha = q2Alpha * 0.6;
       ctx.font = 'italic 20px Segoe UI, system-ui, sans-serif';
       ctx.fillStyle = '#ccc'; ctx.textAlign = 'center';
       ctx.fillText('"In the soil of an honest and good heart the seed must be sown;', W/2, H/2 + 60);
       ctx.fillText('else it beareth not much fruit, for the swinish element', W/2, H/2 + 86);
       ctx.fillText('in human nature uproots it."', W/2, H/2 + 112);
       ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
-      ctx.globalAlpha = seedQuoteAlpha * 0.4;
+      ctx.globalAlpha = q2Alpha * 0.4;
       ctx.fillText('— Mary Baker Eddy, Science and Health 272:6', W/2, H/2 + 140);
       ctx.restore();
     }
 
-    // Once swirl stabilizes (~14s), show click-to-continue
-    if (phaseT > 14 && !waitingForClick) {
+    // Once swirl stabilizes (~17s), show click-to-continue
+    if (phaseT > 17 && !waitingForClick) {
       waitingForClick = true;
       hintEl.textContent = 'Click to continue';
       narrate('Ideas take hold. Not all survive.');
