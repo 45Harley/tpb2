@@ -513,19 +513,19 @@ const SEED_DEFS = [
   { label: "King's Rule", color: '#ff8888', seedX: 600, seedY: H-20, sproutPhase: null, childSeed: null, positive: false, tooltip: 'One person ruling over many — the old way' },
   { label: 'Landed Gentry', color: '#ffcc88', seedX: 750, seedY: H-18, sproutPhase: null, childSeed: null, positive: false, tooltip: 'Only property owners get a voice' },
   // Gold seeds (positive — planted at founding, bloom across eras)
-  { label: 'Unselfish', color: '#f0d060', seedX: 100, seedY: 18, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Service to others above self-interest' },
-  { label: 'Golden Rule', color: '#e8c840', seedX: 250, seedY: 20, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Do to others as you would have them do to you' },
-  { label: 'Education', color: '#f0d060', seedX: 400, seedY: 18, sproutPhase: null, childSeed: null, positive: true, tooltip: 'An informed citizenry is the foundation of democracy' },
-  { label: 'Common Good', color: '#e8c840', seedX: 550, seedY: 20, sproutPhase: null, childSeed: null, positive: true, tooltip: 'What benefits everyone, not just the few' },
-  { label: 'Truth', color: '#ffe088', seedX: 700, seedY: 18, sproutPhase: null, childSeed: null, positive: true, tooltip: 'The light that darkness cannot overcome' },
-  { label: 'Love', color: '#f0d060', seedX: 830, seedY: 20, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Love is the liberator' },
+  { label: 'Unselfish', color: '#f0d060', seedX: 100, seedY: 45, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Service to others above self-interest' },
+  { label: 'Golden Rule', color: '#e8c840', seedX: 250, seedY: 47, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Do to others as you would have them do to you' },
+  { label: 'Education', color: '#f0d060', seedX: 400, seedY: 45, sproutPhase: null, childSeed: null, positive: true, tooltip: 'An informed citizenry is the foundation of democracy' },
+  { label: 'Common Good', color: '#e8c840', seedX: 550, seedY: 47, sproutPhase: null, childSeed: null, positive: true, tooltip: 'What benefits everyone, not just the few' },
+  { label: 'Truth', color: '#ffe088', seedX: 700, seedY: 45, sproutPhase: null, childSeed: null, positive: true, tooltip: 'The light that darkness cannot overcome' },
+  { label: 'Love', color: '#f0d060', seedX: 830, seedY: 47, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Love is the liberator' },
 ];
 
 function makeSeed(def) {
   return {
     label: def.label, color: def.color,
     x: def.seedX, y: def.seedY,
-    r: 4, alpha: 0, targetAlpha: 0.3,
+    r: 6, alpha: 0, targetAlpha: 0.5,
     state: 'dormant',
     sproutPhase: def.sproutPhase,
     childSeed: def.childSeed,
