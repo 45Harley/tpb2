@@ -474,7 +474,17 @@ function render(now) {
   drawGrid();
   updateParticles(dt);
 
-  // --- START: The People ---
+  // =====================================================================
+  // ACT I: THE FOUNDING
+  // Phase 1.0 — Opening / The People (currently 'start')
+  //   Future sub-phases:
+  //     1.0  Opening        — MBE quote: "the focus of ideas"
+  //     1.1  Idea Swirl     — Enlightenment words float, positive win, negative drop seeds
+  //     1.2  Condense       — Positive words cluster into nebula blobs
+  //     1.3  Form People    — Nebula blobs condense into "The People" sphere
+  // =====================================================================
+
+  // --- ACT I / Phase 1.0: The People ---
   if (phase === 'start') {
     drawTitle('The Origin of American Government', 0.5);
     const breathe = Math.sin(now / 600) * 4;
@@ -483,7 +493,7 @@ function render(now) {
     ctx.fillStyle = '#888'; ctx.textAlign = 'center';
     ctx.fillText('circa 1750', W / 2, H / 2 + 120); ctx.restore();
 
-  // --- JITTER PEOPLE ---
+  // --- ACT I / Phase 1.4a: Jitter People (auto-transition) ---
   } else if (phase === 'jitter-people') {
     drawTitle('The Origin of American Government', 0.5);
     phaseT += dt;
@@ -510,7 +520,7 @@ function render(now) {
       narrate('The people settled into towns and cities.');
     }
 
-  // --- SCATTER into towns ---
+  // --- ACT I / Phase 1.4b: Scatter into Towns (auto-transition) ---
   } else if (phase === 'scatter') {
     drawTitle('The Origin of American Government', 0.5);
     phaseT += dt;
@@ -543,7 +553,7 @@ function render(now) {
       hintEl.textContent = 'Click to continue';
     }
 
-  // --- TOWNS: wait for click ---
+  // --- ACT I / Phase 1.4c: Towns — Colonial Capitals (click to continue) ---
   } else if (phase === 'towns') {
     drawTitle('Colonial Capital Cities — circa 1750', 0.5);
     const breathe = Math.sin(now / 700) * 2;
@@ -553,7 +563,7 @@ function render(now) {
 
     townBalls.forEach(b => drawSphere(b.x, b.y, b.r + breathe, b.color, b.label, 1));
 
-  // --- COALESCE 1: towns → states (SLOW) ---
+  // --- ACT I / Phase 1.5a: Coalesce Towns → Colonies (auto, 3.5s) ---
   } else if (phase === 'coalesce1') {
     drawTitle('Towns become Colonies', 0.5);
     phaseT += dt;
@@ -584,13 +594,13 @@ function render(now) {
       hintEl.textContent = 'Click to continue';
     }
 
-  // --- STATES: wait for click ---
+  // --- ACT I / Phase 1.5b: Thirteen Colonies (click to continue) ---
   } else if (phase === 'states') {
     drawTitle('The Thirteen Colonies — 1776', 0.5);
     const breathe = Math.sin(now / 700) * 2;
     stateBalls.forEach(s => drawSphere(s.x, s.y, s.r + breathe, s.color, s.label, 1));
 
-  // --- COALESCE 2: states → Government (SLOW) ---
+  // --- ACT I / Phase 1.6: Forge Constitutional Government (auto, 4s) ---
   } else if (phase === 'coalesce2') {
     drawTitle('E Pluribus Unum', 0.5);
     phaseT += dt;
@@ -626,7 +636,7 @@ function render(now) {
       hintEl.textContent = 'Click to deconstruct';
     }
 
-  // --- GOV ARRIVE: wait for click to enter interactive ---
+  // --- ACT I / Phase 1.6b: Government Arrived (click to deconstruct) ---
   } else if (phase === 'gov-arrive') {
     drawTitle('The United States Constitutional Government', 0.5);
     const breathe = Math.sin(now / 600) * 4;
@@ -636,7 +646,8 @@ function render(now) {
     ctx.fillStyle = '#d4af37'; ctx.textAlign = 'center';
     ctx.fillText('We the People', W / 2, H / 2 + 115); ctx.restore();
 
-  // --- INTERACTIVE: deconstruction ---
+  // --- ACT I / Phase 1.7: Interactive Deconstruction (user-driven) ---
+  //   Click spheres to split: Gov → Branches + Jurisdictions → deeper
   } else if (phase === 'interactive') {
     drawTitle('Deconstruction', 0.5);
 
@@ -661,7 +672,24 @@ function render(now) {
     spheres.forEach(s => updateInteractiveSphere(s, dt, now));
     drawParticles();
 
-  // --- CLOSING ---
+  // =====================================================================
+  // ACT I / Phase 1.8: "A More Perfect Union" (auto after full deconstruct)
+  //   Future: transitions to Act II instead of ending
+  // =====================================================================
+  // ACT II: THE FRICTION (future phases)
+  //   2.1  Civil War Swirl    — "Slavery" seed sprouts, new words swirl
+  //   2.2  Civil War Friction — Gov sphere cracks, nearly splits, repairs with scars
+  //   2.3  Robber Barons      — "Property over People" seed sprouts, pressure on sphere
+  //   2.4  Women's Suffrage   — "Men Only" seed sprouts, half sphere illuminates
+  //   2.5  Civil Rights       — "Inequality" seed sprouts, Act I words echo/restated
+  // =====================================================================
+  // ACT III: THE ENABLEMENT (future phases)
+  //   3.1  Technology         — Electric blue network tendrils, not clouds
+  //   3.2  People Power       — Gov sphere cracks from INSIDE, people re-emerge connected
+  //   3.3  Final              — Network resolves, "The building continues"
+  // =====================================================================
+
+  // --- ACT I / Phase 1.8: Closing — "A More Perfect Union" ---
   } else if (phase === 'closing') {
     phaseT += dt;
     const progress = Math.min(1, phaseT / 3.5);
@@ -706,7 +734,7 @@ function render(now) {
       hintEl.textContent = 'Click to begin again';
     }
 
-  // --- ENDED ---
+  // --- ENDED (click to restart) — future: replaced by Act II transition ---
   } else if (phase === 'ended') {
     phaseT += dt;
     drawTitle('A More Perfect Union', 0.5);
