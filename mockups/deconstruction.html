@@ -196,6 +196,14 @@ const FOUNDING_NEGATIVE = [
   { label: 'Landed Gentry', color: '#887766' },
 ];
 
+// Act II word lists
+const CIVIL_WAR_WORDS = [
+  { label: 'Abolition', color: '#f0d060', positive: true },
+  { label: 'Freedom', color: '#f0d060', positive: true },
+  { label: 'Union', color: '#e8c840', positive: true },
+  { label: 'All Men', color: '#f0d060', positive: true },
+];
+
 // ========================================
 // STATE
 // ========================================
@@ -1083,6 +1091,96 @@ function render(now) {
     ctx.fillText('We the People', W/2, H/2 + 115); ctx.restore();
     // Seeds visible at edges (drawn by drawSeeds in main render loop)
 
+  // =====================================================================
+  // ACT II: THE FRICTION
+  // =====================================================================
+
+  // --- ACT II / Phase 2.1: Civil War Swirl — Slavery seed sprouts ---
+  } else if (phase === 'swirl-civil-war') {
+    drawTitle('The Seeds of Slavery', 0.5);
+    phaseT += dt;
+
+    // Sprout the slavery seed (once)
+    if (phaseT < 0.1) sproutSeedsForPhase('swirl-civil-war');
+
+    // Spawn positive words
+    if (phaseT < 2) {
+      const spawnInterval = 2 / CIVIL_WAR_WORDS.length;
+      const shouldHave = Math.floor(phaseT / spawnInterval);
+      while (floatingWords.length < shouldHave && floatingWords.length < CIVIL_WAR_WORDS.length) {
+        const def = CIVIL_WAR_WORDS[floatingWords.length];
+        floatingWords.push(makeWord(def.label, def.positive, def.color));
+      }
+    }
+
+    // After 3s, words start winning
+    if (phaseT > 3) {
+      floatingWords.filter(w => w.positive && w.phase === 'drifting').forEach(w => {
+        w.phase = 'winning';
+      });
+    }
+
+    updateWords(dt);
+    drawWords();
+
+    // Government sphere visible
+    const breathe = Math.sin(now / 600) * 3;
+    drawSphere(W/2, H/2, 95 + breathe, GOLD, 'Constitutional Government', 0.8);
+
+    if (phaseT > 5 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('The seeds of slavery were never truly gone.');
+    }
+
+  // --- ACT II / Phase 2.2: Civil War Friction — Sphere cracks, splits, repairs ---
+  } else if (phase === 'friction-civil-war') {
+    drawTitle('Civil War — 1861', 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 5);
+    floatingWords = [];
+
+    if (progress < 0.4) {
+      // Violent jitter
+      const intensity = Math.sin(progress / 0.4 * Math.PI) * 20;
+      const jx = (Math.random()-0.5) * intensity * 2;
+      const jy = (Math.random()-0.5) * intensity * 2;
+      drawSphere(W/2 + jx, H/2 + jy, 95, GOLD, 'Constitutional Government', 1);
+      // Crack lines (red)
+      ctx.save(); ctx.globalAlpha = progress * 2;
+      ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(W/2 - 20 + jx, H/2 - 60 + jy); ctx.lineTo(W/2 + 5 + jx, H/2 + jy); ctx.lineTo(W/2 - 10 + jx, H/2 + 50 + jy); ctx.stroke();
+      ctx.restore();
+    } else if (progress < 0.6) {
+      // Nearly splits — two halves
+      const splitDist = Math.sin((progress - 0.4) / 0.2 * Math.PI) * 30;
+      drawSphere(W/2 - splitDist, H/2, 95 * 0.55, '#6688cc', 'North', 0.7);
+      drawSphere(W/2 + splitDist, H/2, 95 * 0.55, '#cc8866', 'South', 0.7);
+      ctx.save(); ctx.globalAlpha = 0.5; ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 3;
+      ctx.setLineDash([8,4]); ctx.beginPath(); ctx.moveTo(W/2, H/2 - 80); ctx.lineTo(W/2, H/2 + 80); ctx.stroke();
+      ctx.setLineDash([]); ctx.restore();
+    } else {
+      // Repair — come back together, brighter but scarred
+      const repairT = (progress - 0.6) / 0.4;
+      const ease = easeInOut(repairT);
+      const brightness = ease * 20;
+      drawSphere(W/2, H/2, 95, lighten(GOLD, brightness), 'Constitutional Government', 1);
+      // Scar line (fading)
+      if (repairT < 0.8) {
+        ctx.save(); ctx.globalAlpha = 0.3 * (1 - repairT);
+        ctx.strokeStyle = '#ff6666'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(W/2 - 5, H/2 - 50); ctx.lineTo(W/2 + 3, H/2); ctx.lineTo(W/2 - 3, H/2 + 45); ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    if (progress >= 1 && !waitingForClick) {
+      popSeed('Slavery', true); // pops slavery, drops Inequality child seed
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('The freedom slog begins.');
+    }
+
   // --- ENDED (click to restart) ---
   } else if (phase === 'ended') {
     phaseT += dt;
@@ -1289,6 +1387,12 @@ canvas.addEventListener('click', function(e) {
       narrate('Deconstructing.');
     } else if (phase === 'post-deconstruct') {
       phase = 'swirl-civil-war'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'swirl-civil-war') {
+      phase = 'friction-civil-war'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'friction-civil-war') {
+      phase = 'swirl-robber-barons'; phaseT = 0;
       floatingWords = [];
     }
     return;
