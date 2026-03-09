@@ -1458,22 +1458,28 @@ function render(now) {
         drawLeaf(pt.x, pt.y, leafSize, stemAngle + leafSide * 1.2, darken(vine.color, 20), 0.6);
       }
 
-      // Vine label at the root — starts huge, shrinks as orbiting words burn it
+      ctx.restore();
+      // Vine label — starts huge, shrinks as orbiting words burn it
       if (vProgress > 0.1) {
         const shrink = Math.min(1, Math.max(0, (phaseT - 4) / 4)); // shrink from t=4 to t=8
-        const labelSize = 28 - shrink * 18; // 28px → 10px
-        const labelAlpha = Math.min(0.9, vProgress) * (1 - shrink * 0.7);
+        const labelSize = 36 - shrink * 22; // 36px → 14px
+        const labelAlpha = Math.min(1, vProgress) * (1 - shrink * 0.7);
+        ctx.save();
         ctx.globalAlpha = labelAlpha;
         ctx.font = '700 ' + labelSize + 'px Segoe UI, system-ui, sans-serif';
         ctx.fillStyle = vine.color;
-        ctx.textAlign = 'center';
-        ctx.fillText(vine.label, vine.startX, vine.startY - 10);
+        ctx.shadowColor = vine.color; ctx.shadowBlur = 20;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText(vine.label, vine.startX, vine.startY - 20);
+        ctx.restore();
       }
 
       // Entangling tendrils when vine reaches the sphere
       if (vProgress > 0.8) {
+        ctx.save();
         const wrapT = (vProgress - 0.8) / 0.2;
         ctx.globalAlpha = wrapT * 0.5;
+        ctx.strokeStyle = vine.color;
         ctx.lineWidth = 1.5;
         for (let t = 0; t < 3; t++) {
           const wAngle = (vi * 2.1 + t * 1.5) + now/1200;
@@ -1482,8 +1488,8 @@ function render(now) {
           ctx.arc(W/2, H/2, wr, wAngle, wAngle + wrapT * 1.2);
           ctx.stroke();
         }
+        ctx.restore();
       }
-      ctx.restore();
     });
 
     // Government sphere — vibrating, resisting the vines
