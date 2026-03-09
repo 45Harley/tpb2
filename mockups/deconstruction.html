@@ -177,6 +177,27 @@ const DECONSTRUCT_TREE = {
 // ========================================
 // STATE
 // ========================================
+
+// ========================================
+// DWELL TIME TRACKING
+// ========================================
+let dwellLog = [];
+let phaseStartTime = Date.now();
+
+function logDwell(fromPhase) {
+  const now = Date.now();
+  dwellLog.push({ phase: fromPhase, dwellMs: now - phaseStartTime });
+  phaseStartTime = now;
+}
+
+function reportDwell() {
+  const total = dwellLog.reduce((s, d) => s + d.dwellMs, 0);
+  console.log('=== Dwell Time Report ===');
+  dwellLog.forEach(d => console.log('  ' + d.phase + ': ' + (d.dwellMs/1000).toFixed(1) + 's'));
+  console.log('  TOTAL: ' + (total/1000).toFixed(1) + 's');
+  console.log('=========================');
+}
+
 let phase = 'start';
 let phaseT = 0;
 let lastTime = 0;
@@ -913,6 +934,7 @@ function render(now) {
     if (progress >= 1 && !ttsPlaying) {
       phase = 'ended';
       phaseT = 0;
+      reportDwell();
       hintEl.textContent = 'Click to begin again';
     }
 
@@ -1073,6 +1095,8 @@ function getMousePos(e) {
 canvas.addEventListener('click', function(e) {
   // Start / restart
   if (phase === 'start' || phase === 'ended') {
+    logDwell(phase);
+    dwellLog = []; phaseStartTime = Date.now();
     phase = 'jitter-people'; phaseT = 0;
     spheres = []; townBalls = []; stateBalls = []; leafSpheres = [];
     closingQueued = false; dragging = null; waitingForClick = false;
@@ -1085,6 +1109,7 @@ canvas.addEventListener('click', function(e) {
   // Click-to-continue gates
   if (waitingForClick) {
     waitingForClick = false;
+    logDwell(phase);
     hintEl.textContent = '';
 
     if (phase === 'towns') {
