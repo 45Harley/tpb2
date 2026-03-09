@@ -726,6 +726,64 @@ function drawNebulae(now) {
 // ========================================
 // VINE HELPERS (shared across eras)
 // ========================================
+function drawThorn(x, y, angle, size, color, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = darken(color, 30);
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(size * 0.3, -size);
+  ctx.lineTo(-size * 0.15, -size * 0.2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBranch(startPt, angle, length, depth, vine, now, alpha) {
+  if (depth > 3 || length < 8) return;
+  const segs = 6;
+  const pts = [];
+  for (let i = 0; i <= segs; i++) {
+    const t = i / segs;
+    const wave = Math.sin(t * 5 + now/600 + depth * 3) * (4 - depth);
+    pts.push({
+      x: startPt.x + Math.cos(angle) * length * t + Math.cos(angle + Math.PI/2) * wave,
+      y: startPt.y + Math.sin(angle) * length * t + Math.sin(angle + Math.PI/2) * wave
+    });
+  }
+  ctx.save();
+  ctx.strokeStyle = vine.color;
+  ctx.lineWidth = Math.max(0.5, 2.5 - depth * 0.7);
+  ctx.globalAlpha = alpha * (1 - depth * 0.2);
+  ctx.beginPath();
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+  // Thorns on branch
+  for (let i = 1; i < pts.length; i += 2) {
+    const prev = pts[i-1];
+    const a = Math.atan2(pts[i].y - prev.y, pts[i].x - prev.x);
+    const side = (i % 4 < 2) ? 1 : -1;
+    drawThorn(pts[i].x, pts[i].y, a + side * 1.3, 4 - depth, vine.color, alpha * 0.7);
+  }
+  // Leaf at tip
+  if (pts.length > 1) {
+    const tip = pts[pts.length-1], prev = pts[pts.length-2];
+    const tipAngle = Math.atan2(tip.y - prev.y, tip.x - prev.x);
+    drawLeaf(tip.x, tip.y, 6 - depth, tipAngle, darken(vine.color, 20), alpha * 0.5);
+  }
+  // Sub-branches
+  if (depth < 2) {
+    const mid = pts[Math.floor(segs * 0.6)];
+    const branchAngle1 = angle + 0.6 + Math.sin(now/1000 + depth) * 0.2;
+    const branchAngle2 = angle - 0.6 + Math.cos(now/900 + depth) * 0.2;
+    drawBranch(mid, branchAngle1, length * 0.55, depth + 1, vine, now, alpha);
+    drawBranch(mid, branchAngle2, length * 0.5, depth + 1, vine, now, alpha);
+  }
+  ctx.restore();
+}
+
 function drawVinesGrowing(vines, phaseT, now) {
   vines.forEach((vine, vi) => {
     if (phaseT < vi * 1.2) return;
@@ -756,6 +814,15 @@ function drawVinesGrowing(vines, phaseT, now) {
     }
     ctx.stroke();
 
+    // Thorns along main stem
+    for (let s = 1; s <= reached; s += 2) {
+      const pt = vinePath[s], prevPt = vinePath[Math.max(0, s-1)];
+      const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
+      const side = (s % 4 < 2) ? 1 : -1;
+      drawThorn(pt.x, pt.y, stemAngle + side * 1.2, 6 + Math.sin(s + vi) * 2, vine.color, 0.7);
+    }
+
+    // Leaves on main stem
     for (let s = 3; s <= reached; s += 4) {
       const pt = vinePath[s], prevPt = vinePath[s - 1];
       const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
@@ -763,6 +830,19 @@ function drawVinesGrowing(vines, phaseT, now) {
       const leafSize = 8 + Math.sin(s + vi) * 3;
       drawLeaf(pt.x, pt.y, leafSize, stemAngle + leafSide * 1.2, darken(vine.color, 20), 0.6);
     }
+
+    // Branching sub-vines — grow as vine progresses
+    for (let s = 5; s <= reached; s += 5) {
+      const branchProgress = (reached - s) / segments;
+      if (branchProgress < 0.1) continue;
+      const pt = vinePath[s], prevPt = vinePath[s-1];
+      const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
+      const side = (s % 10 < 5) ? 1 : -1;
+      const branchAngle = stemAngle + side * (0.7 + Math.sin(s + vi * 3) * 0.3);
+      const branchLen = 25 + branchProgress * 40;
+      drawBranch(pt, branchAngle, branchLen, 0, vine, now, 0.6 * branchProgress);
+    }
+
     ctx.restore();
 
     // Vine label — starts huge, shrinks
@@ -820,11 +900,26 @@ function drawVinesFading(vines, progress, now) {
       else ctx.lineTo(px + wave, py);
     }
     ctx.stroke();
+    // Thorns fading
+    for (let s = 1; s <= segments; s += 2) {
+      const pt = vinePath[s], prevPt = vinePath[Math.max(0, s-1)];
+      const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
+      const side = (s % 4 < 2) ? 1 : -1;
+      drawThorn(pt.x, pt.y, stemAngle + side * 1.2, 6 + Math.sin(s+vi)*2, vine.color, vineAlpha * 0.5);
+    }
+    // Leaves fading
     for (let s = 3; s <= segments; s += 4) {
       const pt = vinePath[s], prevPt = vinePath[s-1];
       const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
       const leafSide = (s % 8 < 4) ? 1 : -1;
       drawLeaf(pt.x, pt.y, 8 + Math.sin(s+vi)*3, stemAngle + leafSide*1.2, darken(vine.color, 20), vineAlpha * 0.5);
+    }
+    // Branches fading
+    for (let s = 5; s <= segments; s += 5) {
+      const pt = vinePath[s], prevPt = vinePath[s-1];
+      const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
+      const side = (s % 10 < 5) ? 1 : -1;
+      drawBranch(pt, stemAngle + side * 0.8, 30, 0, vine, now, vineAlpha * 0.4);
     }
     ctx.restore();
   });
