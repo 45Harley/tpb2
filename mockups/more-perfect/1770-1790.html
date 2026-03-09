@@ -679,6 +679,17 @@ function render(now) {
     ctx.fillStyle = '#d4af37'; ctx.textAlign = 'center';
     ctx.fillText('We the People', W / 2, H / 2 + 115); ctx.restore();
 
+    // MBE quote — self-governance
+    ctx.save(); ctx.globalAlpha = 0.6;
+    ctx.font = 'italic 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#ccc'; ctx.textAlign = 'center';
+    ctx.fillText('"Man is properly self-governed only when he is guided rightly', W/2, H - 55);
+    ctx.fillText('and governed by his Maker, divine Truth and Love."', W/2, H - 33);
+    ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
+    ctx.globalAlpha = 0.4;
+    ctx.fillText('— Mary Baker Eddy, Science and Health 106:9', W/2, H - 12);
+    ctx.restore();
+
   // --- Interactive Deconstruction (user-driven) ---
   } else if (phase === 'interactive') {
     drawTitle('Deconstruction — 1789', 0.5);
@@ -758,6 +769,17 @@ function render(now) {
     ctx.save(); ctx.globalAlpha = 0.5; ctx.font = '400 14px Segoe UI, system-ui, sans-serif';
     ctx.fillStyle = GOLD; ctx.textAlign = 'center';
     ctx.fillText('We the People', W/2, H/2 + 115); ctx.restore();
+
+    // MBE quote — self-governance
+    ctx.save(); ctx.globalAlpha = 0.6;
+    ctx.font = 'italic 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#ccc'; ctx.textAlign = 'center';
+    ctx.fillText('"Man is properly self-governed only when he is guided rightly', W/2, H - 55);
+    ctx.fillText('and governed by his Maker, divine Truth and Love."', W/2, H - 33);
+    ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
+    ctx.globalAlpha = 0.4;
+    ctx.fillText('— Mary Baker Eddy, Science and Health 106:9', W/2, H - 12);
+    ctx.restore();
   }
 
   endFrame(now);
