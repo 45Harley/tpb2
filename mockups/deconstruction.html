@@ -204,6 +204,24 @@ const CIVIL_WAR_WORDS = [
   { label: 'All Men', color: '#f0d060', positive: true },
 ];
 
+const ROBBER_BARON_WORDS = [
+  { label: 'Labor Rights', color: '#f0d060', positive: true },
+  { label: 'Trust-Busting', color: '#e8c840', positive: true },
+  { label: 'Fair Wages', color: '#f0d060', positive: true },
+];
+
+const SUFFRAGE_WORDS = [
+  { label: 'Suffrage', color: '#f0d060', positive: true },
+  { label: '19th Amendment', color: '#e8c840', positive: true },
+  { label: 'Half the People', color: '#f0d060', positive: true },
+];
+
+const CIVIL_RIGHTS_WORDS = [
+  { label: 'Equal Protection', color: '#f0d060', positive: true },
+  { label: 'Voting Rights', color: '#e8c840', positive: true },
+  { label: 'Justice', color: '#f0d060', positive: true },
+];
+
 // ========================================
 // STATE
 // ========================================
@@ -1181,6 +1199,216 @@ function render(now) {
       narrate('The freedom slog begins.');
     }
 
+  // --- ACT II / Phase 2.3a: Robber Barons Swirl ---
+  } else if (phase === 'swirl-robber-barons') {
+    drawTitle('Concentrated Power', 0.5);
+    phaseT += dt;
+
+    if (phaseT < 0.1) sproutSeedsForPhase('swirl-robber-barons');
+
+    if (phaseT < 2) {
+      const spawnInterval = 2 / ROBBER_BARON_WORDS.length;
+      const shouldHave = Math.floor(phaseT / spawnInterval);
+      while (floatingWords.length < shouldHave && floatingWords.length < ROBBER_BARON_WORDS.length) {
+        const def = ROBBER_BARON_WORDS[floatingWords.length];
+        floatingWords.push(makeWord(def.label, def.positive, def.color));
+      }
+    }
+
+    if (phaseT > 3) {
+      floatingWords.filter(w => w.positive && w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
+    }
+
+    updateWords(dt);
+    drawWords();
+    const breathe = Math.sin(now / 600) * 3;
+    drawSphere(W/2, H/2, 95 + breathe, GOLD, 'Constitutional Government', 0.8);
+
+    if (phaseT > 5 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('Concentrated power, confronted.');
+    }
+
+  // --- ACT II / Phase 2.3b: Robber Barons Friction — Dark blobs press on sphere ---
+  } else if (phase === 'friction-robber-barons') {
+    drawTitle('The Gilded Age — 1870s', 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 4);
+    floatingWords = [];
+
+    // Dark blobs pressing from outside
+    const blobCount = 4;
+    for (let i = 0; i < blobCount; i++) {
+      const angle = (i / blobCount) * Math.PI * 2 + Math.PI / 4;
+      const pressIn = progress < 0.5 ? easeInOut(progress * 2) : easeInOut(1 - (progress - 0.5) * 2);
+      const blobDist = 160 - pressIn * 70;
+      const bx = W/2 + Math.cos(angle) * blobDist;
+      const by = H/2 + Math.sin(angle) * blobDist;
+      const blobGrad = ctx.createRadialGradient(bx, by, 0, bx, by, 35);
+      blobGrad.addColorStop(0, '#55330088');
+      blobGrad.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = 0.5 * pressIn;
+      ctx.fillStyle = blobGrad;
+      ctx.beginPath(); ctx.arc(bx, by, 35, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    // Government sphere resists then brightens
+    const brightness = progress > 0.5 ? (progress - 0.5) * 40 : 0;
+    drawSphere(W/2, H/2, 95, lighten(GOLD, brightness), 'Constitutional Government', 1);
+
+    if (progress >= 1 && !waitingForClick) {
+      popSeed('Property over People', false);
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+    }
+
+  // --- ACT II / Phase 2.4a: Suffrage Swirl ---
+  } else if (phase === 'swirl-suffrage') {
+    drawTitle('Half the People', 0.5);
+    phaseT += dt;
+
+    if (phaseT < 0.1) sproutSeedsForPhase('swirl-suffrage');
+
+    if (phaseT < 2) {
+      const spawnInterval = 2 / SUFFRAGE_WORDS.length;
+      const shouldHave = Math.floor(phaseT / spawnInterval);
+      while (floatingWords.length < shouldHave && floatingWords.length < SUFFRAGE_WORDS.length) {
+        const def = SUFFRAGE_WORDS[floatingWords.length];
+        floatingWords.push(makeWord(def.label, def.positive, def.color));
+      }
+    }
+
+    if (phaseT > 3) {
+      floatingWords.filter(w => w.positive && w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
+    }
+
+    updateWords(dt);
+    drawWords();
+    const breathe = Math.sin(now / 600) * 3;
+    drawSphere(W/2, H/2, 95 + breathe, GOLD, 'Constitutional Government', 0.8);
+
+    if (phaseT > 5 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('Half the people, finally counted.');
+    }
+
+  // --- ACT II / Phase 2.4b: Suffrage Friction — Half sphere illuminates ---
+  } else if (phase === 'friction-suffrage') {
+    drawTitle("Women's Suffrage — 1920", 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 4);
+    floatingWords = [];
+
+    // Draw sphere with left half dimmer, then illuminating
+    const dimAlpha = progress < 0.6 ? 0.4 : 0.4 + (progress - 0.6) / 0.4 * 0.6;
+
+    // Right half (always bright)
+    ctx.save();
+    ctx.beginPath(); ctx.rect(W/2, 0, W/2, H); ctx.clip();
+    drawSphere(W/2, H/2, 95, GOLD, '', 1);
+    ctx.restore();
+
+    // Left half (starts dim, illuminates)
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, W/2, H); ctx.clip();
+    drawSphere(W/2, H/2, 95, GOLD, '', dimAlpha);
+    ctx.restore();
+
+    // Label on top
+    ctx.save();
+    ctx.font = '700 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#1a1030';
+    ctx.shadowColor = 'rgba(255,255,255,0.25)'; ctx.shadowBlur = 2;
+    ctx.fillText('Constitutional', W/2, H/2 - 8);
+    ctx.fillText('Government', W/2, H/2 + 8);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // Flash when fully illuminated
+    if (progress > 0.8) {
+      const flash = Math.sin((progress - 0.8) / 0.2 * Math.PI) * 0.3;
+      ctx.save(); ctx.globalAlpha = flash;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(W/2, H/2, 100, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    if (progress >= 1 && !waitingForClick) {
+      popSeed('Men Only', false); // pops for real, no child seed
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+    }
+
+  // --- ACT II / Phase 2.5a: Civil Rights Swirl — Inequality seed sprouts ---
+  } else if (phase === 'swirl-civil-rights') {
+    drawTitle('Not New Principles', 0.5);
+    phaseT += dt;
+
+    if (phaseT < 0.1) sproutSeedsForPhase('swirl-civil-rights');
+
+    if (phaseT < 2) {
+      const spawnInterval = 2 / CIVIL_RIGHTS_WORDS.length;
+      const shouldHave = Math.floor(phaseT / spawnInterval);
+      while (floatingWords.length < shouldHave && floatingWords.length < CIVIL_RIGHTS_WORDS.length) {
+        const def = CIVIL_RIGHTS_WORDS[floatingWords.length];
+        floatingWords.push(makeWord(def.label, def.positive, def.color));
+      }
+    }
+
+    if (phaseT > 3) {
+      floatingWords.filter(w => w.positive && w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
+    }
+
+    updateWords(dt);
+    drawWords();
+    const breathe = Math.sin(now / 600) * 3;
+    drawSphere(W/2, H/2, 95 + breathe, GOLD, 'Constitutional Government', 0.8);
+
+    if (phaseT > 5 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('Not new principles. The same ones — restated, reclaimed.');
+    }
+
+  // --- ACT II / Phase 2.5b: Civil Rights Friction — Echoes of Act I ---
+  } else if (phase === 'friction-civil-rights') {
+    drawTitle('Civil Rights — 1960s', 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 4);
+    floatingWords = [];
+
+    // Echo words from Act I pulse from edges toward sphere
+    const echoWords = ['Equality', 'Consent', 'Justice', 'Common Good'];
+    echoWords.forEach((word, i) => {
+      const angle = (i / echoWords.length) * Math.PI * 2 - Math.PI / 2;
+      const echoProgress = Math.max(0, Math.min(1, (progress - i * 0.1) * 2));
+      const ex = lerp(W/2 + Math.cos(angle) * 300, W/2 + Math.cos(angle) * 100, easeInOut(echoProgress));
+      const ey = lerp(H/2 + Math.sin(angle) * 200, H/2 + Math.sin(angle) * 100, easeInOut(echoProgress));
+      ctx.save();
+      ctx.globalAlpha = echoProgress * 0.6;
+      ctx.font = '700 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#f0d060';
+      ctx.shadowColor = '#f0d060'; ctx.shadowBlur = 10;
+      ctx.fillText(word, ex, ey);
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    });
+
+    // Sphere brightens as echoes arrive
+    const brightness = progress * 30;
+    drawSphere(W/2, H/2, 95, lighten(GOLD, brightness), 'Constitutional Government', 1);
+
+    if (progress >= 1 && !waitingForClick) {
+      popSeed('Inequality', false);
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+    }
+
   // --- ENDED (click to restart) ---
   } else if (phase === 'ended') {
     phaseT += dt;
@@ -1393,6 +1621,24 @@ canvas.addEventListener('click', function(e) {
       floatingWords = [];
     } else if (phase === 'friction-civil-war') {
       phase = 'swirl-robber-barons'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'swirl-robber-barons') {
+      phase = 'friction-robber-barons'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'friction-robber-barons') {
+      phase = 'swirl-suffrage'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'swirl-suffrage') {
+      phase = 'friction-suffrage'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'friction-suffrage') {
+      phase = 'swirl-civil-rights'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'swirl-civil-rights') {
+      phase = 'friction-civil-rights'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'friction-civil-rights') {
+      phase = 'swirl-technology'; phaseT = 0;
       floatingWords = [];
     }
     return;
