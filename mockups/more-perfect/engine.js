@@ -584,13 +584,13 @@ function drawSeeds() {
     ctx.fillStyle = s.color;
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
 
-    // Dormant label — small text near the seed
+    // Dormant label
     if (s.state === 'dormant') {
       ctx.save();
-      ctx.globalAlpha = 0.5;
-      ctx.font = '400 11px Segoe UI, system-ui, sans-serif';
+      ctx.globalAlpha = 0.7;
+      ctx.font = '600 16px Segoe UI, system-ui, sans-serif';
       ctx.fillStyle = s.color; ctx.textAlign = 'center';
-      ctx.fillText(s.label, s.x, s.positive ? s.y + 16 : s.y - 10);
+      ctx.fillText(s.label, s.x, s.positive ? s.y + 24 : s.y - 14);
       ctx.restore();
     }
 
@@ -612,18 +612,18 @@ function drawSeeds() {
   // Tooltip for hovered seed
   if (hoveredSeed && hoveredSeed.tooltip && hoveredSeed.state !== 'popped') {
     const s = hoveredSeed;
-    const tipY = s.positive ? s.y + 30 : s.y - 28;
+    const tipY = s.positive ? s.y + 42 : s.y - 36;
     ctx.save();
     // Background pill
-    ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
-    const tw = ctx.measureText(s.tooltip).width + 16;
+    ctx.font = '400 16px Segoe UI, system-ui, sans-serif';
+    const tw = ctx.measureText(s.tooltip).width + 20;
     const tx = Math.max(tw/2 + 5, Math.min(W - tw/2 - 5, s.x));
     ctx.fillStyle = '#222';
     ctx.globalAlpha = 0.9;
     ctx.beginPath();
-    ctx.roundRect(tx - tw/2, tipY - 10, tw, 22, 4);
+    ctx.roundRect(tx - tw/2, tipY - 13, tw, 28, 5);
     ctx.fill();
-    ctx.strokeStyle = s.color; ctx.lineWidth = 1; ctx.globalAlpha = 0.6;
+    ctx.strokeStyle = s.color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.7;
     ctx.stroke();
     // Text
     ctx.globalAlpha = 1;
