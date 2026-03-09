@@ -504,21 +504,21 @@ function drawWords() {
 let seeds = [];
 
 const SEED_DEFS = [
-  // Dark seeds (negative — red tones, bottom edge)
-  { label: 'Tyranny', color: '#ff6666', seedX: 60, seedY: H-20, sproutPhase: null, childSeed: null, positive: false, tooltip: 'The impulse to control others by force' },
-  { label: 'Slavery', color: '#ff5555', seedX: 150, seedY: H-18, sproutPhase: 'swirl-civil-war', positive: false, tooltip: 'The original sin — owning human beings',
-    childSeed: { label: 'Inequality', color: '#ff7777', seedX: 180, seedY: H-22, sproutPhase: 'swirl-civil-rights', childSeed: null, positive: false, tooltip: 'The scar that slavery left behind' }},
-  { label: 'Property over People', color: '#ffaa55', seedX: 300, seedY: H-20, sproutPhase: 'swirl-robber-barons', childSeed: null, positive: false, tooltip: 'Wealth valued above human dignity' },
-  { label: 'Men Only', color: '#ffbb77', seedX: 450, seedY: H-18, sproutPhase: 'swirl-suffrage', childSeed: null, positive: false, tooltip: 'Half the people excluded from self-governance' },
-  { label: "King's Rule", color: '#ff8888', seedX: 600, seedY: H-20, sproutPhase: null, childSeed: null, positive: false, tooltip: 'One person ruling over many — the old way' },
-  { label: 'Landed Gentry', color: '#ffcc88', seedX: 750, seedY: H-18, sproutPhase: null, childSeed: null, positive: false, tooltip: 'Only property owners get a voice' },
-  // Gold seeds (positive — planted at founding, bloom across eras)
-  { label: 'Unselfish', color: '#f0d060', seedX: 100, seedY: 45, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Service to others above self-interest' },
-  { label: 'Golden Rule', color: '#e8c840', seedX: 250, seedY: 47, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Do to others as you would have them do to you' },
-  { label: 'Education', color: '#f0d060', seedX: 400, seedY: 45, sproutPhase: null, childSeed: null, positive: true, tooltip: 'An informed citizenry is the foundation of democracy' },
-  { label: 'Common Good', color: '#e8c840', seedX: 550, seedY: 47, sproutPhase: null, childSeed: null, positive: true, tooltip: 'What benefits everyone, not just the few' },
-  { label: 'Truth', color: '#ffe088', seedX: 700, seedY: 45, sproutPhase: null, childSeed: null, positive: true, tooltip: 'The light that darkness cannot overcome' },
-  { label: 'Love', color: '#f0d060', seedX: 830, seedY: 47, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Love is the liberator' },
+  // Dark seeds (negative — right edge, spaced vertically)
+  { label: 'Tyranny', color: '#ff6666', seedX: W-30, seedY: 60, sproutPhase: null, childSeed: null, positive: false, tooltip: 'The impulse to control others by force' },
+  { label: 'Slavery', color: '#ff5555', seedX: W-30, seedY: 130, sproutPhase: 'swirl-civil-war', positive: false, tooltip: 'The original sin — owning human beings',
+    childSeed: { label: 'Inequality', color: '#ff7777', seedX: W-30, seedY: 135, sproutPhase: 'swirl-civil-rights', childSeed: null, positive: false, tooltip: 'The scar that slavery left behind' }},
+  { label: 'Property over People', color: '#ffaa55', seedX: W-30, seedY: 200, sproutPhase: 'swirl-robber-barons', childSeed: null, positive: false, tooltip: 'Wealth valued above human dignity' },
+  { label: 'Men Only', color: '#ffbb77', seedX: W-30, seedY: 270, sproutPhase: 'swirl-suffrage', childSeed: null, positive: false, tooltip: 'Half the people excluded from self-governance' },
+  { label: "King's Rule", color: '#ff8888', seedX: W-30, seedY: 340, sproutPhase: null, childSeed: null, positive: false, tooltip: 'One person ruling over many — the old way' },
+  { label: 'Landed Gentry', color: '#ffcc88', seedX: W-30, seedY: 410, sproutPhase: null, childSeed: null, positive: false, tooltip: 'Only property owners get a voice' },
+  // Gold seeds (positive — left edge, spaced vertically)
+  { label: 'Unselfish', color: '#f0d060', seedX: 30, seedY: 60, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Service to others above self-interest' },
+  { label: 'Golden Rule', color: '#e8c840', seedX: 30, seedY: 130, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Do to others as you would have them do to you' },
+  { label: 'Education', color: '#f0d060', seedX: 30, seedY: 200, sproutPhase: null, childSeed: null, positive: true, tooltip: 'An informed citizenry is the foundation of democracy' },
+  { label: 'Common Good', color: '#e8c840', seedX: 30, seedY: 270, sproutPhase: null, childSeed: null, positive: true, tooltip: 'What benefits everyone, not just the few' },
+  { label: 'Truth', color: '#ffe088', seedX: 30, seedY: 340, sproutPhase: null, childSeed: null, positive: true, tooltip: 'The light that darkness cannot overcome' },
+  { label: 'Love', color: '#f0d060', seedX: 30, seedY: 410, sproutPhase: null, childSeed: null, positive: true, tooltip: 'Love is the liberator' },
 ];
 
 function makeSeed(def) {
@@ -584,13 +584,15 @@ function drawSeeds() {
     ctx.fillStyle = s.color;
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
 
-    // Dormant label
+    // Dormant label — left seeds label right, right seeds label left
     if (s.state === 'dormant') {
       ctx.save();
       ctx.globalAlpha = 0.7;
       ctx.font = '600 16px Segoe UI, system-ui, sans-serif';
-      ctx.fillStyle = s.color; ctx.textAlign = 'center';
-      ctx.fillText(s.label, s.x, s.positive ? s.y + 24 : s.y - 14);
+      ctx.fillStyle = s.color;
+      ctx.textAlign = s.positive ? 'left' : 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(s.label, s.positive ? s.x + 12 : s.x - 12, s.y);
       ctx.restore();
     }
 
@@ -612,7 +614,7 @@ function drawSeeds() {
   // Tooltip for hovered seed
   if (hoveredSeed && hoveredSeed.tooltip && hoveredSeed.state !== 'popped') {
     const s = hoveredSeed;
-    const tipY = s.positive ? s.y + 42 : s.y - 36;
+    const tipY = s.y + 22;
     ctx.save();
     // Background pill
     ctx.font = '400 16px Segoe UI, system-ui, sans-serif';
