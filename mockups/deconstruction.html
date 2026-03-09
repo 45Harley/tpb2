@@ -222,6 +222,15 @@ const CIVIL_RIGHTS_WORDS = [
   { label: 'Justice', color: '#f0d060', positive: true },
 ];
 
+// Act III word list
+const TECH_WORDS = [
+  { label: 'Internet', color: '#62a4d0', positive: true },
+  { label: 'Open Data', color: '#62a4d0', positive: true },
+  { label: 'Transparency', color: '#6af', positive: true },
+  { label: 'Connection', color: '#6af', positive: true },
+  { label: 'Every Voice', color: '#62a4d0', positive: true },
+];
+
 // ========================================
 // STATE
 // ========================================
@@ -1409,30 +1418,151 @@ function render(now) {
       hintEl.textContent = 'Click to continue';
     }
 
-  // --- ENDED (click to restart) ---
-  } else if (phase === 'ended') {
+  // =====================================================================
+  // ACT III: THE ENABLEMENT
+  // =====================================================================
+
+  // --- ACT III / Phase 3.1: Technology — Network tendrils ---
+  } else if (phase === 'swirl-technology') {
+    drawTitle('A New Kind of Power', 0.5);
+    phaseT += dt;
+
+    // Spawn tech words (blue, not gold)
+    if (phaseT < 2) {
+      const spawnInterval = 2 / TECH_WORDS.length;
+      const shouldHave = Math.floor(phaseT / spawnInterval);
+      while (floatingWords.length < shouldHave && floatingWords.length < TECH_WORDS.length) {
+        const def = TECH_WORDS[floatingWords.length];
+        floatingWords.push(makeWord(def.label, def.positive, def.color));
+      }
+    }
+
+    if (phaseT > 3) {
+      floatingWords.filter(w => w.positive && w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
+    }
+
+    updateWords(dt);
+    drawWords();
+
+    // Government sphere
+    drawSphere(W/2, H/2, 95, GOLD, 'Constitutional Government', 0.7);
+
+    // Network tendrils growing around sphere
+    if (phaseT > 3) {
+      const tendrilProgress = Math.min(1, (phaseT - 3) / 3);
+      ctx.save(); ctx.globalAlpha = tendrilProgress * 0.4;
+      ctx.strokeStyle = '#6af'; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2 + now/3000;
+        const r1 = 100, r2 = 140 + Math.sin(now/1000 + i) * 20;
+        ctx.beginPath();
+        ctx.moveTo(W/2 + Math.cos(angle) * r1, H/2 + Math.sin(angle) * r1);
+        ctx.lineTo(W/2 + Math.cos(angle + 0.3) * r2, H/2 + Math.sin(angle + 0.3) * r2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    if (phaseT > 6 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('A new kind of power. Not concentrated. Connected.');
+    }
+
+  // --- ACT III / Phase 3.2: People Power — Sphere cracks from inside ---
+  } else if (phase === 'people-power') {
+    drawTitle('People Power', 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 4);
+
+    if (progress < 0.4) {
+      // Sphere cracks from inside — golden light radiating out
+      const crackIntensity = progress / 0.4;
+      drawSphere(W/2, H/2, 95, GOLD, 'Constitutional Government', 1 - crackIntensity * 0.3);
+      // Golden light through cracks
+      ctx.save(); ctx.globalAlpha = crackIntensity * 0.6;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(W/2 + Math.cos(angle) * 30, H/2 + Math.sin(angle) * 30);
+        ctx.lineTo(W/2 + Math.cos(angle) * 95 * crackIntensity, H/2 + Math.sin(angle) * 95 * crackIntensity);
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else {
+      // Small connected spheres emerge
+      const emergeT = (progress - 0.4) / 0.6;
+      const ease = easeOutBack(Math.min(1, emergeT));
+      const nodeCount = 12;
+      const nodes = [];
+      for (let i = 0; i < nodeCount; i++) {
+        const angle = (i / nodeCount) * Math.PI * 2;
+        const orbitR = 60 + (i % 3) * 40;
+        const nx = W/2 + Math.cos(angle + now/4000) * orbitR * ease;
+        const ny = H/2 + Math.sin(angle + now/4000) * orbitR * 0.7 * ease;
+        nodes.push({x: nx, y: ny});
+        drawSphere(nx, ny, 12 + (i%3)*4, GOLD, '', ease * 0.8);
+      }
+      // Connection lines
+      ctx.save(); ctx.globalAlpha = ease * 0.3; ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 1;
+      nodes.forEach((a, i) => {
+        nodes.forEach((b, j) => {
+          if (j > i && dist(a.x, a.y, b.x, b.y) < 140) {
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          }
+        });
+      });
+      ctx.restore();
+    }
+
+    // Remaining seeds dissolve
+    seeds.forEach(s => { if (s.state === 'dormant') s.alpha = Math.max(0, s.alpha - dt * 0.2); });
+
+    if (progress >= 1 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('The People re-emerge.');
+    }
+
+  // --- ACT III / Phase 3.3: Final — The Building Continues ---
+  } else if (phase === 'final') {
     phaseT += dt;
     drawTitle('A More Perfect Union', 0.5);
 
-    const drift = phaseT * 0.15;
-    leafSpheres.forEach((s, i) => {
-      const angle = drift + (i / leafSpheres.length) * Math.PI * 2;
-      const orbitR = 80 + i * 12;
-      s.x = W / 2 + Math.cos(angle) * orbitR;
-      s.y = H / 2 + Math.sin(angle) * orbitR * 0.5;
-      drawSphere(s.x, s.y, s.r * 0.4, s.color, '', 0.15);
+    // Pulsing network of people-spheres
+    const nodeCount = 12;
+    const nodes = [];
+    for (let i = 0; i < nodeCount; i++) {
+      const angle = (i / nodeCount) * Math.PI * 2;
+      const orbitR = 60 + (i % 3) * 40;
+      const nx = W/2 + Math.cos(angle + phaseT * 0.15) * orbitR;
+      const ny = H/2 + Math.sin(angle + phaseT * 0.15) * orbitR * 0.7;
+      nodes.push({x: nx, y: ny});
+      const pulse = 0.6 + Math.sin(now/1000 + i) * 0.2;
+      drawSphere(nx, ny, (12 + (i%3)*4) * pulse, GOLD, '', 0.7);
+    }
+    ctx.save(); ctx.globalAlpha = 0.25; ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 1;
+    nodes.forEach((a, i) => {
+      nodes.forEach((b, j) => {
+        if (j > i && dist(a.x, a.y, b.x, b.y) < 140) {
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
+      });
     });
+    ctx.restore();
 
     const pulse = 0.85 + Math.sin(now / 1200) * 0.15;
     ctx.save(); ctx.globalAlpha = 0.9 * pulse;
     ctx.font = '700 28px Segoe UI, system-ui, sans-serif';
     ctx.fillStyle = GOLD; ctx.textAlign = 'center';
-    ctx.fillText('A more perfect union.', W / 2, H / 2 - 15); ctx.restore();
-
+    ctx.fillText('A more perfect union.', W/2, H/2 - 15); ctx.restore();
     ctx.save(); ctx.globalAlpha = 0.55;
     ctx.font = '400 16px Segoe UI, system-ui, sans-serif';
     ctx.fillStyle = '#b0b0b0'; ctx.textAlign = 'center';
-    ctx.fillText('The building continues.', W / 2, H / 2 + 18); ctx.restore();
+    ctx.fillText('The building continues.', W/2, H/2 + 18); ctx.restore();
+
+    hintEl.textContent = 'Click to begin again';
   }
 
   drawSeeds();
@@ -1565,7 +1695,7 @@ function getMousePos(e) {
 // Click handler for all phases
 canvas.addEventListener('click', function(e) {
   // Start / restart
-  if (phase === 'opening' || phase === 'ended') {
+  if (phase === 'opening' || phase === 'final') {
     logDwell(phase);
     dwellLog = []; phaseStartTime = Date.now();
     phase = 'swirl-founding'; phaseT = 0;
@@ -1640,6 +1770,13 @@ canvas.addEventListener('click', function(e) {
     } else if (phase === 'friction-civil-rights') {
       phase = 'swirl-technology'; phaseT = 0;
       floatingWords = [];
+    } else if (phase === 'swirl-technology') {
+      phase = 'people-power'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'people-power') {
+      phase = 'final'; phaseT = 0;
+      reportDwell();
+      narrate('The building continues.');
     }
     return;
   }
@@ -1693,7 +1830,7 @@ canvas.addEventListener('touchstart', function(e) {
   e.preventDefault();
   const pos = getMousePos(e.touches[0]);
 
-  if (phase === 'opening' || phase === 'ended') {
+  if (phase === 'opening' || phase === 'final') {
     canvas.dispatchEvent(new MouseEvent('click', { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }));
     return;
   }
