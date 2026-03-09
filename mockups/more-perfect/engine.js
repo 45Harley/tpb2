@@ -48,13 +48,12 @@ function navigateToEra(file) {
 
 function makePanelZoomable(panel) {
   let scale = 1;
-  panel.style.transformOrigin = 'top center';
-  panel.style.overflow = 'hidden';
+  panel.style.transformOrigin = 'top left';
   panel.addEventListener('wheel', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    scale += e.deltaY < 0 ? 0.1 : -0.1;
-    scale = Math.max(0.6, Math.min(2.5, scale));
+    scale += e.deltaY < 0 ? 0.15 : -0.15;
+    scale = Math.max(0.8, Math.min(3.0, scale));
     panel.style.transform = `scale(${scale})`;
   }, { passive: false });
 }
