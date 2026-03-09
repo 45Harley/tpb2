@@ -347,17 +347,17 @@ function render(now) {
 
     // Light green "The New World" sphere — breathing in center
     const sphereAlpha = easeInOut(Math.min(1, phaseT * 0.8));
-    const breathe = Math.sin(phaseT * 1.5) * 4;
+    const breathe = Math.sin(phaseT * 1.5) * 5;
     ctx.save();
     ctx.globalAlpha = sphereAlpha * 0.7;
-    const sr = 70 + breathe;
+    const sr = 95 + breathe;
     const grd = ctx.createRadialGradient(W/2, H/2, sr*0.1, W/2, H/2, sr);
     grd.addColorStop(0, '#a8e6a0');
     grd.addColorStop(0.7, '#5cb85c');
     grd.addColorStop(1, '#3a8a3a');
     ctx.fillStyle = grd;
     ctx.beginPath(); ctx.arc(W/2, H/2, sr, 0, Math.PI*2); ctx.fill();
-    ctx.font = '700 22px Segoe UI, system-ui, sans-serif';
+    ctx.font = '700 28px Segoe UI, system-ui, sans-serif';
     ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('The New World', W/2, H/2);
     ctx.restore();
@@ -384,23 +384,27 @@ function render(now) {
     ctx.shadowBlur = 0;
     ctx.restore();
 
-    // Lines 2-5 — below sphere
+    // Lines 2-5 — below sphere, measureText wrapping to fit canvas
     if (subChars > 0) {
       const subAlpha = easeInOut(Math.min(1, (phaseT - subStartT) * 0.8));
       const visible = subText.slice(0, Math.max(0, subChars));
-      const words = visible.split(' ');
-      const lines = []; let cur = '';
-      words.forEach(w => {
-        const test = cur ? cur + ' ' + w : w;
-        if (test.length > 35 && cur) { lines.push(cur); cur = w; }
-        else cur = test;
-      });
-      if (cur) lines.push(cur);
+      const maxW = W - 60; // 30px margin each side
 
       ctx.save();
       ctx.globalAlpha = subAlpha * 0.8;
       ctx.font = 'italic 24px Segoe UI, system-ui, sans-serif';
       ctx.fillStyle = '#ccc'; ctx.textAlign = 'center';
+
+      // Word-wrap using measureText
+      const words = visible.split(' ');
+      const lines = []; let cur = '';
+      words.forEach(w => {
+        const test = cur ? cur + ' ' + w : w;
+        if (cur && ctx.measureText(test).width > maxW) { lines.push(cur); cur = w; }
+        else cur = test;
+      });
+      if (cur) lines.push(cur);
+
       lines.forEach((ln, i) => {
         ctx.fillText(ln, W/2, H/2 + sr + 30 + i * 30);
       });
