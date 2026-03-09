@@ -66,7 +66,7 @@
 <canvas id="c" width="900" height="600"></canvas>
 <div class="narration" id="narration"></div>
 <div class="hint" id="hint">Click to begin</div>
-<div id="timeline" style="position:fixed;bottom:0;left:0;right:0;height:28px;background:#0a0a14;display:flex;align-items:center;z-index:10;padding:0 8px;gap:1px;font-family:monospace;font-size:9px;overflow-x:auto;"></div>
+<div id="timeline" style="position:fixed;bottom:0;left:0;right:0;height:28px;background:#111;display:flex;align-items:center;z-index:10;padding:0 8px;gap:2px;font-family:monospace;font-size:9px;overflow-x:auto;border-top:1px solid #444;"></div>
 
 <script>
 const canvas = document.getElementById('c');
@@ -125,7 +125,7 @@ function buildTimeline() {
     const node = document.createElement('div');
     node.id = 'tl-' + p.id;
     node.textContent = p.label;
-    node.style.cssText = 'padding:2px 5px;border-radius:3px;white-space:nowrap;color:#444;border:1px solid #222;cursor:default;transition:all 0.3s;';
+    node.style.cssText = 'padding:2px 5px;border-radius:3px;white-space:nowrap;color:#999;border:1px solid #555;cursor:default;transition:all 0.3s;';
     el.appendChild(node);
   });
   timelineBuilt = true;
@@ -146,13 +146,13 @@ function updateTimeline(currentPhase) {
       node.style.borderColor = ACT_COLORS[p.act];
       node.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     } else if (i < currentIdx) {
-      node.style.color = '#666';
-      node.style.background = '#1a1a2e';
-      node.style.borderColor = '#333';
+      node.style.color = '#b0b0b0';
+      node.style.background = '#222';
+      node.style.borderColor = '#555';
     } else {
-      node.style.color = '#333';
+      node.style.color = '#777';
       node.style.background = 'transparent';
-      node.style.borderColor = '#1a1a2e';
+      node.style.borderColor = '#444';
     }
   });
 }
