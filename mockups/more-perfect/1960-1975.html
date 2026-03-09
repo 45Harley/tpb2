@@ -87,76 +87,7 @@ function render(now) {
     phaseT += dt;
 
     // Draw vines growing toward and entangling the sphere
-    CR_VINES.forEach((vine, vi) => {
-      if (phaseT < vi * 1.2) return;
-      const vProgress = Math.min(1, (phaseT - vi * 1.2) / 5);
-      const segments = 20;
-      const reached = Math.floor(vProgress * segments);
-
-      const vinePath = [];
-      for (let s = 0; s <= segments; s++) {
-        const t = s / segments;
-        const cx1 = vine.startX + (W/2 - vine.startX) * 0.3;
-        const cy1 = vine.startY - 100 - vi * 40;
-        const px = vine.startX * (1-t)*(1-t) + cx1 * 2*t*(1-t) + W/2 * t*t;
-        const py = vine.startY * (1-t)*(1-t) + cy1 * 2*t*(1-t) + H/2 * t*t;
-        const wave = Math.sin(t * 8 + vi * 2 + now/800) * (12 - t * 10);
-        vinePath.push({ x: px + wave, y: py });
-      }
-
-      // Draw vine stem
-      ctx.save();
-      ctx.strokeStyle = vine.color;
-      ctx.lineWidth = 2.5 + vProgress * 2;
-      ctx.shadowColor = vine.color; ctx.shadowBlur = 8;
-      ctx.globalAlpha = 0.7;
-      ctx.beginPath();
-      for (let s = 0; s <= reached; s++) {
-        if (s === 0) ctx.moveTo(vinePath[s].x, vinePath[s].y);
-        else ctx.lineTo(vinePath[s].x, vinePath[s].y);
-      }
-      ctx.stroke();
-
-      // Leaves along the vine
-      for (let s = 3; s <= reached; s += 4) {
-        const pt = vinePath[s], prevPt = vinePath[s - 1];
-        const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
-        const leafSide = (s % 8 < 4) ? 1 : -1;
-        const leafSize = 8 + Math.sin(s + vi) * 3;
-        drawLeaf(pt.x, pt.y, leafSize, stemAngle + leafSide * 1.2, darken(vine.color, 20), 0.6);
-      }
-      ctx.restore();
-
-      // Vine label — starts huge, shrinks as orbiting words burn it
-      if (vProgress > 0.1) {
-        const shrink = Math.min(1, Math.max(0, (phaseT - 4) / 4));
-        const labelSize = 36 - shrink * 22;
-        const labelAlpha = Math.min(1, vProgress) * (1 - shrink * 0.7);
-        ctx.save();
-        ctx.globalAlpha = labelAlpha;
-        ctx.font = '700 ' + labelSize + 'px Segoe UI, system-ui, sans-serif';
-        ctx.fillStyle = vine.color;
-        ctx.shadowColor = vine.color; ctx.shadowBlur = 20;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-        ctx.fillText(vine.label, vine.startX, vine.startY - 20);
-        ctx.restore();
-      }
-
-      // Entangling tendrils when vine reaches the sphere
-      if (vProgress > 0.8) {
-        ctx.save();
-        const wrapT = (vProgress - 0.8) / 0.2;
-        ctx.globalAlpha = wrapT * 0.5;
-        ctx.strokeStyle = vine.color; ctx.lineWidth = 1.5;
-        for (let t = 0; t < 3; t++) {
-          const wAngle = (vi * 2.1 + t * 1.5) + now/1200;
-          ctx.beginPath();
-          ctx.arc(W/2, H/2, 100, wAngle, wAngle + wrapT * 1.2);
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-    });
+    drawVinesGrowing(CR_VINES, phaseT, now);
 
     // Government sphere — vibrating, resisting the vines
     const resistance = Math.min(1, phaseT / 4);
@@ -229,37 +160,7 @@ function render(now) {
       drawSphere(W/2 + jx, H/2 + jy, 95, GOLD, 'Constitutional Government', 1);
 
       // Vines dissolving
-      const vineAlpha = Math.max(0, 1 - progress * 2.5);
-      CR_VINES_2.forEach((vine, vi) => {
-        ctx.save();
-        ctx.strokeStyle = vine.color;
-        ctx.lineWidth = Math.max(0.5, 3 - progress * 5);
-        ctx.globalAlpha = vineAlpha * 0.6;
-        ctx.shadowColor = vine.color; ctx.shadowBlur = 6;
-        const segments = 20;
-        const vinePath2 = [];
-        ctx.beginPath();
-        for (let s = 0; s <= segments; s++) {
-          const t = s / segments;
-          const cx1 = vine.startX + (W/2 - vine.startX) * 0.3;
-          const cy1 = vine.startY - 100 - vi * 40;
-          const px = vine.startX * (1-t)*(1-t) + cx1 * 2*t*(1-t) + W/2 * t*t;
-          const py = vine.startY * (1-t)*(1-t) + cy1 * 2*t*(1-t) + H/2 * t*t;
-          const wave = Math.sin(t * 8 + vi * 2 + now/800) * (12 - t * 10);
-          vinePath2.push({ x: px + wave, y: py });
-          if (s === 0) ctx.moveTo(px + wave, py);
-          else ctx.lineTo(px + wave, py);
-        }
-        ctx.stroke();
-        // Fading leaves
-        for (let s = 3; s <= segments; s += 4) {
-          const pt = vinePath2[s], prevPt = vinePath2[s-1];
-          const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
-          const leafSide = (s % 8 < 4) ? 1 : -1;
-          drawLeaf(pt.x, pt.y, 8 + Math.sin(s+vi)*3, stemAngle + leafSide*1.2, darken(vine.color, 20), vineAlpha * 0.5);
-        }
-        ctx.restore();
-      });
+      drawVinesFading(CR_VINES_2, progress, now);
 
       // Crack lines on sphere
       ctx.save(); ctx.globalAlpha = progress * 2;
