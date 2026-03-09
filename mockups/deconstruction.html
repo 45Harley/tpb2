@@ -1676,36 +1676,52 @@ function render(now) {
     drawTitle('A New Kind of Power', 0.5);
     phaseT += dt;
 
-    // Spawn tech words from edges — they orbit, never touch the sphere
+    // Spawn tech words from all different edges — inflow toward center
     if (phaseT < 5) {
       const spawnInterval = 5 / TECH_WORDS.length;
       const shouldHave = Math.floor(phaseT / spawnInterval);
       while (floatingWords.length < shouldHave && floatingWords.length < TECH_WORDS.length) {
         const def = TECH_WORDS[floatingWords.length];
-        const w = makeWord(def.label, false, def.color); // not positive — no center drift
+        const w = makeWord(def.label, false, def.color);
         w.fontSize = def.size || 16;
-        w.orbiting = true; // special flag for orbit behavior
+        w.baseFontSize = def.size || 16;
+        w.orbiting = false; // starts inflowing, transitions to orbit
+        w.orbitReady = false;
         floatingWords.push(w);
       }
     }
 
-    // Orbit behavior — words circle the sphere at safe distance
     floatingWords.forEach(w => {
-      if (w.orbiting && (w.phase === 'drifting' || w.phase === 'entering')) {
+      if (w.phase === 'drifting' || w.phase === 'entering' || w.phase === 'winning') {
         const dx = w.x - W/2, dy = w.y - H/2;
         const d = Math.sqrt(dx*dx + dy*dy) || 1;
-        const targetR = 150; // orbit radius — outside the sphere
-        // Pull toward orbit radius
-        const radialForce = (targetR - d) * 0.03;
-        w.vx += (dx / d) * radialForce;
-        w.vy += (dy / d) * radialForce;
-        // Tangential push — makes them circle
-        w.vx += (-dy / d) * 1.5;
-        w.vy += (dx / d) * 1.5;
+
+        if (!w.orbitReady) {
+          // Phase 1: Inflow — drift toward center, expand font size
+          w.vx += (W/2 - w.x) * 0.06 * dt;
+          w.vy += (H/2 - w.y) * 0.06 * dt;
+          w.fontSize = Math.min(w.baseFontSize * 1.4, w.fontSize + dt * 3);
+          // When close enough, switch to orbiting
+          if (d < 170) {
+            w.orbitReady = true;
+            w.orbiting = true;
+          }
+        }
+
+        if (w.orbiting) {
+          // Phase 2: Orbit — circle the sphere, never touch
+          const targetR = 150;
+          const radialForce = (targetR - d) * 0.04;
+          w.vx += (dx / d) * radialForce;
+          w.vy += (dy / d) * radialForce;
+          // Slow tangential push — gentle orbit
+          w.vx += (-dy / d) * 0.8;
+          w.vy += (dx / d) * 0.8;
+        }
       }
     });
 
-    if (phaseT > 4) {
+    if (phaseT > 5) {
       floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
     }
 
