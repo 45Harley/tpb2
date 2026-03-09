@@ -433,6 +433,7 @@ function reportDwell() {
 let phase = 'opening';
 let phaseT = 0;
 let lastTime = 0;
+let threatSpawnT = 0;
 let waitingForClick = false; // gate for click-to-continue
 
 function makeBall(x, y, r, label, color) {
@@ -619,15 +620,27 @@ function updateWords(dt) {
       w.vx += (W/2 - w.x) * 0.08 * dt;
       w.vy += (H/2 - w.y) * 0.08 * dt;
     }
+    // Attacking words — drift toward center aggressively
+    if (w.attacking && (w.phase === 'drifting' || w.phase === 'entering')) {
+      w.vx += (W/2 - w.x) * 0.15 * dt;
+      w.vy += (H/2 - w.y) * 0.15 * dt;
+      // Check proximity to government sphere center — melt when close
+      const d = Math.sqrt((w.x - W/2)**2 + (w.y - H/2)**2);
+      if (d < 110 && w.phase !== 'melting') {
+        w.phase = 'melting';
+        w.meltT = 0;
+        spawnParticles(w.x, w.y, w.color, 6);
+      }
+    }
     // Repulsion — words push each other apart so they don't clump
     floatingWords.forEach(other => {
       if (other === w) return;
       const dx = w.x - other.x, dy = w.y - other.y;
-      const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-      if (dist < 80) {
-        const force = (80 - dist) * 0.02;
-        w.vx += (dx / dist) * force;
-        w.vy += (dy / dist) * force;
+      const distW = Math.sqrt(dx*dx + dy*dy) || 1;
+      if (distW < 80) {
+        const force = (80 - distW) * 0.02;
+        w.vx += (dx / distW) * force;
+        w.vy += (dy / distW) * force;
       }
     });
     // Damping
@@ -645,8 +658,15 @@ function updateWords(dt) {
       w.fontSize = Math.min(w.fontSize + dt * 2, 28);
     } else if (w.phase === 'shrinking') {
       w.alpha = Math.max(0, w.alpha - dt * 1.5);
+    } else if (w.phase === 'melting') {
+      w.meltT += dt;
+      w.alpha = Math.max(0, 1 - w.meltT * 2);
+      w.fontSize *= (1 - dt * 0.5); // shrinks
+      w.vx *= 0.9; w.vy *= 0.9; // slows to a stop
     }
   });
+  // Remove fully melted words
+  floatingWords = floatingWords.filter(w => w.phase !== 'melting' || w.alpha > 0.02);
 }
 
 function drawWords() {
@@ -718,8 +738,12 @@ function updateSeeds(dt) {
       s.sproutT += dt;
       s.r = 4 + s.sproutT * 25;
       s.alpha = Math.min(0.7, 0.3 + s.sproutT * 0.3);
-      s.y -= 40 * dt;
-      if (s.sproutT > 2) s.state = 'popped';
+      // Reach toward government sphere at center
+      const dx = W/2 - s.x, dy = H/2 - s.y;
+      const d = Math.sqrt(dx*dx + dy*dy) || 1;
+      s.x += (dx / d) * 35 * dt;
+      s.y += (dy / d) * 35 * dt;
+      if (s.sproutT > 2.5) s.state = 'popped';
     }
   });
 }
@@ -738,11 +762,18 @@ function drawSeeds() {
     // Core
     ctx.fillStyle = s.color;
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
-    // Label (only when sprouting)
-    if (s.state === 'sprouting' && s.r > 10) {
-      ctx.font = '400 10px Segoe UI, system-ui, sans-serif';
-      ctx.textAlign = 'center'; ctx.fillStyle = '#ddd';
-      ctx.fillText(s.label, s.x, s.y - s.r - 6);
+    // Growing red word inside the sprouting blob — reaching for government
+    if (s.state === 'sprouting') {
+      const labelSize = Math.min(22, 8 + s.sproutT * 8);
+      const labelAlpha = Math.min(1, s.sproutT * 0.6);
+      ctx.save();
+      ctx.globalAlpha = labelAlpha;
+      ctx.font = '700 ' + labelSize + 'px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = s.color;
+      ctx.shadowColor = s.color; ctx.shadowBlur = 15;
+      ctx.fillText(s.label, s.x, s.y);
+      ctx.restore();
     }
     ctx.restore();
   });
@@ -1758,31 +1789,26 @@ function render(now) {
       { label: 'FEAR', color: '#ff8822', size: 20 },
     ];
 
-    // Spawn threat words drifting in from edges
-    if (phaseT < 7) {
-      const spawnInterval = 7 / THREAT_WORDS.length;
-      const shouldHave = Math.floor(phaseT / spawnInterval);
-      while (floatingWords.length < shouldHave && floatingWords.length < THREAT_WORDS.length) {
-        const def = THREAT_WORDS[floatingWords.length];
-        const w = makeWord(def.label, false, def.color);
-        w.fontSize = def.size;
-        floatingWords.push(w);
-      }
+    // Continuously spawn attacking threat words from all sides
+    threatSpawnT += dt;
+    if (threatSpawnT > 0.6 && floatingWords.length < 20) {
+      threatSpawnT = 0;
+      const def = THREAT_WORDS[Math.floor(Math.random() * THREAT_WORDS.length)];
+      const w = makeWord(def.label, false, def.color);
+      w.fontSize = def.size;
+      w.attacking = true; // marks word to attack the government sphere
+      floatingWords.push(w);
     }
 
     // Drum-beat pulse — all words throb in unison like a heartbeat
     const drumBeat = Math.pow(Math.max(0, Math.sin(phaseT * 2.5)), 4); // sharp pulse
     floatingWords.forEach(w => {
-      if (w.phase === 'drifting' || w.phase === 'entering') {
+      if (w.phase !== 'melting') {
         w.targetAlpha = 0.6 + drumBeat * 0.4;
-        w.fontSize = (THREAT_WORDS.find(t => t.label === w.label)?.size || 16) * (1 + drumBeat * 0.25);
+        const baseSz = THREAT_WORDS.find(t => t.label === w.label)?.size || 16;
+        w.fontSize = baseSz * (1 + drumBeat * 0.25);
       }
     });
-
-    // After 8s, words start shrinking
-    if (phaseT > 8) {
-      floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'shrinking'; });
-    }
 
     updateWords(dt);
     drawWords();
@@ -2163,7 +2189,7 @@ canvas.addEventListener('click', function(e) {
       floatingWords = [];
     } else if (phase === 'people-power') {
       phase = 'threats'; phaseT = 0;
-      floatingWords = [];
+      floatingWords = []; threatSpawnT = 0;
     } else if (phase === 'threats') {
       phase = 'the-fight'; phaseT = 0;
       floatingWords = [];
