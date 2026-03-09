@@ -66,7 +66,7 @@
 <canvas id="c" width="900" height="600"></canvas>
 <div class="narration" id="narration"></div>
 <div class="hint" id="hint">Click to begin</div>
-<div id="phaseLabel" style="position:fixed;bottom:8px;left:12px;font-size:11px;color:#555;font-family:monospace;z-index:10;"></div>
+<div id="timeline" style="position:fixed;bottom:0;left:0;right:0;height:28px;background:#0a0a14;display:flex;align-items:center;z-index:10;padding:0 8px;gap:1px;font-family:monospace;font-size:9px;overflow-x:auto;"></div>
 
 <script>
 const canvas = document.getElementById('c');
@@ -83,6 +83,79 @@ const PURPLE = '#9b59b6';
 const CORAL = '#e07050';
 const TEAL = '#45b5aa';
 const BG = '#0d0d1a';
+
+// ========================================
+// TIMELINE (debug)
+// ========================================
+const TIMELINE_PHASES = [
+  { id: 'opening', label: '1.0 Opening', act: 1 },
+  { id: 'swirl-founding', label: '1.1 Swirl', act: 1 },
+  { id: 'condense-founding', label: '1.2 Condense', act: 1 },
+  { id: 'form-people', label: '1.3 Form', act: 1 },
+  { id: 'people-ready', label: '1.3b Ready', act: 1 },
+  { id: 'jitter-people', label: '1.4a Jitter', act: 1 },
+  { id: 'scatter', label: '1.4b Scatter', act: 1 },
+  { id: 'towns', label: '1.4c Towns', act: 1 },
+  { id: 'coalesce1', label: '1.5a Coalesce', act: 1 },
+  { id: 'states', label: '1.5b Colonies', act: 1 },
+  { id: 'coalesce2', label: '1.6a Forge', act: 1 },
+  { id: 'gov-arrive', label: '1.6b Gov', act: 1 },
+  { id: 'interactive', label: '1.7 Deconstruct', act: 1 },
+  { id: 'closing', label: '1.8 Union', act: 1 },
+  { id: 'post-deconstruct', label: 'Bridge', act: 0 },
+  { id: 'swirl-civil-war', label: '2.1 CW Swirl', act: 2 },
+  { id: 'friction-civil-war', label: '2.2 CW Friction', act: 2 },
+  { id: 'swirl-robber-barons', label: '2.3a RB Swirl', act: 2 },
+  { id: 'friction-robber-barons', label: '2.3b RB Friction', act: 2 },
+  { id: 'swirl-suffrage', label: '2.4a Suf Swirl', act: 2 },
+  { id: 'friction-suffrage', label: '2.4b Suf Friction', act: 2 },
+  { id: 'swirl-civil-rights', label: '2.5a CR Swirl', act: 2 },
+  { id: 'friction-civil-rights', label: '2.5b CR Friction', act: 2 },
+  { id: 'swirl-technology', label: '3.1 Tech', act: 3 },
+  { id: 'people-power', label: '3.2 People', act: 3 },
+  { id: 'final', label: '3.3 Final', act: 3 },
+];
+const ACT_COLORS = { 0: '#666', 1: '#d4af37', 2: '#e07050', 3: '#62a4d0' };
+let timelineBuilt = false;
+
+function buildTimeline() {
+  const el = document.getElementById('timeline');
+  el.innerHTML = '';
+  TIMELINE_PHASES.forEach(p => {
+    const node = document.createElement('div');
+    node.id = 'tl-' + p.id;
+    node.textContent = p.label;
+    node.style.cssText = 'padding:2px 5px;border-radius:3px;white-space:nowrap;color:#444;border:1px solid #222;cursor:default;transition:all 0.3s;';
+    el.appendChild(node);
+  });
+  timelineBuilt = true;
+}
+
+let lastTimelinePhase = '';
+function updateTimeline(currentPhase) {
+  if (!timelineBuilt) buildTimeline();
+  if (currentPhase === lastTimelinePhase) return;
+  lastTimelinePhase = currentPhase;
+  const currentIdx = TIMELINE_PHASES.findIndex(p => p.id === currentPhase);
+  TIMELINE_PHASES.forEach((p, i) => {
+    const node = document.getElementById('tl-' + p.id);
+    if (!node) return;
+    if (p.id === currentPhase) {
+      node.style.color = '#fff';
+      node.style.background = ACT_COLORS[p.act] + '44';
+      node.style.borderColor = ACT_COLORS[p.act];
+      node.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    } else if (i < currentIdx) {
+      node.style.color = '#666';
+      node.style.background = '#1a1a2e';
+      node.style.borderColor = '#333';
+    } else {
+      node.style.color = '#333';
+      node.style.background = 'transparent';
+      node.style.borderColor = '#1a1a2e';
+    }
+  });
+}
 
 // ========================================
 // AUDIO — off by default
@@ -735,8 +808,8 @@ function render(now) {
   updateSeeds(dt);
   updateNebulae(dt);
 
-  // Phase label (debug)
-  document.getElementById('phaseLabel').textContent = phase;
+  // Timeline (debug)
+  updateTimeline(phase);
 
   // =====================================================================
   // ACT I: THE FOUNDING
