@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>More Perfect — Polarization (2010–2025)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0d1a; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+  .stage { display: flex; align-items: flex-start; gap: 12px; margin-top: 8px; }
+  .side-panel { width: 140px; display: flex; flex-direction: column; gap: 3px; padding-top: 4px; }
+  .side-panel .tl-item { padding: 3px 6px; border-radius: 3px; font: 11px/1.3 'Segoe UI', system-ui, sans-serif; color: #ccc; border: 1px solid transparent; white-space: nowrap; transition: all 0.3s; cursor: pointer; }
+  .side-panel .tl-item:hover { background: #2a2a4e; color: #fff; }
+  .side-panel .tl-item.active { border-color: #fff; color: #fff; font-weight: 700; }
+  .side-panel .tl-act-label { font: 700 12px/1.3 'Segoe UI', system-ui, sans-serif; color: #888; padding: 6px 6px 2px; text-transform: uppercase; letter-spacing: 1px; }
+  canvas { cursor: pointer; border-radius: 8px; }
+  .controls { position: fixed; top: 12px; right: 16px; display: flex; gap: 8px; z-index: 10; }
+  .controls button { background: #1a1a2e; border: 1px solid #666; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .controls button.active { border-color: #d4af37; color: #d4af37; }
+  .controls button:hover { border-color: #555; color: #ccc; }
+  .narration { margin-top: 14px; text-align: center; font-size: 1rem; color: #b0b0b0; min-height: 28px; max-width: 700px; }
+  .hint { margin-top: 6px; font-size: 0.8rem; color: #d4af37; text-align: center; min-height: 18px; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <button id="audioBtn" onclick="toggleAudio()">Audio Off</button>
+</div>
+<div class="stage">
+  <div class="side-panel" id="timeline-left"></div>
+  <div>
+    <canvas id="c" width="900" height="480"></canvas>
+    <div class="narration" id="narration"></div>
+    <div class="hint" id="hint">Click to continue to next era</div>
+  </div>
+  <div class="side-panel" id="timeline-right"></div>
+</div>
+<script src="engine.js"></script>
+<script>
+phase = 'stub';
+
+function render(now) {
+  const dt = beginFrame(now);
+
+  // Breathing sphere
+  const breathe = Math.sin(now / 600) * 4;
+  drawSphere(W/2, H/2, 95 + breathe, GOLD, 'Constitutional Government', 0.6);
+
+  // Title
+  drawTitle('Polarization — 2010\u20132025', 0.8);
+
+  // Coming soon text
+  ctx.save();
+  ctx.globalAlpha = 0.5 + Math.sin(now/1000) * 0.2;
+  ctx.font = '400 20px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#b0b0b0';
+  ctx.textAlign = 'center';
+  ctx.fillText('Coming Soon', W/2, H/2 + 140);
+  ctx.restore();
+
+  endFrame(now);
+}
+
+canvas.addEventListener('click', function() {
+  navigateToEra('2025-future.html');
+});
+
+buildTimeline([]);
+requestAnimationFrame(render);
+</script>
+</body>
+</html>

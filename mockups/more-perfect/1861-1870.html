@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>More Perfect — Civil War (1861–1870)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0d1a; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+  .stage { display: flex; align-items: flex-start; gap: 12px; margin-top: 8px; }
+  .side-panel { width: 140px; display: flex; flex-direction: column; gap: 3px; padding-top: 4px; }
+  .side-panel .tl-item { padding: 3px 6px; border-radius: 3px; font: 11px/1.3 'Segoe UI', system-ui, sans-serif; color: #ccc; border: 1px solid transparent; white-space: nowrap; transition: all 0.3s; cursor: pointer; }
+  .side-panel .tl-item:hover { background: #2a2a4e; color: #fff; }
+  .side-panel .tl-item.active { border-color: #fff; color: #fff; font-weight: 700; }
+  .side-panel .tl-act-label { font: 700 12px/1.3 'Segoe UI', system-ui, sans-serif; color: #888; padding: 6px 6px 2px; text-transform: uppercase; letter-spacing: 1px; }
+  canvas { cursor: pointer; border-radius: 8px; }
+  .controls { position: fixed; top: 12px; right: 16px; display: flex; gap: 8px; z-index: 10; }
+  .controls button { background: #1a1a2e; border: 1px solid #666; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .controls button.active { border-color: #d4af37; color: #d4af37; }
+  .controls button:hover { border-color: #555; color: #ccc; }
+  .narration { margin-top: 14px; text-align: center; font-size: 1rem; color: #b0b0b0; min-height: 28px; max-width: 700px; }
+  .hint { margin-top: 6px; font-size: 0.8rem; color: #d4af37; text-align: center; min-height: 18px; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <button id="audioBtn" onclick="toggleAudio()">Audio Off</button>
+</div>
+<div class="stage">
+  <div class="side-panel" id="timeline-left"></div>
+  <div>
+    <canvas id="c" width="900" height="480"></canvas>
+    <div class="narration" id="narration"></div>
+    <div class="hint" id="hint">Click to begin</div>
+  </div>
+  <div class="side-panel" id="timeline-right"></div>
+</div>
+<script src="engine.js"></script>
+<script>
+// ========================================
+// DATA
+// ========================================
+const CIVIL_WAR_WORDS = [
+  { label: 'Abolition', color: '#f0d060', positive: true },
+  { label: 'Freedom', color: '#f0d060', positive: true },
+  { label: 'Union', color: '#e8c840', positive: true },
+  { label: 'All Men Created Equal', color: '#f0d060', positive: true },
+  { label: 'Divine Justice', color: '#ffe088', positive: true },
+  { label: 'Immortal Sentences', color: '#ffe077', positive: true },
+  { label: 'Liberty', color: '#f0d060', positive: true },
+  { label: 'Emancipation', color: '#e8c840', positive: true },
+];
+
+const VINE_SEEDS = [
+  { label: 'Slavery', color: '#ff5555', startX: 150, startY: H - 18, angle: -Math.PI * 0.4 },
+  { label: 'Oppression', color: '#ff7744', startX: 450, startY: H - 18, angle: -Math.PI * 0.55 },
+  { label: 'Despotism', color: '#ff6633', startX: 700, startY: H - 20, angle: -Math.PI * 0.65 },
+];
+
+const VINE_SEEDS_2 = [
+  { color: '#ff5555', startX: 150, startY: H - 18 },
+  { color: '#ff7744', startX: 450, startY: H - 18 },
+  { color: '#ff6633', startX: 700, startY: H - 20 },
+];
+
+// ========================================
+// PHASES
+// ========================================
+const PHASES = [
+  { id: 'swirl-civil-war', label: 'Seeds of Slavery' },
+  { id: 'friction-civil-war', label: 'Civil War' },
+];
+
+phase = 'swirl-civil-war';
+
+// ========================================
+// RENDER
+// ========================================
+function render(now) {
+  const dt = beginFrame(now);
+  updateTimeline(phase);
+
+  // --- Swirl: 3 vines entangle the sphere, orbiting protector words ---
+  if (phase === 'swirl-civil-war') {
+    drawTitle('From the Seeds of Slavery', 0.5);
+    phaseT += dt;
+
+    // Draw vines growing toward and entangling the sphere
+    VINE_SEEDS.forEach((vine, vi) => {
+      if (phaseT < vi * 1.2) return;
+      const vProgress = Math.min(1, (phaseT - vi * 1.2) / 5);
+      const segments = 20;
+      const reached = Math.floor(vProgress * segments);
+
+      const vinePath = [];
+      for (let s = 0; s <= segments; s++) {
+        const t = s / segments;
+        const cx1 = vine.startX + (W/2 - vine.startX) * 0.3;
+        const cy1 = vine.startY - 100 - vi * 40;
+        const px = vine.startX * (1-t)*(1-t) + cx1 * 2*t*(1-t) + W/2 * t*t;
+        const py = vine.startY * (1-t)*(1-t) + cy1 * 2*t*(1-t) + H/2 * t*t;
+        const wave = Math.sin(t * 8 + vi * 2 + now/800) * (12 - t * 10);
+        vinePath.push({ x: px + wave, y: py });
+      }
+
+      // Draw vine stem
+      ctx.save();
+      ctx.strokeStyle = vine.color;
+      ctx.lineWidth = 2.5 + vProgress * 2;
+      ctx.shadowColor = vine.color;
+      ctx.shadowBlur = 8;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      for (let s = 0; s <= reached; s++) {
+        if (s === 0) ctx.moveTo(vinePath[s].x, vinePath[s].y);
+        else ctx.lineTo(vinePath[s].x, vinePath[s].y);
+      }
+      ctx.stroke();
+
+      // Draw leaves along the vine — every 4th segment
+      for (let s = 3; s <= reached; s += 4) {
+        const pt = vinePath[s];
+        const prevPt = vinePath[s - 1];
+        const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
+        const leafSide = (s % 8 < 4) ? 1 : -1;
+        const leafSize = 8 + Math.sin(s + vi) * 3;
+        drawLeaf(pt.x, pt.y, leafSize, stemAngle + leafSide * 1.2, darken(vine.color, 20), 0.6);
+      }
+
+      ctx.restore();
+      // Vine label — starts huge, shrinks as orbiting words burn it
+      if (vProgress > 0.1) {
+        const shrink = Math.min(1, Math.max(0, (phaseT - 4) / 4));
+        const labelSize = 36 - shrink * 22;
+        const labelAlpha = Math.min(1, vProgress) * (1 - shrink * 0.7);
+        ctx.save();
+        ctx.globalAlpha = labelAlpha;
+        ctx.font = '700 ' + labelSize + 'px Segoe UI, system-ui, sans-serif';
+        ctx.fillStyle = vine.color;
+        ctx.shadowColor = vine.color; ctx.shadowBlur = 20;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText(vine.label, vine.startX, vine.startY - 20);
+        ctx.restore();
+      }
+
+      // Entangling tendrils when vine reaches the sphere
+      if (vProgress > 0.8) {
+        ctx.save();
+        const wrapT = (vProgress - 0.8) / 0.2;
+        ctx.globalAlpha = wrapT * 0.5;
+        ctx.strokeStyle = vine.color;
+        ctx.lineWidth = 1.5;
+        for (let t = 0; t < 3; t++) {
+          const wAngle = (vi * 2.1 + t * 1.5) + now/1200;
+          const wr = 95 + 5;
+          ctx.beginPath();
+          ctx.arc(W/2, H/2, wr, wAngle, wAngle + wrapT * 1.2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    });
+
+    // Government sphere — vibrating, resisting the vines
+    const resistance = Math.min(1, phaseT / 4);
+    const jitter = resistance * 6;
+    const jx = (Math.random()-0.5) * jitter;
+    const jy = (Math.random()-0.5) * jitter;
+    const breathe = Math.sin(now / 300) * (2 + resistance * 4);
+    drawSphere(W/2 + jx, H/2 + jy, 95 + breathe, GOLD, 'Constitutional Government', 0.8);
+
+    // Spawn positive words — the immortal sentences that protect the sphere
+    if (phaseT < 5) {
+      const spawnInterval = 5 / (CIVIL_WAR_WORDS.length - 1);
+      const shouldHave = Math.min(CIVIL_WAR_WORDS.length, Math.floor(phaseT / spawnInterval) + 1);
+      while (floatingWords.length < shouldHave && floatingWords.length < CIVIL_WAR_WORDS.length) {
+        const def = CIVIL_WAR_WORDS[floatingWords.length];
+        const w = makeWord(def.label, false, def.color);
+        w.fontSize = 16;
+        w.baseFontSize = 16;
+        w.orbiting = true;
+        w.orbitReady = false;
+        w.protector = true;
+        floatingWords.push(w);
+      }
+    }
+
+    // Orbit + protect behavior — words circle the sphere, shielding it
+    floatingWords.forEach(w => {
+      if (w.phase === 'drifting' || w.phase === 'entering' || w.phase === 'winning') {
+        const dx = w.x - W/2, dy = w.y - H/2;
+        const d = Math.sqrt(dx*dx + dy*dy) || 1;
+
+        if (!w.orbitReady) {
+          w.vx += (W/2 - w.x) * 0.06 * dt;
+          w.vy += (H/2 - w.y) * 0.06 * dt;
+          w.fontSize = Math.min(w.baseFontSize * 1.3, w.fontSize + dt * 2);
+          if (d < 170 || w.life > 3) { w.orbitReady = true; w.orbiting = true; }
+        }
+
+        if (w.orbiting) {
+          const targetR = 125;
+          const radialForce = (targetR - d) * 0.05;
+          w.vx += (dx / d) * radialForce;
+          w.vy += (dy / d) * radialForce;
+          w.vx += (-dy / d) * 1.0;
+          w.vy += (dx / d) * 1.0;
+          w.vx *= 0.98; w.vy *= 0.98;
+        }
+      }
+    });
+
+    // After 5s, words glow brighter — burning the vines away
+    if (phaseT > 5) {
+      floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
+    }
+
+    updateWords(dt);
+    drawWords();
+
+    if (phaseT > 8 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('A few immortal sentences, breathing the omnipotence of divine justice, have been potent to break despotic fetters and abolish the whipping-post and slave market.');
+    }
+
+  // --- Friction: Vines dissolve, ideas win ---
+  } else if (phase === 'friction-civil-war') {
+    drawTitle('Civil War — 1861', 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 10);
+
+    if (progress < 0.5) {
+      // Phase A: Sphere strains under vines, cracks appear
+      const intensity = Math.sin(progress / 0.5 * Math.PI) * 20;
+      const jx = (Math.random()-0.5) * intensity * 2;
+      const jy = (Math.random()-0.5) * intensity * 2;
+      drawSphere(W/2 + jx, H/2 + jy, 95, GOLD, 'Constitutional Government', 1);
+
+      // Vines dissolving — burning away where orbiting words pass
+      const vineAlpha = Math.max(0, 1 - progress * 2.5);
+      VINE_SEEDS_2.forEach((vine, vi) => {
+        ctx.save();
+        ctx.strokeStyle = vine.color;
+        ctx.lineWidth = Math.max(0.5, 3 - progress * 5);
+        ctx.globalAlpha = vineAlpha * 0.6;
+        ctx.shadowColor = vine.color; ctx.shadowBlur = 6;
+        const segments = 20;
+        const vinePath2 = [];
+        ctx.beginPath();
+        for (let s = 0; s <= segments; s++) {
+          const t = s / segments;
+          const cx1 = vine.startX + (W/2 - vine.startX) * 0.3;
+          const cy1 = vine.startY - 100 - vi * 40;
+          const px = vine.startX * (1-t)*(1-t) + cx1 * 2*t*(1-t) + W/2 * t*t;
+          const py = vine.startY * (1-t)*(1-t) + cy1 * 2*t*(1-t) + H/2 * t*t;
+          const wave = Math.sin(t * 8 + vi * 2 + now/800) * (12 - t * 10);
+          vinePath2.push({ x: px + wave, y: py });
+          if (s === 0) ctx.moveTo(px + wave, py);
+          else ctx.lineTo(px + wave, py);
+        }
+        ctx.stroke();
+        // Fading leaves
+        for (let s = 3; s <= segments; s += 4) {
+          const pt = vinePath2[s], prevPt = vinePath2[s-1];
+          const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
+          const leafSide = (s % 8 < 4) ? 1 : -1;
+          drawLeaf(pt.x, pt.y, 8 + Math.sin(s+vi)*3, stemAngle + leafSide*1.2, darken(vine.color, 20), vineAlpha * 0.5);
+        }
+        ctx.restore();
+      });
+
+      // Crack lines on sphere
+      ctx.save(); ctx.globalAlpha = progress * 2;
+      ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(W/2 - 20 + jx, H/2 - 60 + jy);
+      ctx.lineTo(W/2 + 5 + jx, H/2 + jy);
+      ctx.lineTo(W/2 - 10 + jx, H/2 + 50 + jy);
+      ctx.stroke();
+      ctx.restore();
+
+      // Orbiting protector words — burning the vines away
+      if (phaseT > 0.5 && floatingWords.length === 0) {
+        const burnWords = ['Divine Justice', 'Abolition', 'Freedom', 'All Men Created Equal', 'Emancipation', 'Liberty'];
+        burnWords.forEach((label, i) => {
+          const angle = (i / burnWords.length) * Math.PI * 2 - Math.PI/2;
+          const w = makeWord(label, false, '#ffe088');
+          w.x = W/2 + Math.cos(angle) * 130;
+          w.y = H/2 + Math.sin(angle) * 100;
+          w.vx = (-Math.sin(angle)) * 15;
+          w.vy = (Math.cos(angle)) * 15;
+          w.fontSize = 16;
+          w.baseFontSize = 16;
+          w.orbiting = true;
+          w.orbitReady = true;
+          w.phase = 'winning';
+          floatingWords.push(w);
+        });
+      }
+
+      // Keep words orbiting
+      floatingWords.forEach(w => {
+        if (w.orbiting) {
+          const dx = w.x - W/2, dy = w.y - H/2;
+          const d = Math.sqrt(dx*dx + dy*dy) || 1;
+          const targetR = 120;
+          const radialForce = (targetR - d) * 0.05;
+          w.vx += (dx / d) * radialForce;
+          w.vy += (dy / d) * radialForce;
+          w.vx += (-dy / d) * 1.2;
+          w.vy += (dx / d) * 1.2;
+          w.vx *= 0.98; w.vy *= 0.98;
+        }
+      });
+
+    } else if (progress < 0.7) {
+      // Phase B: Nearly splits — but the words hold it together
+      const splitDist = Math.sin((progress - 0.5) / 0.2 * Math.PI) * 30;
+      drawSphere(W/2 - splitDist, H/2, 95 * 0.55, '#6688cc', 'North', 0.7);
+      drawSphere(W/2 + splitDist, H/2, 95 * 0.55, '#cc8866', 'South', 0.7);
+      ctx.save(); ctx.globalAlpha = 0.5; ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 3;
+      ctx.setLineDash([8,4]); ctx.beginPath(); ctx.moveTo(W/2, H/2 - 80); ctx.lineTo(W/2, H/2 + 80); ctx.stroke();
+      ctx.setLineDash([]); ctx.restore();
+    } else {
+      // Phase C: Repair — vines gone, sphere heals, scars remain
+      const repairT = (progress - 0.7) / 0.3;
+      const ease = easeInOut(repairT);
+      const brightness = ease * 25;
+      drawSphere(W/2, H/2, 95, lighten(GOLD, brightness), 'Constitutional Government', 1);
+      // Scar line (fading slowly)
+      if (repairT < 0.9) {
+        ctx.save(); ctx.globalAlpha = 0.3 * (1 - repairT);
+        ctx.strokeStyle = '#ff6666'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(W/2 - 5, H/2 - 50); ctx.lineTo(W/2 + 3, H/2); ctx.lineTo(W/2 - 3, H/2 + 45); ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    updateWords(dt);
+    drawWords();
+
+    if (progress >= 1 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('But oppression neither went down in blood, nor did the breath of freedom come from the cannon\u2019s mouth. Love is the liberator. \u2014 Mary Baker Eddy, Science and Health, page 225');
+    }
+  }
+
+  endFrame(now);
+}
+
+// ========================================
+// INPUT
+// ========================================
+canvas.addEventListener('click', function(e) {
+  if (waitingForClick) {
+    waitingForClick = false;
+    logDwell(phase);
+    hintEl.textContent = '';
+
+    if (phase === 'swirl-civil-war') {
+      phase = 'friction-civil-war'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'friction-civil-war') {
+      navigateToEra('1870-1900.html');
+    }
+    return;
+  }
+});
+
+// Touch support
+canvas.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  if (waitingForClick) {
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }));
+  }
+});
+
+// ========================================
+// JUMP TO PHASE (for timeline clicks)
+// ========================================
+function jumpToPhase(targetId) {
+  floatingWords = [];
+  waitingForClick = false;
+  hintEl.textContent = ''; narrationEl.textContent = '';
+  phase = targetId; phaseT = 0;
+}
+
+// Build timeline and start
+buildTimeline(PHASES);
+requestAnimationFrame(render);
+</script>
+</body>
+</html>

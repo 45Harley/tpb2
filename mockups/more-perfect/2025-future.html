@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>More Perfect — The Future (2025–)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0d1a; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+  .stage { display: flex; align-items: flex-start; gap: 12px; margin-top: 8px; }
+  .side-panel { width: 140px; display: flex; flex-direction: column; gap: 3px; padding-top: 4px; }
+  .side-panel .tl-item { padding: 3px 6px; border-radius: 3px; font: 11px/1.3 'Segoe UI', system-ui, sans-serif; color: #ccc; border: 1px solid transparent; white-space: nowrap; transition: all 0.3s; cursor: pointer; }
+  .side-panel .tl-item:hover { background: #2a2a4e; color: #fff; }
+  .side-panel .tl-item.active { border-color: #fff; color: #fff; font-weight: 700; }
+  .side-panel .tl-act-label { font: 700 12px/1.3 'Segoe UI', system-ui, sans-serif; color: #888; padding: 6px 6px 2px; text-transform: uppercase; letter-spacing: 1px; }
+  canvas { cursor: pointer; border-radius: 8px; }
+  .controls { position: fixed; top: 12px; right: 16px; display: flex; gap: 8px; z-index: 10; }
+  .controls button { background: #1a1a2e; border: 1px solid #666; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .controls button.active { border-color: #d4af37; color: #d4af37; }
+  .controls button:hover { border-color: #555; color: #ccc; }
+  .narration { margin-top: 14px; text-align: center; font-size: 1rem; color: #b0b0b0; min-height: 28px; max-width: 700px; }
+  .hint { margin-top: 6px; font-size: 0.8rem; color: #d4af37; text-align: center; min-height: 18px; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <button id="audioBtn" onclick="toggleAudio()">Audio Off</button>
+</div>
+<div class="stage">
+  <div class="side-panel" id="timeline-left"></div>
+  <div>
+    <canvas id="c" width="900" height="480"></canvas>
+    <div class="narration" id="narration"></div>
+    <div class="hint" id="hint">Click to begin</div>
+  </div>
+  <div class="side-panel" id="timeline-right"></div>
+</div>
+<script src="engine.js"></script>
+<script>
+// ========================================
+// DATA
+// ========================================
+const TECH_WORDS = [
+  { label: 'Internet', color: '#62a4d0', size: 16 },
+  { label: 'Open Data', color: '#62a4d0', size: 15 },
+  { label: 'Transparency', color: '#6af', size: 14 },
+  { label: 'Connection', color: '#6af', size: 15 },
+  { label: 'Every Voice', color: '#62a4d0', size: 15 },
+  { label: 'AI', color: '#88ccff', size: 14 },
+  { label: 'AI', color: '#99ddff', size: 20 },
+  { label: 'AI', color: '#aaeeff', size: 28 },
+  { label: 'Fusion', color: '#88ccff', size: 17 },
+];
+
+// ========================================
+// PHASES
+// ========================================
+const PHASES = [
+  { id: 'swirl-technology', label: 'A New Kind of Power' },
+  { id: 'people-power', label: 'People Power' },
+  { id: 'threats', label: 'The Threats' },
+  { id: 'the-fight', label: 'The Fight' },
+  { id: 'fourth-branch', label: 'The 4th Branch' },
+  { id: 'final', label: 'A More Perfect Union' },
+];
+
+phase = 'swirl-technology';
+
+// ========================================
+// RENDER
+// ========================================
+function render(now) {
+  const dt = beginFrame(now);
+  updateTimeline(phase);
+
+  // --- ACT III / Phase 3.1: Technology — Network tendrils ---
+  if (phase === 'swirl-technology') {
+    drawTitle('A New Kind of Power', 0.5);
+    phaseT += dt;
+
+    // Spawn tech words from all different edges — inflow toward center
+    if (phaseT < 6) {
+      const spawnInterval = 5 / (TECH_WORDS.length - 1);
+      const shouldHave = Math.min(TECH_WORDS.length, Math.floor(phaseT / spawnInterval) + 1);
+      while (floatingWords.length < shouldHave && floatingWords.length < TECH_WORDS.length) {
+        const def = TECH_WORDS[floatingWords.length];
+        const w = makeWord(def.label, false, def.color);
+        w.fontSize = def.size || 16;
+        w.baseFontSize = def.size || 16;
+        w.orbiting = false; // starts inflowing, transitions to orbit
+        w.orbitReady = false;
+        floatingWords.push(w);
+      }
+    }
+
+    floatingWords.forEach(w => {
+      if (w.phase === 'drifting' || w.phase === 'entering' || w.phase === 'winning') {
+        const dx = w.x - W/2, dy = w.y - H/2;
+        const d = Math.sqrt(dx*dx + dy*dy) || 1;
+
+        if (!w.orbitReady) {
+          // Phase 1: Inflow — drift toward center, expand font size
+          w.vx += (W/2 - w.x) * 0.06 * dt;
+          w.vy += (H/2 - w.y) * 0.06 * dt;
+          w.fontSize = Math.min(w.baseFontSize * 1.4, w.fontSize + dt * 3);
+          // Switch to orbiting when close enough OR after 3 seconds
+          if (d < 180 || w.life > 3) {
+            w.orbitReady = true;
+            w.orbiting = true;
+          }
+        }
+
+        if (w.orbiting) {
+          // Phase 2: Orbit — circle the sphere, never touch
+          const targetR = 155;
+          const radialForce = (targetR - d) * 0.06;
+          w.vx += (dx / d) * radialForce;
+          w.vy += (dy / d) * radialForce;
+          // Tangential push — makes them circle
+          w.vx += (-dy / d) * 1.2;
+          w.vy += (dx / d) * 1.2;
+          // Extra damping in orbit for smooth motion
+          w.vx *= 0.98; w.vy *= 0.98;
+        }
+      }
+    });
+
+    if (phaseT > 5) {
+      floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
+    }
+
+    updateWords(dt);
+    drawWords();
+
+    // Government sphere
+    drawSphere(W/2, H/2, 95, GOLD, 'Constitutional Government', 0.7);
+
+    // Network tendrils growing around sphere
+    if (phaseT > 3) {
+      const tendrilProgress = Math.min(1, (phaseT - 3) / 3);
+      ctx.save(); ctx.globalAlpha = tendrilProgress * 0.4;
+      ctx.strokeStyle = '#6af'; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2 + now/3000;
+        const r1 = 100, r2 = 140 + Math.sin(now/1000 + i) * 20;
+        ctx.beginPath();
+        ctx.moveTo(W/2 + Math.cos(angle) * r1, H/2 + Math.sin(angle) * r1);
+        ctx.lineTo(W/2 + Math.cos(angle + 0.3) * r2, H/2 + Math.sin(angle + 0.3) * r2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    if (phaseT > 9 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('A new kind of power. Not concentrated. Connected.');
+    }
+
+  // --- ACT III / Phase 3.2: People Power — Sphere cracks from inside, words radiate out ---
+  } else if (phase === 'people-power') {
+    drawTitle('People Power', 0.5);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 10);
+
+    const POWER_WORDS = [
+      { label: 'Love', color: '#ffe066', size: 22 },
+      { label: 'Truth', color: '#ffe077', size: 20 },
+      { label: 'Life', color: '#ffdd55', size: 21 },
+      { label: 'Spirit', color: '#ffd044', size: 19 },
+      { label: 'Soul', color: '#ffcc55', size: 20 },
+      { label: 'Mind', color: '#ffe088', size: 18 },
+      { label: 'Justice', color: '#ffdd66', size: 20 },
+      { label: 'Laws', color: '#ffcc44', size: 17 },
+    ];
+
+    // Spawn words from center radiating outward — power bursting from within
+    if (phaseT < 5) {
+      const spawnInterval = 5 / POWER_WORDS.length;
+      const shouldHave = Math.floor(phaseT / spawnInterval);
+      while (floatingWords.length < shouldHave && floatingWords.length < POWER_WORDS.length) {
+        const def = POWER_WORDS[floatingWords.length];
+        const angle = (floatingWords.length / POWER_WORDS.length) * Math.PI * 2;
+        const w = makeWord(def.label, true, def.color);
+        w.x = W/2; w.y = H/2;
+        w.vx = Math.cos(angle) * 25;
+        w.vy = Math.sin(angle) * 20;
+        w.fontSize = def.size;
+        floatingWords.push(w);
+      }
+    }
+
+    // Words pulse with warm glow
+    if (phaseT > 3) {
+      floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
+    }
+
+    updateWords(dt);
+    drawWords();
+
+    if (progress < 0.3) {
+      // Sphere cracks from inside — golden light radiating out
+      const crackIntensity = progress / 0.3;
+      drawSphere(W/2, H/2, 95, GOLD, 'Constitutional Government', 1 - crackIntensity * 0.3);
+      // Golden light through cracks
+      ctx.save(); ctx.globalAlpha = crackIntensity * 0.6;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(W/2 + Math.cos(angle) * 30, H/2 + Math.sin(angle) * 30);
+        ctx.lineTo(W/2 + Math.cos(angle) * 95 * crackIntensity, H/2 + Math.sin(angle) * 95 * crackIntensity);
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else {
+      // Small connected spheres emerge
+      const emergeT = (progress - 0.3) / 0.7;
+      const ease = easeOutBack(Math.min(1, emergeT));
+      const nodeCount = 12;
+      const nodes = [];
+      for (let i = 0; i < nodeCount; i++) {
+        const angle = (i / nodeCount) * Math.PI * 2;
+        const orbitR = 60 + (i % 3) * 40;
+        const nx = W/2 + Math.cos(angle + now/4000) * orbitR * ease;
+        const ny = H/2 + Math.sin(angle + now/4000) * orbitR * 0.7 * ease;
+        nodes.push({x: nx, y: ny});
+        drawSphere(nx, ny, 12 + (i%3)*4, GOLD, '', ease * 0.8);
+      }
+      // Connection lines
+      ctx.save(); ctx.globalAlpha = ease * 0.3; ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 1;
+      nodes.forEach((a, i) => {
+        nodes.forEach((b, j) => {
+          if (j > i && dist(a.x, a.y, b.x, b.y) < 140) {
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          }
+        });
+      });
+      ctx.restore();
+    }
+
+    // Remaining seeds dissolve
+    seeds.forEach(s => { if (s.state === 'dormant') s.alpha = Math.max(0, s.alpha - dt * 0.2); });
+
+    if (progress >= 1 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('The People re-emerge.');
+    }
+
+  // --- ACT IV / Phase 4.1: Threats — No Kings, No Mobs, No Gangs, No Wars ---
+  } else if (phase === 'threats') {
+    drawTitle('The Threats', 0.8);
+    phaseT += dt;
+
+    const THREAT_WORDS = [
+      { label: 'Kings', color: '#ffaa33', size: 18 },
+      { label: 'Mobs', color: '#ff9922', size: 16 },
+      { label: 'Gangs', color: '#ffbb44', size: 20 },
+      { label: 'Wars', color: '#ff8811', size: 22 },
+      { label: 'Tyranny', color: '#ffcc55', size: 17 },
+      { label: 'Corruption', color: '#ffaa22', size: 19 },
+      { label: 'Oligarchy', color: '#ffbb33', size: 16 },
+      { label: 'Apathy', color: '#ffcc44', size: 15 },
+      { label: 'Fear', color: '#ff9933', size: 14 },
+      { label: 'FEAR', color: '#ffbb22', size: 28 },
+      { label: 'fear', color: '#ffaa44', size: 11 },
+      { label: 'F E A R', color: '#ffdd55', size: 24 },
+      { label: 'FEAR', color: '#ff8822', size: 20 },
+      // Natural & human threats — escalating
+      { label: 'starvation', color: '#ff9933', size: 12 },
+      { label: 'Starvation', color: '#ffaa33', size: 17 },
+      { label: 'STARVATION', color: '#ffcc44', size: 24 },
+      { label: 'famine', color: '#ff9922', size: 12 },
+      { label: 'Famine', color: '#ffaa22', size: 17 },
+      { label: 'FAMINE', color: '#ffcc33', size: 24 },
+      { label: 'tornados', color: '#ffbb44', size: 12 },
+      { label: 'Tornados', color: '#ffcc55', size: 17 },
+      { label: 'TORNADOS', color: '#ffdd66', size: 24 },
+      { label: 'hurricanes', color: '#ff8811', size: 12 },
+      { label: 'Hurricanes', color: '#ffaa22', size: 17 },
+      { label: 'HURRICANES', color: '#ffcc33', size: 24 },
+      { label: 'greed', color: '#ffaa33', size: 12 },
+      { label: 'Greed', color: '#ffbb44', size: 18 },
+      { label: 'GREED', color: '#ffdd55', size: 26 },
+      { label: 'oppression', color: '#ff9922', size: 12 },
+      { label: 'Oppression', color: '#ffbb33', size: 18 },
+      { label: 'OPPRESSION', color: '#ffdd44', size: 26 },
+    ];
+
+    // Continuously spawn attacking threat words from all sides
+    threatSpawnT += dt;
+    if (threatSpawnT > 0.6 && floatingWords.length < 20) {
+      threatSpawnT = 0;
+      const def = THREAT_WORDS[Math.floor(Math.random() * THREAT_WORDS.length)];
+      const w = makeWord(def.label, false, def.color);
+      w.fontSize = def.size;
+      w.attacking = true; // marks word to attack the government sphere
+      floatingWords.push(w);
+    }
+
+    // Drum-beat pulse — all words throb in unison like a heartbeat
+    const drumBeat = Math.pow(Math.max(0, Math.sin(phaseT * 2.5)), 4); // sharp pulse
+    floatingWords.forEach(w => {
+      if (w.phase !== 'melting') {
+        w.targetAlpha = 0.6 + drumBeat * 0.4;
+        const baseSz = THREAT_WORDS.find(t => t.label === w.label)?.size || 16;
+        w.fontSize = baseSz * (1 + drumBeat * 0.25);
+      }
+    });
+
+    updateWords(dt);
+    drawWords();
+
+    // Government sphere under pressure — jitters with the drum beat
+    const jitterAmt = 2 + drumBeat * 10;
+    const jx = (Math.random()-0.5) * jitterAmt;
+    const jy = (Math.random()-0.5) * jitterAmt;
+    const sphereR = 95 + drumBeat * 5;
+    drawSphere(W/2 + jx, H/2 + jy, sphereR, GOLD, 'Constitutional Government', 0.6 + drumBeat * 0.2);
+
+    if (phaseT > 10 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('No kings. No mobs. No gangs. No wars.');
+    }
+
+  // --- ACT IV / Phase 4.2: The Fight — The People's Weapons ---
+  } else if (phase === 'the-fight') {
+    drawTitle('The Fight', 0.8);
+    phaseT += dt;
+
+    const FIGHT_WORDS = [
+      // Escalating core actions
+      { label: 'protest', color: '#44cc77', size: 11 },
+      { label: 'Protest', color: '#50cc88', size: 16 },
+      { label: 'PROTEST', color: '#55dd88', size: 22 },
+      { label: 'PROTEST', color: '#66eea0', size: 28 },
+      { label: 'vote', color: '#44cc77', size: 11 },
+      { label: 'Vote', color: '#50cc88', size: 16 },
+      { label: 'VOTE', color: '#55dd88', size: 22 },
+      { label: 'VOTE', color: '#66eea0', size: 28 },
+      { label: 'march', color: '#44bb77', size: 12 },
+      { label: 'March', color: '#50cc88', size: 18 },
+      { label: 'MARCH', color: '#66dd99', size: 26 },
+      { label: 'organize', color: '#44bb77', size: 12 },
+      { label: 'Organize', color: '#50cc88', size: 18 },
+      { label: 'ORGANIZE', color: '#66dd99', size: 24 },
+      { label: 'speak up', color: '#44bb77', size: 12 },
+      { label: 'Speak Up', color: '#55cc88', size: 18 },
+      { label: 'SPEAK UP', color: '#66ee99', size: 26 },
+      { label: 'stand up', color: '#44bb77', size: 12 },
+      { label: 'Stand Up', color: '#55cc88', size: 20 },
+      { label: 'STAND UP', color: '#66ee99', size: 26 },
+      // Escalating pairs
+      { label: 'Petition', color: '#50c878', size: 14 },
+      { label: 'PETITION', color: '#66dd99', size: 20 },
+      { label: 'Boycott', color: '#50c878', size: 14 },
+      { label: 'BOYCOTT', color: '#66dd99', size: 20 },
+      { label: 'Strike', color: '#50c878', size: 14 },
+      { label: 'STRIKE', color: '#66ee99', size: 22 },
+      { label: 'Recall', color: '#50c878', size: 14 },
+      { label: 'RECALL', color: '#66dd99', size: 20 },
+      { label: 'Dissent', color: '#50c878', size: 14 },
+      { label: 'DISSENT', color: '#66dd99', size: 20 },
+      { label: 'No Kings', color: '#55cc88', size: 14 },
+      { label: 'NO KINGS', color: '#77eea0', size: 22 },
+      { label: 'We the People', color: '#55cc88', size: 14 },
+      { label: 'WE THE PEOPLE', color: '#77eea0', size: 24 },
+      { label: 'The War', color: '#50c878', size: 14 },
+      { label: 'THE WAR', color: '#66ee99', size: 22 },
+      { label: 'Elections', color: '#50c878', size: 14 },
+      { label: 'ELECTIONS', color: '#66dd99', size: 20 },
+      { label: 'Amendment 28', color: '#55cc88', size: 16 },
+      { label: 'AMENDMENT 28', color: '#77eea0', size: 22 },
+      // Single mentions
+      { label: 'Register', color: '#50c878', size: 14 },
+      { label: 'Canvass', color: '#44bb77', size: 13 },
+      { label: 'Town Hall', color: '#50c878', size: 14 },
+      { label: 'Run for Office', color: '#55cc88', size: 15 },
+      { label: 'Impeach', color: '#50c878', size: 16 },
+      { label: 'Free Press', color: '#50c878', size: 14 },
+      { label: 'Whistleblow', color: '#44bb77', size: 13 },
+      { label: 'Civil Disobedience', color: '#50c878', size: 14 },
+      { label: 'Grassroots', color: '#44bb77', size: 13 },
+      { label: 'Term Limits', color: '#50c878', size: 14 },
+      { label: 'Civic Duty', color: '#44bb77', size: 13 },
+      { label: 'Volunteer', color: '#44bb77', size: 13 },
+      { label: 'Solidarity', color: '#55cc88', size: 15 },
+      { label: 'Golden Rule', color: '#55cc88', size: 15 },
+      { label: 'The Mandate', color: '#55cc88', size: 16 },
+      { label: 'Knockout', color: '#50c878', size: 14 },
+      { label: 'Ballot Initiatives', color: '#50c878', size: 14 },
+      { label: 'The Pledge', color: '#55cc88', size: 15 },
+      { label: 'Transparency', color: '#50c878', size: 14 },
+      { label: 'Accountability', color: '#50c878', size: 14 },
+      // Motivating principles — the WHY behind the actions
+      { label: 'Truth', color: '#ffe077', size: 18 },
+      { label: 'TRUTH', color: '#ffee88', size: 24 },
+      { label: 'Love', color: '#ffe066', size: 18 },
+      { label: 'LOVE', color: '#ffee77', size: 26 },
+      { label: 'Life', color: '#ffdd55', size: 17 },
+      { label: 'LIFE', color: '#ffee66', size: 24 },
+      { label: 'Patience', color: '#ffd044', size: 16 },
+      { label: 'PATIENCE', color: '#ffdd55', size: 22 },
+      { label: 'Spirit', color: '#ffd044', size: 17 },
+      { label: 'SPIRIT', color: '#ffdd66', size: 24 },
+      { label: 'Intelligence', color: '#ffe088', size: 16 },
+      { label: 'INTELLIGENCE', color: '#ffee99', size: 22 },
+      { label: 'Soul', color: '#ffcc55', size: 17 },
+      { label: 'SOUL', color: '#ffdd66', size: 24 },
+    ];
+
+    // Continuously spawn fight words from all edges — the people's answer
+    fightSpawnT += dt;
+    if (fightSpawnT > 0.7 && floatingWords.length < 25) {
+      fightSpawnT = 0;
+      const def = FIGHT_WORDS[Math.floor(Math.random() * FIGHT_WORDS.length)];
+      const w = makeWord(def.label, true, def.color);
+      w.fontSize = def.size;
+      w.attacking = true; // rush toward center — the people fight back
+      floatingWords.push(w);
+    }
+
+    // Heartbeat pulse — faster than threats, building energy
+    const fightBeat = Math.pow(Math.max(0, Math.sin(phaseT * 3.2)), 4);
+    floatingWords.forEach(w => {
+      if (w.phase !== 'melting') {
+        w.targetAlpha = 0.6 + fightBeat * 0.4;
+        const baseSz = FIGHT_WORDS.find(t => t.label === w.label)?.size || 14;
+        w.fontSize = baseSz * (1 + fightBeat * 0.2);
+      }
+    });
+
+    updateWords(dt);
+    drawWords();
+
+    // Government sphere — heals brighter as the fight builds
+    const brightness = Math.min(1, phaseT / 12) * 30;
+    const healBeat = 95 + fightBeat * 4;
+    drawSphere(W/2, H/2, healBeat, lighten(GOLD, brightness), 'Constitutional Government', 0.85 + fightBeat * 0.15);
+
+    if (phaseT > 14 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('The war for democracy is fought at the ballot box.');
+    }
+
+  // --- ACT IV / Phase 4.3: The Fourth Branch — The People's Branch ---
+  } else if (phase === 'fourth-branch') {
+    drawTitle("The People's Branch \u2014 The 4th Branch", 0.8);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 8);
+
+    // The 3 branches appear, then the 4th emerges encompassing them
+    const branches = [
+      { label: 'Congress', color: BLUE, angle: -Math.PI/2 - 0.8 },
+      { label: 'Executive', color: CORAL, angle: -Math.PI/2 },
+      { label: 'Judicial', color: PURPLE, angle: -Math.PI/2 + 0.8 },
+    ];
+
+    // Draw the 3 existing branches in an arc
+    const orbitR = 120;
+    branches.forEach(b => {
+      const bx = W/2 + Math.cos(b.angle) * orbitR;
+      const by = H/2 + Math.sin(b.angle) * orbitR * 0.8 + 20;
+      drawSphere(bx, by, 35, b.color, b.label, Math.min(1, progress * 3));
+    });
+
+    // The 4th branch — The People — grows from below, encompassing all
+    if (progress > 0.3) {
+      const fourthT = Math.min(1, (progress - 0.3) / 0.5);
+      const ease = easeInOut(fourthT);
+      const ringR = 50 + ease * 130;
+      const ringAlpha = ease * 0.35;
+
+      // Glowing ring encompassing all branches
+      ctx.save();
+      ctx.globalAlpha = ringAlpha;
+      ctx.strokeStyle = '#50c878';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#50c878';
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.ellipse(W/2, H/2 + 10, ringR, ringR * 0.75, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Label
+      if (fourthT > 0.5) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, (fourthT - 0.5) * 2);
+        ctx.font = '700 18px Segoe UI, system-ui, sans-serif';
+        ctx.fillStyle = '#50c878';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#50c878'; ctx.shadowBlur = 15;
+        ctx.fillText("The People's Branch", W/2, H/2 + 120);
+        ctx.restore();
+      }
+    }
+
+    // Small people-spheres orbiting the ring
+    if (progress > 0.5) {
+      const nPeople = 8;
+      const orbT = (progress - 0.5) * 2;
+      for (let i = 0; i < nPeople; i++) {
+        const a = (i / nPeople) * Math.PI * 2 + phaseT * 0.2;
+        const oR = 155;
+        const px = W/2 + Math.cos(a) * oR;
+        const py = H/2 + 10 + Math.sin(a) * oR * 0.7;
+        const pAlpha = Math.min(0.7, orbT);
+        drawSphere(px, py, 8, '#50c878', '', pAlpha);
+      }
+    }
+
+    if (progress >= 1 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('Three branches of government. And now \u2014 the fourth. The People.');
+    }
+
+  // --- ACT IV / Phase 4.4: Final — The Building Continues ---
+  } else if (phase === 'final') {
+    phaseT += dt;
+    drawTitle('A More Perfect Union', 0.8);
+
+    // Pulsing network of people-spheres
+    const nodeCount = 12;
+    const nodes = [];
+    for (let i = 0; i < nodeCount; i++) {
+      const angle = (i / nodeCount) * Math.PI * 2;
+      const orbitR = 60 + (i % 3) * 40;
+      const nx = W/2 + Math.cos(angle + phaseT * 0.15) * orbitR;
+      const ny = H/2 + Math.sin(angle + phaseT * 0.15) * orbitR * 0.7;
+      nodes.push({x: nx, y: ny});
+      const pulse = 0.6 + Math.sin(now/1000 + i) * 0.2;
+      drawSphere(nx, ny, (12 + (i%3)*4) * pulse, GOLD, '', 0.7);
+    }
+    ctx.save(); ctx.globalAlpha = 0.25; ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 1;
+    nodes.forEach((a, i) => {
+      nodes.forEach((b, j) => {
+        if (j > i && dist(a.x, a.y, b.x, b.y) < 140) {
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
+      });
+    });
+    ctx.restore();
+
+    const pulse = 0.85 + Math.sin(now / 1200) * 0.15;
+    ctx.save(); ctx.globalAlpha = 0.9 * pulse;
+    ctx.font = '700 28px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = GOLD; ctx.textAlign = 'center';
+    ctx.fillText('A more perfect union.', W/2, H/2 - 15); ctx.restore();
+    ctx.save(); ctx.globalAlpha = 0.55;
+    ctx.font = '400 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#b0b0b0'; ctx.textAlign = 'center';
+    ctx.fillText('The building continues.', W/2, H/2 + 18); ctx.restore();
+
+    // MBE quote
+    ctx.save(); ctx.globalAlpha = 0.45;
+    ctx.font = 'italic 400 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#d4af37'; ctx.textAlign = 'center';
+    ctx.fillText("Truth\u2019s immortal idea is sweeping down the centuries,", W/2, H/2 + 50);
+    ctx.fillText("gathering beneath its wings the sick and sinning. \u2014 Mary Baker Eddy", W/2, H/2 + 68);
+    ctx.restore();
+
+    hintEl.textContent = 'Click to explore again';
+  }
+
+  endFrame(now);
+}
+
+// ========================================
+// INPUT
+// ========================================
+canvas.addEventListener('click', function(e) {
+  if (waitingForClick) {
+    waitingForClick = false;
+    logDwell(phase);
+    hintEl.textContent = '';
+
+    if (phase === 'swirl-technology') {
+      phase = 'people-power'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'people-power') {
+      phase = 'threats'; phaseT = 0;
+      floatingWords = [];
+      threatSpawnT = 0;
+    } else if (phase === 'threats') {
+      phase = 'the-fight'; phaseT = 0;
+      floatingWords = [];
+      fightSpawnT = 0;
+    } else if (phase === 'the-fight') {
+      phase = 'fourth-branch'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'fourth-branch') {
+      phase = 'final'; phaseT = 0;
+      floatingWords = [];
+      reportDwell();
+      narrate("Truth\u2019s immortal idea is sweeping down the centuries, gathering beneath its wings the sick and sinning. \u2014 Mary Baker Eddy");
+    } else if (phase === 'final') {
+      navigateToEra('index.html');
+    }
+    return;
+  }
+});
+
+// Touch support
+canvas.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  if (waitingForClick) {
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }));
+  }
+});
+
+// ========================================
+// JUMP TO PHASE (for timeline clicks)
+// ========================================
+function jumpToPhase(targetId) {
+  floatingWords = [];
+  waitingForClick = false;
+  hintEl.textContent = ''; narrationEl.textContent = '';
+  phase = targetId; phaseT = 0;
+}
+
+// Build timeline and start
+buildTimeline(PHASES);
+requestAnimationFrame(render);
+</script>
+</body>
+</html>

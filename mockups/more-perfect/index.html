@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>More Perfect — A History of American Democracy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d0d1a; color: #ccc; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  h1 { color: #d4af37; font-size: 2rem; margin-bottom: 8px; }
+  .subtitle { color: #b0b0b0; font-size: 1rem; margin-bottom: 40px; }
+  .timeline {
+    display: flex; flex-direction: column; gap: 4px;
+    max-width: 500px; width: 100%;
+  }
+  .era {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 20px; border-radius: 8px;
+    border: 1px solid #333; cursor: pointer;
+    transition: all 0.3s;
+  }
+  .era:hover { background: #1a1a2e; border-color: #d4af37; }
+  .era.built { border-color: #d4af3766; }
+  .era.stub { border-color: #33333366; opacity: 0.6; }
+  .era .years {
+    font-size: 0.85rem; color: #d4af37; min-width: 90px;
+    font-weight: 700;
+  }
+  .era .label { font-size: 0.95rem; color: #ccc; }
+  .era.stub .label::after {
+    content: ' (coming soon)'; color: #666; font-style: italic;
+  }
+  .quote {
+    margin-top: 50px; max-width: 600px; text-align: center;
+    font-style: italic; color: #b0b0b0; line-height: 1.6;
+  }
+  .attribution { color: #888; font-size: 0.85rem; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h1>More Perfect</h1>
+<p class="subtitle">A History of American Democracy</p>
+
+<div class="timeline">
+  <div class="era built" onclick="window.location='1770-1790.html'">
+    <span class="years">1770–1790</span>
+    <span class="label">The Founding</span>
+  </div>
+  <div class="era stub" onclick="window.location='1790-1861.html'">
+    <span class="years">1790–1861</span>
+    <span class="label">Seeds Grow</span>
+  </div>
+  <div class="era built" onclick="window.location='1861-1870.html'">
+    <span class="years">1861–1870</span>
+    <span class="label">Civil War</span>
+  </div>
+  <div class="era built" onclick="window.location='1870-1900.html'">
+    <span class="years">1870–1900</span>
+    <span class="label">Gilded Age</span>
+  </div>
+  <div class="era built" onclick="window.location='1900-1920.html'">
+    <span class="years">1900–1920</span>
+    <span class="label">Empire & Suffrage</span>
+  </div>
+  <div class="era stub" onclick="window.location='1920-1935.html'">
+    <span class="years">1920–1935</span>
+    <span class="label">Prohibition & Depression</span>
+  </div>
+  <div class="era stub" onclick="window.location='1935-1945.html'">
+    <span class="years">1935–1945</span>
+    <span class="label">New Deal & WWII</span>
+  </div>
+  <div class="era stub" onclick="window.location='1945-1960.html'">
+    <span class="years">1945–1960</span>
+    <span class="label">Cold War</span>
+  </div>
+  <div class="era built" onclick="window.location='1960-1975.html'">
+    <span class="years">1960–1975</span>
+    <span class="label">Civil Rights & Vietnam</span>
+  </div>
+  <div class="era stub" onclick="window.location='1975-2000.html'">
+    <span class="years">1975–2000</span>
+    <span class="label">Watergate & Deregulation</span>
+  </div>
+  <div class="era stub" onclick="window.location='2000-2010.html'">
+    <span class="years">2000–2010</span>
+    <span class="label">9/11 & Surveillance</span>
+  </div>
+  <div class="era stub" onclick="window.location='2010-2025.html'">
+    <span class="years">2010–2025</span>
+    <span class="label">Polarization</span>
+  </div>
+  <div class="era built" onclick="window.location='2025-future.html'">
+    <span class="years">2025–</span>
+    <span class="label">The Future</span>
+  </div>
+</div>
+
+<p class="quote">
+  "Truth's immortal idea is sweeping down the centuries,<br>
+  gathering beneath its wings the sick and sinning."
+</p>
+<p class="attribution">— Mary Baker Eddy</p>
+
+</body>
+</html>
