@@ -553,6 +553,25 @@ function easeOutBack(t) {
 function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
 function dist(x1, y1, x2, y2) { return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2); }
 function lerp(a, b, t) { return a + (b - a) * t; }
+function drawLeaf(lx, ly, size, angle, color, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(lx, ly);
+  ctx.rotate(angle);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(size*0.5, -size*0.8, size, -size*0.3, size*0.9, 0);
+  ctx.bezierCurveTo(size, size*0.3, size*0.5, size*0.8, 0, 0);
+  ctx.fill();
+  ctx.strokeStyle = darken(color, 30);
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(size * 0.8, 0);
+  ctx.stroke();
+  ctx.restore();
+}
 
 function drawGrid() {
   ctx.save();
@@ -1391,46 +1410,58 @@ function render(now) {
     ];
 
     // Draw vines growing toward and entangling the sphere
-    const vineGrowth = Math.min(1, phaseT / 6); // vines take 6s to fully entangle
     VINE_SEEDS.forEach((vine, vi) => {
       if (phaseT < vi * 1.2) return; // stagger vine starts
       const vProgress = Math.min(1, (phaseT - vi * 1.2) / 5);
       const segments = 20;
       const reached = Math.floor(vProgress * segments);
 
-      ctx.save();
-      ctx.strokeStyle = vine.color;
-      ctx.lineWidth = 2 + vProgress * 2;
-      ctx.shadowColor = vine.color;
-      ctx.shadowBlur = 8;
-      ctx.globalAlpha = 0.7;
-      ctx.beginPath();
-
-      for (let s = 0; s <= reached; s++) {
+      // Compute vine path points for reuse
+      const vinePath = [];
+      for (let s = 0; s <= segments; s++) {
         const t = s / segments;
-        // Bezier-like path from seed to sphere, with organic waviness
         const cx1 = vine.startX + (W/2 - vine.startX) * 0.3;
         const cy1 = vine.startY - 100 - vi * 40;
         const px = vine.startX * (1-t)*(1-t) + cx1 * 2*t*(1-t) + W/2 * t*t;
         const py = vine.startY * (1-t)*(1-t) + cy1 * 2*t*(1-t) + H/2 * t*t;
-        // Add organic waviness
         const wave = Math.sin(t * 8 + vi * 2 + now/800) * (12 - t * 10);
-        if (s === 0) ctx.moveTo(px + wave, py);
-        else ctx.lineTo(px + wave, py);
+        vinePath.push({ x: px + wave, y: py });
+      }
+
+      // Draw vine stem
+      ctx.save();
+      ctx.strokeStyle = vine.color;
+      ctx.lineWidth = 2.5 + vProgress * 2;
+      ctx.shadowColor = vine.color;
+      ctx.shadowBlur = 8;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      for (let s = 0; s <= reached; s++) {
+        if (s === 0) ctx.moveTo(vinePath[s].x, vinePath[s].y);
+        else ctx.lineTo(vinePath[s].x, vinePath[s].y);
       }
       ctx.stroke();
 
+      // Draw leaves along the vine — every 4th segment
+      for (let s = 3; s <= reached; s += 4) {
+        const pt = vinePath[s];
+        const prevPt = vinePath[s - 1];
+        const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
+        const leafSide = (s % 8 < 4) ? 1 : -1; // alternate sides
+        const leafSize = 8 + Math.sin(s + vi) * 3;
+        drawLeaf(pt.x, pt.y, leafSize, stemAngle + leafSide * 1.2, darken(vine.color, 20), 0.6);
+      }
+
       // Vine label at the root
       if (vProgress > 0.1) {
-        const labelAlpha = Math.min(0.8, vProgress);
-        ctx.globalAlpha = labelAlpha;
+        ctx.globalAlpha = Math.min(0.8, vProgress);
         ctx.font = '700 ' + (10 + vProgress * 6) + 'px Segoe UI, system-ui, sans-serif';
         ctx.fillStyle = vine.color;
         ctx.textAlign = 'center';
         ctx.fillText(vine.label, vine.startX, vine.startY - 10);
       }
 
-      // Entangling tendrils when vine reaches the sphere (t > 0.8)
+      // Entangling tendrils when vine reaches the sphere
       if (vProgress > 0.8) {
         const wrapT = (vProgress - 0.8) / 0.2;
         ctx.globalAlpha = wrapT * 0.5;
@@ -1454,21 +1485,50 @@ function render(now) {
     const breathe = Math.sin(now / 300) * (2 + resistance * 4);
     drawSphere(W/2 + jx, H/2 + jy, 95 + breathe, GOLD, 'Constitutional Government', 0.8);
 
-    // Spawn positive words — the immortal sentences that break the fetters
+    // Spawn positive words — the immortal sentences that protect the sphere
     if (phaseT < 5) {
       const spawnInterval = 5 / (CIVIL_WAR_WORDS.length - 1);
       const shouldHave = Math.min(CIVIL_WAR_WORDS.length, Math.floor(phaseT / spawnInterval) + 1);
       while (floatingWords.length < shouldHave && floatingWords.length < CIVIL_WAR_WORDS.length) {
         const def = CIVIL_WAR_WORDS[floatingWords.length];
-        floatingWords.push(makeWord(def.label, def.positive, def.color));
+        const w = makeWord(def.label, false, def.color); // not positive — we handle orbit manually
+        w.fontSize = 16;
+        w.baseFontSize = 16;
+        w.orbiting = true;
+        w.orbitReady = false;
+        w.protector = true; // burns vines on contact
+        floatingWords.push(w);
       }
     }
 
-    // After 5s, words start glowing brighter — the ideas overcome
+    // Orbit + protect behavior — words circle the sphere, shielding it
+    floatingWords.forEach(w => {
+      if (w.phase === 'drifting' || w.phase === 'entering' || w.phase === 'winning') {
+        const dx = w.x - W/2, dy = w.y - H/2;
+        const d = Math.sqrt(dx*dx + dy*dy) || 1;
+
+        if (!w.orbitReady) {
+          w.vx += (W/2 - w.x) * 0.06 * dt;
+          w.vy += (H/2 - w.y) * 0.06 * dt;
+          w.fontSize = Math.min(w.baseFontSize * 1.3, w.fontSize + dt * 2);
+          if (d < 170 || w.life > 3) { w.orbitReady = true; w.orbiting = true; }
+        }
+
+        if (w.orbiting) {
+          const targetR = 125; // orbit closer to sphere — protective shield
+          const radialForce = (targetR - d) * 0.05;
+          w.vx += (dx / d) * radialForce;
+          w.vy += (dy / d) * radialForce;
+          w.vx += (-dy / d) * 1.0;
+          w.vy += (dx / d) * 1.0;
+          w.vx *= 0.98; w.vy *= 0.98;
+        }
+      }
+    });
+
+    // After 5s, words glow brighter — burning the vines away
     if (phaseT > 5) {
-      floatingWords.filter(w => w.positive && w.phase === 'drifting').forEach(w => {
-        w.phase = 'winning';
-      });
+      floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
     }
 
     updateWords(dt);
@@ -1500,15 +1560,16 @@ function render(now) {
       const jy = (Math.random()-0.5) * intensity * 2;
       drawSphere(W/2 + jx, H/2 + jy, 95, GOLD, 'Constitutional Government', 1);
 
-      // Vines still clinging — but dissolving
+      // Vines dissolving — burning away where orbiting words pass
       const vineAlpha = Math.max(0, 1 - progress * 2.5);
       VINE_SEEDS_2.forEach((vine, vi) => {
         ctx.save();
         ctx.strokeStyle = vine.color;
-        ctx.lineWidth = 3 - progress * 4;
+        ctx.lineWidth = Math.max(0.5, 3 - progress * 5);
         ctx.globalAlpha = vineAlpha * 0.6;
         ctx.shadowColor = vine.color; ctx.shadowBlur = 6;
         const segments = 20;
+        const vinePath2 = [];
         ctx.beginPath();
         for (let s = 0; s <= segments; s++) {
           const t = s / segments;
@@ -1517,10 +1578,18 @@ function render(now) {
           const px = vine.startX * (1-t)*(1-t) + cx1 * 2*t*(1-t) + W/2 * t*t;
           const py = vine.startY * (1-t)*(1-t) + cy1 * 2*t*(1-t) + H/2 * t*t;
           const wave = Math.sin(t * 8 + vi * 2 + now/800) * (12 - t * 10);
+          vinePath2.push({ x: px + wave, y: py });
           if (s === 0) ctx.moveTo(px + wave, py);
           else ctx.lineTo(px + wave, py);
         }
         ctx.stroke();
+        // Fading leaves
+        for (let s = 3; s <= segments; s += 4) {
+          const pt = vinePath2[s], prevPt = vinePath2[s-1];
+          const stemAngle = Math.atan2(pt.y - prevPt.y, pt.x - prevPt.x);
+          const leafSide = (s % 8 < 4) ? 1 : -1;
+          drawLeaf(pt.x, pt.y, 8 + Math.sin(s+vi)*3, stemAngle + leafSide*1.2, darken(vine.color, 20), vineAlpha * 0.5);
+        }
         ctx.restore();
       });
 
@@ -1534,20 +1603,39 @@ function render(now) {
       ctx.stroke();
       ctx.restore();
 
-      // Words glow brighter — the immortal sentences burning through
-      if (phaseT > 1 && floatingWords.length === 0) {
-        const burnWords = ['Divine Justice', 'Abolition', 'Freedom', 'All Men Created Equal'];
+      // Orbiting protector words — burning the vines away
+      if (phaseT > 0.5 && floatingWords.length === 0) {
+        const burnWords = ['Divine Justice', 'Abolition', 'Freedom', 'All Men Created Equal', 'Emancipation', 'Liberty'];
         burnWords.forEach((label, i) => {
           const angle = (i / burnWords.length) * Math.PI * 2 - Math.PI/2;
-          const w = makeWord(label, true, '#ffe088');
+          const w = makeWord(label, false, '#ffe088');
           w.x = W/2 + Math.cos(angle) * 130;
           w.y = H/2 + Math.sin(angle) * 100;
-          w.vx = 0; w.vy = 0;
+          w.vx = (-Math.sin(angle)) * 15;
+          w.vy = (Math.cos(angle)) * 15;
           w.fontSize = 16;
+          w.baseFontSize = 16;
+          w.orbiting = true;
+          w.orbitReady = true;
           w.phase = 'winning';
           floatingWords.push(w);
         });
       }
+
+      // Keep words orbiting
+      floatingWords.forEach(w => {
+        if (w.orbiting) {
+          const dx = w.x - W/2, dy = w.y - H/2;
+          const d = Math.sqrt(dx*dx + dy*dy) || 1;
+          const targetR = 120;
+          const radialForce = (targetR - d) * 0.05;
+          w.vx += (dx / d) * radialForce;
+          w.vy += (dy / d) * radialForce;
+          w.vx += (-dy / d) * 1.2;
+          w.vy += (dx / d) * 1.2;
+          w.vx *= 0.98; w.vy *= 0.98;
+        }
+      });
 
     } else if (progress < 0.7) {
       // Phase B: Nearly splits — but the words hold it together
