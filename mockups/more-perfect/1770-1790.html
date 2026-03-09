@@ -345,6 +345,15 @@ function render(now) {
     // Glow intensifies as text completes
     const glowIntensity = easeInOut(Math.min(1, line1Chars / line1.length));
 
+    // Header — "How darkness is destroyed..." fades in immediately
+    const headerAlpha = easeInOut(Math.min(1, phaseT * 1.2));
+    ctx.save();
+    ctx.globalAlpha = headerAlpha * 0.6;
+    ctx.font = '400 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#b0b0b0'; ctx.textAlign = 'center';
+    ctx.fillText('How darkness is destroyed...', W/2, H/2 - 75);
+    ctx.restore();
+
     // Line 1 — big, gold, italic
     ctx.save();
     ctx.translate(W/2, H/2 - 40);
