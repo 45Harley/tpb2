@@ -403,6 +403,108 @@ function drawWords() {
 }
 
 // ========================================
+// SEEDS — dormant ideas at canvas edges
+// ========================================
+let seeds = [];
+
+const SEED_DEFS = [
+  { label: 'Tyranny', color: '#aa4444', seedX: 60, seedY: H-20, sproutPhase: null, childSeed: null },
+  { label: 'Slavery', color: '#aa3333', seedX: 150, seedY: H-18, sproutPhase: 'swirl-civil-war',
+    childSeed: { label: 'Inequality', color: '#994444', seedX: 180, seedY: H-22, sproutPhase: 'swirl-civil-rights', childSeed: null }},
+  { label: 'Property over People', color: '#996633', seedX: 300, seedY: H-20, sproutPhase: 'swirl-robber-barons', childSeed: null },
+  { label: 'Men Only', color: '#997755', seedX: 450, seedY: H-18, sproutPhase: 'swirl-suffrage', childSeed: null },
+  { label: "King's Rule", color: '#885555', seedX: 600, seedY: H-20, sproutPhase: null, childSeed: null },
+  { label: 'Landed Gentry', color: '#887766', seedX: 750, seedY: H-18, sproutPhase: null, childSeed: null },
+];
+
+function makeSeed(def) {
+  return {
+    label: def.label, color: def.color,
+    x: def.seedX, y: def.seedY,
+    r: 4, alpha: 0, targetAlpha: 0.3,
+    state: 'dormant', // dormant | falling | sprouting | popped
+    sproutPhase: def.sproutPhase,
+    childSeed: def.childSeed,
+    sproutT: 0,
+  };
+}
+
+function dropSeed(wordObj) {
+  const def = SEED_DEFS.find(d => d.label === wordObj.label);
+  if (!def) return;
+  const seed = makeSeed(def);
+  seed.x = wordObj.x; seed.y = wordObj.y; // start at word position
+  seed.state = 'falling';
+  seeds.push(seed);
+}
+
+function updateSeeds(dt) {
+  seeds.forEach(s => {
+    if (s.state === 'falling') {
+      s.y += 60 * dt;
+      s.alpha = Math.min(s.targetAlpha, s.alpha + dt * 0.5);
+      const def = SEED_DEFS.find(d => d.label === s.label);
+      if (def && s.y >= def.seedY) {
+        s.y = def.seedY; s.x = def.seedX;
+        s.state = 'dormant';
+      }
+    } else if (s.state === 'dormant') {
+      s.alpha = s.targetAlpha + Math.sin(Date.now()/1000 + s.x) * 0.08;
+    } else if (s.state === 'sprouting') {
+      s.sproutT += dt;
+      s.r = 4 + s.sproutT * 25;
+      s.alpha = Math.min(0.7, 0.3 + s.sproutT * 0.3);
+      s.y -= 40 * dt;
+      if (s.sproutT > 2) s.state = 'popped';
+    }
+  });
+}
+
+function drawSeeds() {
+  seeds.forEach(s => {
+    if (s.alpha < 0.02 || s.state === 'popped') return;
+    ctx.save();
+    ctx.globalAlpha = s.alpha;
+    // Ember glow
+    const glow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 2.5);
+    glow.addColorStop(0, s.color + '88');
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 2.5, 0, Math.PI*2); ctx.fill();
+    // Core
+    ctx.fillStyle = s.color;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+    // Label (only when sprouting)
+    if (s.state === 'sprouting' && s.r > 10) {
+      ctx.font = '400 10px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.fillStyle = '#ddd';
+      ctx.fillText(s.label, s.x, s.y - s.r - 6);
+    }
+    ctx.restore();
+  });
+}
+
+function sproutSeedsForPhase(phaseName) {
+  seeds.forEach(s => {
+    if (s.state === 'dormant' && s.sproutPhase === phaseName) {
+      s.state = 'sprouting'; s.sproutT = 0;
+    }
+  });
+}
+
+function popSeed(label, dropChild) {
+  const s = seeds.find(sd => sd.label === label);
+  if (!s) return;
+  s.state = 'popped';
+  spawnParticles(s.x, s.y, s.color, 8);
+  if (dropChild && s.childSeed) {
+    const child = makeSeed(s.childSeed);
+    child.x = s.x; child.y = s.y; child.state = 'falling';
+    seeds.push(child);
+  }
+}
+
+// ========================================
 // LAYOUT — organized, bigger spheres
 // ========================================
 
@@ -473,6 +575,7 @@ function render(now) {
   ctx.fillRect(0, 0, W, H);
   drawGrid();
   updateParticles(dt);
+  updateSeeds(dt);
 
   // =====================================================================
   // ACT I: THE FOUNDING
@@ -760,6 +863,7 @@ function render(now) {
     ctx.fillText('The building continues.', W / 2, H / 2 + 18); ctx.restore();
   }
 
+  drawSeeds();
   drawParticles();
   requestAnimationFrame(render);
 }
