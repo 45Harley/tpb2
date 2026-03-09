@@ -37,7 +37,11 @@
     border: 1px solid transparent;
     white-space: nowrap;
     transition: all 0.3s;
-    cursor: default;
+    cursor: pointer;
+  }
+  .side-panel .tl-item:hover {
+    background: #2a2a4e;
+    color: #fff;
   }
   .side-panel .tl-item.active {
     border-color: #fff;
@@ -153,9 +157,12 @@ const TIMELINE_PHASES = [
   { id: 'friction-civil-rights', label: '2.5b CR Friction', act: 2 },
   { id: 'swirl-technology', label: '3.1 Tech', act: 3 },
   { id: 'people-power', label: '3.2 People', act: 3 },
-  { id: 'final', label: '3.3 Final', act: 3 },
+  { id: 'threats', label: '4.1 Threats', act: 4 },
+  { id: 'the-fight', label: '4.2 The Fight', act: 4 },
+  { id: 'fourth-branch', label: '4.3 4th Branch', act: 4 },
+  { id: 'final', label: '4.4 The Building', act: 4 },
 ];
-const ACT_COLORS = { 0: '#666', 1: '#d4af37', 2: '#e07050', 3: '#62a4d0' };
+const ACT_COLORS = { 0: '#666', 1: '#d4af37', 2: '#e07050', 3: '#62a4d0', 4: '#50c878' };
 let timelineBuilt = false;
 
 function buildTimeline() {
@@ -166,12 +173,12 @@ function buildTimeline() {
   // Act I → left panel, Act 0/2/3 → right panel
   let lastAct = -1;
   TIMELINE_PHASES.forEach(p => {
-    const panel = (p.act <= 1) ? leftEl : rightEl;
+    const panel = (p.act <= 2) ? leftEl : rightEl;
     // Add act header when act changes
     if (p.act !== lastAct && p.act > 0) {
       const hdr = document.createElement('div');
       hdr.className = 'tl-act-label';
-      hdr.textContent = ['', 'Act I: Founding', 'Act II: Friction', 'Act III: Enablement'][p.act];
+      hdr.textContent = ['', 'Act I: Founding', 'Act II: Friction', 'Act III: Enablement', 'Act IV: The Future'][p.act];
       hdr.style.color = ACT_COLORS[p.act];
       panel.appendChild(hdr);
       lastAct = p.act;
@@ -180,9 +187,49 @@ function buildTimeline() {
     node.id = 'tl-' + p.id;
     node.className = 'tl-item';
     node.textContent = p.label;
+    node.addEventListener('click', () => jumpToPhase(p.id));
     panel.appendChild(node);
   });
   timelineBuilt = true;
+}
+
+function jumpToPhase(targetId) {
+  // Reset all animation state
+  floatingWords = []; nebulae = []; particles = [];
+  spheres = []; townBalls = []; stateBalls = []; leafSpheres = [];
+  closingQueued = false; dragging = null; waitingForClick = false;
+  hintEl.textContent = ''; narrationEl.textContent = '';
+  lastTimelinePhase = '';
+
+  // Rebuild seeds from scratch (so Act II phases have seeds to sprout)
+  seeds = [];
+  SEED_DEFS.forEach(def => seeds.push(makeSeed(def)));
+
+  // Mark seeds as popped for phases we're skipping past
+  const idx = TIMELINE_PHASES.findIndex(p => p.id === targetId);
+  const SEED_POP_ORDER = [
+    { phase: 'friction-civil-war', label: 'Slavery', dropChild: true },
+    { phase: 'friction-robber-barons', label: 'Property over People', dropChild: false },
+    { phase: 'friction-suffrage', label: 'Men Only', dropChild: false },
+    { phase: 'friction-civil-rights', label: 'Inequality', dropChild: false },
+  ];
+  SEED_POP_ORDER.forEach(sp => {
+    const spIdx = TIMELINE_PHASES.findIndex(p => p.id === sp.phase);
+    if (spIdx <= idx) popSeed(sp.label, sp.dropChild);
+  });
+
+  // Set up people ball for phases that need it
+  peopleBall = makeBall(W / 2, H / 2, 90, 'The People', GOLD);
+
+  // If jumping to interactive, we need the deconstruct tree
+  if (targetId === 'interactive') {
+    const root = makeInteractiveSphere(DECONSTRUCT_TREE, W / 2, H / 2, 95);
+    spheres.push(root);
+  }
+
+  phase = targetId;
+  phaseT = 0;
+  logDwell(phase);
 }
 
 let lastTimelinePhase = '';
@@ -1329,7 +1376,7 @@ function render(now) {
   } else if (phase === 'friction-civil-war') {
     drawTitle('Civil War — 1861', 0.5);
     phaseT += dt;
-    const progress = Math.min(1, phaseT / 5);
+    const progress = Math.min(1, phaseT / 8);
     floatingWords = [];
 
     if (progress < 0.4) {
@@ -1408,7 +1455,7 @@ function render(now) {
   } else if (phase === 'friction-robber-barons') {
     drawTitle('The Gilded Age — 1870s', 0.5);
     phaseT += dt;
-    const progress = Math.min(1, phaseT / 4);
+    const progress = Math.min(1, phaseT / 7);
     floatingWords = [];
 
     // Dark blobs pressing from outside
@@ -1473,7 +1520,7 @@ function render(now) {
   } else if (phase === 'friction-suffrage') {
     drawTitle("Women's Suffrage — 1920", 0.5);
     phaseT += dt;
-    const progress = Math.min(1, phaseT / 4);
+    const progress = Math.min(1, phaseT / 7);
     floatingWords = [];
 
     // Draw sphere with left half dimmer, then illuminating
@@ -1552,7 +1599,7 @@ function render(now) {
   } else if (phase === 'friction-civil-rights') {
     drawTitle('Civil Rights — 1960s', 0.5);
     phaseT += dt;
-    const progress = Math.min(1, phaseT / 4);
+    const progress = Math.min(1, phaseT / 7);
     floatingWords = [];
 
     // Echo words from Act I pulse from edges toward sphere
@@ -1638,7 +1685,7 @@ function render(now) {
   } else if (phase === 'people-power') {
     drawTitle('People Power', 0.5);
     phaseT += dt;
-    const progress = Math.min(1, phaseT / 4);
+    const progress = Math.min(1, phaseT / 7);
 
     if (progress < 0.4) {
       // Sphere cracks from inside — golden light radiating out
@@ -1690,10 +1737,165 @@ function render(now) {
       narrate('The People re-emerge.');
     }
 
-  // --- ACT III / Phase 3.3: Final — The Building Continues ---
+  // --- ACT IV / Phase 4.1: Threats — No Kings, No Mobs, No Gangs, No Wars ---
+  } else if (phase === 'threats') {
+    drawTitle('The Threats', 0.8);
+    phaseT += dt;
+
+    const THREAT_WORDS = [
+      { label: 'Kings', color: '#ff4444' }, { label: 'Mobs', color: '#ff5533' },
+      { label: 'Gangs', color: '#ff6644' }, { label: 'Wars', color: '#ff3333' },
+      { label: 'Tyranny', color: '#ff5555' }, { label: 'Corruption', color: '#ff7744' },
+      { label: 'Oligarchy', color: '#ff6655' }, { label: 'Apathy', color: '#ff8866' },
+    ];
+
+    // Spawn threat words drifting in from edges
+    if (phaseT < 5) {
+      const spawnInterval = 5 / THREAT_WORDS.length;
+      const shouldHave = Math.floor(phaseT / spawnInterval);
+      while (floatingWords.length < shouldHave && floatingWords.length < THREAT_WORDS.length) {
+        const def = THREAT_WORDS[floatingWords.length];
+        floatingWords.push(makeWord(def.label, false, def.color));
+      }
+    }
+
+    // After 6s, words start shrinking
+    if (phaseT > 6) {
+      floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'shrinking'; });
+    }
+
+    updateWords(dt);
+    drawWords();
+
+    // Government sphere under pressure — subtle jitter
+    const breathe = Math.sin(now / 400) * 4;
+    const jx = (Math.random()-0.5) * (phaseT > 3 ? 6 : 2);
+    const jy = (Math.random()-0.5) * (phaseT > 3 ? 6 : 2);
+    drawSphere(W/2 + jx, H/2 + jy, 95 + breathe, GOLD, 'Constitutional Government', 0.7);
+
+    if (phaseT > 8 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('No kings. No mobs. No gangs. No wars.');
+    }
+
+  // --- ACT IV / Phase 4.2: The Fight — Elections, Pledges, The War ---
+  } else if (phase === 'the-fight') {
+    drawTitle('The Fight', 0.8);
+    phaseT += dt;
+
+    const FIGHT_WORDS = [
+      { label: 'Elections', color: '#50c878', positive: true },
+      { label: 'Amendment 28', color: '#50c878', positive: true },
+      { label: 'Ballot Initiatives', color: '#66ddaa', positive: true },
+      { label: 'The Pledge', color: '#55cc88', positive: true },
+      { label: 'Transparency', color: '#44bb77', positive: true },
+      { label: 'Accountability', color: '#55cc88', positive: true },
+    ];
+
+    if (phaseT < 4) {
+      const spawnInterval = 4 / FIGHT_WORDS.length;
+      const shouldHave = Math.floor(phaseT / spawnInterval);
+      while (floatingWords.length < shouldHave && floatingWords.length < FIGHT_WORDS.length) {
+        const def = FIGHT_WORDS[floatingWords.length];
+        floatingWords.push(makeWord(def.label, true, def.color));
+      }
+    }
+
+    if (phaseT > 5) {
+      floatingWords.filter(w => w.phase === 'drifting').forEach(w => { w.phase = 'winning'; });
+    }
+
+    updateWords(dt);
+    drawWords();
+
+    // Healing sphere — grows brighter
+    const brightness = Math.min(1, phaseT / 7) * 30;
+    drawSphere(W/2, H/2, 95, lighten(GOLD, brightness), 'Constitutional Government', 0.9);
+
+    if (phaseT > 8 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('The war for democracy is fought at the ballot box.');
+    }
+
+  // --- ACT IV / Phase 4.3: The Fourth Branch — The People's Branch ---
+  } else if (phase === 'fourth-branch') {
+    drawTitle("The People's Branch — The 4th Branch", 0.8);
+    phaseT += dt;
+    const progress = Math.min(1, phaseT / 8);
+
+    // The 3 branches appear, then the 4th emerges encompassing them
+    const branches = [
+      { label: 'Congress', color: BLUE, angle: -Math.PI/2 - 0.8 },
+      { label: 'Executive', color: CORAL, angle: -Math.PI/2 },
+      { label: 'Judicial', color: PURPLE, angle: -Math.PI/2 + 0.8 },
+    ];
+
+    // Draw the 3 existing branches in an arc
+    const orbitR = 120;
+    branches.forEach(b => {
+      const bx = W/2 + Math.cos(b.angle) * orbitR;
+      const by = H/2 + Math.sin(b.angle) * orbitR * 0.8 + 20;
+      drawSphere(bx, by, 35, b.color, b.label, Math.min(1, progress * 3));
+    });
+
+    // The 4th branch — The People — grows from below, encompassing all
+    if (progress > 0.3) {
+      const fourthT = Math.min(1, (progress - 0.3) / 0.5);
+      const ease = easeInOut(fourthT);
+      const ringR = 50 + ease * 130;
+      const ringAlpha = ease * 0.35;
+
+      // Glowing ring encompassing all branches
+      ctx.save();
+      ctx.globalAlpha = ringAlpha;
+      ctx.strokeStyle = '#50c878';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#50c878';
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.ellipse(W/2, H/2 + 10, ringR, ringR * 0.75, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Label
+      if (fourthT > 0.5) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, (fourthT - 0.5) * 2);
+        ctx.font = '700 18px Segoe UI, system-ui, sans-serif';
+        ctx.fillStyle = '#50c878';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#50c878'; ctx.shadowBlur = 15;
+        ctx.fillText("The People's Branch", W/2, H/2 + 120);
+        ctx.restore();
+      }
+    }
+
+    // Small people-spheres orbiting the ring
+    if (progress > 0.5) {
+      const nPeople = 8;
+      const orbT = (progress - 0.5) * 2;
+      for (let i = 0; i < nPeople; i++) {
+        const a = (i / nPeople) * Math.PI * 2 + phaseT * 0.2;
+        const oR = 155;
+        const px = W/2 + Math.cos(a) * oR;
+        const py = H/2 + 10 + Math.sin(a) * oR * 0.7;
+        const pAlpha = Math.min(0.7, orbT);
+        drawSphere(px, py, 8, '#50c878', '', pAlpha);
+      }
+    }
+
+    if (progress >= 1 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click to continue';
+      narrate('Three branches of government. And now — the fourth. The People.');
+    }
+
+  // --- ACT IV / Phase 4.4: Final — The Building Continues ---
   } else if (phase === 'final') {
     phaseT += dt;
-    drawTitle('A More Perfect Union', 0.5);
+    drawTitle('A More Perfect Union', 0.8);
 
     // Pulsing network of people-spheres
     const nodeCount = 12;
@@ -1939,6 +2141,15 @@ canvas.addEventListener('click', function(e) {
       phase = 'people-power'; phaseT = 0;
       floatingWords = [];
     } else if (phase === 'people-power') {
+      phase = 'threats'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'threats') {
+      phase = 'the-fight'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'the-fight') {
+      phase = 'fourth-branch'; phaseT = 0;
+      floatingWords = [];
+    } else if (phase === 'fourth-branch') {
       phase = 'final'; phaseT = 0;
       reportDwell();
       narrate('The building continues.');
