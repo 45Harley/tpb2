@@ -92,7 +92,48 @@ const DECONSTRUCT_TREE = {
   ]
 };
 
-// Founding idea swirl words
+// 13 Colonies — simplified outlines (canvas coords, fitted to ~900x480)
+// Each colony: array of [x,y] points forming a closed polygon
+const COLONY_OUTLINES = {
+  'NH':  [[695,28],[720,35],[725,65],[710,90],[690,85],[680,55]],
+  'MA':  [[700,95],[740,90],[750,110],[745,125],[700,120],[695,105]],
+  'RI':  [[740,128],[755,125],[758,140],[742,143]],
+  'CT':  [[700,125],[740,125],[738,145],[698,145]],
+  'NY':  [[640,80],[700,90],[698,125],[695,150],[660,165],[630,140],[625,100]],
+  'NJ':  [[680,155],[700,150],[705,185],[690,200],[672,180]],
+  'PA':  [[600,145],[680,150],[675,185],[595,180]],
+  'DE':  [[690,192],[705,190],[708,210],[693,212]],
+  'MD':  [[630,188],[690,190],[685,215],[640,220],[625,205]],
+  'VA':  [[560,195],[640,190],[650,220],[670,240],[650,270],[600,280],[550,260],[540,225]],
+  'NC':  [[550,270],[650,275],[670,310],[640,330],[560,320],[530,290]],
+  'SC':  [[580,325],[650,315],[670,350],[640,375],[590,365],[565,345]],
+  'GA':  [[555,360],[600,370],[610,410],[580,430],[545,410],[540,380]],
+};
+
+// Historical events with map positions
+const MAP_EVENTS = [
+  { x: 715, y: 105, label: 'Boston Massacre', year: 1770, color: '#ff5555',
+    desc: 'British soldiers fire on colonists, killing five. Outrage spreads through all colonies.' },
+  { x: 718, y: 108, label: 'Boston Tea Party', year: 1773, color: '#ff7744',
+    desc: '342 chests of tea dumped into Boston Harbor. "No taxation without representation."' },
+  { x: 660, y: 155, label: 'First Continental Congress', year: 1774, color: GOLD,
+    desc: '56 delegates from 12 colonies meet in Philadelphia to coordinate resistance.' },
+  { x: 700, y: 98, label: 'Lexington & Concord', year: 1775, color: '#ff5555',
+    desc: '"The shot heard round the world." The Revolution begins.' },
+  { x: 650, y: 165, label: 'Declaration of Independence', year: 1776, color: GOLD,
+    desc: '"We hold these truths to be self-evident, that all men are created equal."' },
+  { x: 620, y: 260, label: 'Yorktown', year: 1781, color: '#55cc55',
+    desc: 'Cornwallis surrenders. The war is won. American independence secured.' },
+  { x: 645, y: 170, label: 'Constitutional Convention', year: 1787, color: GOLD,
+    desc: '55 delegates craft the Constitution. "We the People of the United States..."' },
+  { x: 660, y: 130, label: 'Washington Inaugurated', year: 1789, color: '#55aaff',
+    desc: 'George Washington takes the oath in New York. The republic begins.' },
+];
+
+let activeEvent = -1; // which event popup is open
+let mapFadeIn = 0;    // animation progress for map appearance
+
+
 const FOUNDING_POSITIVE = [
   { label: 'Liberty', color: '#f0d060' },
   { label: 'Equality', color: '#f0d060' },
@@ -301,6 +342,7 @@ const PHASES = [
   { id: 'towns', label: 'Colonial Towns' },
   { id: 'coalesce1', label: 'Towns to Colonies' },
   { id: 'states', label: 'Thirteen Colonies' },
+  { id: 'colony-map', label: 'Events Map' },
   { id: 'coalesce2', label: 'Forge Government' },
   { id: 'gov-arrive', label: 'Government' },
   { id: 'interactive', label: 'Deconstruct' },
@@ -648,6 +690,126 @@ function render(now) {
     const breathe = Math.sin(now / 700) * 2;
     stateBalls.forEach(s => drawSphere(s.x, s.y, s.r + breathe, s.color, s.label, 1));
 
+  // --- Colony Map — Interactive Events ---
+  } else if (phase === 'colony-map') {
+    drawTitle('The Road to Independence — 1770–1789', 0.5);
+    phaseT += dt;
+    mapFadeIn = Math.min(1, phaseT / 1.5);
+    const fade = easeInOut(mapFadeIn);
+
+    // Draw colony outlines
+    ctx.save();
+    ctx.globalAlpha = fade * 0.35;
+    ctx.strokeStyle = '#5588aa';
+    ctx.lineWidth = 1.5;
+    ctx.fillStyle = '#1a2a3a';
+    Object.values(COLONY_OUTLINES).forEach(pts => {
+      ctx.beginPath();
+      pts.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    });
+    ctx.restore();
+
+    // Draw colony labels (subtle)
+    ctx.save();
+    ctx.globalAlpha = fade * 0.25;
+    ctx.font = '600 11px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#7799bb';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    Object.entries(COLONY_OUTLINES).forEach(([name, pts]) => {
+      const cx = pts.reduce((s, p) => s + p[0], 0) / pts.length;
+      const cy = pts.reduce((s, p) => s + p[1], 0) / pts.length;
+      ctx.fillText(name, cx, cy);
+    });
+    ctx.restore();
+
+    // Draw event dots — pulse in chronological order
+    MAP_EVENTS.forEach((ev, i) => {
+      const delay = i * 0.3;
+      const dotAlpha = easeInOut(Math.min(1, Math.max(0, (phaseT - 0.5 - delay) / 0.8)));
+      if (dotAlpha <= 0) return;
+
+      const pulse = Math.sin(now / 400 + i * 1.5) * 2;
+      const r = (i === activeEvent ? 8 : 5) + pulse;
+
+      // Glow
+      ctx.save();
+      ctx.globalAlpha = dotAlpha * 0.4;
+      ctx.fillStyle = ev.color;
+      ctx.beginPath(); ctx.arc(ev.x, ev.y, r + 6, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // Dot
+      ctx.save();
+      ctx.globalAlpha = dotAlpha * 0.9;
+      ctx.fillStyle = ev.color;
+      ctx.beginPath(); ctx.arc(ev.x, ev.y, r, 0, Math.PI * 2); ctx.fill();
+      // Ring
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = i === activeEvent ? 2 : 1;
+      ctx.globalAlpha = dotAlpha * 0.6;
+      ctx.stroke();
+      ctx.restore();
+
+      // Year label near dot
+      ctx.save();
+      ctx.globalAlpha = dotAlpha * 0.5;
+      ctx.font = '600 10px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#ccc'; ctx.textAlign = 'left';
+      ctx.fillText(ev.year.toString(), ev.x + 10, ev.y + 4);
+      ctx.restore();
+    });
+
+    // Draw active event popup card
+    if (activeEvent >= 0 && activeEvent < MAP_EVENTS.length) {
+      const ev = MAP_EVENTS[activeEvent];
+      const cardW = 340, cardH = 90;
+      // Position card to the left of the map area
+      const cardX = 40, cardY = H / 2 - cardH / 2;
+
+      // Card background
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = '#1a1a3e';
+      ctx.strokeStyle = ev.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardW, cardH, 8);
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+
+      // Card title
+      ctx.save();
+      ctx.globalAlpha = 0.95;
+      ctx.font = '700 16px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = ev.color; ctx.textAlign = 'left';
+      ctx.fillText(ev.label + '  (' + ev.year + ')', cardX + 14, cardY + 24);
+
+      // Card description — word wrap
+      ctx.font = '400 13px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#ccc';
+      const descWords = ev.desc.split(' ');
+      const descLines = []; let curLine = '';
+      descWords.forEach(w => {
+        const test = curLine ? curLine + ' ' + w : w;
+        if (curLine && ctx.measureText(test).width > cardW - 28) { descLines.push(curLine); curLine = w; }
+        else curLine = test;
+      });
+      if (curLine) descLines.push(curLine);
+      descLines.forEach((ln, li) => {
+        ctx.fillText(ln, cardX + 14, cardY + 46 + li * 18);
+      });
+      ctx.restore();
+    }
+
+    // Hint
+    if (phaseT > 3 && !waitingForClick) {
+      waitingForClick = true;
+      hintEl.textContent = 'Click events to explore. Click background to continue.';
+    }
+
   // --- Forge Constitutional Government (auto, 4s) ---
   } else if (phase === 'coalesce2') {
     drawTitle('E Pluribus Unum — 1787', 0.5);
@@ -829,6 +991,30 @@ canvas.addEventListener('click', function(e) {
     return;
   }
 
+  // Colony map — click events or background
+  if (phase === 'colony-map' && mapFadeIn > 0.5) {
+    const pos = getMousePos(e);
+    // Check if clicking an event dot
+    let hitEvent = -1;
+    MAP_EVENTS.forEach((ev, i) => {
+      if (dist(pos.x, pos.y, ev.x, ev.y) < 18) hitEvent = i;
+    });
+    if (hitEvent >= 0) {
+      activeEvent = (activeEvent === hitEvent) ? -1 : hitEvent; // toggle
+      return;
+    }
+    // Clicking background — continue to next phase
+    if (waitingForClick) {
+      waitingForClick = false;
+      logDwell(phase);
+      hintEl.textContent = '';
+      activeEvent = -1;
+      phase = 'coalesce2'; phaseT = 0;
+      narrate('And they forged a Constitution, creating a Constitutional Government of the people.');
+      return;
+    }
+  }
+
   // Click-to-continue gates
   if (waitingForClick) {
     waitingForClick = false;
@@ -856,8 +1042,8 @@ canvas.addEventListener('click', function(e) {
       placeStates();
       narrate('The towns coalesced into thirteen colonies.');
     } else if (phase === 'states') {
-      phase = 'coalesce2'; phaseT = 0;
-      narrate('And they forged a Constitution, creating a Constitutional Government of the people.');
+      phase = 'colony-map'; phaseT = 0; activeEvent = -1; mapFadeIn = 0;
+      narrate('The events that shaped a nation.');
     } else if (phase === 'gov-arrive') {
       phase = 'interactive'; phaseT = 0;
       const root = makeInteractiveSphere(DECONSTRUCT_TREE, W / 2, H / 2, 95);
@@ -977,6 +1163,7 @@ function jumpToPhase(targetId) {
   }
   if (targetId === 'towns' || targetId === 'coalesce1') { scatterTowns(); }
   if (targetId === 'states' || targetId === 'coalesce2') { scatterTowns(); placeStates(); stateBalls.forEach(s => { s.x = s.targetX; s.y = s.targetY; s.alpha = 1; }); }
+  if (targetId === 'colony-map') { activeEvent = -1; mapFadeIn = 0; }
   if (targetId === 'gov-arrive' || targetId === 'post-deconstruct') { /* sphere drawn inline */ }
 }
 
