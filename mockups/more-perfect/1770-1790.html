@@ -92,41 +92,41 @@ const DECONSTRUCT_TREE = {
   ]
 };
 
-// 13 Colonies — simplified outlines (canvas coords, fitted to ~900x480)
-// Each colony: array of [x,y] points forming a closed polygon
+// 13 Colonies — simplified outlines (canvas coords, full 900x480 canvas)
+// Mapped: lon ~-83 to -67 → x 100-800, lat ~31 to 45 → y 430 to 40
 const COLONY_OUTLINES = {
-  'NH':  [[695,28],[720,35],[725,65],[710,90],[690,85],[680,55]],
-  'MA':  [[700,95],[740,90],[750,110],[745,125],[700,120],[695,105]],
-  'RI':  [[740,128],[755,125],[758,140],[742,143]],
-  'CT':  [[700,125],[740,125],[738,145],[698,145]],
-  'NY':  [[640,80],[700,90],[698,125],[695,150],[660,165],[630,140],[625,100]],
-  'NJ':  [[680,155],[700,150],[705,185],[690,200],[672,180]],
-  'PA':  [[600,145],[680,150],[675,185],[595,180]],
-  'DE':  [[690,192],[705,190],[708,210],[693,212]],
-  'MD':  [[630,188],[690,190],[685,215],[640,220],[625,205]],
-  'VA':  [[560,195],[640,190],[650,220],[670,240],[650,270],[600,280],[550,260],[540,225]],
-  'NC':  [[550,270],[650,275],[670,310],[640,330],[560,320],[530,290]],
-  'SC':  [[580,325],[650,315],[670,350],[640,375],[590,365],[565,345]],
-  'GA':  [[555,360],[600,370],[610,410],[580,430],[545,410],[540,380]],
+  'NH':  [[710,55],[730,48],[740,80],[735,120],[715,130],[700,100]],
+  'MA':  [[720,138],[760,132],[775,150],[770,168],[725,165],[715,148]],
+  'RI':  [[762,172],[780,168],[783,188],[765,192]],
+  'CT':  [[715,170],[758,168],[755,192],[712,195]],
+  'NY':  [[600,75],[710,52],[715,168],[710,200],[660,220],[620,195],[595,120]],
+  'NJ':  [[685,210],[715,200],[720,255],[700,275],[678,245]],
+  'PA':  [[530,195],[685,205],[680,255],[525,245]],
+  'DE':  [[700,265],[720,260],[724,290],[704,294]],
+  'MD':  [[560,255],[700,260],[695,295],[580,305],[548,280]],
+  'VA':  [[430,270],[570,255],[590,290],[620,315],[590,345],[510,360],[400,340],[390,300]],
+  'NC':  [[395,345],[600,350],[625,390],[580,415],[420,405],[380,375]],
+  'SC':  [[440,410],[590,400],[620,440],[575,465],[450,455],[415,430]],
+  'GA':  [[400,450],[465,455],[480,475],[450,480],[385,478],[375,462]],
 };
 
 // Historical events with map positions
 const MAP_EVENTS = [
-  { x: 715, y: 105, label: 'Boston Massacre', year: 1770, color: '#ff5555',
+  { x: 745, y: 145, label: 'Boston Massacre', year: 1770, color: '#ff5555',
     desc: 'British soldiers fire on colonists, killing five. Outrage spreads through all colonies.' },
-  { x: 718, y: 108, label: 'Boston Tea Party', year: 1773, color: '#ff7744',
+  { x: 750, y: 150, label: 'Boston Tea Party', year: 1773, color: '#ff7744',
     desc: '342 chests of tea dumped into Boston Harbor. "No taxation without representation."' },
-  { x: 660, y: 155, label: 'First Continental Congress', year: 1774, color: GOLD,
+  { x: 610, y: 225, label: 'First Continental Congress', year: 1774, color: GOLD,
     desc: '56 delegates from 12 colonies meet in Philadelphia to coordinate resistance.' },
-  { x: 700, y: 98, label: 'Lexington & Concord', year: 1775, color: '#ff5555',
+  { x: 735, y: 135, label: 'Lexington & Concord', year: 1775, color: '#ff5555',
     desc: '"The shot heard round the world." The Revolution begins.' },
-  { x: 650, y: 165, label: 'Declaration of Independence', year: 1776, color: GOLD,
+  { x: 620, y: 230, label: 'Declaration of Independence', year: 1776, color: GOLD,
     desc: '"We hold these truths to be self-evident, that all men are created equal."' },
-  { x: 620, y: 260, label: 'Yorktown', year: 1781, color: '#55cc55',
+  { x: 510, y: 340, label: 'Yorktown', year: 1781, color: '#55cc55',
     desc: 'Cornwallis surrenders. The war is won. American independence secured.' },
-  { x: 645, y: 170, label: 'Constitutional Convention', year: 1787, color: GOLD,
+  { x: 625, y: 235, label: 'Constitutional Convention', year: 1787, color: GOLD,
     desc: '55 delegates craft the Constitution. "We the People of the United States..."' },
-  { x: 660, y: 130, label: 'Washington Inaugurated', year: 1789, color: '#55aaff',
+  { x: 650, y: 185, label: 'Washington Inaugurated', year: 1789, color: '#55aaff',
     desc: 'George Washington takes the oath in New York. The republic begins.' },
 ];
 
@@ -699,10 +699,10 @@ function render(now) {
 
     // Draw colony outlines
     ctx.save();
-    ctx.globalAlpha = fade * 0.35;
-    ctx.strokeStyle = '#5588aa';
-    ctx.lineWidth = 1.5;
-    ctx.fillStyle = '#1a2a3a';
+    ctx.globalAlpha = fade * 0.7;
+    ctx.strokeStyle = '#88bbdd';
+    ctx.lineWidth = 2;
+    ctx.fillStyle = '#223344';
     Object.values(COLONY_OUTLINES).forEach(pts => {
       ctx.beginPath();
       pts.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
@@ -712,11 +712,11 @@ function render(now) {
     });
     ctx.restore();
 
-    // Draw colony labels (subtle)
+    // Draw colony labels
     ctx.save();
-    ctx.globalAlpha = fade * 0.25;
-    ctx.font = '600 11px Segoe UI, system-ui, sans-serif';
-    ctx.fillStyle = '#7799bb';
+    ctx.globalAlpha = fade * 0.6;
+    ctx.font = '700 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#aaccee';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     Object.entries(COLONY_OUTLINES).forEach(([name, pts]) => {
       const cx = pts.reduce((s, p) => s + p[0], 0) / pts.length;
@@ -755,10 +755,10 @@ function render(now) {
 
       // Year label near dot
       ctx.save();
-      ctx.globalAlpha = dotAlpha * 0.5;
-      ctx.font = '600 10px Segoe UI, system-ui, sans-serif';
-      ctx.fillStyle = '#ccc'; ctx.textAlign = 'left';
-      ctx.fillText(ev.year.toString(), ev.x + 10, ev.y + 4);
+      ctx.globalAlpha = dotAlpha * 0.8;
+      ctx.font = '700 12px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#eee'; ctx.textAlign = 'left';
+      ctx.fillText(ev.year.toString(), ev.x + 12, ev.y + 4);
       ctx.restore();
     });
 
