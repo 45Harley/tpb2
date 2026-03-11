@@ -266,6 +266,7 @@
                 user_id: (CONFIG.user ? CONFIG.user.userId : null) || ((window.tpbPageState && window.tpbPageState.USER) ? window.tpbPageState.USER.userId : null),
                 session_id: sessionId,
                 clerk: 'guide',
+                context: currentPage,
                 page_context: JSON.stringify(pageContext)
             })
         })
@@ -300,6 +301,24 @@
         for (var i = 0; i < actions.length; i++) {
             var action = actions[i];
             var msg = '';
+
+            // Client-side navigation actions
+            if (action.action === 'NAVIGATE' && action.success && action.url) {
+                // Navigate current tab (or broadcast to browsing tab if in pop-out)
+                if (IS_POPOUT && window.BroadcastChannel) {
+                    var ch = new BroadcastChannel('claudia');
+                    ch.postMessage({ type: 'navigate', url: action.url });
+                    ch.close();
+                } else {
+                    window.location.href = action.url;
+                }
+                continue;
+            }
+            if (action.action === 'OPEN_TAB' && action.success && action.url) {
+                window.open(action.url, '_blank');
+                continue;
+            }
+
             if (action.success) {
                 if (action.message) {
                     msg = action.message;

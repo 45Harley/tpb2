@@ -122,6 +122,12 @@ if ($aiContext['text']) {
     $systemPrompt .= "\n\n" . $aiContext['text'];
 }
 
+// 2b. Add current page context
+$pageContext = $input['context'] ?? null;
+if ($pageContext) {
+    $systemPrompt .= "\n\n## Current Page\nThe user is currently on the '{$pageContext}' page. Use this to give contextually relevant responses.";
+}
+
 // 3. Add message-specific context (town lookups, email lookups, etc.)
 $dbContext = gatherRelevantContext($pdo, $userMessage);
 if ($dbContext) {
@@ -307,7 +313,28 @@ function getActionInstructions($clerk) {
     if (in_array('log_threat', $capabilities)) {
         $instructions .= "To log a threat:\n[ACTION: LOG_THREAT]\ndescription: {threat description}\nseverity: {low|medium|high|critical}\n\n";
     }
-    
+    if (in_array('navigate', $capabilities)) {
+        $instructions .= "To navigate the user's browser to a TPB page (replaces current page):\n[ACTION: NAVIGATE]\nurl: {relative URL like /story.php or /z-states/ct/putnam/}\n\n";
+    }
+    if (in_array('open_tab', $capabilities)) {
+        $instructions .= "To open a page in a new browser tab (keeps current page):\n[ACTION: OPEN_TAB]\nurl: {relative URL}\n\n";
+    }
+    if (in_array('navigate', $capabilities) || in_array('open_tab', $capabilities)) {
+        $instructions .= "Available pages:\n";
+        $instructions .= "- /index.php — Home (USA map)\n";
+        $instructions .= "- /story.php — Our Story (TPB mission & history)\n";
+        $instructions .= "- /profile.php — User's profile\n";
+        $instructions .= "- /constitution/ — Constitution section\n";
+        $instructions .= "- /elections/ — Elections section\n";
+        $instructions .= "- /help/ — Help center\n";
+        $instructions .= "- /join.php — Join / sign up\n";
+        $instructions .= "- /volunteer/ — Volunteer\n";
+        $instructions .= "- /z-states/{state}/ — State page (e.g. /z-states/ct/)\n";
+        $instructions .= "- /z-states/{state}/{town}/ — Town page (e.g. /z-states/ct/putnam/)\n";
+        $instructions .= "\nUse NAVIGATE for destinations (user is going there). Use OPEN_TAB for reference material (user wants to read while staying in chat).\n";
+        $instructions .= "When the user says 'go to', 'open', 'show me', 'take me to' a page, use the appropriate action. ALWAYS include the action tag — do not just describe the page.\n\n";
+    }
+
     return $instructions;
 }
 
@@ -424,7 +451,16 @@ function processAction($pdo, $action, $userId, $sessionId, $email = null) {
             
         case 'ADD_THOUGHT':
             return processAddThought($pdo, $action['params'], $userId);
-            
+
+        case 'NAVIGATE':
+        case 'OPEN_TAB':
+            // Client-side actions — pass through to JS handler
+            return [
+                'action' => $action['type'],
+                'success' => true,
+                'url' => $action['params']['url'] ?? '/'
+            ];
+
         default:
             return ['action' => $action['type'], 'success' => false, 'error' => 'Unknown action'];
     }

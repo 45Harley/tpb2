@@ -62,6 +62,10 @@
                     history: window.ClaudiaCore ? window.ClaudiaCore.getHistory() : []
                 });
             }
+            if (e.data.type === 'navigate') {
+                // Pop-out is telling us to navigate
+                window.location.href = e.data.url;
+            }
             if (e.data.type === 'popout_close') {
                 // Wake up — show widget
                 var widget = document.getElementById('claudia-widget');
