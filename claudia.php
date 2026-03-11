@@ -12,6 +12,22 @@ try {
     );
 } catch (PDOException $e) { $pdo = null; }
 
+// Check site-wide toggle
+$claudiaWidgetEnabled = '0';
+if ($pdo) {
+    try {
+        $stmt = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = ?");
+        $stmt->execute(['claudia_widget_enabled']);
+        $claudiaWidgetEnabled = $stmt->fetchColumn() ?: '0';
+    } catch (Exception $e) {
+        $claudiaWidgetEnabled = '0';
+    }
+}
+if ($claudiaWidgetEnabled !== '1') {
+    echo '<html><body style="background:#0f172a;color:#94a3b8;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><p>Claudia is currently disabled.</p></body></html>';
+    exit;
+}
+
 require_once __DIR__ . '/includes/get-user.php';
 $dbUser = $pdo ? getUser($pdo) : null;
 

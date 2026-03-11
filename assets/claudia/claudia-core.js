@@ -15,6 +15,7 @@
         user: null,
         siteEnabled: true
     };
+    var IS_POPOUT = !!CONFIG.isPopout;
 
     // Anonymous user toggle (localStorage)
     if (!CONFIG.user) {
@@ -65,16 +66,16 @@
     // INPUT ENABLE / DISABLE
     // =====================================================
     function disableInput() {
-        textInput.disabled = true;
-        sendBtn.disabled = true;
-        micBtn.disabled = true;
+        if (textInput) textInput.disabled = true;
+        if (sendBtn) sendBtn.disabled = true;
+        if (micBtn) micBtn.disabled = true;
     }
 
     function enableInput() {
-        textInput.disabled = false;
-        sendBtn.disabled = false;
-        micBtn.disabled = false;
-        textInput.focus();
+        if (textInput) textInput.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
+        if (micBtn) micBtn.disabled = false;
+        if (textInput) textInput.focus();
     }
 
     // =====================================================
@@ -168,7 +169,8 @@
         if (!text) return;
         var div = document.createElement('div');
         div.className = 'claudia-msg ' + role;
-        div.innerHTML = text.replace(/\n/g, '<br>');
+        var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        div.innerHTML = escaped.replace(/\n/g, '<br>');
         messagesEl.appendChild(div);
         messagesEl.scrollTop = messagesEl.scrollHeight;
     }
@@ -393,15 +395,15 @@
     // =====================================================
     function expand() {
         isExpanded = true;
-        bubble.classList.add('hidden');
-        panel.classList.add('open');
-        textInput.focus();
+        if (bubble) bubble.classList.add('hidden');
+        if (panel) panel.classList.add('open');
+        if (textInput) textInput.focus();
     }
 
     function minimize() {
         isExpanded = false;
-        panel.classList.remove('open');
-        bubble.classList.remove('hidden');
+        if (panel) panel.classList.remove('open');
+        if (bubble) bubble.classList.remove('hidden');
         if (window.speechSynthesis) window.speechSynthesis.cancel();
     }
 
@@ -409,17 +411,17 @@
     // MODE PICKER
     // =====================================================
     function showModePicker() {
-        overlay.classList.add('show');
+        if (overlay) overlay.classList.add('show');
     }
 
     function dismissModePicker() {
-        overlay.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
     }
 
     function setMode(newMode) {
         mode = newMode;
         localStorage.setItem('tpb_c_mode', mode);
-        overlay.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
 
         // Hide mic button in text mode
         if (mode === 'text') {
@@ -450,40 +452,46 @@
     }
 
     // Mode picker button handlers
-    var modeButtons = overlay.querySelectorAll('.claudia-mode-btn');
-    for (var i = 0; i < modeButtons.length; i++) {
-        modeButtons[i].addEventListener('click', function() {
-            setMode(this.getAttribute('data-mode'));
+    if (overlay) {
+        var modeButtons = overlay.querySelectorAll('.claudia-mode-btn');
+        for (var i = 0; i < modeButtons.length; i++) {
+            modeButtons[i].addEventListener('click', function() {
+                setMode(this.getAttribute('data-mode'));
+            });
+        }
+
+        // Dismiss mode picker: click outside the card
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                dismissModePicker();
+            }
         });
     }
 
     // Dismiss mode picker: "Maybe later" button
-    modeDismiss.addEventListener('click', function() {
-        dismissModePicker();
-    });
-
-    // Dismiss mode picker: click outside the card
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
+    if (modeDismiss) {
+        modeDismiss.addEventListener('click', function() {
             dismissModePicker();
-        }
-    });
+        });
+    }
 
     // =====================================================
     // SETTINGS
     // =====================================================
-    settingsBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        settingsOpen = !settingsOpen;
-        settingsMenu.classList.toggle('show', settingsOpen);
-    });
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            settingsOpen = !settingsOpen;
+            if (settingsMenu) settingsMenu.classList.toggle('show', settingsOpen);
+        });
+    }
 
     document.addEventListener('click', function() {
         settingsOpen = false;
-        settingsMenu.classList.remove('show');
+        if (settingsMenu) settingsMenu.classList.remove('show');
     });
 
-    var settingsItems = settingsMenu.querySelectorAll('.claudia-settings-item');
+    var settingsItems = settingsMenu ? settingsMenu.querySelectorAll('.claudia-settings-item') : [];
     for (var j = 0; j < settingsItems.length; j++) {
         settingsItems[j].addEventListener('click', function() {
             var action = this.getAttribute('data-action');
@@ -517,9 +525,10 @@
                 }
                 localStorage.setItem('tpb_claudia_enabled', '0');
                 // Hide widget immediately
-                document.getElementById('claudia-widget').style.display = 'none';
+                var w = document.getElementById('claudia-widget') || document.getElementById('claudia-popout');
+                if (w) w.style.display = 'none';
             }
-            settingsMenu.classList.remove('show');
+            if (settingsMenu) settingsMenu.classList.remove('show');
             settingsOpen = false;
         });
     }
@@ -527,7 +536,7 @@
     // =====================================================
     // EVENT LISTENERS
     // =====================================================
-    bubble.addEventListener('click', function() {
+    if (bubble) bubble.addEventListener('click', function() {
         if (!mode) {
             showModePicker();
         } else {
@@ -569,7 +578,7 @@
         }
     }
 
-    minimizeBtn.addEventListener('click', minimize);
+    if (minimizeBtn) minimizeBtn.addEventListener('click', minimize);
 
     sendBtn.addEventListener('click', function() {
         var text = textInput.value.trim();
@@ -594,10 +603,11 @@
     });
 
     // =====================================================
-    // DRAG TO MOVE
+    // DRAG TO MOVE (widget only, not pop-out)
     // =====================================================
     (function() {
         var header = document.querySelector('.claudia-header');
+        if (!header) return; // Not available in pop-out mode
         var isDragging = false;
         var dragStartX, dragStartY, widgetStartX, widgetStartY;
 
@@ -680,6 +690,34 @@
             flowState.confirmedState = user.stateAbbr || null;
             flowState.confirmedTown = user.townName || null;
             flowState.step = 'returning';
+        }
+        // Pop-out mode: auto-expand and greet immediately
+        if (IS_POPOUT) {
+            isExpanded = true;
+            if (!mode) {
+                mode = 'both';
+                localStorage.setItem('tpb_c_mode', mode);
+            }
+            // Auto-greet after a short delay (let modules register)
+            setTimeout(function() {
+                if (history.length === 0) {
+                    var authMod = window.ClaudiaModules.auth;
+                    if (authMod && authMod.getGreeting) {
+                        var greeting = authMod.getGreeting();
+                        if (greeting) {
+                            addMessage(greeting, 'c');
+                            speak(greeting);
+                            history.push({ role: 'assistant', content: greeting });
+                            return;
+                        }
+                    }
+                    var onboard = window.ClaudiaModules.onboarding;
+                    if (onboard && onboard.cannedRespond) {
+                        onboard.cannedRespond('welcome', null, window.ClaudiaCore);
+                    }
+                }
+            }, 100);
+            return;
         }
         // Don't auto-expand on load — let user click the bubble or wait for page events
     }

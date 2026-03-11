@@ -57,6 +57,14 @@ $sessionId = $input['session_id'] ?? null;
 $userEmail = $input['email'] ?? null;
 $clerkKey = $input['clerk'] ?? 'guide';  // NEW: which clerk to use
 
+// Handle Claudia widget toggle action
+if (isset($input['action']) && $input['action'] === 'disable_claudia' && $userId) {
+    $stmt = $pdo->prepare("UPDATE users SET claudia_enabled = 0 WHERE user_id = ?");
+    $stmt->execute([(int)$userId]);
+    echo json_encode(['success' => true]);
+    exit;
+}
+
 if (empty($userMessage)) {
     echo json_encode(['error' => 'No message provided']);
     exit;
@@ -138,10 +146,17 @@ $messages[] = [
     'content' => $userMessage
 ];
 
-// === CALL CLAUDE API ===
+// === CALL CLAUDE (API or LOCAL) ===
 // #call-api
-$model = $clerk['model'] ?? CLAUDE_MODEL;
-$response = callClaudeAPI($systemPrompt, $messages, $model);
+require_once __DIR__ . '/../includes/site-settings.php';
+$claudiaLocalEnabled = getSiteSetting($pdo, 'claudia_local_enabled', '0');
+
+if ($claudiaLocalEnabled === '1') {
+    $response = callLocalClaude($systemPrompt, $messages);
+} else {
+    $model = $clerk['model'] ?? CLAUDE_MODEL;
+    $response = callClaudeAPI($systemPrompt, $messages, $model);
+}
 
 if (isset($response['error'])) {
     echo json_encode(['error' => $response['error']]);
@@ -365,14 +380,16 @@ function gatherRelevantContext($pdo, $message) {
  */
 function parseActions($message) {
     $actions = [];
-    preg_match_all('/\[ACTION:\s*(\w+)\](.*?)(?=\[ACTION:|$)/s', $message, $matches, PREG_SET_ORDER);
-    
+    // Match action tag + only the key:value lines immediately after (stop at blank line, markdown, or next action)
+    preg_match_all('/\[ACTION:\s*(\w+)\]\s*\n((?:\w+:\s*.+\n?)+)/s', $message, $matches, PREG_SET_ORDER);
+
     foreach ($matches as $match) {
         $action = [
             'type' => $match[1],
             'params' => []
         ];
-        preg_match_all('/(\w+):\s*(.+?)(?=\n\w+:|$)/s', $match[2], $params, PREG_SET_ORDER);
+        // Parse only clean key: value lines
+        preg_match_all('/^(\w+):\s*(.+)$/m', $match[2], $params, PREG_SET_ORDER);
         foreach ($params as $param) {
             $action['params'][trim($param[1])] = trim($param[2]);
         }
@@ -559,4 +576,42 @@ function processAddThought($pdo, $params, $userId) {
  */
 function cleanActionTags($message) {
     return trim(preg_replace('/\[ACTION:\s*\w+\].*?(?=\n\n|$)/s', '', $message));
+}
+
+/**
+ * Call local claude -p via reverse SSH tunnel
+ */
+function callLocalClaude($systemPrompt, $messages) {
+    $payload = json_encode([
+        'system_prompt' => $systemPrompt,
+        'messages' => $messages
+    ]);
+
+    $ch = curl_init('http://localhost:9876');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_TIMEOUT => 120
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($curlError) {
+        return ['error' => "Local tunnel error: {$curlError}"];
+    }
+    if ($httpCode !== 200) {
+        return ['error' => "Local listener returned HTTP {$httpCode}"];
+    }
+
+    $data = json_decode($response, true);
+    if (!$data) {
+        return ['error' => 'Invalid response from local listener'];
+    }
+
+    return $data;
 }
