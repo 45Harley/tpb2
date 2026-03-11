@@ -41,6 +41,26 @@
         expandState: function(abbr) { return (abbr && STATE_NAMES[abbr.toUpperCase()]) || abbr; }
     };
 
+    // ----- Page tracking -----
+    var previousPage = localStorage.getItem('tpb_claudia_page') || null;
+    var currentPage = CONFIG.context || 'general';
+    localStorage.setItem('tpb_claudia_page', currentPage);
+
+    // ----- Chat history persistence -----
+    var savedHistory = [];
+    try {
+        var raw = localStorage.getItem('tpb_claudia_history');
+        if (raw) savedHistory = JSON.parse(raw);
+    } catch (e) { savedHistory = []; }
+
+    function saveHistory() {
+        try {
+            // Keep last 20 messages to avoid bloating localStorage
+            var toSave = history.slice(-20);
+            localStorage.setItem('tpb_claudia_history', JSON.stringify(toSave));
+        } catch (e) {}
+    }
+
     // ----- Flow state -----
     var mode = localStorage.getItem('tpb_c_mode') || null;
     var history = [];
@@ -189,8 +209,12 @@
         div.className = 'claudia-msg ' + role;
         var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         div.innerHTML = escaped.replace(/\n/g, '<br>');
-        messagesEl.appendChild(div);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+        if (messagesEl) {
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+        // Persist after every message
+        saveHistory();
     }
 
     function showTyping() {
@@ -516,8 +540,9 @@
             if (action === 'change-mode') {
                 showModePicker();
             } else if (action === 'clear-chat') {
-                messagesEl.innerHTML = '';
+                if (messagesEl) messagesEl.innerHTML = '';
                 history = [];
+                localStorage.removeItem('tpb_claudia_history');
                 flowState = {
                     step: 'welcome',
                     confirmedAddress: null,
@@ -729,6 +754,27 @@
             flowState.confirmedTown = user.townName || null;
             flowState.step = 'returning';
         }
+        // Restore chat history from localStorage (survives page navigation)
+        if (savedHistory.length > 0 && history.length === 0) {
+            history = savedHistory;
+            // Replay messages into the UI
+            savedHistory.forEach(function(msg) {
+                addMessage(msg.content, msg.role === 'assistant' ? 'c' : 'user');
+            });
+            // If user navigated to a new page, acknowledge it
+            if (previousPage && previousPage !== currentPage && mode) {
+                var pageNames = {
+                    home: 'the home page', story: 'the Story page', profile: 'your Profile',
+                    general: 'this page', popout: 'pop-out mode'
+                };
+                var pageName = pageNames[currentPage] || currentPage;
+                var msg = "You're now on " + pageName + ". How can I help?";
+                addMessage(msg, 'c');
+                speak(msg);
+                history.push({ role: 'assistant', content: msg });
+            }
+        }
+
         // Pop-out mode: auto-expand and greet immediately
         if (IS_POPOUT) {
             isExpanded = true;
@@ -773,7 +819,9 @@
         setFlowState: function(key, val) { flowState[key] = val; },
         getConfig: function() { return CONFIG; },
         getHistory: function() { return history; },
-        setHistory: function(h) { history = h; }
+        setHistory: function(h) { history = h; },
+        currentPage: currentPage,
+        previousPage: previousPage
     };
 
     // Backward compat
