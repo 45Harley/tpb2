@@ -91,7 +91,7 @@ $claudiaConfigJson = json_encode([
     </div>
 
     <!-- Collapsed bubble -->
-    <div id="claudia-bubble">C</div>
+    <div id="claudia-bubble"><span class="claudia-bubble-icon">C</span> Ask C</div>
 
     <!-- Expanded panel -->
     <div id="claudia-panel">

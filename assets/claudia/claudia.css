@@ -1,35 +1,46 @@
 /* ===== CLAUDIA WIDGET ===== */
 #claudia-widget {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    top: 90px;
+    left: 20px;
     z-index: 5000;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Bubble (collapsed) */
+/* Bubble (collapsed) — pill shape */
 #claudia-bubble {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-    color: #0f172a;
-    font-size: 1.4rem;
-    font-weight: 700;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px 8px 10px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: grab;
     box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4);
     transition: transform 0.2s, box-shadow 0.2s;
     user-select: none;
     touch-action: none;
+    white-space: nowrap;
+}
+.claudia-bubble-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.15);
+    font-weight: 700;
+    font-size: 1rem;
 }
 #claudia-bubble:active {
     cursor: grabbing;
 }
 #claudia-bubble:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(74, 222, 128, 0.6);
 }
 #claudia-bubble.hidden { display: none; }
