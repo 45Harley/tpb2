@@ -22,57 +22,6 @@
         if (localEnabled === '0') return;
     }
 
-    // ----- Canned responses -----
-    var CANNED = {
-        welcome: "Welcome to The People's Branch! You're part of the Fourth Branch of government now. Go ahead and find your state on the map.",
-        welcome_back: function(data) {
-            var parts = ["Welcome back"];
-            if (data.townName && data.stateAbbr) parts[0] += " from " + data.townName + ", " + data.stateAbbr;
-            else if (data.stateAbbr) parts[0] += " from " + data.stateAbbr;
-            parts[0] += "!";
-            parts.push("You can ask me anything — about your representatives, local issues, or how TPB works.");
-            return parts.join(' ');
-        },
-        state_click: function(data) { return (data.stateName || data.stateCode) + "! If that's your state, click 'This is My State' and we'll zoom in to find your location."; },
-        set_my_state: function(data) {
-            var name = data.stateName || data.stateCode || 'your state';
-            return "Let's find your exact spot in " + name + ". You can type your town name or just drop a pin on the map.";
-        },
-        gmap_ready: function(data) { return "The map is ready. Type a town name or click anywhere to drop a pin."; },
-        pin_resolved: function(data) {
-            // Google's formatted_address already includes town/state/zip — use it directly
-            if (data.address) return "I see " + data.address + ". Does that look right?";
-            // Fallback if no formatted address
-            var parts = [];
-            if (data.town_name) parts.push(data.town_name);
-            if (data.state_code) parts.push(data.state_code);
-            if (data.zip_code) parts.push(data.zip_code);
-            return parts.length ? "I see " + parts.join(', ') + ". Does that look right?" : "I found your location. Does that look right?";
-        },
-        districts_resolved: function(data) {
-            var d = [];
-            if (data.us_congress_district && data.us_congress_district !== '—' && data.us_congress_district !== '') d.push("US Congress " + data.us_congress_district);
-            if (data.state_senate_district && data.state_senate_district !== '—' && data.state_senate_district !== '') d.push("State Senate " + data.state_senate_district);
-            if (data.state_house_district && data.state_house_district !== '—' && data.state_house_district !== '') d.push("State House " + data.state_house_district);
-            if (d.length) return "Your districts: " + d.join(', ') + ". Does everything look right?";
-            return "I couldn't find specific district info for your location, but that's okay — we can sort that out later. Ready to create your account?";
-        },
-        create_account: "Great! To make your voice count, I just need your email. Click the button to continue to sign up.",
-        join_page: function(data) {
-            if (data && data.town_name && data.state_code) {
-                return "Almost there! I have you in " + data.town_name + ", " + data.state_code + ". Just enter your email below and I'll send you a verification link.";
-            }
-            return "Welcome! Enter your email below to get started. One email, one identity — I'll send you a quick verification link.";
-        },
-        address_confirmed: "Great! To make your voice count, I just need your email. I'll send you a quick verification link.",
-        email_sent: "Check your inbox for a message from TPB. If you don't see it, check your spam folder. Still nothing? You might have a typo — no worries, we can try again.",
-        verified_return: function(data) { return "You're verified! I have you at " + (data.address || 'your location') + ". What should people call you?"; },
-        name_confirm: function(name) { return name + " — did I get that right?"; },
-        name_wrong: "No problem! What's the correct name?",
-        welcome_aboard: function(name) { return "Welcome aboard, " + name + "! You're all set. You can now vote on ideas and share your thoughts with your community."; },
-        address_wrong: "No worries — try dropping a new pin on the map and I'll confirm the address."
-    };
-
     // ----- Flow state -----
     var mode = localStorage.getItem('tpb_c_mode') || null;
     var history = [];
@@ -236,40 +185,8 @@
     }
 
     // =====================================================
-    // TWO-TIER RESPONSE
+    // LIVE RESPONSE (API)
     // =====================================================
-    function cannedRespond(eventType, data) {
-        var response = CANNED[eventType];
-        if (!response) return;
-
-        var text = typeof response === 'function' ? response(data || {}) : response;
-        if (!text) return;
-
-        addMessage(text, 'c');
-        speak(text);
-        history.push({ role: 'assistant', content: text });
-        flowState.step = eventType;
-
-        // Track additional state based on event type
-        if (eventType === 'pin_resolved' && data) {
-            flowState.pinData = data;
-            flowState.confirmedState = data.state_code || null;
-            flowState.confirmedTown = data.town_name || null;
-        }
-        if (eventType === 'districts_resolved') {
-            flowState.districtsShown = true;
-        }
-        if (eventType === 'address_confirmed' || (eventType === 'create_account' && flowState.pinData)) {
-            flowState.confirmedAddress = flowState.pinData ? flowState.pinData.address : null;
-        }
-        if (eventType === 'name_confirm' && typeof data === 'string') {
-            flowState.userName = data;
-        }
-        if (eventType === 'welcome_aboard' && typeof data === 'string') {
-            flowState.userName = data;
-        }
-    }
-
     function liveRespond(userMessage) {
         flowState.apiInFlight = true;
         disableInput();
@@ -405,64 +322,6 @@
         return false;
     }
 
-    function handleOnScript(text) {
-        var t = text.toLowerCase().replace(/[?.!]+$/, '').trim();
-
-        if (/^(yes|yeah|yep|yup|correct|right|ok|okay|sure|that's right|sounds good|looks good|that works|perfect)$/.test(t)) {
-            // User confirmed — advance to next step
-            if (flowState.step === 'pin_resolved' || flowState.step === 'districts_resolved') {
-                cannedRespond('create_account');
-            } else if (flowState.step === 'verified_return') {
-                addMessage("Great! So what should people call you?", 'c');
-                speak("Great! So what should people call you?");
-                history.push({ role: 'assistant', content: "Great! So what should people call you?" });
-                flowState.step = 'awaiting_name';
-            } else if (flowState.step === 'name_confirm') {
-                var name = flowState.userName || extractName(history);
-                cannedRespond('welcome_aboard', name);
-            } else if (flowState.step === 'gmap_ready' || flowState.step === 'set_my_state' || flowState.step === 'awaiting_pin') {
-                var msg = "Use the map to find your spot — search or click to drop a pin!";
-                addMessage(msg, 'c');
-                speak(msg);
-                history.push({ role: 'assistant', content: msg });
-            } else {
-                liveRespond(text);
-            }
-        } else if (/^(no|nope|nah|wrong)$/.test(t)) {
-            if (flowState.step === 'pin_resolved' || flowState.step === 'districts_resolved' || flowState.step === 'verified_return') {
-                cannedRespond('address_wrong');
-            } else if (flowState.step === 'name_confirm') {
-                flowState.userName = null;
-                cannedRespond('name_wrong');
-            } else if (flowState.step === 'gmap_ready' || flowState.step === 'set_my_state' || flowState.step === 'awaiting_pin') {
-                var msg = "No worries! Just use the map to find your location when you're ready.";
-                addMessage(msg, 'c');
-                speak(msg);
-                history.push({ role: 'assistant', content: msg });
-            } else {
-                liveRespond(text);
-            }
-        } else {
-            // Could be a name or address — context-dependent
-            if (flowState.step === 'name_wrong' || flowState.step === 'verified_return' || flowState.step === 'awaiting_name') {
-                flowState.userName = text;
-                cannedRespond('name_confirm', text);
-            } else if (flowState.step === 'address_wrong') {
-                addMessage("Got it — try dropping a pin near " + text + " on the map, and I'll confirm the exact address.", 'c');
-                speak("Got it — try dropping a pin near " + text + " on the map, and I'll confirm the exact address.");
-                history.push({ role: 'assistant', content: "Got it — try dropping a pin near " + text + " on the map." });
-                flowState.step = 'awaiting_pin';
-            } else if (flowState.step === 'gmap_ready' || flowState.step === 'set_my_state' || flowState.step === 'awaiting_pin') {
-                var msg = "Try typing that in the search box on the map, or just click the map to drop a pin!";
-                addMessage(msg, 'c');
-                speak(msg);
-                history.push({ role: 'assistant', content: msg });
-            } else {
-                liveRespond(text);
-            }
-        }
-    }
-
     function handleUserInput(text) {
         text = text.trim();
         if (!text) return;
@@ -476,28 +335,20 @@
         for (var i = 0; i < caps.length; i++) {
             var mod = window.ClaudiaModules[caps[i]];
             if (mod && mod.canHandle && mod.canHandle(text, flowState)) {
-                mod.handle(text, flowState, { addMessage: addMessage, speak: speak, liveRespond: liveRespond, cannedRespond: cannedRespond });
+                mod.handle(text, flowState, { addMessage: addMessage, speak: speak, liveRespond: liveRespond, getFlowState: function() { return flowState; } });
                 return;
             }
         }
 
-        if (isOffScript(text, flowState.step)) {
-            liveRespond(text);
-        } else {
-            handleOnScript(text);
+        // Check onboarding module
+        var onboard = window.ClaudiaModules.onboarding;
+        if (onboard && onboard.canHandle && onboard.canHandle(text, flowState)) {
+            onboard.handle(text, flowState, { addMessage: addMessage, speak: speak, liveRespond: liveRespond, getFlowState: function() { return flowState; } });
+            return;
         }
-    }
 
-    function extractName(hist) {
-        for (var i = hist.length - 1; i >= 0; i--) {
-            if (hist[i].role === 'user') {
-                var t = hist[i].content.trim();
-                if (t.length < 80 && !/^(yes|no|yeah|nope|ok|okay|sure|correct|right|wrong|nah)$/i.test(t)) {
-                    return t;
-                }
-            }
-        }
-        return 'friend';
+        // Fallback — send to live API
+        liveRespond(text);
     }
 
     // =====================================================
@@ -526,7 +377,15 @@
             return; // Don't auto-fire welcome — let user click bubble
         }
 
-        cannedRespond(eventType, data);
+        // Delegate to onboarding module if loaded
+        var onboard = window.ClaudiaModules.onboarding;
+        if (onboard && onboard.cannedRespond) {
+            onboard.cannedRespond(eventType, data, window.ClaudiaCore);
+            return;
+        }
+
+        // Fallback (no onboarding module loaded) — send to live API
+        liveRespond(eventType + ': ' + JSON.stringify(data || {}));
     }
 
     // =====================================================
@@ -583,7 +442,11 @@
                 return;
             }
         }
-        cannedRespond('welcome');
+        // Use onboarding module for welcome
+        var onboard = window.ClaudiaModules.onboarding;
+        if (onboard && onboard.cannedRespond) {
+            onboard.cannedRespond('welcome', null, window.ClaudiaCore);
+        }
     }
 
     // Mode picker button handlers
@@ -639,7 +502,10 @@
                     pinData: null,
                     apiInFlight: false
                 };
-                cannedRespond('welcome');
+                var onboard = window.ClaudiaModules.onboarding;
+                if (onboard && onboard.cannedRespond) {
+                    onboard.cannedRespond('welcome', null, window.ClaudiaCore);
+                }
             }
             settingsMenu.classList.remove('show');
             settingsOpen = false;
@@ -669,8 +535,11 @@
                         return;
                     }
                 }
-                // Fallback to old welcome
-                cannedRespond('welcome');
+                // Fallback to old welcome via onboarding module
+                var onboard = window.ClaudiaModules.onboarding;
+                if (onboard && onboard.cannedRespond) {
+                    onboard.cannedRespond('welcome', null, window.ClaudiaCore);
+                }
             }
         }
     });
@@ -798,7 +667,6 @@
         addMessage: addMessage,
         speak: speak,
         liveRespond: liveRespond,
-        cannedRespond: cannedRespond,
         isOffScript: isOffScript,
         getFlowState: function() { return flowState; },
         setFlowState: function(key, val) { flowState[key] = val; },
