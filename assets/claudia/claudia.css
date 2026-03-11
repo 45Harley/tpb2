@@ -1,0 +1,307 @@
+/* ===== CLAUDIA WIDGET ===== */
+#claudia-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 5000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Bubble (collapsed) */
+#claudia-bubble {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    color: #0f172a;
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    user-select: none;
+}
+#claudia-bubble:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(74, 222, 128, 0.6);
+}
+#claudia-bubble.hidden { display: none; }
+
+/* Panel (expanded) */
+#claudia-panel {
+    display: none;
+    width: 380px;
+    height: 480px;
+    background: #1e293b;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    flex-direction: column;
+    overflow: hidden;
+}
+#claudia-panel.open {
+    display: flex;
+}
+
+/* Header */
+.claudia-header {
+    background: #0f172a;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #334155;
+    cursor: grab;
+}
+.claudia-header.dragging { cursor: grabbing; }
+.claudia-header-title {
+    flex: 1;
+    color: #4ade80;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.claudia-header-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.2s, background 0.2s;
+}
+.claudia-header-btn:hover {
+    color: white;
+    background: #334155;
+}
+
+/* Messages area */
+.claudia-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.claudia-msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.5;
+    font-size: 0.9rem;
+    word-wrap: break-word;
+}
+.claudia-msg.c {
+    background: #334155;
+    color: #e2e8f0;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+.claudia-msg.user {
+    background: #3b82f6;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+.claudia-msg.system {
+    background: #064e3b;
+    color: #6ee7b7;
+    align-self: center;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* Typing indicator */
+.claudia-typing {
+    display: none;
+    align-self: flex-start;
+    padding: 10px 14px;
+    background: #334155;
+    border-radius: 12px;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin: 0 16px;
+}
+.claudia-typing.show { display: block; }
+.claudia-typing span { animation: claudiaBlink 1.4s infinite; }
+.claudia-typing span:nth-child(2) { animation-delay: 0.2s; }
+.claudia-typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes claudiaBlink {
+    0%, 60%, 100% { opacity: 0.3; }
+    30% { opacity: 1; }
+}
+
+/* Input area */
+.claudia-input-area {
+    padding: 12px;
+    border-top: 1px solid #334155;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.claudia-text-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 20px;
+    background: #0f172a;
+    color: white;
+    font-size: 0.9rem;
+    outline: none;
+}
+.claudia-text-input::placeholder { color: #64748b; }
+.claudia-text-input:focus { box-shadow: 0 0 0 2px #4ade80; }
+
+.claudia-mic-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: #334155;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+.claudia-mic-btn:hover { background: #475569; color: white; }
+.claudia-mic-btn.recording {
+    background: #ef4444;
+    color: white;
+    animation: claudiaPulse 1s infinite;
+}
+@keyframes claudiaPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.claudia-send-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background: #4ade80;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.claudia-send-btn:hover { background: #22c55e; }
+.claudia-send-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+
+/* Mode picker overlay */
+#claudia-mode-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 5001;
+    align-items: center;
+    justify-content: center;
+}
+#claudia-mode-overlay.show { display: flex; }
+
+.claudia-mode-picker {
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    position: relative;
+}
+.claudia-mode-picker h3 {
+    color: #4ade80;
+    font-size: 1.2rem;
+    margin-bottom: 6px;
+}
+.claudia-mode-picker .claudia-intro {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+}
+.claudia-mode-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 10px;
+    border: 2px solid #334155;
+    border-radius: 12px;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    text-align: left;
+}
+.claudia-mode-btn:hover {
+    border-color: #4ade80;
+    background: #1a2332;
+}
+.claudia-mode-btn .claudia-mode-icon {
+    font-size: 1.2rem;
+    margin-right: 10px;
+}
+.claudia-mode-btn .claudia-mode-desc {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    display: block;
+    margin-top: 2px;
+    margin-left: 32px;
+}
+.claudia-mode-dismiss {
+    display: inline-block;
+    margin-top: 12px;
+    color: #64748b;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
+    background: none;
+    transition: color 0.2s;
+}
+.claudia-mode-dismiss:hover { color: #94a3b8; }
+
+/* Settings dropdown */
+.claudia-settings-menu {
+    display: none;
+    position: absolute;
+    top: 48px;
+    right: 8px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 8px 0;
+    min-width: 160px;
+    z-index: 5002;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.claudia-settings-menu.show { display: block; }
+.claudia-settings-item {
+    padding: 8px 16px;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.claudia-settings-item:hover { background: #1e293b; }
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+    #claudia-panel {
+        width: calc(100vw - 20px);
+        height: 60vh;
+        bottom: 10px;
+        right: 10px;
+    }
+    #claudia-widget {
+        bottom: 10px;
+        right: 10px;
+    }
+}
