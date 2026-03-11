@@ -1314,7 +1314,9 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
             points: <?= $dbUser ? (int)$dbUser['civic_points'] : (int)$sessionPoints ?>,
             isReturning: <?= ($dbUser && $dbUser['email_verified']) ? 'true' : 'false' ?>
         };
-        
+
+        window.tpbPageState = { gmapLocationData: null, gmapSelectedState: '', USER: USER };
+
         const GOOGLE_API_KEY = 'AIzaSyBbppmpBODtUtMOx5E9RlZMNrSD44PFZnM';
         
         // Active states (from database)
@@ -1465,11 +1467,16 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
                 loadGmapTowns(stateUpper);
                 
                 mapMode = 'gmap';
-                
+
+                // Claudia hook: Google Maps ready
+                window.tpbPageState.gmapSelectedState = stateUpper;
+                if (window.ClaudiaCore) ClaudiaCore.onPageEvent('gmap_ready', { stateName: stateName, stateCode: stateUpper });
+                else if (window.cWidget) cWidget.onPageEvent('gmap_ready', { stateName: stateName, stateCode: stateUpper });
+
                 // Scroll to map anchor so user sees state title at top
                 document.getElementById('mapAnchor').scrollIntoView({ behavior: 'smooth' });
             }, 500);
-            
+
             // Log
             logCivicAction('state_click', stateCode, { state_code: stateUpper, state_name: stateName });
         }
@@ -1669,6 +1676,11 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
                     const svLink = document.getElementById('gmapStreetViewLink');
                     svLink.href = 'https://www.google.com/maps?layer=c&cbll=' + gmapLocationData.latitude + ',' + gmapLocationData.longitude;
                     svLink.style.display = 'block';
+
+                    // Claudia hook: pin resolved
+                    window.tpbPageState.gmapLocationData = gmapLocationData;
+                    if (window.ClaudiaCore) ClaudiaCore.onPageEvent('pin_resolved', gmapLocationData);
+                    else if (window.cWidget) cWidget.onPageEvent('pin_resolved', gmapLocationData);
                 }
             });
         }
@@ -1798,6 +1810,11 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
                     gmapLocationData.us_congress_district = congress;
                     gmapLocationData.state_senate_district = senate;
                     gmapLocationData.state_house_district = house;
+
+                    // Claudia hook: districts resolved
+                    window.tpbPageState.gmapLocationData = gmapLocationData;
+                    if (window.ClaudiaCore) ClaudiaCore.onPageEvent('districts_resolved', gmapLocationData);
+                    else if (window.cWidget) cWidget.onPageEvent('districts_resolved', gmapLocationData);
                 })
                 .catch(function() {});
         }
@@ -1807,7 +1824,11 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
         // =====================================================
         document.getElementById('gmapGoProfileBtn').addEventListener('click', function() {
             if (!gmapLocationData) return;
-            
+
+            // Claudia hook: user clicking Create Account
+            if (window.ClaudiaCore) ClaudiaCore.onPageEvent('create_account', gmapLocationData);
+            else if (window.cWidget) cWidget.onPageEvent('create_account', gmapLocationData);
+
             // Build join.php URL with location data from map
             const params = new URLSearchParams({
                 state_code: gmapLocationData.state_code || '',
@@ -1830,8 +1851,9 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
             document.getElementById('gmapGoProfileBtn').style.display = 'none';
             document.getElementById('gmapStreetViewLink').style.display = 'none';
             gmapLocationData = null;
+            window.tpbPageState.gmapLocationData = null;
         }
-        
+
         // =====================================================
         // STATE INFO MODAL (unchanged from index.php)
         // =====================================================
@@ -1893,8 +1915,12 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
             }
             
             stateInfoModal.classList.add('visible');
+
+            // Claudia hook: state clicked
+            if (window.ClaudiaCore) ClaudiaCore.onPageEvent('state_click', { stateCode: stateCode, stateName: stateName });
+            else if (window.cWidget) cWidget.onPageEvent('state_click', { stateCode: stateCode, stateName: stateName });
         }
-        
+
         function populateModal(data) {
             const pop = data.population;
             document.getElementById('modalPopulation').textContent = pop ? pop.toLocaleString() : '—';
@@ -2173,6 +2199,11 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
             if (stateCode) {
                 hideStateInfoModal();
                 transitionToGoogleMaps(stateCode.toLowerCase());
+
+                // Claudia hook: user set their state
+                var sName = stateNames[stateCode.toLowerCase()] || stateCode;
+                if (window.ClaudiaCore) ClaudiaCore.onPageEvent('set_my_state', { stateCode: stateCode, stateName: sName });
+                else if (window.cWidget) cWidget.onPageEvent('set_my_state', { stateCode: stateCode, stateName: sName });
             }
         });
         
@@ -2403,7 +2434,11 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
         // PAGE VISIT + INIT
         // =====================================================
         logCivicAction('page_visit', 'index', { referrer: document.referrer || 'direct' });
-        
+
+        // Claudia hook: page loaded
+        if (window.ClaudiaCore) ClaudiaCore.onPageEvent('page_load', { user: USER, lastState: lastState });
+        else if (window.cWidget) cWidget.onPageEvent('page_load', { user: USER, lastState: lastState });
+
         // Auto-open USA modal on page load
         fetch('/api/get-state-info.php?state=USA')
             .then(r => r.json())
@@ -2415,5 +2450,13 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
         
     })();
     </script>
+<?php
+$claudiaConfig = [
+    'context' => 'home',
+    'capabilities' => ['auth', 'onboarding'],
+    'events' => true,
+];
+require_once __DIR__ . '/includes/c-widget.php';
+?>
 </body>
 </html>
