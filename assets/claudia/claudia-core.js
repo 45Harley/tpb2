@@ -571,6 +571,18 @@
 
         // Start the welcome
         expand();
+
+        // Auth-aware greeting
+        var authMod = window.ClaudiaModules.auth;
+        if (authMod && authMod.getGreeting) {
+            var greeting = authMod.getGreeting();
+            if (greeting) {
+                addMessage(greeting, 'c');
+                speak(greeting);
+                history.push({ role: 'assistant', content: greeting });
+                return;
+            }
+        }
         cannedRespond('welcome');
     }
 
@@ -643,12 +655,22 @@
         } else {
             expand();
             if (history.length === 0) {
-                if (flowState.step === 'returning') {
-                    var user = window.tpbPageState ? window.tpbPageState.USER : {};
-                    cannedRespond('welcome_back', user);
-                } else {
-                    cannedRespond('welcome');
+                // Auth-aware greeting
+                var authMod = window.ClaudiaModules.auth;
+                if (authMod && authMod.getGreeting) {
+                    var greeting = authMod.getGreeting();
+                    if (greeting) {
+                        addMessage(greeting, 'c');
+                        speak(greeting);
+                        history.push({ role: 'assistant', content: greeting });
+                        if (CONFIG.user && CONFIG.user.isReturning) {
+                            flowState.step = 'returning';
+                        }
+                        return;
+                    }
                 }
+                // Fallback to old welcome
+                cannedRespond('welcome');
             }
         }
     });
