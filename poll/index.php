@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canVote && isset($_POST['vote_choi
         $voteChoice = $_POST['vote_choice'] ?? '';
 
         if ($pollId > 0 && in_array($voteChoice, ['yea', 'nay', 'abstain'])) {
-            $stmt = $pdo->prepare("SELECT poll_id, active, poll_type FROM polls WHERE poll_id = ?");
+            $stmt = $pdo->prepare("SELECT poll_id, active FROM polls WHERE poll_id = ?");
             $stmt->execute([$pollId]);
             $poll = $stmt->fetch();
 
@@ -95,33 +95,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canVote && isset($_POST['vote_choi
 }
 
 // Get all threat polls with threat data + vote counts
-$threatPolls = $pdo->query("
-    SELECT p.poll_id, p.threat_id,
-           et.title, et.severity_score, et.threat_date, et.official_id,
-           eo.full_name as official_name,
-           COUNT(pv.poll_vote_id) as total_votes,
-           SUM(CASE WHEN pv.vote_choice = 'yea' THEN 1 ELSE 0 END) as yea_votes,
-           SUM(CASE WHEN pv.vote_choice = 'nay' THEN 1 ELSE 0 END) as nay_votes,
-           SUM(CASE WHEN pv.vote_choice = 'abstain' THEN 1 ELSE 0 END) as abstain_votes
-    FROM polls p
-    JOIN executive_threats et ON p.threat_id = et.threat_id
-    LEFT JOIN elected_officials eo ON et.official_id = eo.official_id
-    LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id
-    WHERE p.poll_type = 'threat' AND p.active = 1
-    GROUP BY p.poll_id
-    ORDER BY et.severity_score DESC
-")->fetchAll();
-
-// Get tags per threat
+// Note: polls table may not have threat_id/poll_type columns (schema changed)
+$threatPolls = [];
 $threatTags = [];
-$r = $pdo->query("
-    SELECT tm.threat_id, t.tag_name, t.tag_label, t.color
-    FROM threat_tag_map tm
-    JOIN threat_tags t ON tm.tag_id = t.tag_id
-    WHERE t.is_active = 1
-");
-while ($row = $r->fetch()) {
-    $threatTags[$row['threat_id']][] = $row;
+try {
+    $threatPolls = $pdo->query("
+        SELECT p.poll_id, p.threat_id,
+               et.title, et.severity_score, et.threat_date, et.official_id,
+               eo.full_name as official_name,
+               COUNT(pv.poll_vote_id) as total_votes,
+               SUM(CASE WHEN pv.vote_choice = 'yea' THEN 1 ELSE 0 END) as yea_votes,
+               SUM(CASE WHEN pv.vote_choice = 'nay' THEN 1 ELSE 0 END) as nay_votes,
+               SUM(CASE WHEN pv.vote_choice = 'abstain' THEN 1 ELSE 0 END) as abstain_votes
+        FROM polls p
+        JOIN executive_threats et ON p.threat_id = et.threat_id
+        LEFT JOIN elected_officials eo ON et.official_id = eo.official_id
+        LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id
+        WHERE p.poll_type = 'threat' AND p.active = 1
+        GROUP BY p.poll_id
+        ORDER BY et.severity_score DESC
+    ")->fetchAll();
+
+    // Get tags per threat
+    $r = $pdo->query("
+        SELECT tm.threat_id, t.tag_name, t.tag_label, t.color
+        FROM threat_tag_map tm
+        JOIN threat_tags t ON tm.tag_id = t.tag_id
+        WHERE t.is_active = 1
+    ");
+    while ($row = $r->fetch()) {
+        $threatTags[$row['threat_id']][] = $row;
+    }
+} catch (PDOException $e) {
+    // Schema doesn't support threat polls yet — page still loads
 }
 
 // Get user's existing votes
@@ -146,14 +152,19 @@ if ($isRep) {
 $states = $pdo->query("SELECT abbreviation, state_name FROM states ORDER BY state_name")->fetchAll();
 
 // Get unique tags for filter
-$allTags = $pdo->query("
-    SELECT DISTINCT t.tag_name, t.tag_label, t.color
-    FROM threat_tags t
-    JOIN threat_tag_map tm ON t.tag_id = tm.tag_id
-    JOIN executive_threats et ON tm.threat_id = et.threat_id
-    WHERE t.is_active = 1 AND et.severity_score >= 300
-    ORDER BY t.tag_label
-")->fetchAll();
+$allTags = [];
+try {
+    $allTags = $pdo->query("
+        SELECT DISTINCT t.tag_name, t.tag_label, t.color
+        FROM threat_tags t
+        JOIN threat_tag_map tm ON t.tag_id = tm.tag_id
+        JOIN executive_threats et ON tm.threat_id = et.threat_id
+        WHERE t.is_active = 1 AND et.severity_score >= 300
+        ORDER BY t.tag_label
+    ")->fetchAll();
+} catch (PDOException $e) {
+    // threat_tags table may not exist locally
+}
 
 $question = $isRep ? 'Will you act on this?' : 'Is this acceptable?';
 
@@ -566,5 +577,8 @@ extract($navVars);
         document.querySelector('.controls .count').textContent = visible + ' threat' + (visible !== 1 ? 's' : '') + ' shown';
     }
     </script>
+
+<?php
+?>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

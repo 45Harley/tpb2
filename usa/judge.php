@@ -515,4 +515,6 @@ require_once dirname(__DIR__) . '/includes/nav.php';
     <?php endif; ?>
 </div>
 
-<?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>
+<?php
+require_once dirname(__DIR__) . '/includes/footer.php';
+?>

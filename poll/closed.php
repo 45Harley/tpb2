@@ -176,4 +176,6 @@ $currentPage = 'poll';
         <?php endif; ?>
     </main>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php
+include __DIR__ . '/../includes/footer.php';
+?>

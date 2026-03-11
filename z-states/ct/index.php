@@ -1129,6 +1129,9 @@ require __DIR__ . '/../../includes/nav.php';
     <p>Built: February 2026 | Task: <a href="/volunteer/task.php?key=build-state-ct" style="color: #888;">build-state-ct</a></p>
 </div>
 
+<?php
+?>
+
 <?php require __DIR__ . '/../../includes/footer.php'; ?>
 
 <script>

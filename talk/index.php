@@ -218,4 +218,7 @@ require __DIR__ . '/../includes/talk-stream.php';
     })();
     </script>
 
+<?php
+?>
+
 <?php require __DIR__ . '/../includes/footer.php'; ?>

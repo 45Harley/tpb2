@@ -97,6 +97,14 @@
     var settingsMenu = document.getElementById('claudia-settings-menu');
     var modeDismiss = document.getElementById('claudia-mode-dismiss');
 
+    // Initialize web search toggle (default OFF)
+    var wsToggle = document.getElementById('claudia-websearch-toggle');
+    var wsLabel = document.getElementById('claudia-ws-label');
+    if (wsToggle && localStorage.getItem('tpb_claudia_websearch') === '1') {
+        wsToggle.classList.add('on');
+        if (wsLabel) wsLabel.textContent = 'ON';
+    }
+
     // ----- Session ID -----
     var sessionId = localStorage.getItem('tpb_civic_session') || 'guest_' + Date.now();
 
@@ -203,15 +211,23 @@
     // =====================================================
     // MESSAGES
     // =====================================================
+    function formatTime(d) {
+        var h = d.getHours(), m = d.getMinutes();
+        var ampm = h >= 12 ? 'pm' : 'am';
+        h = h % 12 || 12;
+        return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+    }
+
     function addMessage(text, role) {
         if (!text) return;
         var div = document.createElement('div');
         div.className = 'claudia-msg ' + role;
         var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        div.innerHTML = escaped.replace(/\n/g, '<br>');
+        var timestamp = '<span class="claudia-msg-time">' + formatTime(new Date()) + '</span>';
+        div.innerHTML = escaped.replace(/\n/g, '<br>') + timestamp;
         if (messagesEl) {
             messagesEl.appendChild(div);
-            messagesEl.scrollTop = messagesEl.scrollHeight;
+            messagesEl.scrollTop = 0;
         }
         // Persist after every message
         saveHistory();
@@ -221,7 +237,7 @@
         typingEl.textContent = '';
         typingEl.innerHTML = 'Claudia is thinking<span>.</span><span>.</span><span>.</span>';
         typingEl.classList.add('show');
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+        messagesEl.scrollTop = 0;
     }
     function hideTyping() {
         typingEl.classList.remove('show');
@@ -257,6 +273,12 @@
             userName: flowState.userName
         };
 
+        // Dynamic form field discovery — scan visible inputs
+        var formFields = scanFormFields();
+        if (formFields.length > 0) {
+            pageContext.formFields = formFields;
+        }
+
         fetch('/api/claude-chat.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -267,7 +289,8 @@
                 session_id: sessionId,
                 clerk: 'guide',
                 context: currentPage,
-                page_context: JSON.stringify(pageContext)
+                page_context: JSON.stringify(pageContext),
+                web_search: localStorage.getItem('tpb_claudia_websearch') === '1'
             })
         })
         .then(function(r) { return r.json(); })
@@ -319,6 +342,27 @@
                 continue;
             }
 
+            // UPDATE_FIELD success — update DOM field in place (no reload, chat stays open)
+            if (action.action === 'UPDATE_FIELD' && action.success) {
+                if (action.message) addMessage(action.message, 'system');
+                // Update the actual form field so user sees new value without reload
+                if (action.fieldId) {
+                    var target = document.getElementById(action.fieldId);
+                    if (target) {
+                        if (target.type === 'checkbox') {
+                            target.checked = (action.fieldValue === 'true' || action.fieldValue === '1');
+                        } else {
+                            target.value = action.fieldValue || '';
+                        }
+                        // Brief highlight to draw attention
+                        target.style.transition = 'background 0.3s';
+                        target.style.background = '#2a4a2a';
+                        setTimeout(function() { target.style.background = ''; }, 2000);
+                    }
+                }
+                continue;
+            }
+
             if (action.success) {
                 if (action.message) {
                     msg = action.message;
@@ -332,6 +376,43 @@
                 addMessage(msg, 'system');
             }
         }
+    }
+
+    // =====================================================
+    // FORM FIELD DISCOVERY
+    // =====================================================
+    function scanFormFields() {
+        var fields = [];
+        var inputs = document.querySelectorAll('input[id], select[id], textarea[id]');
+        for (var i = 0; i < inputs.length; i++) {
+            var el = inputs[i];
+            // Skip hidden, password, and Claudia's own inputs
+            if (el.type === 'hidden' || el.type === 'password') continue;
+            if (el.id.indexOf('claudia') === 0) continue;
+            // Skip invisible elements (not rendered by PHP for this identity level)
+            if (el.offsetParent === null && el.style.display !== 'inline') continue;
+
+            var field = { id: el.id, type: el.type || el.tagName.toLowerCase() };
+            // Get label text if available
+            var label = document.querySelector('label[for="' + el.id + '"]');
+            if (label) field.label = label.textContent.trim();
+            // Get current value
+            if (el.type === 'checkbox') {
+                field.value = el.checked;
+            } else if (el.tagName === 'SELECT') {
+                field.type = 'select';
+                field.value = el.value;
+                var opts = [];
+                for (var j = 0; j < el.options.length; j++) {
+                    if (el.options[j].value) opts.push(el.options[j].text);
+                }
+                field.options = opts;
+            } else {
+                field.value = el.value;
+            }
+            fields.push(field);
+        }
+        return fields;
     }
 
     // =====================================================
@@ -576,6 +657,16 @@
                 if (onboard && onboard.cannedRespond) {
                     onboard.cannedRespond('welcome', null, window.ClaudiaCore);
                 }
+            } else if (action === 'toggle-websearch') {
+                var toggle = document.getElementById('claudia-websearch-toggle');
+                var label = document.getElementById('claudia-ws-label');
+                if (toggle) {
+                    toggle.classList.toggle('on');
+                    var isOn = toggle.classList.contains('on');
+                    localStorage.setItem('tpb_claudia_websearch', isOn ? '1' : '0');
+                    if (label) label.textContent = isOn ? 'ON' : 'OFF';
+                }
+                return; // Don't close menu
             } else if (action === 'disable-claudia') {
                 if (CONFIG.user) {
                     // Logged-in user — save preference to server
@@ -647,6 +738,18 @@
         var text = textInput.value.trim();
         if (text) handleUserInput(text);
     });
+
+    // Clear button (popout only)
+    var clearBtn = document.getElementById('claudia-clear-btn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            if (messagesEl) messagesEl.innerHTML = '';
+            history = [];
+            localStorage.removeItem('tpb_claudia_history');
+            localStorage.removeItem('tpb_claudia_prev_page');
+            textInput.focus();
+        });
+    }
 
     textInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {

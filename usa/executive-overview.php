@@ -250,4 +250,6 @@ function renderCard($official, $threatCount, $maxThreats, $isBoss = false) {
     </div>
 </div>
 
-<?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>
+<?php
+require_once dirname(__DIR__) . '/includes/footer.php';
+?>

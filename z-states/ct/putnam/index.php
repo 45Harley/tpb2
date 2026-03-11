@@ -689,4 +689,7 @@ require __DIR__ . '/../../../includes/nav.php';
     </ul>
 </section>
 
+<?php
+?>
+
 <?php require __DIR__ . '/../../../includes/footer.php'; ?>

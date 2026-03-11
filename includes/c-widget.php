@@ -6,10 +6,21 @@
  * Optional: $claudiaConfig array set before include.
  */
 
-// Defaults
+// Auto-derive context from $currentPage + request URI
 if (!isset($claudiaConfig)) {
+    // Build context from nav state: $currentPage (set by every page) + sub-page from URI
+    $autoContext = isset($currentPage) ? $currentPage : 'general';
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    $path = parse_url($uri, PHP_URL_PATH) ?? '';
+    $basename = basename($path, '.php');
+
+    // Add sub-page specificity (e.g. elections + threats → elections-threats)
+    if ($basename && $basename !== 'index' && $basename !== $autoContext) {
+        $autoContext .= '-' . preg_replace('/[^a-z0-9-]/', '', strtolower($basename));
+    }
+
     $claudiaConfig = [
-        'context' => 'general',
+        'context' => $autoContext,
         'capabilities' => ['auth'],
         'events' => false,
     ];
@@ -103,18 +114,26 @@ $claudiaConfigJson = json_encode([
             <div class="claudia-settings-menu" id="claudia-settings-menu">
                 <div class="claudia-settings-item" data-action="change-mode">Change interaction mode</div>
                 <div class="claudia-settings-item" data-action="clear-chat">Clear conversation</div>
+                <div class="claudia-settings-item claudia-toggle-item" data-action="toggle-websearch">
+                    <span>Web Search</span>
+                    <span class="claudia-toggle" id="claudia-websearch-toggle">
+                        <span class="claudia-toggle-knob"></span>
+                        <span class="claudia-toggle-label" id="claudia-ws-label">OFF</span>
+                    </span>
+                </div>
                 <div class="claudia-settings-item" data-action="disable-claudia">Disable Claudia</div>
             </div>
-        </div>
-        <div class="claudia-messages" id="claudia-messages"></div>
-        <div class="claudia-typing" id="claudia-typing">
-            Claudia is thinking<span>.</span><span>.</span><span>.</span>
         </div>
         <div class="claudia-input-area">
             <button class="claudia-mic-btn" id="claudia-mic-btn" title="Voice input">🎤</button>
             <input type="text" class="claudia-text-input" id="claudia-text-input" placeholder="Type your message..." autocomplete="off">
             <button class="claudia-send-btn" id="claudia-send-btn">Send</button>
+            <button class="claudia-clear-btn" id="claudia-clear-btn" title="Clear conversation">Clear</button>
         </div>
+        <div class="claudia-typing" id="claudia-typing">
+            Claudia is thinking<span>.</span><span>.</span><span>.</span>
+        </div>
+        <div class="claudia-messages" id="claudia-messages"></div>
     </div>
 </div>
 

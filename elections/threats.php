@@ -497,4 +497,7 @@ function sendEmail() {
 }
 </script>
 
+<?php
+?>
+
 <?php require dirname(__DIR__) . '/includes/footer.php'; ?>

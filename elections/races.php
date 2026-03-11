@@ -20,8 +20,12 @@ $ogTitle = '2026 Competitive Races — Follow the Money';
 $ogDescription = 'Track competitive federal races, candidate fundraising, and top donors. See who funds the people who want power.';
 
 // --- Election DB connection ---
-$pdoE = new PDO('mysql:host='.$c['host'].';dbname=sandge5_election', $c['username'], $c['password']);
-$pdoE->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+try {
+    $pdoE = new PDO('mysql:host='.$c['host'].';dbname=sandge5_election', $c['username'], $c['password']);
+    $pdoE->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    $pdoE = null; // Election DB not available locally
+}
 
 // --- Helpers ---
 function getRatingColor($rating) {
@@ -42,7 +46,12 @@ function formatMoney($amount) {
 }
 
 // --- Data queries ---
+$races = [];
+$raceCount = 0;
+$candidatesByRace = [];
+$donorsByCandidate = [];
 
+if ($pdoE) { try {
 // 1. Active races
 $races = $pdoE->query("
     SELECT * FROM fec_races
@@ -50,7 +59,6 @@ $races = $pdoE->query("
     ORDER BY state, district
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-$raceCount = count($races);
 $raceIds = array_column($races, 'race_id');
 
 // 2. Candidates for those races
@@ -123,6 +131,13 @@ $recentShifts = $pdoE->query("
     ORDER BY COALESCE(h.source_date, h.changed_at) DESC
     LIMIT 10
 ")->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) { /* FEC tables not available */ }
+} // end if ($pdoE)
+$raceCount = count($races);
+$totalShift = isset($totalShift) ? $totalShift : 0;
+$recentShifts = $recentShifts ?? [];
+$shiftData = $shiftData ?? ['flip_d' => [], 'flip_r' => [], 'open' => []];
 
 $siteUrl = $c['base_url'] ?? 'https://tpb2.sandgems.net';
 $shareText = "$raceCount competitive 2026 races tracked with FEC campaign finance data. See who funds the people who want power over you.";

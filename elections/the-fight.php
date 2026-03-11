@@ -468,4 +468,7 @@ document.querySelectorAll('.knockout-checkbox').forEach(cb => {
 <?php endif; ?>
 
 
+<?php
+?>
+
 <?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>

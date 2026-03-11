@@ -33,7 +33,10 @@ $paramState = isset($_GET['state']) ? strtoupper(trim($_GET['state'])) : '';
 $userState = $paramState ?: strtoupper($userStateAbbr ?? '');
 
 // Total active threat polls
-$totalThreatPolls = (int)$pdo->query("SELECT COUNT(*) FROM polls WHERE poll_type = 'threat' AND active = 1")->fetchColumn();
+$totalThreatPolls = 0;
+try {
+    $totalThreatPolls = (int)$pdo->query("SELECT COUNT(*) FROM polls WHERE poll_type = 'threat' AND active = 1")->fetchColumn();
+} catch (PDOException $e) {}
 
 // All current reps with bioguide_id + poll stats
 $reps = $pdo->query("
@@ -351,4 +354,6 @@ function partyInitial($party) {
 })();
 </script>
 
-<?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>
+<?php
+require_once dirname(__DIR__) . '/includes/footer.php';
+?>

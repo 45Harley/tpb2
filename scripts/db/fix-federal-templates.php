@@ -4,7 +4,7 @@
 // Problem 2: Environment & Emergency have NULL template_id → no agencies shown
 
 $c = require '/home/sandge5/tpb2.sandgems.net/config.php';
-$p = new PDO('mysql:host='.$c['host'].';dbname=sandge5_tpb2', $c['username'], $c['password']);
+$p = new PDO('mysql:host='.$c['host'].';dbname=sandge5_tpb2;charset=utf8mb4', $c['username'], $c['password']);
 $p->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Step 1: Add new template rows for federal-specific categories

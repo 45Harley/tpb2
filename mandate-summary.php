@@ -388,4 +388,6 @@ require __DIR__ . '/includes/header.php';
 })();
 </script>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php
+require __DIR__ . '/includes/footer.php';
+?>

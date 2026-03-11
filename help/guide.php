@@ -201,4 +201,6 @@ require dirname(__DIR__) . '/includes/nav.php';
     </div>
 </div>
 
-<?php require dirname(__DIR__) . '/includes/footer.php'; ?>
+<?php
+require dirname(__DIR__) . '/includes/footer.php';
+?>

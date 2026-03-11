@@ -361,4 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<?php
+?>
+
 <?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>

@@ -769,4 +769,6 @@ require_once dirname(__DIR__) . '/includes/nav.php';
     </div>
 </div>
 
-<?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>
+<?php
+require_once dirname(__DIR__) . '/includes/footer.php';
+?>

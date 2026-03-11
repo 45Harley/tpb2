@@ -73,16 +73,17 @@ $claudiaConfigJson = json_encode([
                 <div class="claudia-settings-item" data-action="clear-chat">Clear conversation</div>
             </div>
         </div>
-        <div class="claudia-popout-messages" id="claudia-messages"></div>
-        <div class="claudia-typing" id="claudia-typing">
-            Claudia is thinking<span>.</span><span>.</span><span>.</span>
-        </div>
         <div class="claudia-popout-input">
             <button class="claudia-mic-btn" id="claudia-mic-btn" title="Voice input">&#127908;</button>
             <input type="text" class="claudia-text-input" id="claudia-text-input"
                    placeholder="Type your message..." autocomplete="off">
             <button class="claudia-send-btn" id="claudia-send-btn">Send</button>
+            <button class="claudia-clear-btn" id="claudia-clear-btn" title="Clear conversation">Clear</button>
         </div>
+        <div class="claudia-typing" id="claudia-typing">
+            Claudia is thinking<span>.</span><span>.</span><span>.</span>
+        </div>
+        <div class="claudia-popout-messages" id="claudia-messages"></div>
     </div>
 
     <script>window.ClaudiaConfig = <?= $claudiaConfigJson ?>;</script>

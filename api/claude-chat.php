@@ -56,6 +56,7 @@ $userId = $input['user_id'] ?? null;
 $sessionId = $input['session_id'] ?? null;
 $userEmail = $input['email'] ?? null;
 $clerkKey = $input['clerk'] ?? 'guide';  // NEW: which clerk to use
+$webSearchEnabled = !empty($input['web_search']);  // User-toggled, default OFF
 
 // Handle Claudia widget toggle action
 if (isset($input['action']) && $input['action'] === 'disable_claudia' && $userId) {
@@ -128,6 +129,22 @@ if ($pageContext) {
     $systemPrompt .= "\n\n## Current Page\nThe user is currently on the '{$pageContext}' page. Use this to give contextually relevant responses.";
 }
 
+// 2c. Add form field context (from dynamic DOM scanner)
+$pageContextData = $input['page_context'] ?? null;
+if ($pageContextData) {
+    $decoded = is_string($pageContextData) ? json_decode($pageContextData, true) : $pageContextData;
+    if ($decoded && !empty($decoded['formFields'])) {
+        $systemPrompt .= "\n\n## Available Form Fields\nThese fields are visible on the current page and can be updated with UPDATE_FIELD:\n";
+        foreach ($decoded['formFields'] as $f) {
+            $line = "- **{$f['id']}** ({$f['type']})";
+            if (!empty($f['label'])) $line .= " — \"{$f['label']}\"";
+            if (isset($f['value']) && $f['value'] !== '') $line .= " [current: {$f['value']}]";
+            if (!empty($f['options'])) $line .= " Options: " . implode(', ', $f['options']);
+            $systemPrompt .= $line . "\n";
+        }
+    }
+}
+
 // 3. Add message-specific context (town lookups, email lookups, etc.)
 $dbContext = gatherRelevantContext($pdo, $userMessage);
 if ($dbContext) {
@@ -161,7 +178,7 @@ if ($claudiaLocalEnabled === '1') {
     $response = callLocalClaude($systemPrompt, $messages);
 } else {
     $model = $clerk['model'] ?? CLAUDE_MODEL;
-    $response = callClaudeAPI($systemPrompt, $messages, $model);
+    $response = callClaudeAPI($systemPrompt, $messages, $model, $webSearchEnabled);
 }
 
 if (isset($response['error'])) {
@@ -326,13 +343,38 @@ function getActionInstructions($clerk) {
         $instructions .= "- /profile.php — User's profile\n";
         $instructions .= "- /constitution/ — Constitution section\n";
         $instructions .= "- /elections/ — Elections section\n";
+        $instructions .= "- /elections/threats.php — Threat stream (all active threats)\n";
+        $instructions .= "- /elections/the-fight.php — The Fight (pledges & knockouts)\n";
         $instructions .= "- /help/ — Help center\n";
         $instructions .= "- /join.php — Join / sign up\n";
+        $instructions .= "- /poll/ — Polls\n";
+        $instructions .= "- /talk/ — Community discussion\n";
         $instructions .= "- /volunteer/ — Volunteer\n";
+        $instructions .= "- /usa/ — USA overview map\n";
+        $instructions .= "- /usa/congressional-overview.php — All 541 members of Congress with photos and stats\n";
+        $instructions .= "- /usa/congressional-overview.php?state={XX} — Jump to a specific state delegation (e.g. ?state=CT)\n";
+        $instructions .= "- /usa/executive-overview.php — Executive branch officials\n";
+        $instructions .= "- /usa/judicial.php — Federal judiciary overview\n";
+        $instructions .= "- /usa/glossary.php — Congressional glossary (130+ terms)\n";
+        $instructions .= "- /usa/rep.php?id={official_id} — Individual rep detail page\n";
         $instructions .= "- /z-states/{state}/ — State page (e.g. /z-states/ct/)\n";
         $instructions .= "- /z-states/{state}/{town}/ — Town page (e.g. /z-states/ct/putnam/)\n";
         $instructions .= "\nUse NAVIGATE for destinations (user is going there). Use OPEN_TAB for reference material (user wants to read while staying in chat).\n";
-        $instructions .= "When the user says 'go to', 'open', 'show me', 'take me to' a page, use the appropriate action. ALWAYS include the action tag — do not just describe the page.\n\n";
+        $instructions .= "When the user says 'go to', 'open', 'show me', 'take me to' a page, use the appropriate action. ALWAYS include the action tag — do not just describe the page.\n";
+        $instructions .= "Smart routing: If the user asks to see 'my delegation', 'my reps', or 'my representatives in Congress', navigate to /usa/congressional-overview.php?state={XX} using their state from the user context. If no state is known, navigate without ?state= and suggest they pick one.\n\n";
+    }
+    if (in_array('update_field', $capabilities)) {
+        $instructions .= "To update a user's profile field:\n[ACTION: UPDATE_FIELD]\nfield: {field_id from form fields}\nvalue: {new value}\n\n";
+        $instructions .= "The page_context.formFields array shows available form fields on the current page with their IDs, types, labels, current values, and options (for selects).\n";
+        $instructions .= "Rules:\n";
+        $instructions .= "- Only update fields that appear in formFields\n";
+        $instructions .= "- For state abbreviations: convert full names to 2-letter codes (e.g. Connecticut → CT)\n";
+        $instructions .= "- For checkboxes: use 'true' or 'false'\n";
+        $instructions .= "- For selects: match one of the available options exactly\n";
+        $instructions .= "- Protected fields (email, phone): warn the user that changing these will require re-verification\n";
+        $instructions .= "- Read-only fields cannot be updated — tell the user if they ask\n";
+        $instructions .= "- Validate: phone must be digits (10+), email must have @, names must be non-empty strings\n";
+        $instructions .= "- ALWAYS confirm with the user before updating\n\n";
     }
 
     return $instructions;
@@ -460,6 +502,9 @@ function processAction($pdo, $action, $userId, $sessionId, $email = null) {
                 'success' => true,
                 'url' => $action['params']['url'] ?? '/'
             ];
+
+        case 'UPDATE_FIELD':
+            return processUpdateField($pdo, $action['params'], $userId);
 
         default:
             return ['action' => $action['type'], 'success' => false, 'error' => 'Unknown action'];
@@ -605,6 +650,129 @@ function processAddThought($pdo, $params, $userId) {
         'thought_id' => $pdo->lastInsertId(),
         'message' => 'Thought submitted successfully!'
     ];
+}
+
+/**
+ * Process UPDATE_FIELD — routes through save-profile.php logic
+ * Field categories:
+ *   Simple: first_name, last_name, age_bracket, show_first_name, show_last_name,
+ *           show_age_bracket, notify_threat_bulletin, volunteerBio, primarySkill, street_address
+ *   Protected: email, phone (resets verification)
+ *   Read-only: user_id, civic_points, identity_level_id, created_at
+ */
+function processUpdateField($pdo, $params, $userId) {
+    if (!$userId) {
+        return ['action' => 'UPDATE_FIELD', 'success' => false, 'error' => 'You need to be logged in to update your profile.'];
+    }
+
+    $fieldId = $params['field'] ?? '';
+    $value = $params['value'] ?? '';
+
+    // Map DOM field IDs → save-profile.php field names
+    $fieldMap = [
+        'firstName'           => ['key' => 'first_name',           'category' => 'simple'],
+        'lastName'            => ['key' => 'last_name',            'category' => 'simple'],
+        'ageBracket'          => ['key' => 'age_bracket',          'category' => 'simple'],
+        'showFirstName'       => ['key' => 'show_first_name',      'category' => 'simple', 'bool' => true],
+        'showLastName'        => ['key' => 'show_last_name',       'category' => 'simple', 'bool' => true],
+        'showAgeBracket'      => ['key' => 'show_age_bracket',     'category' => 'simple', 'bool' => true],
+        'notifyThreatBulletin'=> ['key' => 'notify_threat_bulletin','category' => 'simple', 'bool' => true],
+        'streetAddressInput'  => ['key' => 'street_address',       'category' => 'simple'],
+        'emailInput'          => ['key' => 'email',                'category' => 'protected'],
+        'phone'               => ['key' => 'phone',                'category' => 'protected'],
+        'primarySkill'        => ['key' => 'primary_skill',        'category' => 'simple'],
+        'volunteerBio'        => ['key' => 'volunteer_bio',        'category' => 'simple'],
+    ];
+
+    if (!isset($fieldMap[$fieldId])) {
+        return ['action' => 'UPDATE_FIELD', 'success' => false, 'error' => "Field '$fieldId' cannot be updated."];
+    }
+
+    $spec = $fieldMap[$fieldId];
+    $dbKey = $spec['key'];
+    $category = $spec['category'];
+
+    // Build save-profile.php compatible payload
+    $payload = ['session_id' => 'internal'];
+
+    if (!empty($spec['bool'])) {
+        $boolVal = in_array(strtolower($value), ['true', '1', 'yes', 'on']);
+        $payload[$dbKey] = $boolVal;
+    } else {
+        $payload[$dbKey] = $value;
+    }
+
+    // Basic validation
+    if ($dbKey === 'email' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+        return ['action' => 'UPDATE_FIELD', 'success' => false, 'error' => "That doesn't look like a valid email address."];
+    }
+    if ($dbKey === 'phone' && !preg_match('/^\d{10,15}$/', preg_replace('/\D/', '', $value))) {
+        return ['action' => 'UPDATE_FIELD', 'success' => false, 'error' => "Phone number should be 10+ digits."];
+    }
+    if (in_array($dbKey, ['first_name', 'last_name']) && strlen(trim($value)) === 0) {
+        return ['action' => 'UPDATE_FIELD', 'success' => false, 'error' => "Name can't be empty."];
+    }
+
+    // Direct DB update (same logic as save-profile.php)
+    try {
+        if ($dbKey === 'email') {
+            // Protected: update email + reset verification
+            $stmt = $pdo->prepare("UPDATE users SET email = ? WHERE user_id = ?");
+            $stmt->execute([$value, $userId]);
+            $stmt = $pdo->prepare("UPDATE user_identity_status SET email_verified = 0 WHERE user_id = ?");
+            $stmt->execute([$userId]);
+            return ['action' => 'UPDATE_FIELD', 'success' => true, 'message' => "Email updated. You'll need to re-verify it.", 'fieldId' => $fieldId, 'fieldValue' => $value];
+        }
+
+        if ($dbKey === 'phone') {
+            // Protected: update phone + reset verification
+            $stmt = $pdo->prepare("UPDATE user_identity_status SET phone = ?, phone_verified = 0, phone_verify_token = NULL, phone_verify_expires = NULL WHERE user_id = ?");
+            $stmt->execute([$value, $userId]);
+            return ['action' => 'UPDATE_FIELD', 'success' => true, 'message' => "Phone updated. You'll need to re-verify it.", 'fieldId' => $fieldId, 'fieldValue' => $value];
+        }
+
+        if ($dbKey === 'volunteer_bio') {
+            // Volunteer bio lives in volunteer_applications
+            $stmt = $pdo->prepare("UPDATE volunteer_applications SET bio = ? WHERE user_id = ?");
+            $stmt->execute([$value, $userId]);
+            return ['action' => 'UPDATE_FIELD', 'success' => true, 'message' => "Volunteer bio updated!", 'fieldId' => $fieldId, 'fieldValue' => $value];
+        }
+
+        if ($dbKey === 'primary_skill') {
+            // Primary skill lives in volunteer_applications
+            $stmt = $pdo->prepare("UPDATE volunteer_applications SET primary_skill_id = (SELECT skill_id FROM skill_sets WHERE skill_name = ? LIMIT 1) WHERE user_id = ?");
+            $stmt->execute([$value, $userId]);
+            return ['action' => 'UPDATE_FIELD', 'success' => true, 'message' => "Primary skill updated!", 'fieldId' => $fieldId, 'fieldValue' => $value];
+        }
+
+        if ($dbKey === 'street_address') {
+            $stmt = $pdo->prepare("UPDATE users SET street_address = ? WHERE user_id = ?");
+            $stmt->execute([$value, $userId]);
+            return ['action' => 'UPDATE_FIELD', 'success' => true, 'message' => "Street address updated!", 'fieldId' => $fieldId, 'fieldValue' => $value];
+        }
+
+        // Simple fields on users table
+        if (!empty($spec['bool'])) {
+            $dbVal = in_array(strtolower($value), ['true', '1', 'yes', 'on']) ? 1 : 0;
+        } else {
+            $dbVal = $value;
+        }
+
+        $stmt = $pdo->prepare("UPDATE users SET $dbKey = ? WHERE user_id = ?");
+        $stmt->execute([$dbVal, $userId]);
+
+        $friendlyNames = [
+            'first_name' => 'First name', 'last_name' => 'Last name',
+            'age_bracket' => 'Age bracket', 'show_first_name' => 'Show first name',
+            'show_last_name' => 'Show last name', 'show_age_bracket' => 'Show age bracket',
+            'notify_threat_bulletin' => 'Threat bulletin notifications'
+        ];
+        $label = $friendlyNames[$dbKey] ?? $dbKey;
+        return ['action' => 'UPDATE_FIELD', 'success' => true, 'message' => "$label updated!", 'fieldId' => $fieldId, 'fieldValue' => $value];
+
+    } catch (PDOException $e) {
+        return ['action' => 'UPDATE_FIELD', 'success' => false, 'error' => 'Database error updating field.'];
+    }
 }
 
 /**

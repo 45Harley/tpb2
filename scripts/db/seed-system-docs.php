@@ -7,7 +7,7 @@ $configPath = file_exists(__DIR__ . '/../../config.php')
     ? __DIR__ . '/../../config.php'
     : '/home/sandge5/tpb2.sandgems.net/config.php';
 $c = require $configPath;
-$p = new PDO('mysql:host='.$c['host'].';dbname=sandge5_tpb2', $c['username'], $c['password']);
+$p = new PDO('mysql:host='.$c['host'].';dbname=sandge5_tpb2;charset=utf8mb4', $c['username'], $c['password']);
 $p->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Get existing doc_keys so we skip them

@@ -559,6 +559,9 @@ async function deleteInvite(id) {
 }
 </script>
 
+<?php
+?>
+
 <?php include dirname(__DIR__) . '/includes/footer.php'; ?>
 </body>
 </html>

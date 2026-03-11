@@ -2456,7 +2456,6 @@ $claudiaConfig = [
     'capabilities' => ['auth', 'onboarding'],
     'events' => true,
 ];
-require_once __DIR__ . '/includes/c-widget.php';
 ?>
 </body>
 </html>

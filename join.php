@@ -1154,5 +1154,9 @@ $deviceAdded = isset($_GET['verified']) && $_GET['verified'] === 'device_added';
     });
     </script>
 
+<?php
+$claudiaConfig = ['context' => 'join', 'capabilities' => ['auth', 'onboarding'], 'events' => false];
+require_once __DIR__ . '/includes/footer.php';
+?>
 </body>
 </html>

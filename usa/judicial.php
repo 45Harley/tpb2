@@ -513,4 +513,6 @@ function renderJudgeCard($j, $isBoss = false, $threatCount = 0, $maxThreats = 1)
 })();
 </script>
 
-<?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>
+<?php
+require_once dirname(__DIR__) . '/includes/footer.php';
+?>

@@ -3,7 +3,7 @@
 // Run: /usr/local/bin/php /path/to/seed-all-departments.php
 
 $c = require __DIR__ . '/../../config.php';
-$p = new PDO('mysql:host='.$c['host'].';dbname=sandge5_tpb2', $c['username'], $c['password']);
+$p = new PDO('mysql:host='.$c['host'].';dbname=sandge5_tpb2;charset=utf8mb4', $c['username'], $c['password']);
 $p->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // 1. Schema: add state_id column, make town_id nullable, rename conceptually to support all scopes

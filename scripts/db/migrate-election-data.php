@@ -25,9 +25,9 @@ $configPath = file_exists(dirname(__DIR__, 2) . '/config.php')
     ? dirname(__DIR__, 2) . '/config.php'
     : '/home/sandge5/tpb2.sandgems.net/config.php';
 $c = require $configPath;
-$elec = new PDO('mysql:host='.$c['host'].';dbname=sandge5_election', $c['username'], $c['password']);
+$elec = new PDO('mysql:host='.$c['host'].';dbname=sandge5_election;charset=utf8mb4', $c['username'], $c['password']);
 $elec->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-$tpb2 = new PDO('mysql:host='.$c['host'].';dbname='.$c['database'], $c['username'], $c['password']);
+$tpb2 = new PDO('mysql:host='.$c['host'].';dbname='.$c['database'].';charset=utf8mb4', $c['username'], $c['password']);
 $tpb2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 if ($dryRun) echo "=== DRY RUN — no changes will be made ===\n\n";

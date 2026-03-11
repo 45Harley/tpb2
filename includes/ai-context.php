@@ -42,11 +42,13 @@ function buildAIContext($pdo, $dbUser) {
     $lines = ["## User Context"];
     $lines[] = "- Name: " . ($dbUser['first_name'] ?? 'Friend');
     $lines[] = "- User ID: " . $dbUser['user_id'];
+    $lines[] = "- Civic Points: " . (int)($dbUser['civic_points'] ?? 0);
     $lines[] = "- Email Verified: " . ($dbUser['email_verified'] ? 'Yes' : 'No');
     
     $context['data']['user'] = [
         'name' => $dbUser['first_name'] ?? 'Friend',
         'user_id' => $dbUser['user_id'],
+        'civic_points' => (int)($dbUser['civic_points'] ?? 0),
         'email_verified' => (bool)$dbUser['email_verified']
     ];
     

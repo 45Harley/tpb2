@@ -463,4 +463,6 @@ require 'includes/nav.php';
     <?php endif; ?>
 </main>
 
-<?php require 'includes/footer.php'; ?>
+<?php
+require 'includes/footer.php';
+?>

@@ -358,5 +358,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
+<?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>
 </body>
 </html>

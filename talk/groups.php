@@ -1040,4 +1040,6 @@ require __DIR__ . '/../includes/nav.php';
     }
     </script>
 
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+<?php
+require __DIR__ . '/../includes/footer.php';
+?>

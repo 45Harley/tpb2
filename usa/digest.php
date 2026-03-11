@@ -1917,5 +1917,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
 });
 </script>
+<?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>
 </body>
 </html>
