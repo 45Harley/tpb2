@@ -19,10 +19,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
+    cursor: grab;
     box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4);
     transition: transform 0.2s, box-shadow 0.2s;
     user-select: none;
+    touch-action: none;
+}
+#claudia-bubble:active {
+    cursor: grabbing;
 }
 #claudia-bubble:hover {
     transform: scale(1.1);

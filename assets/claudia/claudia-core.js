@@ -537,6 +537,7 @@
     // EVENT LISTENERS
     // =====================================================
     if (bubble) bubble.addEventListener('click', function() {
+        if (bubbleDragged) { bubbleDragged = false; return; } // was a drag, not a click
         if (!mode) {
             showModePicker();
         } else {
@@ -605,21 +606,33 @@
     // =====================================================
     // DRAG TO MOVE (widget only, not pop-out)
     // =====================================================
+    var bubbleDragged = false; // shared with bubble click handler
+
     (function() {
+        if (!widget) return; // Not available in pop-out mode
         var header = document.querySelector('.claudia-header');
-        if (!header) return; // Not available in pop-out mode
         var isDragging = false;
         var dragStartX, dragStartY, widgetStartX, widgetStartY;
+        var DRAG_THRESHOLD = 5; // px — must move this far to count as drag
+        var hasMoved = false;
 
-        header.addEventListener('mousedown', startDrag);
-        header.addEventListener('touchstart', startDrag, { passive: false });
+        // Attach drag to both header and bubble
+        if (header) {
+            header.addEventListener('mousedown', startDrag);
+            header.addEventListener('touchstart', startDrag, { passive: false });
+        }
+        if (bubble) {
+            bubble.addEventListener('mousedown', startDrag);
+            bubble.addEventListener('touchstart', startDrag, { passive: false });
+        }
 
         function startDrag(e) {
-            // Don't drag if clicking a button
-            if (e.target.closest('.claudia-header-btn') || e.target.closest('.claudia-settings-menu')) return;
+            // Don't drag if clicking a button in the header
+            if (e.target.closest && (e.target.closest('.claudia-header-btn') || e.target.closest('.claudia-settings-menu'))) return;
 
             isDragging = true;
-            header.classList.add('dragging');
+            hasMoved = false;
+            bubbleDragged = false;
 
             var touch = e.touches ? e.touches[0] : e;
             dragStartX = touch.clientX;
@@ -629,12 +642,6 @@
             var rect = widget.getBoundingClientRect();
             widgetStartX = rect.left;
             widgetStartY = rect.top;
-
-            // Switch to top/left positioning
-            widget.style.left = widgetStartX + 'px';
-            widget.style.top = widgetStartY + 'px';
-            widget.style.right = 'auto';
-            widget.style.bottom = 'auto';
 
             if (e.touches) e.preventDefault();
             document.addEventListener('mousemove', onDrag);
@@ -649,7 +656,19 @@
             var dx = touch.clientX - dragStartX;
             var dy = touch.clientY - dragStartY;
 
-            var newX = Math.max(0, Math.min(window.innerWidth - 100, widgetStartX + dx));
+            // Only start moving after threshold (avoids jitter on tap)
+            if (!hasMoved && Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+            hasMoved = true;
+
+            // Switch to top/left positioning on first real move
+            if (!widget.style.left || widget.style.right !== 'auto') {
+                widget.style.left = widgetStartX + 'px';
+                widget.style.top = widgetStartY + 'px';
+                widget.style.right = 'auto';
+                widget.style.bottom = 'auto';
+            }
+
+            var newX = Math.max(0, Math.min(window.innerWidth - 60, widgetStartX + dx));
             var newY = Math.max(0, Math.min(window.innerHeight - 50, widgetStartY + dy));
 
             widget.style.left = newX + 'px';
@@ -659,8 +678,9 @@
         }
 
         function stopDrag() {
+            if (hasMoved) bubbleDragged = true; // suppress click
             isDragging = false;
-            header.classList.remove('dragging');
+            hasMoved = false;
             document.removeEventListener('mousemove', onDrag);
             document.removeEventListener('mouseup', stopDrag);
             document.removeEventListener('touchmove', onDrag);
