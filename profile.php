@@ -1198,3 +1198,11 @@ require 'includes/nav.php';
         
     })();
     </script>
+<?php
+$claudiaConfig = [
+    'context' => 'profile',
+    'capabilities' => ['auth'],
+    'events' => false,
+];
+require_once __DIR__ . '/includes/c-widget.php';
+?>

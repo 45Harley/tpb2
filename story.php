@@ -1427,5 +1427,13 @@ TPBModalHelp.init({
     enableTooltips: true
 });
 </script>
+<?php
+$claudiaConfig = [
+    'context' => 'story',
+    'capabilities' => ['auth'],
+    'events' => false,
+];
+require_once __DIR__ . '/includes/c-widget.php';
+?>
 </body>
 </html>
