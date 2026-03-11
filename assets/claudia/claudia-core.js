@@ -682,7 +682,9 @@
         isOffScript: isOffScript,
         getFlowState: function() { return flowState; },
         setFlowState: function(key, val) { flowState[key] = val; },
-        getConfig: function() { return CONFIG; }
+        getConfig: function() { return CONFIG; },
+        getHistory: function() { return history; },
+        setHistory: function(h) { history = h; }
     };
 
     // Backward compat

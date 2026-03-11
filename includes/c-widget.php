@@ -128,3 +128,4 @@ foreach ($claudiaConfig['capabilities'] as $cap) {
     }
 }
 ?>
+<script src="/assets/claudia/claudia-popout.js"></script>
