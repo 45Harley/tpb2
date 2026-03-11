@@ -424,6 +424,20 @@ if (isset($_POST['save_settings'])) {
         'value' => $ratingCheckEnabled
     ]);
 
+    $claudiaLocalEnabled = !empty($_POST['claudia_local_enabled']) ? '1' : '0';
+    setSiteSetting($pdo, 'claudia_local_enabled', $claudiaLocalEnabled, $adminUserId);
+    logAdminAction($pdo, $adminUserId, 'update_setting', 'site_setting', null, [
+        'key' => 'claudia_local_enabled',
+        'value' => $claudiaLocalEnabled
+    ]);
+
+    $claudiaWidgetEnabled = !empty($_POST['claudia_widget_enabled']) ? '1' : '0';
+    setSiteSetting($pdo, 'claudia_widget_enabled', $claudiaWidgetEnabled, $adminUserId);
+    logAdminAction($pdo, $adminUserId, 'update_setting', 'site_setting', null, [
+        'key' => 'claudia_widget_enabled',
+        'value' => $claudiaWidgetEnabled
+    ]);
+
     $message = "Settings saved";
     $messageType = 'success';
 }
@@ -2034,7 +2048,8 @@ $adminActions = $pdo->query("
                 ?>
                 <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
                     <h3 style="color:#d4af37;margin:0 0 15px;">Threat Collection</h3>
-                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">AI-powered daily collection of new threats via Claude API + web search. Runs at 7:00 PM ET.</p>
+                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Local pipeline via claude -p + web search. Daily 5:00 AM.
+                        <a href="cron-status.php?tab=threats" target="_blank" style="color:#6a9fff;margin-left:8px;">View Logs</a></p>
 
                     <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
                         <input type="checkbox" name="threat_collect_enabled" value="1" <?= $collectEnabled === '1' ? 'checked' : '' ?>
@@ -2046,7 +2061,7 @@ $adminActions = $pdo->query("
                         <span>Threats: <strong style="color:#d4af37;"><?= $threatCount ?></strong></span>
                         <span>Polls: <strong style="color:#d4af37;"><?= $pollCount ?></strong></span>
                         <span>Status: <strong style="color:<?= $collectEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $collectEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
-                        <span>Cost: <strong style="color:#ccc;">~$1/day</strong></span>
+                        <span>Cost: <strong style="color:#4caf50;">Free (local)</strong></span>
                     </div>
 
                     <?php if ($lastRun): ?>
@@ -2114,7 +2129,8 @@ $adminActions = $pdo->query("
                 ?>
                 <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
                     <h3 style="color:#d4af37;margin:0 0 15px;">Race Rating Checker</h3>
-                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">AI-powered weekly check of Cook/Sabato race ratings via Claude API + web search. Runs Sunday 10:00 AM ET.</p>
+                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Local pipeline via claude -p + web search. Weekly Sunday.
+                        <a href="cron-status.php?tab=ratings" target="_blank" style="color:#6a9fff;margin-left:8px;">View Logs</a></p>
 
                     <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
                         <input type="checkbox" name="rating_check_enabled" value="1" <?= $ratingCheckEnabled === '1' ? 'checked' : '' ?>
@@ -2125,7 +2141,7 @@ $adminActions = $pdo->query("
                     <div style="display:flex;flex-wrap:wrap;gap:20px;color:#888;font-size:0.9em;margin-bottom:10px;">
                         <span>Races: <strong style="color:#d4af37;"><?= count($fecRaces ?? []) ?></strong></span>
                         <span>Status: <strong style="color:<?= $ratingCheckEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $ratingCheckEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
-                        <span>Cost: <strong style="color:#ccc;">~$1/week</strong></span>
+                        <span>Cost: <strong style="color:#4caf50;">Free (local)</strong></span>
                     </div>
 
                     <?php if ($ratingLastRun): ?>
@@ -2144,6 +2160,40 @@ $adminActions = $pdo->query("
                         <?php endif; ?>
                     </div>
                     <?php endif; ?>
+                </div>
+
+                <!-- Claudia Local Mode -->
+                <?php
+                $claudiaLocalEnabled = getSiteSetting($pdo, 'claudia_local_enabled', '0');
+                ?>
+                <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                    <h3 style="color:#d4af37;margin:0 0 15px;">Claudia Chat (Local Mode)</h3>
+                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Routes Claudia chat through reverse SSH tunnel to local claude -p instead of Anthropic API. Requires <code>claudia-local-start.bat</code> running on your PC.</p>
+
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
+                        <input type="checkbox" name="claudia_local_enabled" value="1" <?= $claudiaLocalEnabled === '1' ? 'checked' : '' ?>
+                            style="width:18px;height:18px;accent-color:#d4af37;">
+                        <span style="color:#e0e0e0;font-size:1.05em;">Enable local Claudia (tunnel mode)</span>
+                    </label>
+
+                    <div style="display:flex;gap:20px;color:#888;font-size:0.9em;">
+                        <span>Status: <strong style="color:<?= $claudiaLocalEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $claudiaLocalEnabled === '1' ? 'LOCAL' : 'API' ?></strong></span>
+                        <span>Cost: <strong style="color:<?= $claudiaLocalEnabled === '1' ? '#4caf50' : '#ccc' ?>;"><?= $claudiaLocalEnabled === '1' ? 'Free' : '~$0.01/chat' ?></strong></span>
+                    </div>
+                </div>
+
+                <!-- Claudia Widget -->
+                <?php
+                $claudiaWidgetEnabled = getSiteSetting($pdo, 'claudia_widget_enabled', '0');
+                ?>
+                <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                    <h3 style="color:#d4af37;margin:0 0 15px;">Claudia Widget</h3>
+
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
+                        <input type="checkbox" name="claudia_widget_enabled" value="1" <?= $claudiaWidgetEnabled === '1' ? 'checked' : '' ?>
+                            style="width:18px;height:18px;accent-color:#d4af37;">
+                        <span style="color:#e0e0e0;font-size:1.05em;">Show C bubble on pages with include</span>
+                    </label>
                 </div>
 
                 <button type="submit" style="background:#d4af37;color:#000;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-weight:600;">Save Settings</button>
