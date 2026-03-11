@@ -102,6 +102,7 @@ $claudiaConfigJson = json_encode([
             <div class="claudia-settings-menu" id="claudia-settings-menu">
                 <div class="claudia-settings-item" data-action="change-mode">Change interaction mode</div>
                 <div class="claudia-settings-item" data-action="clear-chat">Clear conversation</div>
+                <div class="claudia-settings-item" data-action="disable-claudia">Disable Claudia</div>
             </div>
         </div>
         <div class="claudia-messages" id="claudia-messages"></div>

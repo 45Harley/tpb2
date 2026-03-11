@@ -506,6 +506,18 @@
                 if (onboard && onboard.cannedRespond) {
                     onboard.cannedRespond('welcome', null, window.ClaudiaCore);
                 }
+            } else if (action === 'disable-claudia') {
+                if (CONFIG.user) {
+                    // Logged-in user — save preference to server
+                    fetch('/api/claude-chat.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'disable_claudia', user_id: CONFIG.user.userId })
+                    });
+                }
+                localStorage.setItem('tpb_claudia_enabled', '0');
+                // Hide widget immediately
+                document.getElementById('claudia-widget').style.display = 'none';
             }
             settingsMenu.classList.remove('show');
             settingsOpen = false;
