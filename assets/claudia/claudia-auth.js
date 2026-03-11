@@ -30,7 +30,8 @@
             if (u.firstName) parts[0] += ", " + u.firstName;
             parts[0] += "!";
             if (u.townName && u.stateAbbr) {
-                parts.push("You're in " + u.townName + ", " + u.stateAbbr + ".");
+                var stateFull = window.ClaudiaUtils ? window.ClaudiaUtils.expandState(u.stateAbbr) : u.stateAbbr;
+                parts.push("You're in " + u.townName + ", " + stateFull + ".");
             }
             parts.push("What can I help with?");
             return parts.join(' ');

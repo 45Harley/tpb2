@@ -9,9 +9,10 @@
     var CANNED = {
         welcome: "Welcome to The People's Branch! You're part of the Fourth Branch of government now. Go ahead and find your state on the map.",
         welcome_back: function(data) {
+            var expand = window.ClaudiaUtils ? window.ClaudiaUtils.expandState : function(s) { return s; };
             var parts = ["Welcome back"];
-            if (data.townName && data.stateAbbr) parts[0] += " from " + data.townName + ", " + data.stateAbbr;
-            else if (data.stateAbbr) parts[0] += " from " + data.stateAbbr;
+            if (data.townName && data.stateAbbr) parts[0] += " from " + data.townName + ", " + expand(data.stateAbbr);
+            else if (data.stateAbbr) parts[0] += " from " + expand(data.stateAbbr);
             parts[0] += "!";
             parts.push("You can ask me anything — about your representatives, local issues, or how TPB works.");
             return parts.join(' ');
