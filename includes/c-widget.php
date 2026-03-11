@@ -97,6 +97,7 @@ $claudiaConfigJson = json_encode([
     <div id="claudia-panel">
         <div class="claudia-header">
             <span class="claudia-header-title">C — Your Civic Guide</span>
+            <button class="claudia-header-btn" id="claudia-popout-btn" title="Pop out">⤴</button>
             <button class="claudia-header-btn" id="claudia-settings-btn" title="Settings">⚙</button>
             <button class="claudia-header-btn" id="claudia-minimize-btn" title="Close">✕</button>
             <div class="claudia-settings-menu" id="claudia-settings-menu">

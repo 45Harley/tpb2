@@ -556,6 +556,19 @@
         }
     });
 
+    // Pop-out button
+    var popoutBtn = document.getElementById('claudia-popout-btn');
+    if (popoutBtn) {
+        if (!window.BroadcastChannel) {
+            popoutBtn.style.display = 'none';
+        } else {
+            popoutBtn.addEventListener('click', function() {
+                window.open('/claudia.php', 'claudia_popout',
+                    'width=420,height=600,resizable=yes,scrollbars=no,menubar=no,toolbar=no');
+            });
+        }
+    }
+
     minimizeBtn.addEventListener('click', minimize);
 
     sendBtn.addEventListener('click', function() {
