@@ -5,8 +5,8 @@
  * Simple HTTP endpoint that receives chat requests and pipes them to claude -p.
  * Runs on your local PC, reachable from server via reverse SSH tunnel.
  *
- * Start: php -S localhost:9878 scripts/maintenance/claudia-local-listener.php
- * Tunnel: ssh -R 9878:localhost:9878 sandge5@ecngx308.inmotionhosting.com -p 2222 -N
+ * Start: php -S localhost:9999 scripts/maintenance/claudia-local-listener.php
+ * Tunnel: ssh -R 9999:localhost:9999 sandge5@ecngx308.inmotionhosting.com -p 2222 -N
  */
 
 header('Content-Type: application/json');
