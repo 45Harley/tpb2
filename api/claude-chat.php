@@ -791,7 +791,7 @@ function callLocalClaude($systemPrompt, $messages) {
         'messages' => $messages
     ]);
 
-    $ch = curl_init('http://localhost:9999');
+    $ch = curl_init('http://127.0.0.1:9999');
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
