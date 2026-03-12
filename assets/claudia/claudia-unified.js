@@ -544,6 +544,7 @@
                 history: history,
                 clerk: state.mode === 'talk' ? 'brainstorm' : (state.mode === 'mandate' ? 'mandate' : 'guide'),
                 mode: state.mode,
+                user_id: USER ? USER.user_id : null,
                 session_id: state.sessionId,
                 context: CONFIG.context,
                 web_search: state.webSearch
