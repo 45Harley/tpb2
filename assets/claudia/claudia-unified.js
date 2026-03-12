@@ -908,11 +908,14 @@
     function pickVoice() {
         var v = speechSynthesis.getVoices();
         if (!v.length) return;
-        // Prefer known female voices by name
+        // Prefer known female voices by name (Microsoft, Apple, etc.)
         voice.claudiaVoice = v.find(function(x) { return /zira|eva|samantha|karen|susan|hazel|fiona|moira|tessa|jenny|aria/i.test(x.name); })
+            // Chrome: prefer "Google UK English Female" over default male "Google US English"
             || v.find(function(x) { return /female/i.test(x.name) && x.lang && x.lang.startsWith('en'); })
-            // Exclude known male voices
-            || v.find(function(x) { return x.lang && x.lang.startsWith('en') && !/david|mark|james|george|daniel|richard|guy|sean/i.test(x.name); })
+            // Any voice with "female" or "woman" in name
+            || v.find(function(x) { return /female|woman/i.test(x.name); })
+            // Exclude known male voices AND generic "Google US English" (male)
+            || v.find(function(x) { return x.lang && x.lang.startsWith('en') && !/david|mark|james|george|daniel|richard|guy|sean|Google US English/i.test(x.name); })
             || v.find(function(x) { return x.lang && x.lang.startsWith('en'); });
     }
 
