@@ -201,4 +201,63 @@ current_town_id    INT    -- location gate
 
 ---
 
+## 10. Idea Visibility Decision Table
+
+**Which stream shows which idea?** An idea's four dimensions determine where it appears.
+
+### Idea dimensions (set at INSERT)
+
+| Dimension | Column(s) | Values | Set by |
+|-----------|-----------|--------|--------|
+| **Owner** | `user_id` | INT / NULL | `getUser($pdo)` at submit time |
+| **Geo** | `state_id`, `town_id` | INT / NULL | Form field or user profile; NULL = USA-wide |
+| **Group** | `group_id` | INT / NULL | Talk textarea page context; NULL = personal/ungrouped |
+| **Jurisdiction** | `jurisdiction_level`, `is_local/state/federal` | ENUM / TINYINT / NULL | User picks from dropdown; NULL = unclassified |
+
+### Stream → filter logic
+
+| Stream | Page examples | WHERE clause on idea_log | Uses jurisdiction? |
+|--------|--------------|--------------------------|-------------------|
+| **Town** | Putnam, Woodstock | `town_id = X AND group_id IS NULL AND status = 'published'` | No |
+| **State** | CT state page | `state_id = X AND group_id IS NULL AND status = 'published'` | No |
+| **USA** | Talk landing | `group_id IS NULL AND status = 'published'` | No |
+| **Group** | The Fight, civic groups | `group_id = X AND status = 'published'` | No |
+| **My Thoughts** | voice.php My tab | `user_id = X` (user_only mode) | No |
+| **Session** | anonymous browse | `session_id = X` | No |
+| **Federal filter** | get-thoughts API only | `is_federal = 1` | **Yes** (only place) |
+
+### Visibility rules
+
+| Idea has... | Visible in town stream? | Visible in state stream? | Visible in USA stream? | Visible in group stream? |
+|-------------|:-:|:-:|:-:|:-:|
+| `group_id = NULL, town_id = 119, state_id = 7` | Putnam only | CT only | Yes | No |
+| `group_id = NULL, town_id = NULL, state_id = 7` | No | CT only | Yes | No |
+| `group_id = NULL, town_id = NULL, state_id = NULL` | No | No | Yes | No |
+| `group_id = 5, town_id = 119, state_id = 7` | No | No | No | Group 5 only |
+| `group_id = 5, town_id = NULL, state_id = NULL` | No | No | No | Group 5 only |
+
+**Key rule:** `group_id IS NULL` is actively enforced on geo streams. Group ideas never leak into geo streams. Ungrouped ideas never appear in group streams. **No cross-stream visibility.**
+
+### Known gaps (as of 2026-03-12)
+
+| Gap | Impact |
+|-----|--------|
+| **Claudia is group-blind** | `ADD_THOUGHT` action never sets `group_id` → Claudia submissions only appear in USA/geo streams, invisible to group streams like The Fight |
+| **Claudia is geo-blind** | `ADD_THOUGHT` doesn't set `state_id`/`town_id` from page or user context → ideas land with NULL geo, only visible in USA stream |
+| **Jurisdiction is decorative** | `jurisdiction_level` is stored but only `is_federal=1` is filterable, and only via get-thoughts API — no stream page uses it |
+| **No cross-stream option** | An idea cannot appear in both a group stream AND a geo stream simultaneously |
+| **No jurisdiction stream** | No page exists to show "all federal ideas" or "all local ideas" |
+
+### Claudia Phase 2 fix needed
+
+For Claudia to match Talk textarea capabilities, the widget must pass page context to `ADD_THOUGHT`:
+
+| Field | Source | Default if missing |
+|-------|--------|--------------------|
+| `group_id` | Page's `data-group-id` or `talkStreamConfig` | NULL (personal/USA) |
+| `state_id` | User's `current_state_id` or page context | NULL (USA-wide) |
+| `town_id` | User's `current_town_id` or page context | NULL (no town) |
+
+---
+
 *This document is the single source of truth for Talk's access model. Update it when access rules change.*
