@@ -994,7 +994,7 @@
         if (/^read (?:my )?federal mandates?$/.test(t)) { readMandate('federal'); return true; }
         if (/^read (?:my )?state mandates?$/.test(t)) { readMandate('state'); return true; }
         if (/^read (?:my )?town mandates?$/.test(t)) { readMandate('town'); return true; }
-        var saveMatch = t.match(/^save #?(\d+)(?: as idea)?$/);
+        var saveMatch = t.match(/^save(?:\s+idea)?\s+#?(\d+)$/);
         if (saveMatch) {
             var sIdx = parseInt(saveMatch[1]) - 1;
             if (sIdx >= 0 && sIdx < state.scratchpadItems.length) saveIdea(state.scratchpadItems[sIdx].id);
