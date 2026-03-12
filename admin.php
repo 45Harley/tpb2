@@ -200,8 +200,8 @@ if (isset($_GET['msg'])) {
 if (isset($_POST['delete_thought'])) {
     validateCsrf();
     $thoughtId = (int)$_POST['thought_id'];
-    $pdo->prepare("DELETE FROM user_thought_votes WHERE thought_id = ?")->execute([$thoughtId]);
-    $pdo->prepare("DELETE FROM user_thoughts WHERE thought_id = ?")->execute([$thoughtId]);
+    $pdo->prepare("DELETE FROM idea_votes WHERE idea_id = ?")->execute([$thoughtId]);
+    $pdo->prepare("UPDATE idea_log SET deleted_at = NOW() WHERE id = ?")->execute([$thoughtId]);
     logAdminAction($pdo, $adminUserId, 'delete_thought', 'thought', $thoughtId);
     $message = "Thought #$thoughtId deleted";
     $messageType = 'success';
@@ -211,7 +211,7 @@ if (isset($_POST['delete_thought'])) {
 if (isset($_POST['hide_thought'])) {
     validateCsrf();
     $thoughtId = (int)$_POST['thought_id'];
-    $pdo->prepare("UPDATE user_thoughts SET status = 'draft' WHERE thought_id = ?")->execute([$thoughtId]);
+    $pdo->prepare("UPDATE idea_log SET status = 'hidden' WHERE id = ?")->execute([$thoughtId]);
     logAdminAction($pdo, $adminUserId, 'hide_thought', 'thought', $thoughtId);
     $message = "Thought #$thoughtId hidden";
     $messageType = 'success';
@@ -221,7 +221,7 @@ if (isset($_POST['hide_thought'])) {
 if (isset($_POST['restore_thought'])) {
     validateCsrf();
     $thoughtId = (int)$_POST['thought_id'];
-    $pdo->prepare("UPDATE user_thoughts SET status = 'published' WHERE thought_id = ?")->execute([$thoughtId]);
+    $pdo->prepare("UPDATE idea_log SET status = 'published' WHERE id = ?")->execute([$thoughtId]);
     logAdminAction($pdo, $adminUserId, 'restore_thought', 'thought', $thoughtId);
     $message = "Thought #$thoughtId restored";
     $messageType = 'success';
@@ -245,8 +245,8 @@ if (isset($_POST['delete_user'])) {
         $stmt->execute([$userId]);
         if ($n = $stmt->rowCount()) $cascade[] = "$n device(s) deactivated";
 
-        // 3. Hide published thoughts
-        $stmt = $pdo->prepare("UPDATE user_thoughts SET status = 'draft' WHERE user_id = ? AND status = 'published'");
+        // 3. Hide published thoughts (in idea_log)
+        $stmt = $pdo->prepare("UPDATE idea_log SET status = 'hidden' WHERE user_id = ? AND status = 'published'");
         $stmt->execute([$userId]);
         if ($n = $stmt->rowCount()) $cascade[] = "$n thought(s) hidden";
 
@@ -610,11 +610,11 @@ $identityLevels = $pdo->query("
 ")->fetchAll();
 
 // --- Civic engagement ---
-$stats['thoughts_total'] = (int)$pdo->query("SELECT COUNT(*) FROM user_thoughts WHERE status = 'published'")->fetchColumn();
-$stats['thoughts_week'] = (int)$pdo->query("SELECT COUNT(*) FROM user_thoughts WHERE status = 'published' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
-$stats['hidden_thoughts'] = (int)$pdo->query("SELECT COUNT(*) FROM user_thoughts WHERE status = 'draft'")->fetchColumn();
-$stats['votes_total'] = (int)$pdo->query("SELECT COUNT(*) FROM user_thought_votes")->fetchColumn();
-$stats['votes_week'] = (int)$pdo->query("SELECT COUNT(*) FROM user_thought_votes WHERE voted_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
+$stats['thoughts_total'] = (int)$pdo->query("SELECT COUNT(*) FROM idea_log WHERE status = 'published' AND deleted_at IS NULL")->fetchColumn();
+$stats['thoughts_week'] = (int)$pdo->query("SELECT COUNT(*) FROM idea_log WHERE status = 'published' AND deleted_at IS NULL AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
+$stats['hidden_thoughts'] = (int)$pdo->query("SELECT COUNT(*) FROM idea_log WHERE status = 'hidden' AND deleted_at IS NULL")->fetchColumn();
+$stats['votes_total'] = (int)$pdo->query("SELECT COUNT(*) FROM idea_votes")->fetchColumn();
+$stats['votes_week'] = (int)$pdo->query("SELECT COUNT(*) FROM idea_votes WHERE voted_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
 $stats['states'] = (int)$pdo->query("SELECT COUNT(DISTINCT current_state_id) FROM users WHERE current_state_id IS NOT NULL")->fetchColumn();
 $stats['towns'] = (int)$pdo->query("SELECT COUNT(DISTINCT current_town_id) FROM users WHERE current_town_id IS NOT NULL")->fetchColumn();
 
@@ -707,16 +707,18 @@ $allVolunteers = $pdo->query("
     LIMIT 50
 ")->fetchAll();
 
-// Thoughts — sorted by engagement
+// Thoughts — sorted by engagement (from idea_log, published + hidden only)
 $thoughts = $pdo->query("
-    SELECT t.thought_id, t.content, t.jurisdiction_level, t.status,
-           t.upvotes, t.downvotes, (t.upvotes - t.downvotes) as net_score,
-           (t.upvotes + t.downvotes) as engagement, t.created_at,
+    SELECT t.id AS thought_id, t.content, t.jurisdiction_level, t.status,
+           t.agree_count AS upvotes, t.disagree_count AS downvotes,
+           (t.agree_count - t.disagree_count) as net_score,
+           (t.agree_count + t.disagree_count) as engagement, t.created_at,
            u.email, u.first_name, s.abbreviation as state_abbrev, tw.town_name
-    FROM user_thoughts t
+    FROM idea_log t
     LEFT JOIN users u ON t.user_id = u.user_id
     LEFT JOIN states s ON t.state_id = s.state_id
     LEFT JOIN towns tw ON t.town_id = tw.town_id
+    WHERE t.deleted_at IS NULL AND t.status IN ('published','hidden')
     ORDER BY engagement DESC, t.created_at DESC
     LIMIT 50
 ")->fetchAll();
@@ -725,8 +727,8 @@ $thoughts = $pdo->query("
 $users = $pdo->query("
     SELECT u.user_id, u.email, u.first_name, u.last_name, u.civic_points, u.created_at, u.deleted_at,
            s.abbreviation as state_abbrev, tw.town_name, il.level_name as identity_level,
-           (SELECT COUNT(*) FROM user_thoughts WHERE user_id = u.user_id AND status = 'published') as thought_count,
-           (SELECT COUNT(*) FROM user_thought_votes WHERE user_id = u.user_id) as vote_count,
+           (SELECT COUNT(*) FROM idea_log WHERE user_id = u.user_id AND status = 'published' AND deleted_at IS NULL) as thought_count,
+           (SELECT COUNT(*) FROM idea_votes WHERE user_id = u.user_id) as vote_count,
            (SELECT COUNT(*) FROM user_devices WHERE user_id = u.user_id AND is_active = 1) as active_devices,
            (SELECT device_name FROM user_devices WHERE user_id = u.user_id AND is_active = 1 ORDER BY last_active_at DESC LIMIT 1) as last_ua,
            (SELECT GROUP_CONCAT(ur.role_name SEPARATOR ', ')
@@ -746,21 +748,21 @@ $users = $pdo->query("
 $activity = $pdo->query("
     SELECT * FROM (
         SELECT 'thought' as event_type,
-               CONCAT('Published: \"', SUBSTRING(ut.content, 1, 60), '...\"') as description,
-               ut.created_at as event_time,
+               CONCAT('Published: \"', SUBSTRING(il.content, 1, 60), '...\"') as description,
+               il.created_at as event_time,
                u.email as user_email, u.first_name
-        FROM user_thoughts ut
-        JOIN users u ON ut.user_id = u.user_id
-        WHERE ut.status = 'published'
+        FROM idea_log il
+        JOIN users u ON il.user_id = u.user_id
+        WHERE il.status = 'published' AND il.deleted_at IS NULL
 
         UNION ALL
 
         SELECT 'vote' as event_type,
-               CONCAT(uv.vote_type, ' on thought #', uv.thought_id) as description,
-               uv.voted_at as event_time,
+               CONCAT(iv.vote_type, ' on idea #', iv.idea_id) as description,
+               iv.voted_at as event_time,
                u.email as user_email, u.first_name
-        FROM user_thought_votes uv
-        JOIN users u ON uv.user_id = u.user_id
+        FROM idea_votes iv
+        JOIN users u ON iv.user_id = u.user_id
 
         UNION ALL
 

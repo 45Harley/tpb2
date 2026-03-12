@@ -93,7 +93,7 @@ $stmt->execute([$userId]);
 $volunteerApps = $stmt->fetchAll();
 
 // Thoughts
-$stmt = $pdo->prepare("SELECT * FROM user_thoughts WHERE user_id = ? ORDER BY created_at DESC LIMIT 50");
+$stmt = $pdo->prepare("SELECT id AS thought_id, user_id, content, status, created_at FROM idea_log WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 50");
 $stmt->execute([$userId]);
 $thoughts = $stmt->fetchAll();
 

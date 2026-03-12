@@ -263,21 +263,22 @@ $seedThoughts = [];
 $seedCount = 0;
 if ($dbUser && $isVolunteer) {
     $seedThoughts = $pdo->query("
-        SELECT 
-            t.thought_id, t.content, t.created_at, t.upvotes, t.downvotes,
+        SELECT
+            t.id AS thought_id, t.content, t.created_at,
+            t.agree_count AS upvotes, t.disagree_count AS downvotes,
             u.username, u.first_name, u.last_name
-        FROM user_thoughts t
+        FROM idea_log t
         LEFT JOIN users u ON t.user_id = u.user_id
-        WHERE t.category_id = 12 
+        WHERE t.category_id = 12
         AND t.task_id IS NULL
-        AND t.status = 'published'
-        ORDER BY t.upvotes DESC, t.created_at DESC
+        AND t.status = 'published' AND t.deleted_at IS NULL
+        ORDER BY t.agree_count DESC, t.created_at DESC
         LIMIT 10
     ")->fetchAll();
-    
+
     $seedCount = $pdo->query("
-        SELECT COUNT(*) FROM user_thoughts 
-        WHERE category_id = 12 AND task_id IS NULL AND status = 'published'
+        SELECT COUNT(*) FROM idea_log
+        WHERE category_id = 12 AND task_id IS NULL AND status = 'published' AND deleted_at IS NULL
     ")->fetchColumn();
 }
 

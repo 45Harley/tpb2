@@ -102,11 +102,11 @@ try {
         exit();
     }
 
-    // Get the source thought
+    // Get the source thought from idea_log
     $stmt = $pdo->prepare("
-        SELECT thought_id, content, task_id, category_id 
-        FROM user_thoughts 
-        WHERE thought_id = ?
+        SELECT id AS thought_id, content, task_id, category_id
+        FROM idea_log
+        WHERE id = ? AND deleted_at IS NULL
     ");
     $stmt->execute([$thoughtId]);
     $thought = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -147,7 +147,7 @@ try {
     $taskId = $pdo->lastInsertId();
 
     // Link thought to task
-    $stmt = $pdo->prepare("UPDATE user_thoughts SET task_id = ? WHERE thought_id = ?");
+    $stmt = $pdo->prepare("UPDATE idea_log SET task_id = ? WHERE id = ?");
     $stmt->execute([$taskId, $thoughtId]);
 
     echo json_encode([

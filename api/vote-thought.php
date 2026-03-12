@@ -72,8 +72,8 @@ try {
         exit();
     }
 
-    // Check if thought exists
-    $stmt = $pdo->prepare("SELECT thought_id, upvotes, downvotes FROM user_thoughts WHERE thought_id = ?");
+    // Check if thought exists in idea_log
+    $stmt = $pdo->prepare("SELECT id, agree_count, disagree_count FROM idea_log WHERE id = ? AND deleted_at IS NULL");
     $stmt->execute([$thoughtId]);
     $thought = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -84,9 +84,9 @@ try {
 
     // Check if already voted
     $stmt = $pdo->prepare("
-        SELECT vote_id, vote_type 
-        FROM user_thought_votes 
-        WHERE thought_id = ? AND user_id = ?
+        SELECT vote_id, vote_type
+        FROM idea_votes
+        WHERE idea_id = ? AND user_id = ?
     ");
     $stmt->execute([$thoughtId, $user['user_id']]);
     $existingVote = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -97,29 +97,29 @@ try {
     if ($existingVote) {
         if ($existingVote['vote_type'] === $dbVoteType) {
             // Same vote - REMOVE it (toggle off)
-            $stmt = $pdo->prepare("DELETE FROM user_thought_votes WHERE vote_id = ?");
+            $stmt = $pdo->prepare("DELETE FROM idea_votes WHERE vote_id = ?");
             $stmt->execute([$existingVote['vote_id']]);
-            
+
             // Update counts
             if ($voteType === 'up') {
-                $stmt = $pdo->prepare("UPDATE user_thoughts SET upvotes = upvotes - 1 WHERE thought_id = ?");
+                $stmt = $pdo->prepare("UPDATE idea_log SET agree_count = agree_count - 1 WHERE id = ?");
             } else {
-                $stmt = $pdo->prepare("UPDATE user_thoughts SET downvotes = downvotes - 1 WHERE thought_id = ?");
+                $stmt = $pdo->prepare("UPDATE idea_log SET disagree_count = disagree_count - 1 WHERE id = ?");
             }
             $stmt->execute([$thoughtId]);
-            
+
             $message = 'Vote removed';
             $userVote = null;
         } else {
             // Different vote - CHANGE it
-            $stmt = $pdo->prepare("UPDATE user_thought_votes SET vote_type = ? WHERE vote_id = ?");
+            $stmt = $pdo->prepare("UPDATE idea_votes SET vote_type = ? WHERE vote_id = ?");
             $stmt->execute([$dbVoteType, $existingVote['vote_id']]);
 
-            // Update counts on thought
+            // Update counts on idea
             if ($voteType === 'up') {
-                $stmt = $pdo->prepare("UPDATE user_thoughts SET upvotes = upvotes + 1, downvotes = downvotes - 1 WHERE thought_id = ?");
+                $stmt = $pdo->prepare("UPDATE idea_log SET agree_count = agree_count + 1, disagree_count = disagree_count - 1 WHERE id = ?");
             } else {
-                $stmt = $pdo->prepare("UPDATE user_thoughts SET upvotes = upvotes - 1, downvotes = downvotes + 1 WHERE thought_id = ?");
+                $stmt = $pdo->prepare("UPDATE idea_log SET agree_count = agree_count - 1, disagree_count = disagree_count + 1 WHERE id = ?");
             }
             $stmt->execute([$thoughtId]);
 
@@ -129,16 +129,16 @@ try {
     } else {
         // New vote
         $stmt = $pdo->prepare("
-            INSERT INTO user_thought_votes (thought_id, user_id, vote_type, voted_at)
+            INSERT INTO idea_votes (idea_id, user_id, vote_type, voted_at)
             VALUES (?, ?, ?, NOW())
         ");
         $stmt->execute([$thoughtId, $user['user_id'], $dbVoteType]);
 
-        // Update count on thought
+        // Update count on idea
         if ($voteType === 'up') {
-            $stmt = $pdo->prepare("UPDATE user_thoughts SET upvotes = upvotes + 1 WHERE thought_id = ?");
+            $stmt = $pdo->prepare("UPDATE idea_log SET agree_count = agree_count + 1 WHERE id = ?");
         } else {
-            $stmt = $pdo->prepare("UPDATE user_thoughts SET downvotes = downvotes + 1 WHERE thought_id = ?");
+            $stmt = $pdo->prepare("UPDATE idea_log SET disagree_count = disagree_count + 1 WHERE id = ?");
         }
         $stmt->execute([$thoughtId]);
 
@@ -153,7 +153,7 @@ try {
     }
 
     // Get updated counts
-    $stmt = $pdo->prepare("SELECT upvotes, downvotes FROM user_thoughts WHERE thought_id = ?");
+    $stmt = $pdo->prepare("SELECT agree_count AS upvotes, disagree_count AS downvotes FROM idea_log WHERE id = ?");
     $stmt->execute([$thoughtId]);
     $updatedThought = $stmt->fetch(PDO::FETCH_ASSOC);
 

@@ -49,8 +49,8 @@ try {
     
     // Build query - includes user display preferences
     $query = "
-        SELECT 
-            t.thought_id,
+        SELECT
+            t.id AS thought_id,
             t.user_id,
             t.content,
             t.jurisdiction_level,
@@ -59,8 +59,8 @@ try {
             t.is_federal,
             t.other_topic,
             t.created_at,
-            t.upvotes,
-            t.downvotes,
+            t.agree_count AS upvotes,
+            t.disagree_count AS downvotes,
             c.category_name,
             c.icon,
             u.username,
@@ -73,12 +73,13 @@ try {
             s.abbreviation as state_abbrev,
             s.state_name,
             tw.town_name
-        FROM user_thoughts t
+        FROM idea_log t
         LEFT JOIN thought_categories c ON t.category_id = c.category_id
         LEFT JOIN users u ON t.user_id = u.user_id
         LEFT JOIN states s ON t.state_id = s.state_id
         LEFT JOIN towns tw ON t.town_id = tw.town_id
         WHERE t.status = 'published'
+          AND t.deleted_at IS NULL
     ";
     
     $params = [];
@@ -101,7 +102,7 @@ try {
     
     // Sort order
     if ($sort === 'votes') {
-        $query .= " ORDER BY t.upvotes DESC, t.created_at DESC";
+        $query .= " ORDER BY t.agree_count DESC, t.created_at DESC";
     } else {
         $query .= " ORDER BY t.created_at DESC";
     }

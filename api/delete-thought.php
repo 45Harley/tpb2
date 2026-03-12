@@ -58,7 +58,7 @@ try {
     }
 
     // Check if thought exists AND belongs to this user (owner-only delete)
-    $stmt = $pdo->prepare("SELECT user_id FROM user_thoughts WHERE thought_id = ? AND user_id = ?");
+    $stmt = $pdo->prepare("SELECT user_id FROM idea_log WHERE id = ? AND user_id = ? AND deleted_at IS NULL");
     $stmt->execute([$thoughtId, $user['user_id']]);
     $thought = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -67,12 +67,8 @@ try {
         exit();
     }
 
-    // Delete votes on this thought first
-    $stmt = $pdo->prepare("DELETE FROM user_thought_votes WHERE thought_id = ?");
-    $stmt->execute([$thoughtId]);
-
-    // Delete the thought
-    $stmt = $pdo->prepare("DELETE FROM user_thoughts WHERE thought_id = ?");
+    // Soft-delete the thought (idea_log uses deleted_at)
+    $stmt = $pdo->prepare("UPDATE idea_log SET deleted_at = NOW() WHERE id = ?");
     $stmt->execute([$thoughtId]);
 
     echo json_encode([

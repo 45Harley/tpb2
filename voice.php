@@ -60,10 +60,10 @@ if ($browseState) {
     }
 }
 
-// Get thoughts - filtered by jurisdiction (or browse mode)
+// Get thoughts - filtered by jurisdiction (or browse mode) — from unified idea_log
 $thoughtsQuery = "
-    SELECT 
-        t.thought_id,
+    SELECT
+        t.id AS thought_id,
         t.user_id,
         t.content,
         t.jurisdiction_level,
@@ -71,8 +71,8 @@ $thoughtsQuery = "
         t.is_state,
         t.is_federal,
         t.created_at,
-        t.upvotes,
-        t.downvotes,
+        t.agree_count AS upvotes,
+        t.disagree_count AS downvotes,
         c.category_name,
         c.icon,
         u.first_name,
@@ -81,12 +81,12 @@ $thoughtsQuery = "
         u.show_last_name,
         s.abbreviation as state_abbrev,
         tw.town_name
-    FROM user_thoughts t
+    FROM idea_log t
     LEFT JOIN thought_categories c ON t.category_id = c.category_id
     LEFT JOIN users u ON t.user_id = u.user_id
     LEFT JOIN states s ON t.state_id = s.state_id
     LEFT JOIN towns tw ON t.town_id = tw.town_id
-    WHERE t.status = 'published'
+    WHERE t.status = 'published' AND t.deleted_at IS NULL
 ";
 
 if ($browseMode) {
@@ -120,7 +120,7 @@ $categories = $pdo->query("SELECT * FROM thought_categories WHERE is_active = 1 
 // Get user's votes
 $userVotes = array();
 if ($dbUser) {
-    $stmt = $pdo->prepare("SELECT thought_id, vote_type FROM user_thought_votes WHERE user_id = ?");
+    $stmt = $pdo->prepare("SELECT idea_id AS thought_id, vote_type FROM idea_votes WHERE user_id = ?");
     $stmt->execute(array($dbUser['user_id']));
     while ($row = $stmt->fetch()) {
         $userVotes[$row['thought_id']] = ($row['vote_type'] === 'upvote') ? 'up' : 'down';
@@ -131,10 +131,13 @@ if ($dbUser) {
 $myThoughts = array();
 if ($dbUser) {
     $stmt = $pdo->prepare("
-        SELECT t.*, c.category_name, c.icon 
-        FROM user_thoughts t
+        SELECT t.id AS thought_id, t.user_id, t.content, t.status, t.created_at,
+               t.is_local, t.is_state, t.is_federal,
+               t.agree_count AS upvotes, t.disagree_count AS downvotes,
+               c.category_name, c.icon
+        FROM idea_log t
         LEFT JOIN thought_categories c ON t.category_id = c.category_id
-        WHERE t.user_id = ?
+        WHERE t.user_id = ? AND t.deleted_at IS NULL
         ORDER BY t.created_at DESC
     ");
     $stmt->execute(array($dbUser['user_id']));
@@ -493,7 +496,7 @@ require 'includes/nav.php';
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             thought_id: thoughtId,
-                            vote_type: voteType === 'up' ? 'upvote' : 'downvote'
+                            vote_type: voteType
                         })
                     });
                     

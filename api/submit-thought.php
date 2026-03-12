@@ -175,15 +175,17 @@ try {
         }
     }
 
-    // Insert thought with new fields
+    // Insert into idea_log (unified civic input table)
     $stmt = $pdo->prepare("
-        INSERT INTO user_thoughts 
+        INSERT INTO idea_log
             (user_id, content, category_id, other_topic, jurisdiction_level,
              is_local, is_state, is_federal,
              is_legislative, is_executive, is_judicial,
-             town_id, state_id, status, upvotes, downvotes, created_at)
-        VALUES 
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', 0, 0, NOW())
+             town_id, state_id, status, agree_count, disagree_count,
+             source, created_at)
+        VALUES
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', 0, 0,
+             'voice', NOW())
     ");
     $stmt->execute([
         $user['user_id'],

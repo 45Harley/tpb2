@@ -196,8 +196,8 @@ function processAction($action, $userId, $sessionId) {
                 $isState = $jurisdiction === 'state' ? 1 : 0;
                 $isFederal = $jurisdiction === 'federal' ? 1 : 0;
                 
-                $sql = "INSERT INTO user_thoughts (user_id, content, jurisdiction_level, is_local, is_state, is_federal, status) 
-                        VALUES ($userId, '$content', '$jurisdiction', $isLocal, $isState, $isFederal, 'published')";
+                $sql = "INSERT INTO idea_log (user_id, content, jurisdiction_level, is_local, is_state, is_federal, status, source)
+                        VALUES ($userId, '$content', '$jurisdiction', $isLocal, $isState, $isFederal, 'published', 'claudia')";
                 
                 if ($conn->query($sql)) {
                     $result = [

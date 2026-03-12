@@ -56,7 +56,7 @@ $filter = $_GET['filter'] ?? 'all';
 // Get thoughts
 $query = "
     SELECT 
-        t.thought_id,
+        t.id AS thought_id,
         t.content,
         t.is_local,
         t.is_state,
@@ -66,8 +66,8 @@ $query = "
         t.is_judicial,
         t.other_topic,
         t.created_at,
-        t.upvotes,
-        t.downvotes,
+        t.agree_count AS upvotes,
+        t.disagree_count AS downvotes,
         c.category_name,
         c.icon,
         s.abbreviation as state_abbrev,
@@ -78,12 +78,12 @@ $query = "
         u.show_first_name,
         u.show_last_name,
         u.show_age_bracket
-    FROM user_thoughts t
+    FROM idea_log t
     LEFT JOIN thought_categories c ON t.category_id = c.category_id
     LEFT JOIN states s ON t.state_id = s.state_id
     LEFT JOIN towns tw ON t.town_id = tw.town_id
     LEFT JOIN users u ON t.user_id = u.user_id
-    WHERE t.status = 'published'
+    WHERE t.status = 'published' AND t.deleted_at IS NULL
 ";
 
 if ($filter === 'local') {
@@ -99,7 +99,7 @@ $query .= " ORDER BY t.created_at DESC LIMIT 50";
 $thoughts = $pdo->query($query)->fetchAll();
 
 // Count
-$totalCount = $pdo->query("SELECT COUNT(*) FROM user_thoughts WHERE status = 'published'")->fetchColumn();
+$totalCount = $pdo->query("SELECT COUNT(*) FROM idea_log WHERE status = 'published' AND deleted_at IS NULL")->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="en">

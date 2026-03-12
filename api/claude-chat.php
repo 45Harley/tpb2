@@ -428,8 +428,9 @@ function gatherRelevantContext($pdo, $message) {
     // Check for "thoughts" or "issues" keywords
     if (strpos($messageLower, 'thought') !== false || strpos($messageLower, 'issue') !== false) {
         $stmt = $pdo->query("
-            SELECT content, upvotes, jurisdiction_level 
-            FROM user_thoughts 
+            SELECT content, agree_count AS upvotes, jurisdiction_level
+            FROM idea_log
+            WHERE status = 'published' AND deleted_at IS NULL
             ORDER BY created_at DESC LIMIT 3
         ");
         $thoughts = $stmt->fetchAll();
@@ -630,8 +631,8 @@ function processAddThought($pdo, $params, $userId) {
     $userData = $stmt->fetch();
     
     $stmt = $pdo->prepare("
-        INSERT INTO user_thoughts (user_id, content, jurisdiction_level, is_local, is_state, is_federal, town_id, state_id, status) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published')
+        INSERT INTO idea_log (user_id, content, jurisdiction_level, is_local, is_state, is_federal, town_id, state_id, status, source)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published', 'claudia')
     ");
     $stmt->execute([
         $userId,
@@ -643,7 +644,7 @@ function processAddThought($pdo, $params, $userId) {
         $userData['current_town_id'],
         $userData['current_state_id']
     ]);
-    
+
     return [
         'action' => 'ADD_THOUGHT',
         'success' => true,
