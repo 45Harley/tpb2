@@ -86,10 +86,6 @@ if ($isLoggedIn) {
     $pollVoteCount = $stmt->fetchColumn();
 }
 
-// Pre-load talk-stream CSS in <head> via header.php
-$_tsCssVer = filemtime(dirname(__DIR__) . '/assets/talk-stream.css');
-$headLinks = '    <link rel="stylesheet" href="/assets/talk-stream.css?v=' . $_tsCssVer . '">' . "\n";
-
 $pageStyles = <<<'CSS'
 .fight-container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
 
@@ -370,23 +366,7 @@ require_once dirname(__DIR__) . '/includes/nav.php';
         </div>
     </div>
 
-    <?php
-    $talkStreamConfig = [
-        'group'               => 'The Fight',
-        'scope'               => 'federal',
-        'title'               => 'Community Stream',
-        'subtitle'            => 'Evidence. Ideas. Action. A debate where everyone wins.',
-        'placeholder'         => 'What does the Golden Rule demand right now?',
-        'show_group_selector' => false,
-        'show_filters'        => false,
-        'show_categories'     => false,
-        'show_ai_toggle'      => true,
-        'show_mic'            => true,
-        'show_admin_tools'    => false,
-        'limit'               => 30,
-    ];
-    require dirname(__DIR__) . '/includes/talk-stream.php';
-    ?>
+    <!-- Community discussion now via Claudia widget (Talk mode) -->
 
 </main>
 <div class="points-flash" id="pointsFlash"></div>

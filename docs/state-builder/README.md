@@ -155,7 +155,7 @@ Overview of the State Builder system.
 ### 1. [state]-state-page.php
 **Main PHP file** - the complete state page code
 
-- Uses includes: header.php, nav.php, footer.php, thought-form.php
+- Uses includes: header.php, nav.php, footer.php (footer loads Claudia widget automatically)
 - 11 sections with comprehensive data
 - Styled like Putnam (dark mode, gold accents)
 - 1,500-2,000 lines

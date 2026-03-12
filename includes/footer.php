@@ -170,6 +170,6 @@
 // Requires $pdo in scope (standard for all TPB pages)
 if (isset($pdo) && !defined('CLAUDIA_LOADED')) {
     define('CLAUDIA_LOADED', true);
-    require_once __DIR__ . '/c-widget.php';
+    require_once __DIR__ . '/claudia-widget.php';
 }
 ?>

@@ -552,46 +552,7 @@ $categories = $pdo->query("SELECT * FROM thought_categories WHERE is_active = 1 
             btn.textContent = 'Submit';
         }
     });
-    
-    // Speech Recognition
-    const dictateBtn = document.getElementById('dictateBtn');
-    const contentTextarea = document.getElementById('content');
-    if (dictateBtn && contentTextarea) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            dictateBtn.classList.add('unsupported');
-        } else {
-            const recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            let isRecording = false;
-            let finalTranscript = '';
-            
-            dictateBtn.addEventListener('click', function() {
-                if (isRecording) {
-                    recognition.stop();
-                } else {
-                    finalTranscript = contentTextarea.value;
-                    if (finalTranscript && !finalTranscript.endsWith(' ')) finalTranscript += ' ';
-                    recognition.start();
-                }
-            });
-            
-            recognition.onstart = () => { isRecording = true; dictateBtn.classList.add('recording'); dictateBtn.textContent = '🎤 Stop'; };
-            recognition.onend = () => { isRecording = false; dictateBtn.classList.remove('recording'); dictateBtn.textContent = '🎤 Dictate'; document.getElementById('charCount').textContent = contentTextarea.value.length; };
-            recognition.onresult = (event) => {
-                let interimTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) finalTranscript += transcript;
-                    else interimTranscript += transcript;
-                }
-                contentTextarea.value = finalTranscript + interimTranscript;
-                document.getElementById('charCount').textContent = contentTextarea.value.length;
-            };
-            recognition.onerror = () => { isRecording = false; dictateBtn.classList.remove('recording'); dictateBtn.textContent = '🎤 Dictate'; };
-        }
-    }
+    // Voice input now via Claudia widget
     </script>
 </body>
 </html>

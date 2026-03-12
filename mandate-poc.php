@@ -27,7 +27,13 @@ extract($navVars);
 $currentPage = 'mandate';
 $pageTitle   = 'My Mandate | The People\'s Branch';
 
-$headLinks = ''; // mandate-chat.php loads its own assets
+$claudiaConfig = [
+    'context' => 'mandate',
+    'mode_default' => 'mandate',
+    'mode_available' => ['chat', 'talk', 'mandate'],
+    'capabilities' => ['auth', 'mandates'],
+    'events' => false,
+];
 
 // Page-specific styles
 $pageStyles = <<<'CSS'
@@ -1124,13 +1130,13 @@ require __DIR__ . '/includes/nav.php';
         </div>
     </div>
 
-    <!-- Mandate Chat -->
-    <?php
-    $mandateChatConfig = [
-        'placeholder' => "What do you want your reps to do?",
-    ];
-    require __DIR__ . '/includes/mandate-chat.php';
-    ?>
+    <!-- Mandate refinement now via Claudia widget (Mandate mode) -->
+    <div style="text-align:center; padding: 20px; color: #b0b0b0;">
+        <p style="font-size: 1rem; color: #90caf9;">Use Claudia to refine your mandate</p>
+        <p style="font-size: 0.85rem; color: #b0b0b0; margin-top: 6px;">
+            Click the gold <strong style="color:#d4af37;">C</strong> bubble &mdash; Claudia starts in <strong>Mandate</strong> mode on this page.
+        </p>
+    </div>
 
     <!-- Public Mandate Summary -->
     <div class="mandate-summary" id="mandateSummary">
@@ -1452,12 +1458,6 @@ require __DIR__ . '/includes/nav.php';
 
 </div>
 <?php endif; ?>
-
-<?php
-require __DIR__ . '/includes/c-widget.php';
-?>
-
-<!-- Voice commands are now handled by MandateChat.handleCommand() in mandate-chat.js -->
 
 <?php
 require __DIR__ . '/includes/footer.php';

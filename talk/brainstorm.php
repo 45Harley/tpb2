@@ -425,51 +425,7 @@ try {
             sessionStorage.setItem('tpb_session', sessionId);
         }
 
-        // Speech Recognition
-        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        var recognition = null;
-
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = true;
-            recognition.lang = 'en-US';
-
-            recognition.onstart = function() {
-                micBtn.classList.add('listening');
-                micBtn.textContent = '⏺';
-            };
-
-            recognition.onend = function() {
-                micBtn.classList.remove('listening');
-                micBtn.textContent = '🎤';
-            };
-
-            recognition.onresult = function(event) {
-                var transcript = '';
-                for (var i = event.resultIndex; i < event.results.length; i++) {
-                    transcript += event.results[i][0].transcript;
-                }
-                chatInput.value = transcript;
-                autoResize();
-            };
-
-            recognition.onerror = function(event) {
-                console.error('Speech error:', event.error);
-                micBtn.classList.remove('listening');
-                micBtn.textContent = '🎤';
-            };
-
-            micBtn.addEventListener('click', function() {
-                if (micBtn.classList.contains('listening')) {
-                    recognition.stop();
-                } else {
-                    recognition.start();
-                }
-            });
-        } else {
-            micBtn.style.display = 'none';
-        }
+        // Voice input now via Claudia widget
 
         // Auto-resize textarea
         function autoResize() {

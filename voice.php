@@ -395,7 +395,7 @@ require 'includes/nav.php';
         
         <!-- Submit Thought Tab -->
         <div class="tab-content" id="tab-submit">
-            <?php require __DIR__ . '/includes/thought-form.php'; ?>
+            <!-- Thought submission now via Claudia widget -->
         </div>
         
         <!-- My Thoughts Tab -->

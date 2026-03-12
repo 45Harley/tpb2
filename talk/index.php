@@ -54,10 +54,6 @@ $secondaryNav = [
     ['label' => 'Help',    'url' => '/talk/help.php'],
 ];
 
-// Pre-load talk-stream CSS in <head> via header.php
-$_tsCssVer = filemtime(__DIR__ . '/../assets/talk-stream.css');
-$headLinks = '    <link rel="stylesheet" href="/assets/talk-stream.css?v=' . $_tsCssVer . '">' . "\n";
-
 $pageStyles = <<<'CSS'
         body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -131,6 +127,14 @@ $pageStyles = <<<'CSS'
         }
 CSS;
 
+$claudiaConfig = [
+    'context' => 'talk',
+    'mode_default' => 'talk',
+    'mode_available' => ['chat', 'talk'],
+    'capabilities' => ['auth', 'ideas'],
+    'events' => false,
+];
+
 require __DIR__ . '/../includes/header.php';
 require __DIR__ . '/../includes/nav.php';
 ?>
@@ -170,21 +174,13 @@ if ($geoTownId || $geoStateId): ?>
     </div>
 <?php endif; ?>
 
-<?php
-// ── Talk Stream Include ──────────────────────────────────────────────────
-$talkStreamConfig = [
-    'show_group_selector' => !($geoStateId || $geoTownId),
-    'show_filters'        => true,
-    'show_categories'     => true,
-    'show_ai_toggle'      => true,
-    'show_mic'            => true,
-    'show_admin_tools'    => 'auto',
-    'geo_state_id'        => $geoStateId,
-    'geo_town_id'         => $geoTownId,
-    'limit'               => 50,
-];
-require __DIR__ . '/../includes/talk-stream.php';
-?>
+<!-- Talk functionality now provided by Claudia widget (bottom-right) -->
+<div style="text-align:center; padding: 40px 20px; color: #b0b0b0;">
+    <p style="font-size: 1.1rem; color: #90caf9;">Use Claudia to share your ideas</p>
+    <p style="font-size: 0.85rem; color: #888; margin-top: 8px;">
+        Click the gold <strong style="color:#d4af37;">C</strong> bubble and switch to <strong>Talk</strong> mode to brainstorm, pin ideas, and save them.
+    </p>
+</div>
 
     <script>
     // Browser detection for status bar
@@ -198,27 +194,6 @@ require __DIR__ . '/../includes/talk-stream.php';
         var el = document.getElementById('browserName');
         if (el) el.textContent = name;
     })();
-
-    // URL ?group=NNN param → pre-select group in stream
-    (function() {
-        var urlGroup = new URLSearchParams(window.location.search).get('group');
-        if (urlGroup) {
-            localStorage.setItem('tpb_talk_context', urlGroup);
-            // Find the TalkStream instance and switch to this group
-            var prefix = '<?= $_tsPrefix ?? 'ts0' ?>';
-            var ts = TalkStream._instances[prefix];
-            if (ts) ts.setGroup(parseInt(urlGroup));
-        }
-        // Geo params override group context
-        var geoState = <?= $geoStateId ? $geoStateId : 'null' ?>;
-        var geoTown = <?= $geoTownId ? $geoTownId : 'null' ?>;
-        if (geoState || geoTown) {
-            localStorage.removeItem('tpb_talk_context');
-        }
-    })();
     </script>
-
-<?php
-?>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

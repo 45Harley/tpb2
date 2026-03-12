@@ -1,20 +1,43 @@
 <?php
 /**
- * Claudia Pop-Out — Full-page conversational assistant
- * Opened via window.open() from the widget's pop-out button.
+ * Claudia Unified Widget — Platform-Wide Conversational Assistant
+ * ===============================================================
+ * One widget, one voice engine, one pipe. Replaces c-widget.php.
+ *
+ * Include on any page via footer.php.
+ * Requires: $pdo in scope (from host page).
+ * Optional: $claudiaConfig array set before include.
+ *
+ * Design: docs/plans/2026-03-11-claudia-unified-design.md
  */
-$config = require 'config.php';
-try {
-    $pdo = new PDO(
-        "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}",
-        $config['username'], $config['password'],
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
-    );
-} catch (PDOException $e) { $pdo = null; }
 
-// Check site-wide toggle
+// Auto-derive context from $currentPage + request URI
+if (!isset($claudiaConfig)) {
+    $autoContext = isset($currentPage) ? $currentPage : 'general';
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    $path = parse_url($uri, PHP_URL_PATH) ?? '';
+    $basename = basename($path, '.php');
+
+    if ($basename && $basename !== 'index' && $basename !== $autoContext) {
+        $autoContext .= '-' . preg_replace('/[^a-z0-9-]/', '', strtolower($basename));
+    }
+
+    $claudiaConfig = [
+        'context' => $autoContext,
+        'mode_default' => 'chat',
+        'mode_available' => ['chat'],
+        'capabilities' => ['auth'],
+        'events' => false,
+    ];
+}
+
+// Ensure mode fields exist
+$claudiaConfig['mode_default'] = $claudiaConfig['mode_default'] ?? 'chat';
+$claudiaConfig['mode_available'] = $claudiaConfig['mode_available'] ?? ['chat'];
+
+// Site-wide toggle check
 $claudiaWidgetEnabled = '0';
-if ($pdo) {
+if (isset($pdo) && $pdo) {
     try {
         $stmt = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = ?");
         $stmt->execute(['claudia_widget_enabled']);
@@ -23,85 +46,49 @@ if ($pdo) {
         $claudiaWidgetEnabled = '0';
     }
 }
-if ($claudiaWidgetEnabled !== '1') {
-    echo '<html><body style="background:#0f172a;color:#94a3b8;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><p>Claudia is currently disabled.</p></body></html>';
-    exit;
+if ($claudiaWidgetEnabled !== '1') return;
+
+// Get user
+if (!isset($dbUser)) {
+    require_once __DIR__ . '/get-user.php';
+    $dbUser = getUser($pdo);
 }
 
-require_once __DIR__ . '/includes/get-user.php';
-$dbUser = $pdo ? getUser($pdo) : null;
+// Per-user toggle (logged-in users)
+if ($dbUser && isset($dbUser['claudia_enabled']) && $dbUser['claudia_enabled'] == 0) return;
 
-// Build user data for JS
+// Build user context for JS
 $claudiaUser = null;
 if ($dbUser) {
     $claudiaUser = [
-        'userId' => (int)$dbUser['user_id'],
-        'firstName' => $dbUser['first_name'] ?? null,
-        'stateAbbr' => $dbUser['state_abbrev'] ?? null,
-        'townName' => $dbUser['town_name'] ?? null,
-        'identityLevel' => (int)($dbUser['identity_level_id'] ?? 1),
-        'isReturning' => true,
+        'user_id' => (int)$dbUser['user_id'],
+        'display_name' => $dbUser['display_name'] ?? $dbUser['first_name'] ?? 'Friend',
+        'town_name' => $dbUser['town_name'] ?? null,
+        'state_name' => $dbUser['state_name'] ?? null,
+        'state_abbrev' => $dbUser['state_abbrev'] ?? null,
+        'district' => $dbUser['us_congress_district'] ?? null,
+        'civic_points' => (int)($dbUser['civic_points'] ?? 0),
+        'identity_level' => (int)($dbUser['identity_level_id'] ?? 1),
     ];
 }
 
-// Pop-out config — widget renders inline at full page size
-$claudiaConfig = [
-    'context' => 'popout',
-    'mode_default' => 'chat',
-    'mode_available' => ['chat', 'talk', 'mandate'],
-    'capabilities' => ['auth', 'onboarding', 'mandates', 'profile'],
-    'events' => false,
-    'isPopout' => true,
-];
-
-// Build user context matching claudia-widget.php format
-$claudiaUserJs = $dbUser ? [
-    'user_id' => (int)$dbUser['user_id'],
-    'display_name' => $dbUser['display_name'] ?? $dbUser['first_name'] ?? 'Friend',
-    'town_name' => $dbUser['town_name'] ?? null,
-    'state_name' => $dbUser['state_name'] ?? null,
-    'district' => $dbUser['us_congress_district'] ?? null,
-    'civic_points' => (int)($dbUser['civic_points'] ?? 0),
-    'identity_level' => (int)($dbUser['identity_level_id'] ?? 1),
-] : null;
-
-$cssVer = filemtime(__DIR__ . '/assets/claudia/claudia-unified.css') ?: 0;
-$jsVer = filemtime(__DIR__ . '/assets/claudia/claudia-unified.js') ?: 0;
+// CSS + JS versioning
+$_cuCssPath = __DIR__ . '/../assets/claudia/claudia-unified.css';
+$_cuJsPath = __DIR__ . '/../assets/claudia/claudia-unified.js';
+$cssVer = file_exists($_cuCssPath) ? filemtime($_cuCssPath) : 0;
+$jsVer = file_exists($_cuJsPath) ? filemtime($_cuJsPath) : 0;
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claudia — Your Civic Guide</title>
-    <link rel="stylesheet" href="/assets/claudia/claudia-unified.css?v=<?= $cssVer ?>">
-    <style>
-        body { margin: 0; background: #0d0d1a; overflow: hidden; }
-        /* Popout: widget fills the window, no bubble */
-        .claudia-widget {
-            position: fixed !important;
-            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-            width: 100% !important; height: 100% !important;
-            border-radius: 0 !important;
-            border: none !important;
-        }
-        .claudia-bubble { display: none !important; }
-        .claudia-resize-handle { display: none !important; }
-        .claudia-popout-btn { display: none !important; }
-        .claudia-minimize-btn { display: none !important; }
-    </style>
-</head>
-<body>
+<link rel="stylesheet" href="/assets/claudia/claudia-unified.css?v=<?= $cssVer ?>">
 
-<!-- Claudia Widget Shell (same structure as claudia-widget.php) -->
-<div id="claudia-widget" class="claudia-widget" style="display:flex;">
+<!-- Claudia Unified Widget -->
+<div id="claudia-widget" class="claudia-widget" style="display:none;">
     <div class="claudia-header" id="claudia-drag-handle">
         <span class="claudia-title">Claudia</span>
         <div class="claudia-header-controls">
             <button class="claudia-mode-btn" id="claudia-mode-btn" title="Chat mode">Chat</button>
             <button class="claudia-hdr-btn" id="claudia-settings-btn" title="Settings">&#9881;</button>
-            <button class="claudia-hdr-btn claudia-popout-btn" id="claudia-popout-btn" title="Pop out">&#8599;</button>
-            <button class="claudia-hdr-btn claudia-minimize-btn" id="claudia-minimize-btn" title="Minimize">&minus;</button>
+            <button class="claudia-hdr-btn" id="claudia-popout-btn" title="Pop out">&#8599;</button>
+            <button class="claudia-hdr-btn" id="claudia-minimize-btn" title="Minimize">&minus;</button>
         </div>
     </div>
 
@@ -157,7 +144,7 @@ $jsVer = filemtime(__DIR__ . '/assets/claudia/claudia-unified.js') ?: 0;
 
     <div class="claudia-body">
         <div class="claudia-voice-bar" id="claudia-voice-bar" style="display:none;">
-            <span class="claudia-voice-state" id="claudia-voice-state">IDLE</span>
+            <span class="claudia-voice-state idle" id="claudia-voice-state">IDLE</span>
         </div>
 
         <div class="claudia-input-area">
@@ -171,17 +158,17 @@ $jsVer = filemtime(__DIR__ . '/assets/claudia/claudia-unified.js') ?: 0;
 
         <div class="claudia-messages" id="claudia-messages"></div>
     </div>
+
+    <div class="claudia-resize-handle" id="claudia-resize-handle"></div>
 </div>
 
-<!-- No bubble needed in popout -->
-<div id="claudia-bubble" class="claudia-bubble" style="display:none;">
+<!-- Claudia Bubble (minimized state) -->
+<div id="claudia-bubble" class="claudia-bubble">
     <span class="claudia-bubble-icon">C</span>
 </div>
 
 <script>
 window.claudiaConfig = <?= json_encode($claudiaConfig) ?>;
-window.claudiaUser = <?= json_encode($claudiaUserJs) ?>;
+window.claudiaUser = <?= json_encode($claudiaUser) ?>;
 </script>
 <script src="/assets/claudia/claudia-unified.js?v=<?= $jsVer ?>"></script>
-</body>
-</html>
