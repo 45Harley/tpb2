@@ -524,6 +524,12 @@
         var content = inputEl.value.trim();
         if (!content) return;
 
+        // Check for local commands before sending to API
+        if (parseVoiceCommand(content.toLowerCase().trim())) {
+            inputEl.value = '';
+            return;
+        }
+
         addMessage('user', content);
         inputEl.value = '';
         showTyping();
