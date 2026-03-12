@@ -8,19 +8,35 @@ TPB's civic content follows a two-level derivative model. Raw civic input enters
 
 ## First Derivatives (Raw Civic Input)
 
-All raw civic content entering the system. Same fundamental shape — content with jurisdiction, tags, votes, and a place in the geographic hierarchy (town → state → USA). They differ only by **source** (user vs AI) and **tagger** (user vs AI).
+Two separate systems feed civic content into TPB:
+
+### 1. User Civic Input (Ideas + Thoughts → unified `idea_log`)
+
+User-generated civic content. Ideas and Thoughts share the same fundamental shape — content with jurisdiction, tags, votes, and geographic hierarchy (town → state → USA).
 
 | Type | Source | Tagger | Table | Input Path |
 |------|--------|--------|-------|------------|
 | **Ideas** | User (via Talk) | AI classification + user | `idea_log` | `/talk/`, Claudia widget |
 | **Thoughts** | User (town/state/national pages) | User-selected category | `user_thoughts` | Town pages, `voice.php`, `thought.php` |
-| **Threats** | AI-scraped from trusted outside sources | AI auto-tagged | `threats` | `collect-threats-local.bat` daily pipeline |
 
-### Jurisdiction Tagging Rule
-If the user sets jurisdiction, use that. Otherwise default from user context (their town, their state). Threats get jurisdiction from AI analysis of the content.
+**Jurisdiction tagging rule**: If the user sets jurisdiction, use that. Otherwise default from user context (their town, their state).
 
-### Table Unification Path
-`user_thoughts` is conceptually a subset of `idea_log`. The only unique fields thoughts have are jurisdiction/branch flags (`jurisdiction_level`, `is_legislative`, `is_executive`, `is_judicial`). Adding those columns to `idea_log` would allow merging into one table. The `source` column already distinguishes origin (user, voice, clerk, threat-feed, etc.).
+**Table unification**: `user_thoughts` is conceptually a subset of `idea_log`. The only unique fields thoughts have are jurisdiction/branch flags (`jurisdiction_level`, `is_legislative`, `is_executive`, `is_judicial`). Adding those columns to `idea_log` would allow merging into one table. The `source` column already distinguishes origin (user, voice, clerk, etc.).
+
+### 2. Threat System (separate — `executive_threats` + related tables)
+
+**Threats are a separate system. No convergence with idea_log.**
+
+AI-scraped from trusted outside sources, AI auto-tagged, with domain-specific fields (severity_score, official_id, source_url, action_script, threat_type). Threats feed polls — that's their pipeline.
+
+| Table | Purpose |
+|-------|---------|
+| `executive_threats` | Core threat records (title, description, severity, branch, category, source_url, official_id) |
+| `threat_tags` + `threat_tag_map` | Normalized tag system |
+| `threat_ratings` | User ratings on threats |
+| `threat_responses` | User responses to threats |
+
+**Pipeline**: `collect-threats-local.bat` → AI scrape + classify → INSERT threats → auto-generate polls for high-severity threats.
 
 ## Second Derivatives (Distilled Civic Output)
 
@@ -36,13 +52,14 @@ Produced from first derivatives through the deliberation pipeline (scatter → g
 ## The Pipeline
 
 ```
-First Derivatives          Pipeline                    Second Derivatives
-─────────────────          ────────                    ──────────────────
-Ideas (user)      ─┐
-                    ├──→  Scatter → Gather → Refine → Crystallize  ──→  Mandates
-Thoughts (user)   ─┤                                                     Ballot Initiatives
-                    ├──→  AI classify → Tag → Geo-stamp             ──→  Polls
-Threats (AI)      ─┘                                                     Digests
+User Input Pipeline:
+  Ideas (user)      ─┐
+                      ├──→  Scatter → Gather → Refine → Crystallize  ──→  Mandates
+  Thoughts (user)   ─┘                                                     Ballot Initiatives
+                                                                            Digests
+
+Threat Pipeline (separate system):
+  Threats (AI)      ──→  AI scrape → Classify → Tag → Severity score  ──→  Polls
 ```
 
 ## Stream Display Pattern

@@ -1113,8 +1113,20 @@ require __DIR__ . '/../../includes/nav.php';
     </div>
 </section>
 
-<!-- GET INVOLVED -->
-<section id="voice">
+<!-- WHAT CONNECTICUT IS THINKING -->
+<section class="voice" id="voice">
+    <h2>What Connecticut Is Thinking</h2>
+    <p class="section-intro">
+        Thoughts from across the state. Share yours via Claudia or <a href="/talk/?state=7" class="external-link">Talk</a>.
+    </p>
+
+    <div class="thoughts-container">
+        <h3 style="color: #d4af37;">💬 What Neighbors Are Thinking</h3>
+        <div id="thoughtsList" class="thoughts-list">
+            <p style="color: #888;">Loading thoughts...</p>
+        </div>
+    </div>
+
     <h3>Get Involved</h3>
     <ul style="color: #ccc; line-height: 1.8;">
         <li><a href="/talk/?state=7" class="external-link">Join the conversation on Talk</a> — share ideas for Connecticut</li>
@@ -1129,8 +1141,67 @@ require __DIR__ . '/../../includes/nav.php';
     <p>Built: February 2026 | Task: <a href="/volunteer/task.php?key=build-state-ct" style="color: #888;">build-state-ct</a></p>
 </div>
 
-<?php
-?>
+<script>
+var sessionId = '<?= htmlspecialchars($_COOKIE['tpb_civic_session'] ?? '') ?>';
+var stateId = <?= $stateId ?>;
+
+async function loadThoughts() {
+    try {
+        const response = await fetch('/api/get-thoughts.php?state_id=' + stateId + '&limit=10');
+        const data = await response.json();
+        const container = document.getElementById('thoughtsList');
+
+        if (!data.thoughts || data.thoughts.length === 0) {
+            container.innerHTML = '<div class="empty-state" style="text-align:center;padding:30px;color:#666;"><div style="font-size:2em;margin-bottom:10px;">💭</div><p>Be the first to share a thought about Connecticut!</p></div>';
+            return;
+        }
+
+        container.innerHTML = data.thoughts.map(function(t) {
+            var displayName = t.display_name || 'A neighbor';
+            var timeAgo = t.time_ago || '';
+            return '<div class="thought-card">' +
+                '<div class="thought-content">' + escapeHtml(t.content) + '</div>' +
+                '<div class="thought-meta">' +
+                    '<span>' + displayName + ' · ' + timeAgo + '</span>' +
+                    '<div class="thought-votes">' +
+                        '<button class="vote-btn agree" data-id="' + t.thought_id + '" data-vote="1">👍 <span class="count">' + (t.agree_count || 0) + '</span></button>' +
+                        '<button class="vote-btn disagree" data-id="' + t.thought_id + '" data-vote="-1">👎 <span class="count">' + (t.disagree_count || 0) + '</span></button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        document.querySelectorAll('.vote-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                voteThought(this.dataset.id, this.dataset.vote);
+            });
+        });
+    } catch (err) {
+        document.getElementById('thoughtsList').innerHTML = '<p style="color: #666; text-align: center;">Could not load thoughts</p>';
+    }
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function voteThought(thoughtId, vote) {
+    try {
+        await fetch('/api/vote-thought.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ thought_id: thoughtId, vote: vote, session_id: sessionId })
+        });
+        loadThoughts();
+    } catch (err) {
+        console.error('Vote failed');
+    }
+}
+
+loadThoughts();
+</script>
 
 <?php require __DIR__ . '/../../includes/footer.php'; ?>
 
