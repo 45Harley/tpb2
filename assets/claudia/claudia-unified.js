@@ -978,10 +978,10 @@
             return true;
         }
 
-        // Clear all
+        // Clear
         if (/^clear all$|^start over$/.test(t)) { clearConversation(); clearScratchpad(); return true; }
-
-        // Clear prompt
+        if (/^clear scratchpad$|^clear pins?$|^clear ideas?$/.test(t)) { clearScratchpad(); return true; }
+        if (/^clear chat$|^clear conversation$/.test(t)) { clearConversation(); return true; }
         if (/^clear prompt$|^clear input$/.test(t)) { inputEl.value = ''; return true; }
 
         // Scratchpad toggle
