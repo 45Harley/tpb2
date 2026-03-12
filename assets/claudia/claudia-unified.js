@@ -579,8 +579,15 @@
         state.messages.push(msg);
         renderMessage(msg);
 
-        // Auto-pin mandates from assistant responses
-        if (msg.role === 'assistant' && state.mode === 'mandate') {
+        // Auto-pin: user ideas in talk mode, mandates in mandate mode
+        if (msg.role === 'user' && state.mode === 'talk') {
+            var isDupe = state.scratchpadItems.some(function(item) {
+                return item.content === msg.content;
+            });
+            if (!isDupe && msg.content.length > 5) {
+                pinMessage(msg.content);
+            }
+        } else if (msg.role === 'assistant' && state.mode === 'mandate') {
             var mandateRegex = /(?:^|\n)\s*(?:\*\*)?Mandate:\s*(?:\*\*)?\s*(.+?)(?:\n|$)/gi;
             var match;
             while ((match = mandateRegex.exec(msg.content)) !== null) {
@@ -617,8 +624,8 @@
         timeDiv.textContent = (h % 12 || 12) + ':' + (m < 10 ? '0' : '') + m + ' ' + (h >= 12 ? 'PM' : 'AM');
         div.appendChild(timeDiv);
 
-        // Pin button for assistant messages
-        if (msg.role === 'assistant') {
+        // Pin button for user and assistant messages
+        if (msg.role === 'assistant' || msg.role === 'user') {
             var pinBtn = document.createElement('button');
             pinBtn.className = 'claudia-msg-pin';
             pinBtn.textContent = '\u{1F4CC} Pin';
