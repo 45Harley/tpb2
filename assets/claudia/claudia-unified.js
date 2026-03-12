@@ -648,6 +648,8 @@
         // New session
         state.sessionId = crypto.randomUUID();
         sessionStorage.setItem('claudia_session', state.sessionId);
+        // Re-pick voice (Chrome can lose voice reference after cancel)
+        pickVoice();
         syncToPopout();
         settingsMenu.style.display = 'none';
     }
