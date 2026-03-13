@@ -18,6 +18,7 @@
         audioMode: localStorage.getItem('claudia_audio_mode') || 'speakers',
         voiceEnabled: localStorage.getItem('claudia_voice_mode') !== 'off',
         webSearch: localStorage.getItem('claudia_websearch') === '1',
+        inputMode: localStorage.getItem('claudia_input_mode') || 'chat',
         scratchpadOpen: localStorage.getItem('claudia_scratchpad') !== '0',
         scratchpadItems: JSON.parse(localStorage.getItem('claudia_scratchpad_items') || '[]'),
         messages: [],
@@ -163,6 +164,14 @@
             stopMic();
             closeWidget();
         });
+
+        // Input mode tabs (Chat / Post Idea)
+        document.querySelectorAll('.claudia-mode-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                setInputMode(tab.dataset.inputMode);
+            });
+        });
+        setInputMode(state.inputMode);
 
         // Send message
         sendBtn.addEventListener('click', function() { sendMessage(); });
@@ -519,6 +528,52 @@
         }
     }
 
+    // ── Input Mode ────────────────────────────────────────────
+    function setInputMode(mode) {
+        state.inputMode = mode;
+        localStorage.setItem('claudia_input_mode', mode);
+        document.querySelectorAll('.claudia-mode-tab').forEach(function(tab) {
+            tab.classList.toggle('active', tab.dataset.inputMode === mode);
+        });
+        if (mode === 'post') {
+            inputEl.placeholder = 'Type your idea and hit Send...';
+            sendBtn.textContent = 'Post';
+            sendBtn.style.background = '#4caf50';
+        } else {
+            inputEl.placeholder = 'Ask Claudia...';
+            sendBtn.textContent = 'Send';
+            sendBtn.style.background = '#d4af37';
+        }
+    }
+
+    function postIdea(content) {
+        fetch('/talk/api.php?action=save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                content: content,
+                category: 'idea',
+                source: 'claudia-widget',
+                session_id: state.sessionId
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                addMessage('system', 'Idea posted.');
+                // Refresh talk stream if present on page
+                if (window.talkApp && typeof window.talkApp.loadIdeas === 'function') {
+                    window.talkApp.loadIdeas();
+                }
+            } else {
+                addMessage('system', 'Could not post: ' + (data.error || 'unknown error'));
+            }
+        })
+        .catch(function() {
+            addMessage('system', 'Connection error posting idea.');
+        });
+    }
+
     // ── Chat ────────────────────────────────────────────────
     function sendMessage() {
         var content = inputEl.value.trim();
@@ -527,6 +582,13 @@
         // Check for local commands before sending to API
         if (parseVoiceCommand(content.toLowerCase().trim())) {
             inputEl.value = '';
+            return;
+        }
+
+        // Post mode: write directly to DB, skip Claudia
+        if (state.inputMode === 'post') {
+            inputEl.value = '';
+            postIdea(content);
             return;
         }
 

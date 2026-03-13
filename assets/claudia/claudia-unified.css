@@ -200,6 +200,35 @@
     50% { box-shadow: 0 0 0 8px rgba(244, 67, 54, 0); }
 }
 
+/* ── Input Mode Toggle (Chat / Post Idea) ────────────────────── */
+.claudia-input-mode {
+    display: flex;
+    padding: 4px 14px 0;
+    gap: 0;
+    flex-shrink: 0;
+}
+.claudia-mode-tab {
+    flex: 1;
+    padding: 6px 0;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #888;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+.claudia-mode-tab:hover { color: #ccc; }
+.claudia-mode-tab.active {
+    color: #d4af37;
+    border-bottom-color: #d4af37;
+}
+.claudia-mode-tab[data-input-mode="post"].active {
+    color: #4caf50;
+    border-bottom-color: #4caf50;
+}
+
 /* ── Input Area ──────────────────────────────────────────────── */
 .claudia-input-area {
     display: flex;

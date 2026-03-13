@@ -147,6 +147,10 @@ $jsVer = file_exists($_cuJsPath) ? filemtime($_cuJsPath) : 0;
             <span class="claudia-voice-state idle" id="claudia-voice-state">IDLE</span>
         </div>
 
+        <div class="claudia-input-mode" id="claudia-input-mode">
+            <button class="claudia-mode-tab active" data-input-mode="chat" id="claudia-tab-chat">Chat</button>
+            <button class="claudia-mode-tab" data-input-mode="post" id="claudia-tab-post">Post Idea</button>
+        </div>
         <div class="claudia-input-area">
             <button class="claudia-mic-btn" id="claudia-mic-btn" title="Voice input">&#127908;</button>
             <input type="text" class="claudia-text-input" id="claudia-text-input"
