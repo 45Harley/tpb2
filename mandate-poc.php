@@ -516,6 +516,40 @@ $pageStyles = <<<'CSS'
     color: #b0b0b0;
 }
 
+/* ── Vote buttons ────────────────────────────────────────── */
+.mandate-vote-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 4px;
+}
+.mandate-vote-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #b0b0b0;
+    font-size: 0.8rem;
+    padding: 2px 10px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.mandate-vote-btn:hover {
+    border-color: rgba(212,175,55,0.4);
+    color: #fff;
+}
+.mandate-vote-btn.vote-active.agree {
+    background: rgba(76,175,80,0.2);
+    border-color: #4caf50;
+    color: #81c784;
+}
+.mandate-vote-btn.vote-active.disagree {
+    background: rgba(229,57,53,0.2);
+    border-color: #e53935;
+    color: #e57373;
+}
+.vote-count {
+    font-weight: 600;
+}
+
 /* ── Level Tabs ──────────────────────────────────────────── */
 .level-tabs {
     display: flex;
@@ -1266,32 +1300,32 @@ require __DIR__ . '/includes/nav.php';
         var userId = <?= json_encode($dbUser ? (int)$dbUser['user_id'] : 0) ?>;
 
         function buildUrl(level) {
+            var url;
             if (level === 'my-ideas') {
-                return '/api/mandate-aggregate.php?level=my-ideas&user_id=' + encodeURIComponent(userId);
+                url = '/api/mandate-aggregate.php?level=my-ideas&user_id=' + encodeURIComponent(userId);
+            } else if (level === 'mine') {
+                url = '/api/mandate-aggregate.php?level=mine&user_id=' + encodeURIComponent(userId);
+            } else if (level === 'all') {
+                url = '/api/mandate-aggregate.php?level=all';
+                if (userDistrict) url += '&district=' + encodeURIComponent(userDistrict);
+                if (userStateId) url += '&state_id=' + encodeURIComponent(userStateId);
+                if (userTownId) url += '&town_id=' + encodeURIComponent(userTownId);
+            } else {
+                url = '/api/mandate-aggregate.php?level=' + encodeURIComponent(level);
+                switch (level) {
+                    case 'federal':
+                        if (userDistrict) url += '&district=' + encodeURIComponent(userDistrict);
+                        break;
+                    case 'state':
+                        if (userStateId) url += '&state_id=' + encodeURIComponent(userStateId);
+                        break;
+                    case 'town':
+                        if (userTownId) url += '&town_id=' + encodeURIComponent(userTownId);
+                        break;
+                }
             }
-            if (level === 'mine') {
-                return '/api/mandate-aggregate.php?level=mine&user_id=' + encodeURIComponent(userId);
-            }
-            if (level === 'all') {
-                var base = '/api/mandate-aggregate.php?level=all';
-                if (userDistrict) base += '&district=' + encodeURIComponent(userDistrict);
-                if (userStateId) base += '&state_id=' + encodeURIComponent(userStateId);
-                if (userTownId) base += '&town_id=' + encodeURIComponent(userTownId);
-                return base;
-            }
-            var base = '/api/mandate-aggregate.php?level=' + encodeURIComponent(level);
-            switch (level) {
-                case 'federal':
-                    if (userDistrict) base += '&district=' + encodeURIComponent(userDistrict);
-                    break;
-                case 'state':
-                    if (userStateId) base += '&state_id=' + encodeURIComponent(userStateId);
-                    break;
-                case 'town':
-                    if (userTownId) base += '&town_id=' + encodeURIComponent(userTownId);
-                    break;
-            }
-            return base;
+            if (userId) url += '&viewer_user_id=' + encodeURIComponent(userId);
+            return url;
         }
 
         function buildTitle(level) {
@@ -1354,6 +1388,15 @@ require __DIR__ . '/includes/nav.php';
                                 + '<button class="mandate-delete-btn" data-id="' + item.id + '" title="Delete">&times;</button>'
                                 + '</span>';
                         }
+                        // Vote buttons + count
+                        var agreeActive = item.my_vote === 'agree' ? ' vote-active' : '';
+                        var disagreeActive = item.my_vote === 'disagree' ? ' vote-active' : '';
+                        html += '<div class="mandate-vote-row">'
+                            + '<button class="mandate-vote-btn agree' + agreeActive + '" data-id="' + item.id + '" data-type="agree" title="Agree">'
+                            + '&#x1F44D; <span class="vote-count">' + (item.agree_count || 0) + '</span></button>'
+                            + '<button class="mandate-vote-btn disagree' + disagreeActive + '" data-id="' + item.id + '" data-type="disagree" title="Disagree">'
+                            + '&#x1F44E; <span class="vote-count">' + (item.disagree_count || 0) + '</span></button>'
+                            + '</div>';
                         html += '<div class="mandate-top-link"><a href="#top">&uarr; Top</a></div>';
                         html += '</li>';
                     });
@@ -1442,6 +1485,32 @@ require __DIR__ . '/includes/nav.php';
                         loadSummary(currentLevel);
                     } else {
                         alert(data.error || 'Failed to delete');
+                    }
+                });
+            }
+
+            // Vote handler
+            var voteBtn = e.target.closest('.mandate-vote-btn');
+            if (voteBtn) {
+                if (!userId) { alert('Log in to vote'); return; }
+                var ideaId = parseInt(voteBtn.dataset.id);
+                var voteType = voteBtn.dataset.type;
+                fetch('/talk/api.php?action=vote', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({idea_id: ideaId, vote_type: voteType})
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) {
+                        // Update counts and active state inline
+                        var row = voteBtn.closest('.mandate-vote-row');
+                        var agreeBtn = row.querySelector('.agree');
+                        var disagreeBtn = row.querySelector('.disagree');
+                        agreeBtn.querySelector('.vote-count').textContent = data.agree_count;
+                        disagreeBtn.querySelector('.vote-count').textContent = data.disagree_count;
+                        agreeBtn.classList.toggle('vote-active', data.user_vote === 'agree');
+                        disagreeBtn.classList.toggle('vote-active', data.user_vote === 'disagree');
+                    } else {
+                        alert(data.error || 'Vote failed');
                     }
                 });
             }

@@ -84,6 +84,8 @@ switch ($level) {
 }
 
 $config = require __DIR__ . '/../config.php';
+$viewerUserId = $_GET['viewer_user_id'] ?? null;
+if ($viewerUserId !== null) $viewerUserId = (int)$viewerUserId;
 
 try {
     $pdo = new PDO(
@@ -123,7 +125,7 @@ try {
         $geoFilter = '(' . implode(' OR ', $whereParts) . ')';
 
         $sql = "
-            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.created_at
+            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.deleted_at IS NULL AND u.deleted_at IS NULL
@@ -137,12 +139,14 @@ try {
         foreach ($stmt->fetchAll() as $row) {
             $levelLabel = str_replace('mandate-', '', $row['category']);
             $items[] = [
-                'id'         => (int)$row['id'],
-                'user_id'    => (int)$row['user_id'],
-                'content'    => $row['content'],
-                'tags'       => $row['tags'],
-                'level'      => ucfirst($levelLabel),
-                'created_at' => $row['created_at'],
+                'id'             => (int)$row['id'],
+                'user_id'        => (int)$row['user_id'],
+                'content'        => $row['content'],
+                'tags'           => $row['tags'],
+                'level'          => ucfirst($levelLabel),
+                'agree_count'    => (int)$row['agree_count'],
+                'disagree_count' => (int)$row['disagree_count'],
+                'created_at'     => $row['created_at'],
             ];
         }
 
@@ -162,7 +166,7 @@ try {
     } else if ($level === 'my-ideas') {
         // My ideas — category='idea' for this user
         $sql = "
-            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.created_at
+            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i
             WHERE i.user_id = ? AND i.deleted_at IS NULL
               AND i.category = 'idea'
@@ -173,12 +177,14 @@ try {
         $items = [];
         foreach ($stmt->fetchAll() as $row) {
             $items[] = [
-                'id'         => (int)$row['id'],
-                'user_id'    => (int)$row['user_id'],
-                'content'    => $row['content'],
-                'tags'       => $row['tags'],
-                'level'      => 'Idea',
-                'created_at' => $row['created_at'],
+                'id'             => (int)$row['id'],
+                'user_id'        => (int)$row['user_id'],
+                'content'        => $row['content'],
+                'tags'           => $row['tags'],
+                'level'          => 'Idea',
+                'agree_count'    => (int)$row['agree_count'],
+                'disagree_count' => (int)$row['disagree_count'],
+                'created_at'     => $row['created_at'],
             ];
         }
         $contributorCount = count($items) > 0 ? 1 : 0;
@@ -186,7 +192,7 @@ try {
     } else if ($level === 'mine') {
         // My mandates — all categories for this user
         $sql = "
-            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.created_at
+            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i
             WHERE i.user_id = ? AND i.deleted_at IS NULL
               AND i.category IN ('mandate-federal','mandate-state','mandate-town')
@@ -198,12 +204,14 @@ try {
         foreach ($stmt->fetchAll() as $row) {
             $levelLabel = str_replace('mandate-', '', $row['category']);
             $items[] = [
-                'id'         => (int)$row['id'],
-                'user_id'    => (int)$row['user_id'],
-                'content'    => $row['content'],
-                'tags'       => $row['tags'],
-                'level'      => ucfirst($levelLabel),
-                'created_at' => $row['created_at'],
+                'id'             => (int)$row['id'],
+                'user_id'        => (int)$row['user_id'],
+                'content'        => $row['content'],
+                'tags'           => $row['tags'],
+                'level'          => ucfirst($levelLabel),
+                'agree_count'    => (int)$row['agree_count'],
+                'disagree_count' => (int)$row['disagree_count'],
+                'created_at'     => $row['created_at'],
             ];
         }
         $contributorCount = count($items) > 0 ? 1 : 0;
@@ -223,7 +231,7 @@ try {
 
         // Get items
         $sql = "
-            SELECT i.id, i.user_id, i.content, i.tags, i.created_at
+            SELECT i.id, i.user_id, i.content, i.tags, i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.category = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
@@ -236,11 +244,13 @@ try {
         $items = [];
         foreach ($stmt->fetchAll() as $row) {
             $items[] = [
-                'id'         => (int)$row['id'],
-                'user_id'    => (int)$row['user_id'],
-                'content'    => $row['content'],
-                'tags'       => $row['tags'],
-                'created_at' => $row['created_at'],
+                'id'             => (int)$row['id'],
+                'user_id'        => (int)$row['user_id'],
+                'content'        => $row['content'],
+                'tags'           => $row['tags'],
+                'agree_count'    => (int)$row['agree_count'],
+                'disagree_count' => (int)$row['disagree_count'],
+                'created_at'     => $row['created_at'],
             ];
         }
 
@@ -255,6 +265,21 @@ try {
         $cntStmt = $pdo->prepare($cntSql);
         $cntStmt->execute([$category, $geoParam]);
         $contributorCount = (int)$cntStmt->fetchColumn();
+    }
+
+    // Attach viewer's votes if logged in
+    if ($viewerUserId && count($items) > 0) {
+        $ideaIds = array_column($items, 'id');
+        $placeholders = implode(',', array_fill(0, count($ideaIds), '?'));
+        $vStmt = $pdo->prepare("SELECT idea_id, vote_type FROM idea_votes WHERE idea_id IN ({$placeholders}) AND user_id = ?");
+        $vStmt->execute(array_merge($ideaIds, [$viewerUserId]));
+        $myVotes = [];
+        foreach ($vStmt->fetchAll() as $v) {
+            $myVotes[(int)$v['idea_id']] = $v['vote_type'];
+        }
+        for ($i = 0; $i < count($items); $i++) {
+            $items[$i]['my_vote'] = $myVotes[$items[$i]['id']] ?? null;
+        }
     }
 
     echo json_encode([
