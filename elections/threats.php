@@ -275,6 +275,7 @@ require dirname(__DIR__) . '/includes/nav.php';
     </div>
 
     <?php require_once dirname(__DIR__) . '/includes/criminality-scale.php'; ?>
+    <?php require_once dirname(__DIR__) . '/includes/benefit-scale.php'; ?>
 
     <!-- Stats Bar -->
     <div class="stats-bar">
