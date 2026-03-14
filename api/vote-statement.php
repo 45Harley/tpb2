@@ -79,7 +79,7 @@ try {
 
     // Check if already voted
     $stmt = $pdo->prepare("
-        SELECT id, vote_type
+        SELECT vote_id, vote_type
         FROM rep_statement_votes
         WHERE statement_id = ? AND user_id = ?
     ");
@@ -92,8 +92,8 @@ try {
     if ($existingVote) {
         if ($existingVote['vote_type'] === $voteType) {
             // Same vote - REMOVE it (toggle off)
-            $stmt = $pdo->prepare("DELETE FROM rep_statement_votes WHERE id = ?");
-            $stmt->execute([$existingVote['id']]);
+            $stmt = $pdo->prepare("DELETE FROM rep_statement_votes WHERE vote_id = ?");
+            $stmt->execute([$existingVote['vote_id']]);
 
             // Update counts
             if ($voteType === 'agree') {
@@ -107,8 +107,8 @@ try {
             $userVote = null;
         } else {
             // Different vote - CHANGE it
-            $stmt = $pdo->prepare("UPDATE rep_statement_votes SET vote_type = ? WHERE id = ?");
-            $stmt->execute([$voteType, $existingVote['id']]);
+            $stmt = $pdo->prepare("UPDATE rep_statement_votes SET vote_type = ? WHERE vote_id = ?");
+            $stmt->execute([$voteType, $existingVote['vote_id']]);
 
             // Update counts - swap
             if ($voteType === 'agree') {

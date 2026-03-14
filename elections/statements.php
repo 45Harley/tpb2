@@ -312,12 +312,12 @@ require dirname(__DIR__) . '/includes/nav.php';
                 <button class="vote-btn <?= $userVote === 'agree' ? 'vote-active agree' : '' ?>"
                         data-id="<?= $sid ?>" data-type="agree"
                         onclick="voteStatement(this)">
-                    Agree <span class="vote-count"><?= (int)$s['agree_count'] ?></span>
+                    &#x1F44D; Agree <span class="vote-count"><?= (int)$s['agree_count'] ?></span>
                 </button>
                 <button class="vote-btn <?= $userVote === 'disagree' ? 'vote-active disagree' : '' ?>"
                         data-id="<?= $sid ?>" data-type="disagree"
                         onclick="voteStatement(this)">
-                    Disagree <span class="vote-count"><?= (int)$s['disagree_count'] ?></span>
+                    &#x1F44E; Disagree <span class="vote-count"><?= (int)$s['disagree_count'] ?></span>
                 </button>
             </div>
         </div>
