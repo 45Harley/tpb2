@@ -113,6 +113,20 @@ Search these (prioritize Tier 1):
 - 701-900: Crime Against Humanity (mass harm, deaths)
 Score the ACT, not the person. Consider: measurable impact, reversibility, precedent, intent.
 
+## Benefit Scoring (0-1000 Benefit Scale, Geometric)
+Some actions have positive aspects even if harmful overall. Score the benefit independently:
+- 0: No measurable citizen benefit
+- 1-10: Minor Positive (small symbolic gesture)
+- 11-30: Helpful (tangible benefit, limited scope)
+- 31-70: Significant (meaningful improvement for a group)
+- 71-150: Major Benefit (broad impact, lasting improvement)
+- 151-300: Transformative (structural positive change)
+- 301-500: Historic (generational-level benefit)
+- 501-700: Landmark (reshapes institutions for the better)
+- 701-900: Epochal (massive, irreversible positive change)
+- 901-1000: Civilizational (existential-level improvement)
+Most threats will have benefit_score of 0. But some actions are genuinely dual-natured — score both honestly.
+
 ## Available Tags (assign 1-3 per threat)
 {$tagContext}
 
@@ -135,6 +149,7 @@ If you find threats, return:
       "action_script": "Contact your [who]. Ask: '[specific question].' Support [specific org/effort].",
       "official_id": 326,
       "severity_score": 350,
+      "benefit_score": 0,
       "branch": "executive",
       "tags": ["tag_name_1", "tag_name_2"]
     }

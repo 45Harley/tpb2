@@ -168,8 +168,8 @@ foreach ($tags as $tag) {
 // Insert threats
 $insertStmt = $pdo->prepare("
     INSERT INTO executive_threats
-    (threat_date, title, description, threat_type, target, source_url, action_script, official_id, is_active, severity_score, branch)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+    (threat_date, title, description, threat_type, target, source_url, action_script, official_id, is_active, severity_score, benefit_score, branch)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
 ");
 $tagStmt = $pdo->prepare("INSERT IGNORE INTO threat_tag_map (threat_id, tag_id) VALUES (?, ?)");
 
@@ -193,6 +193,7 @@ foreach ($threats as $threat) {
     $actionScript = trim($threat['action_script'] ?? '');
     $officialId = intval($threat['official_id'] ?? 326);
     $score = intval($threat['severity_score'] ?? 200);
+    $benefitScore = isset($threat['benefit_score']) ? intval($threat['benefit_score']) : 0;
     $branch = in_array($threat['branch'] ?? '', ['executive', 'congressional', 'judicial']) ? $threat['branch'] : 'executive';
     $threatTags = $threat['tags'] ?? [];
 
@@ -206,10 +207,10 @@ foreach ($threats as $threat) {
     }
 
     try {
-        $insertStmt->execute([$date, $title, $desc, $type, $target, $sourceUrl, $actionScript, $officialId, $score, $branch]);
+        $insertStmt->execute([$date, $title, $desc, $type, $target, $sourceUrl, $actionScript, $officialId, $score, $benefitScore, $branch]);
         $threatId = $pdo->lastInsertId();
         $inserted++;
-        logMsg("Inserted threat #{$threatId} (score {$score}): {$title}");
+        logMsg("Inserted threat #{$threatId} (sev:{$score} ben:{$benefitScore}): {$title}");
 
         foreach ($threatTags as $tagName) {
             if (isset($tagLookup[$tagName])) {
