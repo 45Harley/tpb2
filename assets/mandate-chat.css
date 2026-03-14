@@ -300,6 +300,32 @@
 
 .mc-idea-actions button:hover { opacity: 1; }
 
+.mc-idea-edit-wrap {
+    margin: 4px 0;
+    padding-left: 2rem;
+}
+.mc-idea-edit-input {
+    width: 100%;
+    background: #0d0d1a;
+    border: 1px solid #d4af37;
+    color: #e0e0e0;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    resize: vertical;
+    margin-bottom: 4px;
+}
+.mc-idea-edit-save, .mc-idea-edit-cancel {
+    font-size: 0.75rem;
+    padding: 2px 10px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin-right: 4px;
+}
+.mc-idea-edit-save { background: #d4af37; color: #000; }
+.mc-idea-edit-cancel { background: rgba(255,255,255,0.1); color: #b0b0b0; }
+
 /* ── Save Bar ──────────────────────────────────────────────── */
 
 .mc-save-bar {

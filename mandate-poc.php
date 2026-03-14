@@ -467,6 +467,55 @@ $pageStyles = <<<'CSS'
     color: #d4af37;
 }
 
+/* ── Owner edit/delete buttons ───────────────────────────── */
+.mandate-owner-actions {
+    display: inline-block;
+    margin-left: 8px;
+}
+.mandate-edit-btn, .mandate-delete-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #888;
+    font-size: 0.8rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 3px;
+    transition: color 0.2s, border-color 0.2s;
+}
+.mandate-edit-btn:hover { color: #d4af37; border-color: #d4af37; }
+.mandate-delete-btn:hover { color: #e63946; border-color: #e63946; }
+.mandate-edit-wrap {
+    margin: 6px 0;
+}
+.mandate-edit-input {
+    width: 100%;
+    background: #0d0d1a;
+    border: 1px solid #d4af37;
+    color: #e0e0e0;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 0.9rem;
+    resize: vertical;
+    margin-bottom: 4px;
+}
+.mandate-edit-save, .mandate-edit-cancel {
+    font-size: 0.8rem;
+    padding: 3px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin-right: 6px;
+}
+.mandate-edit-save {
+    background: #d4af37;
+    color: #000;
+}
+.mandate-edit-cancel {
+    background: rgba(255,255,255,0.1);
+    color: #b0b0b0;
+}
+
 /* ── Level Tabs ──────────────────────────────────────────── */
 .level-tabs {
     display: flex;
@@ -1282,15 +1331,22 @@ require __DIR__ . '/includes/nav.php';
 
                     html += '<ol style="text-align:left; padding-left:1.5rem; margin:0;">';
                     data.items.forEach(function(item) {
-                        html += '<li style="color:#ccc; margin-bottom:0.5rem;">';
+                        var isOwner = item.user_id && item.user_id === userId;
+                        html += '<li style="color:#ccc; margin-bottom:0.5rem;" data-idea-id="' + item.id + '">';
                         if (item.level) {
                             html += '<span style="color:#d4af37; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; margin-right:6px;">'
                                 + escapeHtml(item.level) + '</span> ';
                         }
-                        html += escapeHtml(item.content);
+                        html += '<span class="mandate-text">' + escapeHtml(item.content) + '</span>';
                         if (item.tags) {
                             html += ' <span style="color:#999; font-size:0.85rem;">('
                                 + escapeHtml(item.tags) + ')</span>';
+                        }
+                        if (isOwner) {
+                            html += '<span class="mandate-owner-actions">'
+                                + '<button class="mandate-edit-btn" data-id="' + item.id + '" title="Edit">&#9998;</button>'
+                                + '<button class="mandate-delete-btn" data-id="' + item.id + '" title="Delete">&times;</button>'
+                                + '</span>';
                         }
                         html += '<div class="mandate-top-link"><a href="#top">&uarr; Top</a></div>';
                         html += '</li>';
@@ -1308,7 +1364,82 @@ require __DIR__ . '/includes/nav.php';
         window.refreshMandateSummary = loadSummary;
 
         // ── Initial load ──────────────────────────────────────
+        var currentLevel = 'all';
         loadSummary('all');
+
+        // ── Edit / Delete handlers (delegated) ─────────────────
+        bodyEl.addEventListener('click', function(e) {
+            var editBtn = e.target.closest('.mandate-edit-btn');
+            var deleteBtn = e.target.closest('.mandate-delete-btn');
+
+            if (editBtn) {
+                var li = editBtn.closest('li');
+                var ideaId = editBtn.dataset.id;
+                var textEl = li.querySelector('.mandate-text');
+                if (!textEl || li.querySelector('.mandate-edit-input')) return;
+
+                var input = document.createElement('textarea');
+                input.className = 'mandate-edit-input';
+                input.value = textEl.textContent;
+                input.rows = 2;
+
+                var saveBtn = document.createElement('button');
+                saveBtn.className = 'mandate-edit-save';
+                saveBtn.textContent = 'Save';
+
+                var cancelBtn = document.createElement('button');
+                cancelBtn.className = 'mandate-edit-cancel';
+                cancelBtn.textContent = 'Cancel';
+
+                var wrap = document.createElement('div');
+                wrap.className = 'mandate-edit-wrap';
+                wrap.appendChild(input);
+                wrap.appendChild(saveBtn);
+                wrap.appendChild(cancelBtn);
+
+                textEl.style.display = 'none';
+                textEl.parentNode.insertBefore(wrap, textEl.nextSibling);
+                input.focus();
+
+                saveBtn.addEventListener('click', function() {
+                    var newContent = input.value.trim();
+                    if (!newContent) return;
+                    fetch('/talk/api.php?action=edit', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({idea_id: parseInt(ideaId), content: newContent})
+                    }).then(function(r) { return r.json(); }).then(function(data) {
+                        if (data.success) {
+                            loadSummary(currentLevel);
+                        } else {
+                            alert(data.error || 'Failed to edit');
+                            wrap.remove();
+                            textEl.style.display = '';
+                        }
+                    });
+                });
+                cancelBtn.addEventListener('click', function() {
+                    wrap.remove();
+                    textEl.style.display = '';
+                });
+            }
+
+            if (deleteBtn) {
+                var ideaId = deleteBtn.dataset.id;
+                if (!confirm('Delete this mandate?')) return;
+                fetch('/talk/api.php?action=delete', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({idea_id: parseInt(ideaId)})
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) {
+                        loadSummary(currentLevel);
+                    } else {
+                        alert(data.error || 'Failed to delete');
+                    }
+                });
+            }
+        });
 
         // ── Extend tab click handlers to also update summary ───
         var tabs = document.querySelectorAll('#levelTabs .level-tab');
@@ -1337,6 +1468,7 @@ require __DIR__ . '/includes/nav.php';
                         summaryLevel = 'all';
                         break;
                 }
+                currentLevel = summaryLevel;
                 loadSummary(summaryLevel);
             });
         });

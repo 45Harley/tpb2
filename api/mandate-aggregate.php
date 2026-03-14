@@ -122,7 +122,7 @@ try {
         $geoFilter = '(' . implode(' OR ', $whereParts) . ')';
 
         $sql = "
-            SELECT i.id, i.content, i.tags, i.category, i.created_at
+            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.created_at
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.deleted_at IS NULL AND u.deleted_at IS NULL
@@ -137,6 +137,7 @@ try {
             $levelLabel = str_replace('mandate-', '', $row['category']);
             $items[] = [
                 'id'         => (int)$row['id'],
+                'user_id'    => (int)$row['user_id'],
                 'content'    => $row['content'],
                 'tags'       => $row['tags'],
                 'level'      => ucfirst($levelLabel),
@@ -160,7 +161,7 @@ try {
     } else if ($level === 'mine') {
         // My mandates — all categories for this user
         $sql = "
-            SELECT i.id, i.content, i.tags, i.category, i.created_at
+            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.created_at
             FROM idea_log i
             WHERE i.user_id = ? AND i.deleted_at IS NULL
               AND i.category IN ('mandate-federal','mandate-state','mandate-town')
@@ -173,6 +174,7 @@ try {
             $levelLabel = str_replace('mandate-', '', $row['category']);
             $items[] = [
                 'id'         => (int)$row['id'],
+                'user_id'    => (int)$row['user_id'],
                 'content'    => $row['content'],
                 'tags'       => $row['tags'],
                 'level'      => ucfirst($levelLabel),
@@ -196,7 +198,7 @@ try {
 
         // Get items
         $sql = "
-            SELECT i.id, i.content, i.tags, i.created_at
+            SELECT i.id, i.user_id, i.content, i.tags, i.created_at
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.category = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
@@ -210,6 +212,7 @@ try {
         foreach ($stmt->fetchAll() as $row) {
             $items[] = [
                 'id'         => (int)$row['id'],
+                'user_id'    => (int)$row['user_id'],
                 'content'    => $row['content'],
                 'tags'       => $row['tags'],
                 'created_at' => $row['created_at'],

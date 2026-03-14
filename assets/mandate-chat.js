@@ -328,11 +328,20 @@
             var actions = document.createElement('span');
             actions.className = 'mc-idea-actions';
 
+            var editBtn = document.createElement('button');
+            editBtn.textContent = '\u270E'; // ✎
+            editBtn.title = 'Edit';
+            editBtn.className = 'mc-idea-edit';
+            var self = this;
+            editBtn.addEventListener('click', (function(num) {
+                return function() { self.editIdeaInline(num); };
+            })(idea.num));
+            actions.appendChild(editBtn);
+
             var removeBtn = document.createElement('button');
             removeBtn.textContent = '\u2715'; // ✕
             removeBtn.title = 'Remove';
             removeBtn.dataset.num = idea.num;
-            var self = this;
             removeBtn.addEventListener('click', (function(num) {
                 return function() { self.removeIdea(num); };
             })(idea.num));
@@ -355,6 +364,54 @@
         this.ideas = this.ideas.filter(function(i) { return i.num !== num; });
         this.renderIdeas();
         this.saveToStorage();
+    };
+
+    MandateChat.prototype.editIdeaInline = function(num) {
+        var idea = this.ideas.find(function(i) { return i.num === num; });
+        if (!idea) return;
+
+        var itemEl = this.ideaListEl.querySelector('[data-num="' + num + '"]')
+            || this.ideaListEl.children[this.ideas.indexOf(idea)];
+        if (!itemEl) return;
+
+        var textEl = itemEl.querySelector('.mc-idea-text');
+        if (!textEl) return;
+
+        var input = document.createElement('textarea');
+        input.className = 'mc-idea-edit-input';
+        input.value = idea.content;
+        input.rows = 2;
+
+        var saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Save';
+        saveBtn.className = 'mc-idea-edit-save';
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.className = 'mc-idea-edit-cancel';
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'mc-idea-edit-wrap';
+        wrapper.appendChild(input);
+        wrapper.appendChild(saveBtn);
+        wrapper.appendChild(cancelBtn);
+
+        textEl.style.display = 'none';
+        textEl.parentNode.insertBefore(wrapper, textEl.nextSibling);
+
+        var self = this;
+        saveBtn.addEventListener('click', function() {
+            var newContent = input.value.trim();
+            if (newContent && newContent !== idea.content) {
+                idea.content = newContent;
+                self.saveToStorage();
+            }
+            self.renderIdeas();
+        });
+        cancelBtn.addEventListener('click', function() {
+            self.renderIdeas();
+        });
+        input.focus();
     };
 
     // ── Save to Database ──────────────────────────────────────
