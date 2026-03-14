@@ -430,6 +430,42 @@ $pageStyles = <<<'CSS'
     background: #3a2d1a;
     transform: translateY(-1px);
 }
+.mandate-header-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.mandate-pulse-link {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.4rem 1rem;
+    background: rgba(212,175,55,0.1);
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 20px;
+    color: #d4af37;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.mandate-pulse-link:hover {
+    background: rgba(212,175,55,0.2);
+}
+.mandate-top-link {
+    display: block;
+    text-align: right;
+    padding: 4px 0;
+    margin-top: 2px;
+}
+.mandate-top-link a {
+    color: #888;
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.mandate-top-link a:hover {
+    color: #d4af37;
+}
 
 /* ── Level Tabs ──────────────────────────────────────────── */
 .level-tabs {
@@ -1094,12 +1130,16 @@ require __DIR__ . '/includes/nav.php';
 <!-- ════════════════════════════════════════════════════════════
      LOGGED IN — Mandate Interface
      ════════════════════════════════════════════════════════════ -->
-<div class="mandate-wrap">
+<div class="mandate-wrap" id="top">
 
     <!-- Mandate Header -->
     <div class="mandate-header">
         <h1>My Mandate</h1>
-        <a href="/help/guide.php?flow=mandate-chat" class="mandate-help-btn">&#x1F393; How It Works</a>
+        <div class="mandate-header-links">
+            <a href="/help/guide.php?flow=mandate-chat" class="mandate-help-btn">&#x1F393; How It Works</a>
+            <a href="/mandate-summary.php?scope=federal&value=<?= htmlspecialchars(urlencode($dbUser['us_congress_district'] ?? '')) ?>"
+               class="mandate-pulse-link" title="View full statistics and topic breakdown">The People's Pulse &rarr;</a>
+        </div>
         <p class="geo-info" id="geoInfoTrigger" title="Click to see your elected representatives">
             <?php if ($userTownName): ?>
                 <span><?= htmlspecialchars($userTownName) ?></span>,
@@ -1252,6 +1292,7 @@ require __DIR__ . '/includes/nav.php';
                             html += ' <span style="color:#999; font-size:0.85rem;">('
                                 + escapeHtml(item.tags) + ')</span>';
                         }
+                        html += '<div class="mandate-top-link"><a href="#top">&uarr; Top</a></div>';
                         html += '</li>';
                     });
                     html += '</ol>';

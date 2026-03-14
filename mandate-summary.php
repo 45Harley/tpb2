@@ -55,6 +55,37 @@ $headLinks = '';
 
 $pageStyles = <<<'CSS'
 
+/* ── Navigation links ──────────────────────────────────── */
+.summary-back-link {
+    display: inline-block;
+    color: #d4af37;
+    font-size: 0.85rem;
+    text-decoration: none;
+    margin-bottom: 0.5rem;
+    padding: 0.3rem 0.8rem;
+    background: rgba(212,175,55,0.1);
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 20px;
+    transition: background 0.2s;
+}
+.summary-back-link:hover {
+    background: rgba(212,175,55,0.2);
+}
+.mandate-top-link {
+    text-align: right;
+    padding: 2px 0;
+    margin-top: 2px;
+}
+.mandate-top-link a {
+    color: #888;
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.mandate-top-link a:hover {
+    color: #d4af37;
+}
+
 /* ── Summary page layout ───────────────────────────────── */
 .summary-wrap {
     max-width: 900px;
@@ -244,9 +275,10 @@ CSS;
 require __DIR__ . '/includes/header.php';
 ?>
 
-<div class="summary-wrap">
+<div class="summary-wrap" id="top">
 
     <div class="summary-header">
+        <a href="/mandate-poc.php" class="summary-back-link">&larr; My Mandate</a>
         <h1>The People's Pulse</h1>
         <p class="scope-label"><?= htmlspecialchars($scopeLabel) ?> &mdash; <?= htmlspecialchars($scopeDisplay) ?></p>
     </div>
@@ -359,6 +391,7 @@ require __DIR__ . '/includes/header.php';
                 }
                 m += '<span class="mandate-content">' + escHtml(item.content) + '</span>';
                 m += '<div class="mandate-meta">' + escHtml(item.created_at) + '</div>';
+                m += '<div class="mandate-top-link"><a href="#top">&uarr; Top</a></div>';
                 m += '</div>';
             });
             document.getElementById('mandatesBody').innerHTML = m;
