@@ -431,6 +431,13 @@ if (isset($_POST['save_settings'])) {
         'value' => $claudiaLocalEnabled
     ]);
 
+    $statementCollectEnabled = !empty($_POST['statement_collect_local_enabled']) ? '1' : '0';
+    setSiteSetting($pdo, 'statement_collect_local_enabled', $statementCollectEnabled, $adminUserId);
+    logAdminAction($pdo, $adminUserId, 'update_setting', 'site_setting', null, [
+        'key' => 'statement_collect_local_enabled',
+        'value' => $statementCollectEnabled
+    ]);
+
     $claudiaWidgetEnabled = !empty($_POST['claudia_widget_enabled']) ? '1' : '0';
     setSiteSetting($pdo, 'claudia_widget_enabled', $claudiaWidgetEnabled, $adminUserId);
     logAdminAction($pdo, $adminUserId, 'update_setting', 'site_setting', null, [
@@ -2161,6 +2168,49 @@ $adminActions = $pdo->query("
                             &mdash; <?= htmlspecialchars($ratingLastRun['error'] ?? 'Unknown error') ?>
                         <?php endif; ?>
                     </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Statement Collection -->
+                <?php
+                $statementCollectEnabled = getSiteSetting($pdo, 'statement_collect_local_enabled', '0');
+                $statementLastResult = getSiteSetting($pdo, 'statement_collect_last_result', '');
+                $statementLastRun = $statementLastResult ? json_decode($statementLastResult, true) : null;
+                $statementLastSuccess = getSiteSetting($pdo, 'statement_collect_last_success', '');
+                ?>
+                <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                    <h3 style="color:#d4af37;margin:0 0 15px;">Statement Collection</h3>
+                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Local pipeline via claude -p + web search. Collects rep statements for tracked races.</p>
+
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
+                        <input type="checkbox" name="statement_collect_local_enabled" value="1" <?= $statementCollectEnabled === '1' ? 'checked' : '' ?>
+                            style="width:18px;height:18px;accent-color:#d4af37;">
+                        <span style="color:#e0e0e0;font-size:1.05em;">Enable Statement Collection (Local)</span>
+                    </label>
+
+                    <div style="display:flex;flex-wrap:wrap;gap:20px;color:#888;font-size:0.9em;margin-bottom:10px;">
+                        <span>Status: <strong style="color:<?= $statementCollectEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $statementCollectEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
+                        <span>Cost: <strong style="color:#4caf50;">Free (local)</strong></span>
+                    </div>
+
+                    <?php if ($statementLastRun): ?>
+                    <div style="background:#111;border:1px solid #222;border-radius:6px;padding:12px;font-size:0.85em;color:#888;margin-top:10px;">
+                        <strong style="color:#ccc;">Last run:</strong>
+                        <?= $statementLastRun['timestamp'] ?? 'unknown' ?>
+                        &mdash;
+                        <?php if (($statementLastRun['status'] ?? '') === 'success'): ?>
+                            <span style="color:#4caf50;">OK</span>
+                            &mdash; <?= $statementLastRun['inserted'] ?? 0 ?> inserted, <?= $statementLastRun['skipped'] ?? 0 ?> skipped
+                            <?php if (!empty($statementLastRun['note'])): ?>&mdash; <?= htmlspecialchars($statementLastRun['note']) ?><?php endif; ?>
+                            &mdash; <?= number_format($statementLastRun['input_tokens'] ?? 0) ?> in / <?= number_format($statementLastRun['output_tokens'] ?? 0) ?> out
+                            &mdash; <?= $statementLastRun['elapsed'] ?? '?' ?>s
+                        <?php else: ?>
+                            <span style="color:#ef5350;">FAILED</span>
+                            &mdash; <?= htmlspecialchars($statementLastRun['error'] ?? 'Unknown error') ?>
+                        <?php endif; ?>
+                    </div>
+                    <?php elseif (!$statementLastSuccess): ?>
+                    <div style="color:#666;font-size:0.85em;margin-top:10px;">No runs recorded yet.</div>
                     <?php endif; ?>
                 </div>
 
