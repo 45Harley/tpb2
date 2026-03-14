@@ -173,6 +173,8 @@
     animation: mc-pulse 1.2s ease-in-out infinite;
 }
 
+.mc-input .mc-pin-direct { color: #d4af37; font-size: 1.1rem; }
+.mc-input .mc-pin-direct:hover { color: #f0d060; }
 .mc-input .mc-send { color: #4fc3f7; }
 .mc-input .mc-send:hover { color: #80d8ff; }
 

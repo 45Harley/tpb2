@@ -51,6 +51,7 @@ if (!defined('MANDATE_CHAT_ASSETS_LOADED')) {
                   placeholder="<?= htmlspecialchars($_mc['placeholder']) ?>"
                   rows="2"
                   maxlength="2000"></textarea>
+        <button class="mc-pin-direct" id="<?= $_mcPrefix ?>-pin" title="Pin directly to scratchpad (no AI)">&#x1F4CC;</button>
         <button class="mc-mic" id="<?= $_mcPrefix ?>-mic" title="Tap to dictate — say &quot;command&quot; to switch to voice commands">&#x1F3A4;</button>
         <button class="mc-send" id="<?= $_mcPrefix ?>-send" title="Send your idea to AI for refinement">&#x27A4;</button>
     </div>

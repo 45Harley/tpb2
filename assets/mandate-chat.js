@@ -52,6 +52,7 @@
         this.messagesEl   = document.getElementById(p + '-messages');
         this.inputEl      = document.getElementById(p + '-input');
         this.sendBtn      = document.getElementById(p + '-send');
+        this.pinBtn       = document.getElementById(p + '-pin');
         this.micBtn       = document.getElementById(p + '-mic');
         this.charEl       = document.getElementById(p + '-char');
         this.ideaListEl   = document.getElementById(p + '-idea-list');
@@ -75,6 +76,11 @@
 
         // Send button
         this.sendBtn.addEventListener('click', function() { self.send(); });
+
+        // Direct pin button — pin to scratchpad without AI
+        if (this.pinBtn) {
+            this.pinBtn.addEventListener('click', function() { self.pinDirect(); });
+        }
 
         // Enter to send (shift+enter for newline)
         this.inputEl.addEventListener('keydown', function(e) {
@@ -290,6 +296,33 @@
         this.renderIdeas();
         this.saveToStorage();
         this.showToast('Idea #' + idea.num + ' pinned', 'success');
+    };
+
+    MandateChat.prototype.pinDirect = function() {
+        var content = this.inputEl.value.trim();
+        if (!content) return;
+
+        // Prevent duplicates
+        for (var i = 0; i < this.ideas.length; i++) {
+            if (this.ideas[i].content === content) {
+                this.showToast('Already pinned as #' + this.ideas[i].num, 'success');
+                return;
+            }
+        }
+
+        var idea = {
+            num: this.nextIdea++,
+            content: content,
+            ts: new Date().toISOString()
+        };
+        this.ideas.push(idea);
+        this.renderIdeas();
+        this.saveToStorage();
+        this.showToast('Idea #' + idea.num + ' pinned (direct)', 'success');
+
+        this.inputEl.value = '';
+        this.autoResize();
+        this.updateCharCount();
     };
 
     MandateChat.prototype.renderIdeas = function() {
@@ -705,6 +738,12 @@
             } else {
                 this.addSystemMessage('Nothing to send. Dictate an idea first.');
             }
+            return true;
+        }
+
+        // ── Pin direct (pin what's in the input box) ──
+        if (/\bpin\s+(this|direct|my|it)\b/.test(lower)) {
+            this.pinDirect();
             return true;
         }
 
