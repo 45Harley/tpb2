@@ -1233,6 +1233,7 @@ require __DIR__ . '/includes/nav.php';
             <button class="level-tab" data-level="mandate-state" title="State legislature — your state reps">State</button>
             <button class="level-tab" data-level="mandate-town" title="Local town government — selectmen, council">Town</button>
             <button class="level-tab" data-level="mine" title="Only mandates you have saved">My Mandates</button>
+            <button class="level-tab" data-level="my-ideas" title="Your private ideas">My Ideas</button>
         </div>
         <div style="text-align:right; padding: 4px 12px;">
             <a href="/mandate-summary.php?scope=federal&value=<?= htmlspecialchars(urlencode($dbUser['us_congress_district'] ?? '')) ?>"
@@ -1265,6 +1266,9 @@ require __DIR__ . '/includes/nav.php';
         var userId = <?= json_encode($dbUser ? (int)$dbUser['user_id'] : 0) ?>;
 
         function buildUrl(level) {
+            if (level === 'my-ideas') {
+                return '/api/mandate-aggregate.php?level=my-ideas&user_id=' + encodeURIComponent(userId);
+            }
             if (level === 'mine') {
                 return '/api/mandate-aggregate.php?level=mine&user_id=' + encodeURIComponent(userId);
             }
@@ -1292,6 +1296,8 @@ require __DIR__ . '/includes/nav.php';
 
         function buildTitle(level) {
             switch (level) {
+                case 'my-ideas':
+                    return 'My Ideas';
                 case 'mine':
                     return 'My Mandates';
                 case 'federal':
@@ -1463,6 +1469,9 @@ require __DIR__ . '/includes/nav.php';
                         break;
                     case 'mine':
                         summaryLevel = 'mine';
+                        break;
+                    case 'my-ideas':
+                        summaryLevel = 'my-ideas';
                         break;
                     default:
                         summaryLevel = 'all';

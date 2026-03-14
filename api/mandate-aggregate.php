@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $level = $_GET['level'] ?? 'federal';
 
 // Validate level
-$validLevels = ['federal', 'state', 'town', 'mine', 'all'];
+$validLevels = ['federal', 'state', 'town', 'mine', 'all', 'my-ideas'];
 if (!in_array($level, $validLevels, true)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Invalid level']);
@@ -45,10 +45,11 @@ $geoParam = null;
 $userId = null;
 switch ($level) {
     case 'mine':
+    case 'my-ideas':
         $userId = $_GET['user_id'] ?? '';
         if ($userId === '' || !ctype_digit((string)$userId)) {
             http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'user_id parameter (integer) is required for mine level']);
+            echo json_encode(['success' => false, 'error' => 'user_id parameter (integer) is required for ' . $level . ' level']);
             exit();
         }
         $userId = (int)$userId;
@@ -157,6 +158,30 @@ try {
         $cntStmt = $pdo->prepare($cntSql);
         $cntStmt->execute($params);
         $contributorCount = (int)$cntStmt->fetchColumn();
+
+    } else if ($level === 'my-ideas') {
+        // My ideas — category='idea' for this user
+        $sql = "
+            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.created_at
+            FROM idea_log i
+            WHERE i.user_id = ? AND i.deleted_at IS NULL
+              AND i.category = 'idea'
+            ORDER BY i.created_at DESC
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$userId]);
+        $items = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $items[] = [
+                'id'         => (int)$row['id'],
+                'user_id'    => (int)$row['user_id'],
+                'content'    => $row['content'],
+                'tags'       => $row['tags'],
+                'level'      => 'Idea',
+                'created_at' => $row['created_at'],
+            ];
+        }
+        $contributorCount = count($items) > 0 ? 1 : 0;
 
     } else if ($level === 'mine') {
         // My mandates — all categories for this user
