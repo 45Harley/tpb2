@@ -19,8 +19,9 @@ CREATE TABLE IF NOT EXISTS rep_statements (
     disagree_count INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (official_id) REFERENCES elected_officials(official_id),
-    FOREIGN KEY (related_threat_id) REFERENCES executive_threats(threat_id),
+    -- No FK to elected_officials: it uses MyISAM engine (incompatible with InnoDB FK)
+    -- No FK to executive_threats: matches existing pattern (threats table has no FK either)
+    -- Referential integrity enforced at application level
     INDEX idx_official_date (official_id, statement_date DESC),
     INDEX idx_policy_topic (policy_topic),
     INDEX idx_tense (tense)
@@ -34,8 +35,9 @@ CREATE TABLE IF NOT EXISTS rep_statement_votes (
     vote_type ENUM('agree', 'disagree') NOT NULL,
     voted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY unique_vote (statement_id, user_id),
-    FOREIGN KEY (statement_id) REFERENCES rep_statements(id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    FOREIGN KEY (statement_id) REFERENCES rep_statements(id)
+    -- No FK to users: users table uses latin1 charset (incompatible with utf8mb4 FK)
+    -- Referential integrity enforced at application level
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 3. Add benefit_score to executive_threats
