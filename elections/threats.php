@@ -12,13 +12,14 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 require_once dirname(__DIR__) . '/includes/get-user.php';
 require_once dirname(__DIR__) . '/includes/severity.php';
+require_once dirname(__DIR__) . '/includes/benefit-severity.php';
 $dbUser = getUser($pdo);
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'elections';
-$pageTitle = 'Threat Stream — The People\'s Branch';
-$ogTitle = 'Threat Stream — Live Democracy Threats';
-$ogDescription = 'Real-time feed of threats to constitutional order. Scored on a 0-1000 criminality scale. See what you can do.';
+$pageTitle = 'Executive Actions — The People\'s Branch';
+$ogTitle = 'Executive Actions — Live Democracy Feed';
+$ogDescription = 'Real-time feed of executive actions scored on a 0-1000 scale. See what you can do.';
 
 // --- Data ---
 $threats = $pdo->query("
@@ -267,7 +268,7 @@ require dirname(__DIR__) . '/includes/nav.php';
         <a href="/elections/">Elections</a>
         <a href="/elections/the-fight.php">The Fight</a>
         <a href="/elections/the-amendment.php">The War</a>
-        <a href="/elections/threats.php" class="active">Threats</a>
+        <a href="/elections/threats.php" class="active">Actions</a>
         <a href="/elections/statements.php">Statements</a>
         <a href="/elections/races.php">Races</a>
         <a href="/elections/impeachment-vote.php">Impeachment #1</a>
@@ -343,6 +344,13 @@ require dirname(__DIR__) . '/includes/nav.php';
                 <span class="severity-badge <?= $isPulsing ? 'pulsing' : '' ?>" style="background:<?= $zone['color'] ?>;color:<?= $textColor ?>">
                     <?= $score ?> <?= $zone['label'] ?>
                 </span>
+                <?php if (isset($t['benefit_score']) && $t['benefit_score'] !== null):
+                    $bz = getBenefitZone($t['benefit_score']);
+                ?>
+                <span class="severity-badge" style="background:<?= $bz['color'] ?>;color:#000;">
+                    Benefit: <?= $t['benefit_score'] ?> (<?= $bz['label'] ?>)
+                </span>
+                <?php endif; ?>
                 <span class="tc-branch <?= $branch ?>"><?= $branch ?></span>
                 <span class="tc-official"><?= htmlspecialchars($t['official_name'] ?? 'Unknown') ?></span>
                 <span class="tc-date"><?= date('M j, Y', strtotime($t['threat_date'])) ?></span>
