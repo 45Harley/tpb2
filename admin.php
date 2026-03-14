@@ -424,6 +424,13 @@ if (isset($_POST['save_settings'])) {
         'value' => $ratingCheckEnabled
     ]);
 
+    $ratingCheckLocalEnabled = !empty($_POST['rating_check_local_enabled']) ? '1' : '0';
+    setSiteSetting($pdo, 'rating_check_local_enabled', $ratingCheckLocalEnabled, $adminUserId);
+    logAdminAction($pdo, $adminUserId, 'update_setting', 'site_setting', null, [
+        'key' => 'rating_check_local_enabled',
+        'value' => $ratingCheckLocalEnabled
+    ]);
+
     $claudiaLocalEnabled = !empty($_POST['claudia_local_enabled']) ? '1' : '0';
     setSiteSetting($pdo, 'claudia_local_enabled', $claudiaLocalEnabled, $adminUserId);
     logAdminAction($pdo, $adminUserId, 'update_setting', 'site_setting', null, [
@@ -2133,23 +2140,31 @@ $adminActions = $pdo->query("
                 <!-- Rating Checker -->
                 <?php
                 $ratingCheckEnabled = getSiteSetting($pdo, 'rating_check_enabled', '0');
+                $ratingCheckLocalEnabled = getSiteSetting($pdo, 'rating_check_local_enabled', '0');
                 $ratingLastResult = getSiteSetting($pdo, 'rating_check_last_result', '');
                 $ratingLastRun = $ratingLastResult ? json_decode($ratingLastResult, true) : null;
                 ?>
                 <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
                     <h3 style="color:#d4af37;margin:0 0 15px;">Race Rating Checker</h3>
-                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Local pipeline via claude -p + web search. Weekly Sunday.
+                    <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Local pipeline via claude -p + web search. Daily 7 AM.
                         <a href="cron-status.php?tab=ratings" target="_blank" style="color:#6a9fff;margin-left:8px;">View Logs</a></p>
 
-                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:8px;">
                         <input type="checkbox" name="rating_check_enabled" value="1" <?= $ratingCheckEnabled === '1' ? 'checked' : '' ?>
                             style="width:18px;height:18px;accent-color:#d4af37;">
-                        <span style="color:#e0e0e0;font-size:1.05em;">Enable weekly rating check</span>
+                        <span style="color:#e0e0e0;font-size:1.05em;">Enable Rating Check (Server API)</span>
+                    </label>
+
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:15px;">
+                        <input type="checkbox" name="rating_check_local_enabled" value="1" <?= $ratingCheckLocalEnabled === '1' ? 'checked' : '' ?>
+                            style="width:18px;height:18px;accent-color:#d4af37;">
+                        <span style="color:#e0e0e0;font-size:1.05em;">Enable Rating Check (Local Pipeline)</span>
                     </label>
 
                     <div style="display:flex;flex-wrap:wrap;gap:20px;color:#888;font-size:0.9em;margin-bottom:10px;">
                         <span>Races: <strong style="color:#d4af37;"><?= count($fecRaces ?? []) ?></strong></span>
-                        <span>Status: <strong style="color:<?= $ratingCheckEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $ratingCheckEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
+                        <span>Server: <strong style="color:<?= $ratingCheckEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $ratingCheckEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
+                        <span>Local: <strong style="color:<?= $ratingCheckLocalEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $ratingCheckLocalEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
                         <span>Cost: <strong style="color:#4caf50;">Free (local)</strong></span>
                     </div>
 

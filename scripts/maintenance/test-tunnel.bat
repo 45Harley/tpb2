@@ -5,7 +5,7 @@
 :: ============================================================
 
 echo === Test 1: Local listener on port 9876 ===
-curl -s --max-time 5 http://localhost:9876/ 2>nul
+curl -s --max-time 5 http://127.0.0.1:9876/ 2>nul
 echo.
 echo.
 
