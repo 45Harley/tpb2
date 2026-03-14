@@ -218,6 +218,40 @@ $pageStyles = <<<'CSS'
 .mandate-content { color: #ccc; font-size: 0.9rem; line-height: 1.4; }
 .mandate-meta { color: #888; font-size: 0.8rem; margin-top: 4px; }
 
+/* ── Vote buttons ────────────────────────────────────────── */
+.mandate-vote-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 4px;
+}
+.mandate-vote-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #b0b0b0;
+    font-size: 0.8rem;
+    padding: 2px 10px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.mandate-vote-btn:hover {
+    border-color: rgba(212,175,55,0.4);
+    color: #fff;
+}
+.mandate-vote-btn.vote-active.agree {
+    background: rgba(76,175,80,0.2);
+    border-color: #4caf50;
+    color: #81c784;
+}
+.mandate-vote-btn.vote-active.disagree {
+    background: rgba(229,57,53,0.2);
+    border-color: #e53935;
+    color: #e57373;
+}
+.vote-count {
+    font-weight: 600;
+}
+
 /* ── Period tabs ───────────────────────────────────────── */
 .period-tabs {
     display: flex;
@@ -322,6 +356,7 @@ require __DIR__ . '/includes/header.php';
 (function() {
     var scope      = <?= json_encode($scope) ?>;
     var scopeValue = <?= json_encode($scopeValue) ?>;
+    var userId     = <?= $dbUser ? (int)$dbUser['user_id'] : 0 ?>;
     var currentPeriod = 'all';
 
     function escHtml(s) {
@@ -334,7 +369,8 @@ require __DIR__ . '/includes/header.php';
         currentPeriod = period;
         var url = '/api/mandate-summary.php?scope=' + encodeURIComponent(scope)
                 + '&scope_value=' + encodeURIComponent(scopeValue)
-                + '&period=' + encodeURIComponent(period);
+                + '&period=' + encodeURIComponent(period)
+                + (userId ? '&viewer_user_id=' + encodeURIComponent(userId) : '');
 
         fetch(url).then(function(r) { return r.json(); }).then(render).catch(function() {
             document.getElementById('emptyState').style.display = 'block';
@@ -391,6 +427,14 @@ require __DIR__ . '/includes/header.php';
                 }
                 m += '<span class="mandate-content">' + escHtml(item.content) + '</span>';
                 m += '<div class="mandate-meta">' + escHtml(item.created_at) + '</div>';
+                var agreeActive = item.my_vote === 'agree' ? ' vote-active' : '';
+                var disagreeActive = item.my_vote === 'disagree' ? ' vote-active' : '';
+                m += '<div class="mandate-vote-row">'
+                    + '<button class="mandate-vote-btn agree' + agreeActive + '" data-id="' + item.id + '" data-type="agree" title="Agree">'
+                    + '&#x1F44D; <span class="vote-count">' + (item.agree_count || 0) + '</span></button>'
+                    + '<button class="mandate-vote-btn disagree' + disagreeActive + '" data-id="' + item.id + '" data-type="disagree" title="Disagree">'
+                    + '&#x1F44E; <span class="vote-count">' + (item.disagree_count || 0) + '</span></button>'
+                    + '</div>';
                 m += '<div class="mandate-top-link"><a href="#top">&uarr; Top</a></div>';
                 m += '</div>';
             });
@@ -413,6 +457,32 @@ require __DIR__ . '/includes/header.php';
             document.querySelectorAll('.period-tab').forEach(function(t) { t.classList.remove('active'); });
             tab.classList.add('active');
             load(tab.dataset.period);
+        });
+    });
+
+    // Vote handler
+    document.getElementById('mandatesBody').addEventListener('click', function(e) {
+        var voteBtn = e.target.closest('.mandate-vote-btn');
+        if (!voteBtn) return;
+        if (!userId) { alert('Log in to vote'); return; }
+        var ideaId = parseInt(voteBtn.dataset.id);
+        var voteType = voteBtn.dataset.type;
+        fetch('/talk/api.php?action=vote', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({idea_id: ideaId, vote_type: voteType})
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.success) {
+                var row = voteBtn.closest('.mandate-vote-row');
+                var agreeBtn = row.querySelector('.agree');
+                var disagreeBtn = row.querySelector('.disagree');
+                agreeBtn.querySelector('.vote-count').textContent = data.agree_count;
+                disagreeBtn.querySelector('.vote-count').textContent = data.disagree_count;
+                agreeBtn.classList.toggle('vote-active', data.user_vote === 'agree');
+                disagreeBtn.classList.toggle('vote-active', data.user_vote === 'disagree');
+            } else {
+                alert(data.error || 'Vote failed');
+            }
         });
     });
 

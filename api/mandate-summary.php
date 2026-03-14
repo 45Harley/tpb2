@@ -28,6 +28,8 @@ $scope      = $_GET['scope'] ?? '';
 $scopeValue = trim($_GET['scope_value'] ?? '');
 $period     = $_GET['period'] ?? 'all';
 $format     = $_GET['format'] ?? 'json';
+$viewerUserId = $_GET['viewer_user_id'] ?? null;
+if ($viewerUserId !== null) $viewerUserId = (int)$viewerUserId;
 
 // Validate
 if (!in_array($scope, ['federal', 'state', 'town'], true) || $scopeValue === '') {
@@ -125,7 +127,7 @@ try {
 
     // 4. Top mandates
     $mandateLimit = ($format === 'csv') ? 1000 : 10;
-    $sql = "SELECT i.id, i.content, i.policy_topic, i.citizen_summary, i.created_at
+    $sql = "SELECT i.id, i.content, i.policy_topic, i.citizen_summary, i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i JOIN users u ON i.user_id = u.user_id
             WHERE {$baseWhere}{$periodWhere}
             ORDER BY i.created_at DESC LIMIT {$mandateLimit}";
@@ -138,8 +140,25 @@ try {
             'content'         => $row['content'],
             'policy_topic'    => $row['policy_topic'],
             'citizen_summary' => $row['citizen_summary'],
+            'agree_count'     => (int)$row['agree_count'],
+            'disagree_count'  => (int)$row['disagree_count'],
             'created_at'      => $row['created_at'],
         ];
+    }
+
+    // Attach viewer's votes if logged in
+    if ($viewerUserId && count($topMandates) > 0) {
+        $ideaIds = array_column($topMandates, 'id');
+        $placeholders = implode(',', array_fill(0, count($ideaIds), '?'));
+        $vStmt = $pdo->prepare("SELECT idea_id, vote_type FROM idea_votes WHERE idea_id IN ({$placeholders}) AND user_id = ?");
+        $vStmt->execute(array_merge($ideaIds, [$viewerUserId]));
+        $myVotes = [];
+        foreach ($vStmt->fetchAll() as $v) {
+            $myVotes[(int)$v['idea_id']] = $v['vote_type'];
+        }
+        for ($i = 0; $i < count($topMandates); $i++) {
+            $topMandates[$i]['my_vote'] = $myVotes[$topMandates[$i]['id']] ?? null;
+        }
     }
 
     // CSV export
