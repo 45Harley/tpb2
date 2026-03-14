@@ -223,6 +223,9 @@ require dirname(__DIR__) . '/includes/nav.php';
         <a href="/elections/impeachment-vote.php">Impeachment #1</a>
     </div>
 
+    <?php require_once dirname(__DIR__) . '/includes/criminality-scale.php'; ?>
+    <?php require_once dirname(__DIR__) . '/includes/benefit-scale.php'; ?>
+
     <h1 class="page-heading">What the President Says</h1>
     <p class="page-subheading">Presidential statements scored on dual scales — criminality and benefit. You decide if you agree.</p>
 
