@@ -37,8 +37,9 @@ if (!defined('MANDATE_CHAT_ASSETS_LOADED')) {
 
 <div class="mandate-chat" id="<?= $_mcPrefix ?>-wrapper">
     <!-- Response -->
-    <div class="mc-section-header">
+    <div class="mc-scratchpad-header">
         <h3 title="AI responses appear here — say &quot;clear response&quot; to clear">Response</h3>
+        <button class="mc-clear-response" title="Clear all chat messages">Clear</button>
     </div>
     <div class="mc-messages" id="<?= $_mcPrefix ?>-messages"></div>
 

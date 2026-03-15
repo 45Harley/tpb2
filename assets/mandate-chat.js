@@ -121,13 +121,23 @@
             });
         }
 
-        // Clear chat button
+        // Clear chat button (clears everything)
         var clearBtn = this.messagesEl.closest('.mandate-chat').querySelector('.mc-clear-chat');
         if (clearBtn) {
             clearBtn.addEventListener('click', function() {
                 if (confirm('Clear this conversation and all pinned ideas?')) {
                     self.clearSession();
                 }
+            });
+        }
+
+        // Clear response button (clears chat messages only, keeps ideas)
+        var clearResponseBtn = this.messagesEl.closest('.mandate-chat').querySelector('.mc-clear-response');
+        if (clearResponseBtn) {
+            clearResponseBtn.addEventListener('click', function() {
+                self.messages = [];
+                self.messagesEl.innerHTML = '';
+                self.saveToStorage();
             });
         }
     };
@@ -364,8 +374,16 @@
     };
 
     MandateChat.prototype.renderIdeas = function() {
-        if (!this.ideaListEl) return;
+        if (!this.ideaListEl) { console.error('MandateChat renderIdeas: ideaListEl is null!'); return; }
         this.ideaListEl.innerHTML = '';
+
+        // DEBUG: Update scratchpad header to show count
+        var hdr = this.ideaListEl.closest('.mc-scratchpad');
+        if (hdr) {
+            var h3 = hdr.querySelector('.mc-scratchpad-header h3');
+            if (h3) h3.textContent = 'Ideas Scratchpad (' + this.ideas.length + ' pinned)';
+        }
+        console.log('MandateChat renderIdeas: rendering', this.ideas.length, 'ideas into', this.ideaListEl.id);
 
         // Update select dropdown
         if (this.ideaSelectEl) this.ideaSelectEl.innerHTML = '';
@@ -392,6 +410,7 @@
             // List item
             var item = document.createElement('div');
             item.className = 'mc-idea-item';
+            item.style.cssText = 'display:flex !important; visibility:visible !important; opacity:1 !important; min-height:30px; border:2px solid red; margin:4px 0; padding:8px;';
 
             var numSpan = document.createElement('span');
             numSpan.className = 'mc-idea-num';

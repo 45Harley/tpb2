@@ -241,9 +241,20 @@
     cursor: pointer;
 }
 
-.mc-scratchpad-header .mc-clear-chat:hover {
+.mc-scratchpad-header .mc-clear-chat:hover,
+.mc-scratchpad-header .mc-clear-response:hover {
     color: #ef5350;
     border-color: #ef5350;
+}
+
+.mc-scratchpad-header .mc-clear-response {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #999;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .mc-idea-list {
