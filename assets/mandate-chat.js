@@ -235,10 +235,16 @@
             var self = this;
             pinBtn.addEventListener('click', function() {
                 self.pinIdea(msg.content);
-                // Remove this bubble from response area
+                // Remove this AI bubble and its preceding user prompt
                 var idx = self.messages.indexOf(msg);
-                if (idx !== -1) self.messages.splice(idx, 1);
-                div.remove();
+                if (idx !== -1) {
+                    self.messages.splice(idx, 1);
+                    // Remove the user prompt that triggered this response
+                    if (idx > 0 && self.messages[idx - 1] && self.messages[idx - 1].role === 'user') {
+                        self.messages.splice(idx - 1, 1);
+                    }
+                }
+                self.renderAll();
                 self.saveToStorage();
             });
             div.appendChild(pinBtn);
@@ -759,9 +765,14 @@
             }
             if (lastAi) {
                 this.pinIdea(lastAi.content);
-                // Remove from response area
+                // Remove AI response and its preceding user prompt
                 var idx = this.messages.indexOf(lastAi);
-                if (idx !== -1) this.messages.splice(idx, 1);
+                if (idx !== -1) {
+                    this.messages.splice(idx, 1);
+                    if (idx > 0 && this.messages[idx - 1] && this.messages[idx - 1].role === 'user') {
+                        this.messages.splice(idx - 1, 1);
+                    }
+                }
                 this.renderAll();
                 this.saveToStorage();
             } else {
