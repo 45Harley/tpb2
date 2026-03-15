@@ -306,6 +306,10 @@
         this.renderIdeas();
         this.saveToStorage();
         this.showToast('Idea #' + idea.num + ' pinned', 'success');
+
+        // Scroll scratchpad into view
+        var scratchpad = this.ideaListEl.closest('.mc-scratchpad');
+        if (scratchpad) scratchpad.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
     MandateChat.prototype.pinDirect = function() {
@@ -328,11 +332,15 @@
         this.ideas.push(idea);
         this.renderIdeas();
         this.saveToStorage();
-        this.showToast('Idea #' + idea.num + ' pinned (direct)', 'success');
+        this.showToast('Idea #' + idea.num + ' pinned', 'success');
 
         this.inputEl.value = '';
         this.autoResize();
         this.updateCharCount();
+
+        // Scroll scratchpad into view
+        var scratchpad = this.ideaListEl.closest('.mc-scratchpad');
+        if (scratchpad) scratchpad.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
     MandateChat.prototype.renderIdeas = function() {
