@@ -59,7 +59,12 @@
         this.ideaSelectEl = document.getElementById(p + '-idea-select');
         this.toastEl      = document.getElementById(p + '-toast');
 
-        if (!this.messagesEl || !this.inputEl) return;
+        console.log('MandateChat init:', p, {
+            messages: !!this.messagesEl, input: !!this.inputEl, pin: !!this.pinBtn,
+            ideaList: !!this.ideaListEl, ideaSelect: !!this.ideaSelectEl, send: !!this.sendBtn
+        });
+
+        if (!this.messagesEl || !this.inputEl) { console.error('MandateChat: missing messagesEl or inputEl'); return; }
 
         // Bind events FIRST so handlers work even if render fails
         this.bindEvents();
@@ -80,7 +85,13 @@
 
         // Direct pin button — pin to scratchpad without AI
         if (this.pinBtn) {
-            this.pinBtn.addEventListener('click', function() { self.pinDirect(); });
+            console.log('MandateChat: binding pinBtn click');
+            this.pinBtn.addEventListener('click', function() {
+                console.log('MandateChat: pin button clicked, input value:', self.inputEl.value);
+                self.pinDirect();
+            });
+        } else {
+            console.error('MandateChat: pinBtn not found!');
         }
 
         // Enter to send (shift+enter for newline)
@@ -235,9 +246,11 @@
             pinBtn.title = 'Pin this idea';
             var self = this;
             pinBtn.addEventListener('click', function() {
+                console.log('MandateChat: AI pin clicked, messages before:', self.messages.length, 'msg index:', self.messages.indexOf(msg));
                 self.pinIdea(msg.content);
                 // Remove this AI bubble and its preceding user prompt
                 var idx = self.messages.indexOf(msg);
+                console.log('MandateChat: splice index:', idx, 'prev role:', idx > 0 ? self.messages[idx - 1].role : 'none');
                 if (idx !== -1) {
                     self.messages.splice(idx, 1);
                     // Remove the user prompt that triggered this response
@@ -245,6 +258,7 @@
                         self.messages.splice(idx - 1, 1);
                     }
                 }
+                console.log('MandateChat: messages after splice:', self.messages.length);
                 self.renderAll();
                 self.saveToStorage();
             });
@@ -316,7 +330,8 @@
 
     MandateChat.prototype.pinDirect = function() {
         var content = this.inputEl.value.trim();
-        if (!content) return;
+        console.log('MandateChat pinDirect called, content:', JSON.stringify(content), 'ideas before:', this.ideas.length);
+        if (!content) { console.log('MandateChat pinDirect: empty content, returning'); return; }
 
         // Prevent duplicates
         for (var i = 0; i < this.ideas.length; i++) {
@@ -332,7 +347,9 @@
             ts: new Date().toISOString()
         };
         this.ideas.push(idea);
+        console.log('MandateChat pinDirect: ideas after push:', this.ideas.length, 'ideaListEl:', this.ideaListEl);
         this.renderIdeas();
+        console.log('MandateChat pinDirect: renderIdeas done, ideaListEl children:', this.ideaListEl ? this.ideaListEl.children.length : 'null');
         this.saveToStorage();
         this.showToast('Idea #' + idea.num + ' pinned', 'success');
 
@@ -342,6 +359,7 @@
 
         // Scroll scratchpad into view
         var scratchpad = this.ideaListEl.closest('.mc-scratchpad');
+        console.log('MandateChat pinDirect: scratchpad element:', scratchpad);
         if (scratchpad) scratchpad.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
