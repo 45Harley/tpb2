@@ -61,9 +61,10 @@
 
         if (!this.messagesEl || !this.inputEl) return;
 
-        this.loadFromStorage();
-        this.renderAll();
+        // Bind events FIRST so handlers work even if render fails
         this.bindEvents();
+        this.loadFromStorage();
+        try { this.renderAll(); } catch (e) { console.error('MandateChat renderAll:', e); }
         this.initVoice();
 
         return this;
@@ -261,6 +262,7 @@
     };
 
     MandateChat.prototype.formatContent = function(text) {
+        if (!text) return '';
         // Escape HTML
         var html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         // Bold
@@ -344,22 +346,27 @@
     };
 
     MandateChat.prototype.renderIdeas = function() {
+        if (!this.ideaListEl) return;
         this.ideaListEl.innerHTML = '';
 
         // Update select dropdown
-        this.ideaSelectEl.innerHTML = '';
+        if (this.ideaSelectEl) this.ideaSelectEl.innerHTML = '';
         if (this.ideas.length === 0) {
-            var opt = document.createElement('option');
-            opt.value = '';
-            opt.textContent = 'No ideas pinned';
-            this.ideaSelectEl.appendChild(opt);
+            if (this.ideaSelectEl) {
+                var opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'No ideas pinned';
+                this.ideaSelectEl.appendChild(opt);
+            }
             return;
         }
 
-        var lastOpt = document.createElement('option');
-        lastOpt.value = 'last';
-        lastOpt.textContent = 'Last idea (#' + this.ideas[this.ideas.length - 1].num + ')';
-        this.ideaSelectEl.appendChild(lastOpt);
+        if (this.ideaSelectEl) {
+            var lastOpt = document.createElement('option');
+            lastOpt.value = 'last';
+            lastOpt.textContent = 'Last idea (#' + this.ideas[this.ideas.length - 1].num + ')';
+            this.ideaSelectEl.appendChild(lastOpt);
+        }
 
         for (var i = 0; i < this.ideas.length; i++) {
             var idea = this.ideas[i];
@@ -404,10 +411,12 @@
             this.ideaListEl.appendChild(item);
 
             // Select option
-            var opt = document.createElement('option');
-            opt.value = idea.num;
-            opt.textContent = 'Idea #' + idea.num + ': ' + idea.content.substring(0, 40) + (idea.content.length > 40 ? '...' : '');
-            this.ideaSelectEl.appendChild(opt);
+            if (this.ideaSelectEl) {
+                var opt = document.createElement('option');
+                opt.value = idea.num;
+                opt.textContent = 'Idea #' + idea.num + ': ' + idea.content.substring(0, 40) + (idea.content.length > 40 ? '...' : '');
+                this.ideaSelectEl.appendChild(opt);
+            }
         }
     };
 
@@ -537,13 +546,18 @@
 
     MandateChat.prototype.loadFromStorage = function() {
         try {
-            var data = JSON.parse(localStorage.getItem(this.storageKey));
+            var raw = localStorage.getItem(this.storageKey);
+            if (!raw) return;
+            var data = JSON.parse(raw);
             if (data) {
-                this.messages = data.messages || [];
-                this.ideas    = data.ideas    || [];
+                this.messages = Array.isArray(data.messages) ? data.messages.filter(function(m) { return m && m.content; }) : [];
+                this.ideas    = Array.isArray(data.ideas) ? data.ideas.filter(function(i) { return i && i.content; }) : [];
                 this.nextIdea = data.nextIdea || (this.ideas.length + 1);
             }
-        } catch (e) { /* corrupt — ignore */ }
+        } catch (e) {
+            console.error('MandateChat: corrupt localStorage, clearing', e);
+            localStorage.removeItem(this.storageKey);
+        }
     };
 
     MandateChat.prototype.clearSession = function() {
