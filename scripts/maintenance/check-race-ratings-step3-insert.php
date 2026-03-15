@@ -191,7 +191,7 @@ if (!empty($changedRaces)) {
 
         sendSmtpMail($config, $adminEmail,
             'TPB Race Rating SHIFT — ' . count($changedRaces) . ' race(s) moved — ' . date('M j'),
-            $body
+            $body, null, true
         );
         logMsg("Shift notification sent to {$adminEmail}.");
     }
