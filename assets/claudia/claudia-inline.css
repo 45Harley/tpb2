@@ -80,7 +80,7 @@
     border-color: #d4af37;
 }
 .claudia-inline-textarea::placeholder {
-    color: #666;
+    color: #999;
 }
 .claudia-inline-send {
     padding: 0.7rem 1.2rem;
