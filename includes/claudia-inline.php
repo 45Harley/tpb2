@@ -18,11 +18,21 @@
 $_ciDefaults = [
     'title'       => 'My Mandate',
     'placeholder' => "What do you want your reps to do?",
+    'group'       => null,  // group name filter (e.g. 'The Fight')
 ];
 $_ci = array_merge($_ciDefaults, $claudiaInlineConfig ?? []);
 
 $_ciUserLevel = $dbUser ? (int)($dbUser['identity_level_id'] ?? 1) : 0;
 $_ciCanPost = $isLoggedIn && $_ciUserLevel >= 2;
+
+// Resolve group name → group_id for mandate saves
+$_ciGroupId = null;
+if (!empty($_ci['group']) && isset($pdo)) {
+    $stmt = $pdo->prepare("SELECT id FROM idea_groups WHERE name = ? LIMIT 1");
+    $stmt->execute([$_ci['group']]);
+    $_ciGroupId = $stmt->fetchColumn() ?: null;
+    if ($_ciGroupId) $_ciGroupId = (int)$_ciGroupId;
+}
 
 // User geo data
 $_ciUserStateId  = $dbUser ? ($dbUser['current_state_id'] ?? null) : null;
@@ -84,6 +94,7 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
     <?php
     $mandateChatConfig = [
         'placeholder' => $_ci['placeholder'],
+        'group_id'    => $_ciGroupId,
     ];
     require __DIR__ . '/mandate-chat.php';
     ?>
@@ -131,6 +142,7 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
         var userTownName  = <?= json_encode($_ciUserTownName ?: '') ?>;
         var userStateName = <?= json_encode($_ciUserStateAbbr ?: $_ciUserStateName ?: '') ?>;
         var userId        = <?= json_encode($dbUser ? (int)$dbUser['user_id'] : 0) ?>;
+        var groupFilter   = <?= json_encode($_ci['group'] ?: null) ?>;
 
         var titleEl = document.getElementById('claudia-inline-summary-title');
         var bodyEl  = document.getElementById('claudia-inline-summary-body');
@@ -167,6 +179,7 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
                 }
             }
             if (userId) url += '&viewer_user_id=' + encodeURIComponent(userId);
+            if (groupFilter) url += '&group=' + encodeURIComponent(groupFilter);
             return url;
         }
 

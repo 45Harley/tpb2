@@ -86,6 +86,9 @@ switch ($level) {
         break;
 }
 
+// Optional group filter (by name, e.g. "The Fight")
+$groupName = trim($_GET['group'] ?? '');
+
 // Optional viewer_user_id for my_vote
 $viewerUserId = $_GET['viewer_user_id'] ?? null;
 
@@ -103,6 +106,19 @@ try {
     require_once __DIR__ . '/../includes/get-user.php';
     $dbUser = getUser($pdo);
     $currentUserId = $viewerUserId ? (int)$viewerUserId : ($dbUser ? (int)$dbUser['user_id'] : 0);
+
+    // Resolve group name → group_id
+    $groupId = null;
+    if ($groupName !== '') {
+        $gStmt = $pdo->prepare("SELECT id FROM idea_groups WHERE name = ? LIMIT 1");
+        $gStmt->execute([$groupName]);
+        $groupId = $gStmt->fetchColumn();
+        if (!$groupId) {
+            echo json_encode(['success' => true, 'level' => $level, 'item_count' => 0, 'contributor_count' => 0, 'items' => []]);
+            exit;
+        }
+        $groupId = (int)$groupId;
+    }
 
     if ($level === 'all') {
         // All mandates for this user's geographic area (federal + state + town combined)
@@ -132,6 +148,11 @@ try {
         }
 
         $geoFilter = '(' . implode(' OR ', $whereParts) . ')';
+        $groupFilter = '';
+        if ($groupId) {
+            $groupFilter = ' AND i.group_id = ?';
+            $params[] = $groupId;
+        }
 
         $sql = "
             SELECT i.id, i.user_id, i.content, i.tags, i.category, i.policy_topic,
@@ -140,7 +161,7 @@ try {
             JOIN users u ON i.user_id = u.user_id
             WHERE i.deleted_at IS NULL AND u.deleted_at IS NULL
               AND i.category IN ('mandate-federal','mandate-state','mandate-town')
-              AND {$geoFilter}
+              AND {$geoFilter}{$groupFilter}
             ORDER BY i.created_at DESC
         ";
         $stmt = $pdo->prepare($sql);
@@ -166,30 +187,39 @@ try {
             ];
         }
 
-        // Contributor count
+        // Contributor count (re-build params for count query since $params was consumed)
+        $cntParams = [];
+        if ($district) $cntParams[] = $district;
+        if ($stId && ctype_digit((string)$stId)) $cntParams[] = (int)$stId;
+        if ($twId && ctype_digit((string)$twId)) $cntParams[] = (int)$twId;
+        if ($groupId) $cntParams[] = $groupId;
+
         $cntSql = "
             SELECT COUNT(DISTINCT i.user_id)
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.deleted_at IS NULL AND u.deleted_at IS NULL
               AND i.category IN ('mandate-federal','mandate-state','mandate-town')
-              AND {$geoFilter}
+              AND {$geoFilter}{$groupFilter}
         ";
         $cntStmt = $pdo->prepare($cntSql);
-        $cntStmt->execute($params);
+        $cntStmt->execute($cntParams);
         $contributorCount = (int)$cntStmt->fetchColumn();
 
     } else if ($level === 'my-ideas') {
         // My ideas — category='idea' for this user
+        $myGroupFilter = $groupId ? ' AND i.group_id = ?' : '';
         $sql = "
             SELECT i.id, i.user_id, i.content, i.tags, i.category, i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i
             WHERE i.user_id = ? AND i.deleted_at IS NULL
-              AND i.category = 'idea'
+              AND i.category = 'idea'{$myGroupFilter}
             ORDER BY i.created_at DESC
         ";
+        $myParams = [$userId];
+        if ($groupId) $myParams[] = $groupId;
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$userId]);
+        $stmt->execute($myParams);
         $rows = $stmt->fetchAll();
 
         $items = [];
@@ -212,16 +242,19 @@ try {
 
     } else if ($level === 'mine') {
         // My mandates — all categories for this user
+        $myGroupFilter = $groupId ? ' AND i.group_id = ?' : '';
         $sql = "
             SELECT i.id, i.user_id, i.content, i.tags, i.category, i.policy_topic,
                    i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i
             WHERE i.user_id = ? AND i.deleted_at IS NULL
-              AND i.category IN ('mandate-federal','mandate-state','mandate-town')
+              AND i.category IN ('mandate-federal','mandate-state','mandate-town'){$myGroupFilter}
             ORDER BY i.created_at DESC
         ";
+        $myParams = [$userId];
+        if ($groupId) $myParams[] = $groupId;
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$userId]);
+        $stmt->execute($myParams);
         $rows = $stmt->fetchAll();
 
         $items = [];
@@ -259,18 +292,21 @@ try {
         }
 
         // Get items
+        $geoGroupFilter = $groupId ? ' AND i.group_id = ?' : '';
         $sql = "
             SELECT i.id, i.user_id, i.content, i.tags, i.policy_topic,
                    i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.category = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
-              AND {$geoWhere}
+              AND {$geoWhere}{$geoGroupFilter}
             ORDER BY i.created_at DESC
         ";
 
+        $execParams = [$category, $geoParam];
+        if ($groupId) $execParams[] = $groupId;
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$category, $geoParam]);
+        $stmt->execute($execParams);
         $rows = $stmt->fetchAll();
 
         $items = [];
@@ -296,10 +332,12 @@ try {
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.category = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
-              AND {$geoWhere}
+              AND {$geoWhere}{$geoGroupFilter}
         ";
+        $cntParams2 = [$category, $geoParam];
+        if ($groupId) $cntParams2[] = $groupId;
         $cntStmt = $pdo->prepare($cntSql);
-        $cntStmt->execute([$category, $geoParam]);
+        $cntStmt->execute($cntParams2);
         $contributorCount = (int)$cntStmt->fetchColumn();
     }
 

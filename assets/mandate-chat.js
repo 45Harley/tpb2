@@ -25,6 +25,7 @@
             townName:    '',
             stateId:     0,
             townId:      0,
+            groupId:     null,
             placeholder: "What do you want your reps to do?"
         }, config);
 
@@ -533,7 +534,8 @@
                     category: category,
                     source: 'mandate-chat',
                     session_id: this.sessionId,
-                    auto_classify: false
+                    auto_classify: false,
+                    group_id: this.config.groupId || null
                 })
             });
             var data = await resp.json();

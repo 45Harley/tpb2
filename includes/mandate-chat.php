@@ -13,6 +13,7 @@
 $_mcDefaults = [
     'placeholder' => "What do you want your reps to do?",
     'prefix'      => 'mc',
+    'group_id'    => null,
 ];
 $_mc = array_merge($_mcDefaults, $mandateChatConfig ?? []);
 $_mcPrefix = $_mc['prefix'];
@@ -91,6 +92,7 @@ new MandateChat({
     townName:    <?= json_encode($_mcTownName) ?>,
     stateId:     <?= $_mcStateId ?>,
     townId:      <?= $_mcTownId ?>,
+    groupId:     <?= json_encode($_mc['group_id']) ?>,
     placeholder: <?= json_encode($_mc['placeholder']) ?>
 }).init();
 </script>

@@ -229,9 +229,7 @@ $pageStyles = <<<'CSS'
 }
 CSS;
 
-// Pre-load talk-stream CSS in <head> via header.php
-$_tsCssVer = filemtime(dirname(__DIR__) . '/assets/talk-stream.css');
-$headLinks = '    <link rel="stylesheet" href="/assets/talk-stream.css?v=' . $_tsCssVer . '">' . "\n";
+// talk-stream CSS preload removed — stream no longer used on this page
 
 require_once dirname(__DIR__) . '/includes/header.php';
 require_once dirname(__DIR__) . '/includes/nav.php';
@@ -376,27 +374,12 @@ require_once dirname(__DIR__) . '/includes/nav.php';
         'scope_label' => 'Elections 2026',
         'title' => 'Your Mandate for This Election',
         'placeholder' => 'What should your representatives fight for?',
+        'group' => 'The Fight',
     ];
     require dirname(__DIR__) . '/includes/claudia-inline.php';
     ?>
 
-    <?php
-    $talkStreamConfig = [
-        'group'               => 'The Fight',
-        'scope'               => 'federal',
-        'title'               => 'Community Stream',
-        'subtitle'            => 'Evidence. Ideas. Action. A debate where everyone wins.',
-        'placeholder'         => 'What does the Golden Rule demand right now?',
-        'show_group_selector' => false,
-        'show_filters'        => false,
-        'show_categories'     => false,
-        'show_ai_toggle'      => true,
-        'show_mic'            => true,
-        'show_admin_tools'    => false,
-        'limit'               => 30,
-    ];
-    require dirname(__DIR__) . '/includes/talk-stream.php';
-    ?>
+    <?php // Talk stream removed — claudia-inline.php Public Mandate Summary covers this ?>
 
 </main>
 <div class="points-flash" id="pointsFlash"></div>
