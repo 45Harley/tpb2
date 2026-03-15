@@ -1,0 +1,133 @@
+/* Claudia Inline Mandate Form
+   Static form embedded on Talk/Fight pages.
+   Not the floating widget — this sits IN the page. */
+
+.claudia-inline {
+    max-width: 700px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid rgba(212,175,55,0.25);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+}
+
+.claudia-inline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.claudia-inline-title {
+    color: #d4af37;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+.claudia-inline-scope {
+    color: #b0b0b0;
+    font-size: 0.85rem;
+}
+
+/* Topic pills */
+.claudia-inline-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+.claudia-topic-pill {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    border: 1px solid rgba(212,175,55,0.25);
+    border-radius: 16px;
+    background: transparent;
+    color: #b0b0b0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.claudia-topic-pill:hover {
+    border-color: #d4af37;
+    color: #fff;
+}
+.claudia-topic-pill.active {
+    background: rgba(212,175,55,0.2);
+    border-color: #d4af37;
+    color: #d4af37;
+    font-weight: 600;
+}
+
+/* Input area */
+.claudia-inline-input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+.claudia-inline-textarea {
+    flex: 1;
+    background: #0d0d1a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #e0e0e0;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 60px;
+    max-height: 200px;
+    font-family: inherit;
+}
+.claudia-inline-textarea:focus {
+    outline: none;
+    border-color: #d4af37;
+}
+.claudia-inline-textarea::placeholder {
+    color: #666;
+}
+.claudia-inline-send {
+    padding: 0.7rem 1.2rem;
+    background: rgba(212,175,55,0.15);
+    border: 1px solid #d4af37;
+    border-radius: 8px;
+    color: #d4af37;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.claudia-inline-send:hover {
+    background: rgba(212,175,55,0.3);
+}
+.claudia-inline-send:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Status/feedback */
+.claudia-inline-status {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    min-height: 1.2em;
+}
+.claudia-inline-status.success { color: #81c784; }
+.claudia-inline-status.error { color: #e57373; }
+
+/* Auth nudge */
+.claudia-inline-auth {
+    text-align: center;
+    padding: 1rem;
+    color: #b0b0b0;
+    font-size: 0.9rem;
+}
+.claudia-inline-auth a {
+    color: #d4af37;
+    text-decoration: none;
+}
+.claudia-inline-auth a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .claudia-inline { padding: 1rem; }
+    .claudia-inline-input-row { flex-direction: column; }
+    .claudia-inline-send { width: 100%; }
+}
