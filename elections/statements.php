@@ -55,9 +55,14 @@ if ($filterSource) {
 
 $whereClause = implode(' AND ', $where);
 $sql = "
-    SELECT rs.*, eo.full_name AS official_name
+    SELECT rs.*, eo.full_name AS official_name,
+           sc.canonical_claim, sc.repeat_count, sc.truthfulness_score AS truth_score,
+           sc.truthfulness_avg AS truth_avg, sc.truthfulness_direction AS truth_dir,
+           sc.truthfulness_delta AS truth_delta, sc.truthfulness_note AS truth_note,
+           sc.first_seen AS cluster_first, sc.last_seen AS cluster_last
     FROM rep_statements rs
     JOIN elected_officials eo ON rs.official_id = eo.official_id
+    LEFT JOIN statement_clusters sc ON rs.cluster_id = sc.id
     WHERE $whereClause
     ORDER BY rs.statement_date DESC, rs.id DESC
 ";
@@ -81,6 +86,21 @@ $sources = $pdo->query("
 ")->fetchAll(PDO::FETCH_COLUMN);
 
 $hasFilters = $filterTopic || $filterTense || $filterSource;
+
+// Truthfulness zone helper
+function getTruthZone($score) {
+    if ($score === null) return ['label' => 'Unscored', 'color' => '#444', 'text' => '#888'];
+    if ($score <= 100) return ['label' => 'False', 'color' => '#b71c1c', 'text' => '#fff'];
+    if ($score <= 200) return ['label' => 'Mostly False', 'color' => '#c62828', 'text' => '#fff'];
+    if ($score <= 300) return ['label' => 'Misleading', 'color' => '#e65100', 'text' => '#fff'];
+    if ($score <= 400) return ['label' => 'Half True', 'color' => '#f9a825', 'text' => '#000'];
+    if ($score <= 500) return ['label' => 'Mixed', 'color' => '#fdd835', 'text' => '#000'];
+    if ($score <= 600) return ['label' => 'Mostly True', 'color' => '#9ccc65', 'text' => '#000'];
+    if ($score <= 700) return ['label' => 'True', 'color' => '#66bb6a', 'text' => '#000'];
+    if ($score <= 800) return ['label' => 'Very True', 'color' => '#43a047', 'text' => '#fff'];
+    if ($score <= 900) return ['label' => 'Verified', 'color' => '#2e7d32', 'text' => '#fff'];
+    return ['label' => 'Precisely True', 'color' => '#1b5e20', 'text' => '#fff'];
+}
 
 $pageStyles = <<<'CSS'
 .stream-container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
@@ -199,11 +219,42 @@ $pageStyles = <<<'CSS'
     text-align: center; padding: 3rem 1rem; color: #b0b0b0; font-size: 1.1rem;
 }
 
+/* Truthfulness */
+.truth-row {
+    display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+    margin-bottom: 0.75rem; padding: 0.6rem 0.75rem;
+    background: rgba(255,255,255,0.03); border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.truth-score-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 3px 12px; border-radius: 4px; font-weight: 700;
+    font-family: 'Courier New', monospace; font-size: 0.85rem;
+}
+.truth-direction {
+    font-size: 0.85rem; font-weight: 700;
+}
+.truth-direction.up { color: #66bb6a; }
+.truth-direction.down { color: #ef5350; }
+.truth-direction.stable { color: #888; }
+.truth-direction.new { color: #64b5f6; }
+.truth-note {
+    font-size: 0.8rem; color: #b0b0b0; line-height: 1.4;
+    flex: 1 1 100%;
+}
+.cluster-info {
+    font-size: 0.75rem; color: #888;
+}
+.cluster-info .repeat-count {
+    color: #d4af37; font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .statement-meta { flex-direction: column; align-items: flex-start; }
     .statement-date { margin-left: 0; }
     .dual-scores { flex-direction: column; }
+    .truth-row { flex-direction: column; align-items: flex-start; }
 }
 CSS;
 
@@ -272,6 +323,11 @@ require dirname(__DIR__) . '/includes/nav.php';
             $benefitTextColor = '#000';
             $tenseClass = $s['tense'] ? 'tense-' . $s['tense'] : '';
             $userVote = $userVotes[$sid] ?? null;
+            $truthScore = $s['truth_score'] ?? null;
+            $truthZone = getTruthZone($truthScore !== null ? (int)$truthScore : null);
+            $truthDir = $s['truth_dir'] ?? null;
+            $truthDelta = (int)($s['truth_delta'] ?? 0);
+            $repeatCount = (int)($s['repeat_count'] ?? 0);
         ?>
         <div class="statement-card">
             <div class="statement-meta">
@@ -307,6 +363,26 @@ require dirname(__DIR__) . '/includes/nav.php';
                     Benefit: <?= $benefitScore !== null ? (int)$benefitScore : '—' ?> <?= $benefitZone['label'] ?>
                 </span>
             </div>
+
+            <?php if ($truthScore !== null): ?>
+            <div class="truth-row">
+                <span class="truth-score-badge" style="background:<?= $truthZone['color'] ?>;color:<?= $truthZone['text'] ?>">
+                    Truth: <?= (int)$truthScore ?> <?= $truthZone['label'] ?>
+                </span>
+                <?php if ($truthDir && $truthDir !== 'new'): ?>
+                <span class="truth-direction <?= $truthDir ?>">
+                    <?= $truthDir === 'up' ? '&#9650;' : ($truthDir === 'down' ? '&#9660;' : '&#9654;') ?>
+                    <?= $truthDelta > 0 ? '+' . $truthDelta : $truthDelta ?>
+                </span>
+                <?php endif; ?>
+                <?php if ($repeatCount > 1): ?>
+                <span class="cluster-info">Said <span class="repeat-count"><?= $repeatCount ?>x</span> across sources</span>
+                <?php endif; ?>
+                <?php if ($s['truth_note']): ?>
+                <span class="truth-note"><?= htmlspecialchars($s['truth_note']) ?></span>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
 
             <div class="vote-row">
                 <button class="vote-btn <?= $userVote === 'agree' ? 'vote-active agree' : '' ?>"
