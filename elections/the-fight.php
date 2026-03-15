@@ -371,6 +371,16 @@ require_once dirname(__DIR__) . '/includes/nav.php';
     </div>
 
     <?php
+    $claudiaInlineConfig = [
+        'scope' => 'federal',
+        'scope_label' => 'Elections 2026',
+        'title' => 'Your Mandate for This Election',
+        'placeholder' => 'What should your representatives fight for?',
+    ];
+    require dirname(__DIR__) . '/includes/claudia-inline.php';
+    ?>
+
+    <?php
     $talkStreamConfig = [
         'group'               => 'The Fight',
         'scope'               => 'federal',
