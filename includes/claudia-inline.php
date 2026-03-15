@@ -3,7 +3,7 @@
  * Claudia Inline Mandate Form
  * ============================
  * Full mandate interface embedded on Talk/Fight pages.
- * Visual layout matches mandate-poc.php logged-in section exactly.
+ * Matches mandate-poc.php logged-in section from experiment branch.
  *
  * Required from calling page:
  *   $pdo        — PDO connection
@@ -11,55 +11,26 @@
  *   $isLoggedIn — (bool)$dbUser
  *
  * Config: set $claudiaInlineConfig before requiring this file.
- *   'scope'       => 'federal'|'state'|'town' (default: 'federal')
- *   'scope_label' => 'USA'|'Connecticut'|'Putnam' etc.
  *   'title'       => heading text (default: 'My Mandate')
- *   'placeholder' => textarea placeholder
+ *   'placeholder' => mandate-chat placeholder
  */
 
-require_once __DIR__ . '/../config/mandate-topics.php';
-
 $_ciDefaults = [
-    'scope'       => 'federal',
-    'scope_label' => 'USA',
     'title'       => 'My Mandate',
-    'placeholder' => 'What matters most to you? Pick a topic and share your mandate.',
+    'placeholder' => "What do you want your reps to do?",
 ];
 $_ci = array_merge($_ciDefaults, $claudiaInlineConfig ?? []);
 
 $_ciUserLevel = $dbUser ? (int)($dbUser['identity_level_id'] ?? 1) : 0;
 $_ciCanPost = $isLoggedIn && $_ciUserLevel >= 2;
 
-// Category for idea_log based on scope
-$_ciCategoryMap = ['federal' => 'mandate-federal', 'state' => 'mandate-state', 'town' => 'mandate-town'];
-$_ciCategory = $_ciCategoryMap[$_ci['scope']] ?? 'mandate-federal';
-
-// User geo data for mandate summary and delegation popup
+// User geo data
 $_ciUserStateId  = $dbUser ? ($dbUser['current_state_id'] ?? null) : null;
 $_ciUserTownId   = $dbUser ? ($dbUser['current_town_id'] ?? null) : null;
 $_ciUserDistrict = $dbUser ? ($dbUser['us_congress_district'] ?? null) : null;
-$_ciUserTownName  = null;
-$_ciUserStateName = null;
-$_ciUserStateAbbr = null;
-
-if ($_ciUserTownId && isset($pdo)) {
-    $stmt = $pdo->prepare("SELECT t.town_name, s.state_name, s.abbreviation FROM towns t JOIN states s ON t.state_id = s.state_id WHERE t.town_id = ?");
-    $stmt->execute([$_ciUserTownId]);
-    $geo = $stmt->fetch();
-    if ($geo) {
-        $_ciUserTownName  = $geo['town_name'];
-        $_ciUserStateName = $geo['state_name'];
-        $_ciUserStateAbbr = $geo['abbreviation'];
-    }
-} elseif ($_ciUserStateId && isset($pdo)) {
-    $stmt = $pdo->prepare("SELECT state_name, abbreviation FROM states WHERE state_id = ?");
-    $stmt->execute([$_ciUserStateId]);
-    $geo = $stmt->fetch();
-    if ($geo) {
-        $_ciUserStateName = $geo['state_name'];
-        $_ciUserStateAbbr = $geo['abbreviation'];
-    }
-}
+$_ciUserTownName  = $dbUser ? ($dbUser['town_name'] ?? null) : null;
+$_ciUserStateName = $dbUser ? ($dbUser['state_name'] ?? null) : null;
+$_ciUserStateAbbr = $dbUser ? ($dbUser['state_abbrev'] ?? null) : null;
 
 // Load CSS once per page
 if (!defined('CLAUDIA_INLINE_LOADED')) {
@@ -70,12 +41,16 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
 }
 ?>
 
-<div class="mandate-wrap" id="claudia-inline-form">
+<div class="mandate-wrap" id="top">
 
-    <!-- Mandate Header — matches mandate-poc.php exactly -->
+    <!-- Mandate Header -->
     <div class="mandate-header">
         <h1><?= htmlspecialchars($_ci['title']) ?></h1>
-        <a href="/help/guide.php?flow=mandate-chat" class="mandate-help-btn">&#x1F393; How It Works</a>
+        <div class="mandate-header-links">
+            <a href="/help/guide.php?flow=mandate-chat" class="mandate-help-btn">&#x1F393; How It Works</a>
+            <a href="/mandate-summary.php?scope=federal&value=<?= htmlspecialchars(urlencode($_ciUserDistrict ?? '')) ?>"
+               class="mandate-pulse-link" title="View full statistics and topic breakdown">The People's Pulse &rarr;</a>
+        </div>
 <?php if ($dbUser && ($_ciUserTownName || $_ciUserStateName || $_ciUserDistrict)): ?>
         <p class="geo-info" id="claudia-inline-geo" title="Click to see your elected representatives">
 <?php if ($_ciUserTownName): ?>
@@ -105,23 +80,13 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
 <?php endif; ?>
 
 <?php if ($_ciCanPost): ?>
-    <!-- Topic pills -->
-    <div class="mandate-topics" id="claudia-inline-topics">
-    <?php foreach (MANDATE_POLICY_TOPICS as $topic): ?>
-        <button class="mandate-topic-pill" data-topic="<?= htmlspecialchars($topic) ?>">
-            <?= htmlspecialchars($topic) ?>
-        </button>
-    <?php endforeach; ?>
-    </div>
-
-    <!-- Mandate Input -->
-    <div class="mandate-input-row">
-        <textarea class="mandate-textarea" id="claudia-inline-input"
-                  placeholder="<?= htmlspecialchars($_ci['placeholder']) ?>"
-                  rows="3" maxlength="2000"></textarea>
-        <button class="mandate-submit-btn" id="claudia-inline-send" disabled>Submit Mandate</button>
-    </div>
-    <div class="mandate-status" id="claudia-inline-status"></div>
+    <!-- Mandate Chat — Response / Prompt / Scratchpad -->
+    <?php
+    $mandateChatConfig = [
+        'placeholder' => $_ci['placeholder'],
+    ];
+    require __DIR__ . '/mandate-chat.php';
+    ?>
 
 <?php elseif (!$isLoggedIn): ?>
     <div class="mandate-auth-nudge">
@@ -133,10 +98,10 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
     </div>
 <?php endif; ?>
 
-    <!-- Public Mandate Summary — matches mandate-poc.php exactly -->
+    <!-- Public Mandate Summary -->
     <div class="mandate-summary" id="claudia-inline-summary">
         <div class="mandate-summary-header">
-            <h3 id="claudia-inline-summary-title" title="Click to see your elected representatives">Public Mandate Summary</h3>
+            <h3 id="claudia-inline-summary-title" title="Saved mandates from your area — say &quot;read my mandate&quot; to hear them">Public Mandate Summary</h3>
         </div>
         <!-- Level Filter Tabs -->
         <div class="level-tabs" id="claudia-inline-level-tabs">
@@ -145,32 +110,417 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
             <button class="level-tab" data-level="mandate-state" title="State legislature &mdash; your state reps">State</button>
             <button class="level-tab" data-level="mandate-town" title="Local town government &mdash; selectmen, council">Town</button>
             <button class="level-tab" data-level="mine" title="Only mandates you have saved">My Mandates</button>
+            <button class="level-tab" data-level="my-ideas" title="Your private ideas">My Ideas</button>
         </div>
         <div style="text-align:right; padding: 4px 12px;">
-            <a href="/mandate-summary.php" style="color:#d4af37; font-size:0.8rem; text-decoration:none;" title="View full statistics and topic breakdown">The People's Pulse &rarr;</a>
+            <a href="/mandate-summary.php?scope=federal&value=<?= htmlspecialchars(urlencode($_ciUserDistrict ?? '')) ?>"
+               style="color:#d4af37; font-size:0.8rem; text-decoration:none;"
+               title="View full statistics and topic breakdown">The People's Pulse &rarr;</a>
         </div>
         <div id="claudia-inline-summary-body" style="padding: 1.5rem;">
-            <p style="color:#b0b0b0;">Loading mandate data...</p>
+            <p>Loading mandate data...</p>
         </div>
     </div>
 
-</div>
+    <!-- ── Mandate Summary JS — edit/delete/vote/tabs ──── -->
+    <script>
+    (function() {
+        var userDistrict  = <?= json_encode($_ciUserDistrict ?: null) ?>;
+        var userStateId   = <?= json_encode($_ciUserStateId ?: null) ?>;
+        var userTownId    = <?= json_encode($_ciUserTownId ?: null) ?>;
+        var userTownName  = <?= json_encode($_ciUserTownName ?: '') ?>;
+        var userStateName = <?= json_encode($_ciUserStateAbbr ?: $_ciUserStateName ?: '') ?>;
+        var userId        = <?= json_encode($dbUser ? (int)$dbUser['user_id'] : 0) ?>;
 
-<script>
-window._claudiaInlineConfig = {
-    category: <?= json_encode($_ciCategory) ?>,
-    scope: <?= json_encode($_ci['scope']) ?>,
-    userId: <?= $dbUser ? (int)$dbUser['user_id'] : 'null' ?>,
-    userStateId: <?= json_encode($_ciUserStateId) ?>,
-    userTownId: <?= json_encode($_ciUserTownId) ?>,
-    userDistrict: <?= json_encode($_ciUserDistrict) ?>,
-    userTownName: <?= json_encode($_ciUserTownName ?: '') ?>,
-    userStateName: <?= json_encode($_ciUserStateName ?: '') ?>,
-    userStateAbbr: <?= json_encode($_ciUserStateAbbr ?: '') ?>
-};
-</script>
-<?php
-$_ciJsVer = file_exists(__DIR__ . '/../assets/claudia/claudia-inline.js')
-    ? filemtime(__DIR__ . '/../assets/claudia/claudia-inline.js') : 0;
-?>
-<script src="/assets/claudia/claudia-inline.js?v=<?= $_ciJsVer ?>"></script>
+        var titleEl = document.getElementById('claudia-inline-summary-title');
+        var bodyEl  = document.getElementById('claudia-inline-summary-body');
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        function buildUrl(level) {
+            var url;
+            if (level === 'my-ideas') {
+                url = '/api/mandate-aggregate.php?level=my-ideas&user_id=' + encodeURIComponent(userId);
+            } else if (level === 'mine') {
+                url = '/api/mandate-aggregate.php?level=mine&user_id=' + encodeURIComponent(userId);
+            } else if (level === 'all') {
+                url = '/api/mandate-aggregate.php?level=all';
+                if (userDistrict) url += '&district=' + encodeURIComponent(userDistrict);
+                if (userStateId) url += '&state_id=' + encodeURIComponent(userStateId);
+                if (userTownId) url += '&town_id=' + encodeURIComponent(userTownId);
+            } else {
+                url = '/api/mandate-aggregate.php?level=' + encodeURIComponent(level);
+                switch (level) {
+                    case 'federal':
+                        if (userDistrict) url += '&district=' + encodeURIComponent(userDistrict);
+                        break;
+                    case 'state':
+                        if (userStateId) url += '&state_id=' + encodeURIComponent(userStateId);
+                        break;
+                    case 'town':
+                        if (userTownId) url += '&town_id=' + encodeURIComponent(userTownId);
+                        break;
+                }
+            }
+            if (userId) url += '&viewer_user_id=' + encodeURIComponent(userId);
+            return url;
+        }
+
+        function buildTitle(level) {
+            switch (level) {
+                case 'my-ideas':
+                    return 'My Ideas';
+                case 'mine':
+                    return 'My Mandates';
+                case 'federal':
+                    return userDistrict
+                        ? 'Constituent Mandate for ' + escapeHtml(userDistrict)
+                        : 'Constituent Mandate (Federal)';
+                case 'state':
+                    return userStateName
+                        ? 'Constituent Mandate for ' + escapeHtml(userStateName)
+                        : 'Constituent Mandate (State)';
+                case 'town':
+                    return userTownName
+                        ? 'Constituent Mandate for ' + escapeHtml(userTownName)
+                        : 'Constituent Mandate (Town)';
+                default:
+                    return 'Public Mandate Summary';
+            }
+        }
+
+        function loadSummary(level) {
+            titleEl.innerHTML = buildTitle(level);
+            bodyEl.innerHTML = '<p style="color:#b0b0b0;">Loading...</p>';
+
+            fetch(buildUrl(level))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.success || data.item_count === 0) {
+                        bodyEl.innerHTML = '<p style="color:#b0b0b0;">No mandate items yet for this scope.</p>';
+                        return;
+                    }
+
+                    var html = '<p style="color:#81c784; font-size:0.95rem; margin-bottom:0.75rem;">'
+                        + data.contributor_count + ' constituent'
+                        + (data.contributor_count !== 1 ? 's' : '')
+                        + ' ha' + (data.contributor_count !== 1 ? 've' : 's')
+                        + ' spoken.</p>';
+
+                    html += '<ol style="text-align:left; padding-left:1.5rem; margin:0;">';
+                    data.items.forEach(function(item) {
+                        var isOwner = item.user_id && item.user_id === userId;
+                        html += '<li style="color:#ccc; margin-bottom:0.5rem;" data-idea-id="' + item.id + '">';
+                        if (item.level) {
+                            html += '<span style="color:#d4af37; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; margin-right:6px;">'
+                                + escapeHtml(item.level) + '</span> ';
+                        }
+                        html += '<span class="mandate-text">' + escapeHtml(item.content) + '</span>';
+                        if (item.tags) {
+                            html += ' <span style="color:#999; font-size:0.85rem;">('
+                                + escapeHtml(item.tags) + ')</span>';
+                        }
+                        if (isOwner) {
+                            html += '<span class="mandate-owner-actions">'
+                                + '<button class="mandate-edit-btn" data-id="' + item.id + '" title="Edit">&#9998;</button>'
+                                + '<button class="mandate-delete-btn" data-id="' + item.id + '" title="Delete">&times;</button>'
+                                + '</span>';
+                        }
+                        // Vote buttons + count
+                        var agreeActive = item.my_vote === 'agree' ? ' vote-active' : '';
+                        var disagreeActive = item.my_vote === 'disagree' ? ' vote-active' : '';
+                        html += '<div class="mandate-vote-row">'
+                            + '<button class="mandate-vote-btn agree' + agreeActive + '" data-id="' + item.id + '" data-type="agree" title="Agree">'
+                            + '&#x1F44D; <span class="vote-count">' + (item.agree_count || 0) + '</span></button>'
+                            + '<button class="mandate-vote-btn disagree' + disagreeActive + '" data-id="' + item.id + '" data-type="disagree" title="Disagree">'
+                            + '&#x1F44E; <span class="vote-count">' + (item.disagree_count || 0) + '</span></button>'
+                            + '</div>';
+                        html += '<div class="mandate-top-link"><a href="#top">&uarr; Top</a></div>';
+                        html += '</li>';
+                    });
+                    html += '</ol>';
+
+                    bodyEl.innerHTML = html;
+                })
+                .catch(function() {
+                    bodyEl.innerHTML = '<p style="color:#e63946;">Failed to load mandate summary.</p>';
+                });
+        }
+
+        // Expose so MandateChat can refresh after saving
+        window.refreshMandateSummary = loadSummary;
+
+        // ── Initial load ──────────────────────────────────────
+        var currentLevel = 'all';
+        loadSummary('all');
+
+        // ── Edit / Delete / Vote handlers (delegated) ─────────
+        bodyEl.addEventListener('click', function(e) {
+            var editBtn = e.target.closest('.mandate-edit-btn');
+            var deleteBtn = e.target.closest('.mandate-delete-btn');
+
+            if (editBtn) {
+                var li = editBtn.closest('li');
+                var ideaId = editBtn.dataset.id;
+                var textEl = li.querySelector('.mandate-text');
+                if (!textEl || li.querySelector('.mandate-edit-input')) return;
+
+                var input = document.createElement('textarea');
+                input.className = 'mandate-edit-input';
+                input.value = textEl.textContent;
+                input.rows = 2;
+
+                var saveBtn = document.createElement('button');
+                saveBtn.className = 'mandate-edit-save';
+                saveBtn.textContent = 'Save';
+
+                var cancelBtn = document.createElement('button');
+                cancelBtn.className = 'mandate-edit-cancel';
+                cancelBtn.textContent = 'Cancel';
+
+                var wrap = document.createElement('div');
+                wrap.className = 'mandate-edit-wrap';
+                wrap.appendChild(input);
+                wrap.appendChild(saveBtn);
+                wrap.appendChild(cancelBtn);
+
+                textEl.style.display = 'none';
+                textEl.parentNode.insertBefore(wrap, textEl.nextSibling);
+                input.focus();
+
+                saveBtn.addEventListener('click', function() {
+                    var newContent = input.value.trim();
+                    if (!newContent) return;
+                    fetch('/talk/api.php?action=edit', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({idea_id: parseInt(ideaId), content: newContent})
+                    }).then(function(r) { return r.json(); }).then(function(data) {
+                        if (data.success) {
+                            loadSummary(currentLevel);
+                        } else {
+                            alert(data.error || 'Failed to edit');
+                            wrap.remove();
+                            textEl.style.display = '';
+                        }
+                    });
+                });
+                cancelBtn.addEventListener('click', function() {
+                    wrap.remove();
+                    textEl.style.display = '';
+                });
+            }
+
+            if (deleteBtn) {
+                var ideaId = deleteBtn.dataset.id;
+                if (!confirm('Delete this mandate?')) return;
+                fetch('/talk/api.php?action=delete', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({idea_id: parseInt(ideaId)})
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) {
+                        loadSummary(currentLevel);
+                    } else {
+                        alert(data.error || 'Failed to delete');
+                    }
+                });
+            }
+
+            // Vote handler
+            var voteBtn = e.target.closest('.mandate-vote-btn');
+            if (voteBtn) {
+                if (!userId) { alert('Log in to vote'); return; }
+                var ideaId = parseInt(voteBtn.dataset.id);
+                var voteType = voteBtn.dataset.type;
+                fetch('/talk/api.php?action=vote', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({idea_id: ideaId, vote_type: voteType})
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) {
+                        var row = voteBtn.closest('.mandate-vote-row');
+                        var agreeBtn = row.querySelector('.agree');
+                        var disagreeBtn = row.querySelector('.disagree');
+                        agreeBtn.querySelector('.vote-count').textContent = data.agree_count;
+                        disagreeBtn.querySelector('.vote-count').textContent = data.disagree_count;
+                        agreeBtn.classList.toggle('vote-active', data.user_vote === 'agree');
+                        disagreeBtn.classList.toggle('vote-active', data.user_vote === 'disagree');
+                    } else {
+                        alert(data.error || 'Vote failed');
+                    }
+                });
+            }
+        });
+
+        // ── Tab click handlers ────────────────────────────────
+        var tabs = document.querySelectorAll('#claudia-inline-level-tabs .level-tab');
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                tabs.forEach(function(t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+
+                var dataLevel = tab.dataset.level || '';
+                var summaryLevel;
+                switch (dataLevel) {
+                    case 'mandate-federal': summaryLevel = 'federal'; break;
+                    case 'mandate-state':   summaryLevel = 'state';   break;
+                    case 'mandate-town':    summaryLevel = 'town';    break;
+                    case 'mine':            summaryLevel = 'mine';    break;
+                    case 'my-ideas':        summaryLevel = 'my-ideas'; break;
+                    default:                summaryLevel = 'all';     break;
+                }
+                currentLevel = summaryLevel;
+                loadSummary(summaryLevel);
+            });
+        });
+    })();
+    </script>
+
+    <!-- ── Delegation Popup Logic ──────────────────────────────── -->
+<?php if ($dbUser): ?>
+    <script>
+    (function() {
+        var triggers = [
+            document.getElementById('claudia-inline-geo'),
+            document.getElementById('claudia-inline-summary-title')
+        ];
+        var popup    = document.getElementById('claudia-inline-delegation');
+        var body     = document.getElementById('claudia-delegation-body');
+        var closeBtn = document.getElementById('claudia-delegation-close');
+        var handle   = document.getElementById('claudia-delegation-drag');
+        if (!popup) return;
+
+        var stateAbbr = <?= json_encode(strtolower($_ciUserStateAbbr ?: '')) ?>;
+        var district  = <?= json_encode($_ciUserDistrict ?: '') ?>;
+        var loaded = false;
+
+        function openPopup(e) {
+            e.stopPropagation();
+            if (popup.classList.contains('open')) {
+                popup.classList.remove('open');
+                return;
+            }
+            var rect = e.currentTarget.getBoundingClientRect();
+            popup.style.top  = (rect.bottom + 8) + 'px';
+            popup.style.left = Math.max(10, rect.left) + 'px';
+            popup.classList.add('open');
+            if (!loaded) loadDelegation();
+        }
+        for (var i = 0; i < triggers.length; i++) {
+            if (triggers[i]) {
+                triggers[i].style.cursor = 'pointer';
+                triggers[i].title = triggers[i].title || 'Click to see your elected representatives';
+                triggers[i].addEventListener('click', openPopup);
+            }
+        }
+
+        closeBtn.addEventListener('click', function() { popup.classList.remove('open'); });
+
+        document.addEventListener('click', function(e) {
+            if (!popup.classList.contains('open')) return;
+            if (popup.contains(e.target)) return;
+            for (var j = 0; j < triggers.length; j++) {
+                if (triggers[j] && triggers[j].contains(e.target)) return;
+            }
+            popup.classList.remove('open');
+        });
+
+        function loadDelegation() {
+            loaded = true;
+            var url = '/api/get-delegation.php?state=' + encodeURIComponent(stateAbbr)
+                    + '&district=' + encodeURIComponent(district);
+            fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+                var html = '';
+                if (data.federal && data.federal.length) html += buildGroup('Federal', data.federal);
+                if (data.state && data.state.length) html += buildGroup('State', data.state);
+                if (!html) html = '<div class="delegation-loading">No representatives found.</div>';
+                body.innerHTML = html;
+            }).catch(function() {
+                body.innerHTML = '<div class="delegation-loading">Failed to load.</div>';
+            });
+        }
+
+        function buildGroup(label, officials) {
+            var html = '<div class="delegation-group"><div class="delegation-group-title">' + label + '</div>';
+            for (var i = 0; i < officials.length; i++) {
+                var o = officials[i];
+                var partyClass = (o.party || '').toLowerCase().indexOf('democrat') >= 0 ? 'dem'
+                               : (o.party || '').toLowerCase().indexOf('republican') >= 0 ? 'rep' : 'ind';
+                var partyShort = partyClass === 'dem' ? 'D' : partyClass === 'rep' ? 'R' : 'I';
+                html += '<div class="delegation-card">';
+                if (o.photo) {
+                    html += '<img class="delegation-photo" src="' + escH(o.photo) + '" alt="' + escH(o.name) + '" onerror="this.outerHTML=\'<div class=delegation-photo-placeholder>&#x1F464;</div>\'">';
+                } else {
+                    html += '<div class="delegation-photo-placeholder">&#x1F464;</div>';
+                }
+                html += '<div class="delegation-info">';
+                html += '<div class="delegation-name">' + escH(o.name) + '</div>';
+                html += '<div class="delegation-title">' + escH(o.title) + '</div>';
+                html += '<span class="delegation-party ' + partyClass + '">' + partyShort + ' — ' + escH(o.party) + '</span>';
+                html += '<div class="delegation-links">';
+                if (o.phone) html += '<a href="tel:' + escH(o.phone) + '">&#x1F4DE; ' + escH(o.phone) + '</a>';
+                if (o.website) html += '<a href="' + escH(o.website) + '" target="_blank">&#x1F310; Website</a>';
+                html += '</div></div></div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function escH(s) {
+            if (!s) return '';
+            var d = document.createElement('div');
+            d.appendChild(document.createTextNode(s));
+            return d.innerHTML;
+        }
+
+        // ── Draggable ──
+        var isDragging = false, dragX = 0, dragY = 0;
+        handle.addEventListener('mousedown', startDrag);
+        handle.addEventListener('touchstart', startDragTouch, {passive: false});
+
+        function startDrag(e) {
+            isDragging = true;
+            dragX = e.clientX - popup.offsetLeft;
+            dragY = e.clientY - popup.offsetTop;
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+            e.preventDefault();
+        }
+        function startDragTouch(e) {
+            isDragging = true;
+            var t = e.touches[0];
+            dragX = t.clientX - popup.offsetLeft;
+            dragY = t.clientY - popup.offsetTop;
+            document.addEventListener('touchmove', onDragTouch, {passive: false});
+            document.addEventListener('touchend', stopDrag);
+            e.preventDefault();
+        }
+        function onDrag(e) {
+            if (!isDragging) return;
+            popup.style.left = (e.clientX - dragX) + 'px';
+            popup.style.top  = (e.clientY - dragY) + 'px';
+        }
+        function onDragTouch(e) {
+            if (!isDragging) return;
+            var t = e.touches[0];
+            popup.style.left = (t.clientX - dragX) + 'px';
+            popup.style.top  = (t.clientY - dragY) + 'px';
+            e.preventDefault();
+        }
+        function stopDrag() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchmove', onDragTouch);
+            document.removeEventListener('touchend', stopDrag);
+        }
+    })();
+    </script>
+<?php endif; ?>
+
+</div>

@@ -31,9 +31,15 @@
 .mandate-header .geo-info span {
     color: #ccc;
 }
+.mandate-header-links {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
 .mandate-help-btn {
     display: inline-block;
-    margin-top: 0.5rem;
     padding: 0.4rem 1rem;
     background: #2a1d12;
     border: 1px solid #d4af37;
@@ -46,6 +52,20 @@
 .mandate-help-btn:hover {
     background: #3a2d1a;
     transform: translateY(-1px);
+}
+.mandate-pulse-link {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    background: rgba(212,175,55,0.1);
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 20px;
+    color: #d4af37;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.mandate-pulse-link:hover {
+    background: rgba(212,175,55,0.2);
 }
 
 /* ── Delegation Popup (from mandate-poc) ──────────────────── */
@@ -165,91 +185,6 @@
     color: #b0b0b0;
 }
 
-/* ── Topic pills (new — replacing "Use Claudia" placeholder) ── */
-.mandate-topics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 1.25rem;
-}
-.mandate-topic-pill {
-    padding: 0.4rem 0.85rem;
-    font-size: 0.85rem;
-    border: 1px solid rgba(212,175,55,0.25);
-    border-radius: 20px;
-    background: transparent;
-    color: #b0b0b0;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.mandate-topic-pill:hover {
-    border-color: #d4af37;
-    color: #fff;
-}
-.mandate-topic-pill.active {
-    background: rgba(212,175,55,0.2);
-    border-color: #d4af37;
-    color: #d4af37;
-    font-weight: 600;
-}
-
-/* ── Mandate Input (new — textarea + submit) ──────────────── */
-.mandate-input-row {
-    display: flex;
-    gap: 0.75rem;
-    align-items: flex-end;
-    margin-bottom: 0.5rem;
-}
-.mandate-textarea {
-    flex: 1;
-    background: #0d0d1a;
-    border: 1px solid #444;
-    border-radius: 8px;
-    color: #e0e0e0;
-    padding: 0.85rem 1rem;
-    font-size: 1rem;
-    resize: vertical;
-    min-height: 80px;
-    max-height: 250px;
-    font-family: inherit;
-}
-.mandate-textarea:focus {
-    outline: none;
-    border-color: #d4af37;
-    box-shadow: 0 0 0 2px rgba(212,175,55,0.2);
-}
-.mandate-textarea::placeholder {
-    color: #999;
-}
-.mandate-submit-btn {
-    padding: 0.85rem 1.5rem;
-    background: #d4af37;
-    border: none;
-    border-radius: 10px;
-    color: #000;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s, opacity 0.2s;
-    white-space: nowrap;
-}
-.mandate-submit-btn:hover:not(:disabled) {
-    background: #e4bf47;
-}
-.mandate-submit-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-/* ── Status/feedback ──────────────────────────────────────── */
-.mandate-status {
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
-    min-height: 1.4em;
-}
-.mandate-status.success { color: #4caf50; }
-.mandate-status.error { color: #e63946; }
-
 /* ── Auth nudge ───────────────────────────────────────────── */
 .mandate-auth-nudge {
     text-align: center;
@@ -325,98 +260,112 @@
     font-weight: 600;
 }
 
-/* ── Mandate Items in Summary ─────────────────────────────── */
-.mandate-item {
-    text-align: left;
-    padding: 0.85rem 1.25rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+/* ── Top Link ─────────────────────────────────────────────── */
+.mandate-top-link {
+    display: block;
+    text-align: right;
+    padding: 4px 0;
+    margin-top: 2px;
 }
-.mandate-item:last-child { border-bottom: none; }
-.mandate-item-content {
-    color: #ccc;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    margin-bottom: 0.5rem;
-}
-.mandate-item-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-.mandate-item-level {
-    color: #d4af37;
+.mandate-top-link a {
+    color: #888;
     font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
 }
-.mandate-item-topic {
-    color: #999;
-    font-size: 0.85rem;
-}
-.mandate-item-actions {
-    margin-left: auto;
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
+.mandate-top-link a:hover {
+    color: #d4af37;
 }
 
-/* ── Vote Buttons ─────────────────────────────────────────── */
-.mandate-vote-btn {
+/* ── Owner edit/delete buttons ───────────────────────────── */
+.mandate-owner-actions {
+    display: inline-block;
+    margin-left: 8px;
+}
+.mandate-edit-btn, .mandate-delete-btn {
     background: none;
     border: 1px solid rgba(255,255,255,0.15);
+    color: #888;
+    font-size: 0.8rem;
+    padding: 1px 6px;
     border-radius: 4px;
-    color: #b0b0b0;
     cursor: pointer;
-    padding: 3px 10px;
-    font-size: 0.85rem;
+    margin-left: 3px;
+    transition: color 0.2s, border-color 0.2s;
+}
+.mandate-edit-btn:hover { color: #d4af37; border-color: #d4af37; }
+.mandate-delete-btn:hover { color: #e63946; border-color: #e63946; }
+.mandate-edit-wrap {
+    margin: 6px 0;
+}
+.mandate-edit-input {
+    width: 100%;
+    background: #0d0d1a;
+    border: 1px solid #d4af37;
+    color: #e0e0e0;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 0.9rem;
+    resize: vertical;
+    margin-bottom: 4px;
+}
+.mandate-edit-save, .mandate-edit-cancel {
+    font-size: 0.8rem;
+    padding: 3px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin-right: 6px;
+}
+.mandate-edit-save {
+    background: #d4af37;
+    color: #000;
+}
+.mandate-edit-cancel {
+    background: rgba(255,255,255,0.1);
+    color: #b0b0b0;
+}
+
+/* ── Vote buttons ────────────────────────────────────────── */
+.mandate-vote-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 4px;
+}
+.mandate-vote-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #b0b0b0;
+    font-size: 0.8rem;
+    padding: 2px 10px;
+    border-radius: 14px;
+    cursor: pointer;
     transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
 }
 .mandate-vote-btn:hover {
-    border-color: rgba(255,255,255,0.35);
+    border-color: rgba(212,175,55,0.4);
     color: #fff;
 }
-.mandate-vote-btn.active-agree {
+.mandate-vote-btn.vote-active.agree {
+    background: rgba(76,175,80,0.2);
     border-color: #4caf50;
-    color: #4caf50;
-    background: rgba(76,175,80,0.12);
+    color: #81c784;
 }
-.mandate-vote-btn.active-disagree {
-    border-color: #e63946;
-    color: #e63946;
-    background: rgba(230,57,70,0.12);
+.mandate-vote-btn.vote-active.disagree {
+    background: rgba(229,57,53,0.2);
+    border-color: #e53935;
+    color: #e57373;
 }
-.mandate-vote-btn .count {
-    font-size: 0.8rem;
-}
-
-/* ── TTS Button (from mandate-poc) ────────────────────────── */
-.tts-btn {
-    background: none;
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 4px;
-    color: #b0b0b0;
-    cursor: pointer;
-    padding: 2px 6px;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-}
-.tts-btn:hover {
-    border-color: #d4af37;
-    color: #d4af37;
+.vote-count {
+    font-weight: 600;
 }
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 600px) {
     .mandate-wrap { padding: 1rem 0.75rem; }
-    .mandate-input-row { flex-direction: column; }
-    .mandate-submit-btn { width: 100%; }
     .level-tabs { gap: 0.25rem; }
     .level-tab { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
+    .mandate-header-links { flex-direction: column; gap: 0.5rem; }
 }
 @media (max-width: 420px) {
     .delegation-popup { width: calc(100vw - 20px); left: 10px !important; }

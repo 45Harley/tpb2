@@ -1,0 +1,417 @@
+/* ── Mandate Chat Component ────────────────────────────────── */
+
+.mandate-chat {
+    max-width: 800px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ── Chat Messages Area ────────────────────────────────────── */
+
+.mc-messages {
+    min-height: 200px;
+    max-height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.mc-messages:empty::after {
+    content: 'Start typing to refine your mandate with AI assistance.';
+    color: #999;
+    text-align: center;
+    padding: 40px 20px;
+    font-style: italic;
+}
+
+/* ── Message Bubbles ───────────────────────────────────────── */
+
+.mc-bubble {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.5;
+    font-size: 0.95rem;
+    color: #e0e0e0;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.mc-bubble-user {
+    align-self: flex-end;
+    background: #2a4a6c;
+    border: 1px solid rgba(79,195,247,0.35);
+    border-bottom-right-radius: 4px;
+}
+
+.mc-bubble-ai {
+    align-self: flex-start;
+    background: #2a2a3e;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-bottom-left-radius: 4px;
+}
+
+.mc-bubble-system {
+    align-self: center;
+    background: rgba(212,175,55,0.1);
+    border: 1px solid rgba(212,175,55,0.25);
+    color: #d4af37;
+    font-size: 0.85rem;
+    font-style: italic;
+    max-width: 90%;
+    text-align: center;
+}
+
+.mc-bubble-ai .mc-pin {
+    position: static;
+    display: inline-block;
+    margin-top: 8px;
+    background: rgba(212,175,55,0.15);
+    border: 1px solid #d4af37;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #d4af37;
+    font-weight: 600;
+    transition: background 0.2s;
+    padding: 4px 12px;
+}
+
+.mc-bubble-ai .mc-pin::after { content: ' Pin this'; }
+.mc-bubble-ai .mc-pin:hover { background: rgba(212,175,55,0.3); }
+.mc-bubble-ai .mc-pin.pinned { background: rgba(212,175,55,0.25); }
+.mc-bubble-ai .mc-pin.pinned::after { content: ' Pinned!'; }
+
+.mc-bubble-time {
+    font-size: 0.7rem;
+    color: #999;
+    margin-top: 4px;
+}
+
+.mc-thinking {
+    align-self: flex-start;
+    color: #888;
+    font-style: italic;
+    padding: 10px 14px;
+    animation: mc-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes mc-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* ── Input Area ────────────────────────────────────────────── */
+
+.mc-input {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    padding: 12px 16px;
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-top: 1px solid rgba(255,255,255,0.12);
+    position: relative;
+    z-index: 2;
+}
+
+.mc-input textarea {
+    flex: 1;
+    min-height: 44px;
+    max-height: 200px;
+    padding: 10px 12px;
+    background: #2a2a3e;
+    color: #e0e0e0;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    resize: none;
+    font-size: 0.95rem;
+    font-family: inherit;
+    line-height: 1.4;
+    overflow-y: auto;
+}
+
+.mc-input textarea:focus {
+    outline: none;
+    border-color: #4fc3f7;
+}
+
+.mc-input textarea::placeholder { color: #888; }
+
+.mc-input button {
+    background: none;
+    border: none;
+    color: #b0b0b0;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.mc-input button:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.08);
+}
+
+.mc-input .mc-mic.listening {
+    color: #ef5350;
+    animation: mc-pulse 1s ease-in-out infinite;
+}
+
+.mc-input .mc-mic.command-mode {
+    color: #d4af37;
+    background: rgba(212,175,55,0.15);
+    animation: mc-pulse 1.2s ease-in-out infinite;
+}
+
+.mc-input .mc-pin-direct { color: #d4af37; font-size: 1.1rem; }
+.mc-input .mc-pin-direct:hover { color: #f0d060; }
+.mc-input .mc-send { color: #4fc3f7; }
+.mc-input .mc-send:hover { color: #80d8ff; }
+
+/* ── Char Counter ──────────────────────────────────────────── */
+
+.mc-char {
+    text-align: right;
+    font-size: 0.7rem;
+    color: #888;
+    padding: 2px 16px 0;
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+}
+
+.mc-char.warn { color: #ff9800; }
+
+/* ── Ideas Scratchpad ──────────────────────────────────────── */
+
+.mc-scratchpad {
+    margin-top: 16px;
+    background: #2a2a3e;
+    border: 1px solid rgba(212,175,55,0.35);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.mc-section-header {
+    padding: 8px 16px;
+    background: rgba(212,175,55,0.08);
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+}
+.mc-section-header h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #d4af37;
+    font-weight: 600;
+}
+
+.mc-scratchpad-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: rgba(212,175,55,0.08);
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+}
+
+.mc-scratchpad-header h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #d4af37;
+    font-weight: 600;
+}
+
+.mc-scratchpad-header .mc-clear-chat {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #999;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.mc-scratchpad-header .mc-clear-chat:hover {
+    color: #ef5350;
+    border-color: #ef5350;
+}
+
+.mc-idea-list {
+    padding: 8px 16px;
+}
+
+.mc-idea-list:empty::after {
+    content: 'Pin ideas from the conversation using the \01F4CC button.';
+    color: #999;
+    font-size: 0.85rem;
+    display: block;
+    padding: 12px 0;
+    text-align: center;
+}
+
+.mc-idea-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.mc-idea-item:last-child { border-bottom: none; }
+
+.mc-idea-num {
+    color: #d4af37;
+    font-weight: 700;
+    font-size: 0.85rem;
+    min-width: 24px;
+    padding-top: 2px;
+}
+
+.mc-idea-text {
+    flex: 1;
+    color: #ccc;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.mc-idea-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.mc-idea-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 2px 4px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.mc-idea-actions button:hover { opacity: 1; }
+
+.mc-idea-edit-wrap {
+    margin: 4px 0;
+    padding-left: 2rem;
+}
+.mc-idea-edit-input {
+    width: 100%;
+    background: #0d0d1a;
+    border: 1px solid #d4af37;
+    color: #e0e0e0;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    resize: vertical;
+    margin-bottom: 4px;
+}
+.mc-idea-edit-save, .mc-idea-edit-cancel {
+    font-size: 0.75rem;
+    padding: 2px 10px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin-right: 4px;
+}
+.mc-idea-edit-save { background: #d4af37; color: #000; }
+.mc-idea-edit-cancel { background: rgba(255,255,255,0.1); color: #b0b0b0; }
+
+/* ── Save Bar ──────────────────────────────────────────────── */
+
+.mc-save-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(212,175,55,0.05);
+    border-top: 1px solid rgba(212,175,55,0.15);
+}
+
+.mc-save-bar select {
+    background: #1e1e2e;
+    color: #ccc;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.mc-save-bar select option { background: #2a2a3e; }
+
+.mc-save-bar button {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.mc-save-bar button:hover { filter: brightness(1.2); }
+
+.mc-save-bar .mc-save-federal {
+    background: #1565c0;
+    color: #fff;
+}
+
+.mc-save-bar .mc-save-state {
+    background: #6a1b9a;
+    color: #fff;
+}
+
+.mc-save-bar .mc-save-town {
+    background: #2e7d32;
+    color: #fff;
+}
+
+.mc-save-bar .mc-save-idea {
+    background: rgba(255,255,255,0.1);
+    color: #ccc;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* ── Toast ─────────────────────────────────────────────────── */
+
+.mc-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #fff;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.mc-toast.show { opacity: 1; }
+.mc-toast.success { background: #2e7d32; }
+.mc-toast.error { background: #c62828; }
+
+/* ── Responsive ────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+    .mc-messages { max-height: 320px; }
+    .mc-bubble { max-width: 90%; font-size: 0.9rem; }
+    .mc-input textarea { min-height: 38px; }
+    .mc-save-bar { flex-direction: column; }
+    .mc-save-bar button { width: 100%; }
+    .mc-save-bar select { width: 100%; }
+}
