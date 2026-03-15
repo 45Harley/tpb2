@@ -174,13 +174,29 @@ if ($geoTownId || $geoStateId): ?>
     </div>
 <?php endif; ?>
 
-<!-- Talk functionality now provided by Claudia widget (bottom-right) -->
-<div style="text-align:center; padding: 40px 20px; color: #b0b0b0;">
-    <p style="font-size: 1.1rem; color: #90caf9;">Use Claudia to share your ideas</p>
-    <p style="font-size: 0.85rem; color: #888; margin-top: 8px;">
-        Click the gold <strong style="color:#d4af37;">C</strong> bubble and switch to <strong>Talk</strong> mode to brainstorm, pin ideas, and save them.
-    </p>
-</div>
+<?php
+// Inline mandate form — scoped by geo context
+$claudiaInlineConfig = [
+    'scope' => $geoTownId ? 'town' : ($geoStateId ? 'state' : 'federal'),
+    'scope_label' => $geoLabel,
+    'title' => 'Your Mandate',
+    'placeholder' => 'What matters most to you? Pick a topic and share.',
+];
+require dirname(__DIR__) . '/includes/claudia-inline.php';
+
+// Idea stream below the form
+$talkStreamConfig = [
+    'title'        => $geoLabel . ' Stream',
+    'geo_state_id' => $geoStateId,
+    'geo_town_id'  => $geoTownId,
+    'categories'   => 'mandate-federal,mandate-state,mandate-town,idea',
+    'show_filters' => false,
+    'show_mic'     => false,
+    'show_ai_toggle' => false,
+    'limit'        => 30,
+];
+require dirname(__DIR__) . '/includes/talk-stream.php';
+?>
 
     <script>
     // Browser detection for status bar
