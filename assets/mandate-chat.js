@@ -377,14 +377,22 @@
             return;
         }
 
+        // Renumber sequentially
+        for (var n = 0; n < this.ideas.length; n++) {
+            this.ideas[n].num = n + 1;
+        }
+        this.nextIdea = this.ideas.length + 1;
+
         if (this.ideaSelectEl) {
             var lastOpt = document.createElement('option');
             lastOpt.value = 'last';
-            lastOpt.textContent = 'Last idea (#' + this.ideas[this.ideas.length - 1].num + ')';
+            lastOpt.textContent = 'Latest idea (#' + this.ideas[this.ideas.length - 1].num + ')';
             this.ideaSelectEl.appendChild(lastOpt);
         }
 
-        for (var i = 0; i < this.ideas.length; i++) {
+        // Render newest first
+        var self = this;
+        for (var i = this.ideas.length - 1; i >= 0; i--) {
             var idea = this.ideas[i];
 
             // List item
@@ -406,7 +414,6 @@
             editBtn.textContent = '\u270E'; // ✎
             editBtn.title = 'Edit';
             editBtn.className = 'mc-idea-edit';
-            var self = this;
             editBtn.addEventListener('click', (function(num) {
                 return function() { self.editIdeaInline(num); };
             })(idea.num));
