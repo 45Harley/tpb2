@@ -217,7 +217,7 @@ require dirname(__DIR__) . '/includes/nav.php';
         <a href="/elections/">Elections</a>
         <a href="/elections/the-fight.php">The Fight</a>
         <a href="/elections/the-amendment.php">The War</a>
-        <a href="/elections/threats.php">Threats</a>
+        <a href="/elections/threats.php">Actions</a>
         <a href="/elections/statements.php" class="active">Statements</a>
         <a href="/elections/races.php">Races</a>
         <a href="/elections/impeachment-vote.php">Impeachment #1</a>

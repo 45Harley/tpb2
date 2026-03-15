@@ -68,12 +68,12 @@ Public words by the President that:
 - React to events, court rulings, or criticism
 - Attack or praise institutions, individuals, or groups
 
-## Sources to Search (ALL of these)
-- Truth Social posts (primary — highest volume)
-- Press conferences and pool sprays (transcripts)
-- Interviews (Fox News, podcasts, rallies)
-- Official White House statements (whitehouse.gov)
-- Media quotes from events
+## Sources to Search (ALL of these, in priority order)
+1. Truth Social (truthsocial.com/@realDonaldTrump, trumpstruth.org) — primary, highest volume
+2. WhiteHouse.gov — official remarks, press briefings, executive order announcements
+3. C-SPAN (c-span.org) — full transcripts of speeches, rallies, press conferences
+4. Factbase (rollcall.com/factbase) — comprehensive transcript archive
+Also check news outlets that quote him directly: AP, Reuters, The Hill, CNN, Fox News, NBC, CNBC
 
 ## Existing Recent Statements (DO NOT DUPLICATE)
 {$dedupContext}
