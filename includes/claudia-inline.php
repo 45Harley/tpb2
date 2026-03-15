@@ -84,3 +84,8 @@ window._claudiaInlineConfig = {
     userId: <?= $dbUser ? (int)$dbUser['user_id'] : 'null' ?>
 };
 </script>
+<?php
+$_ciJsVer = file_exists(__DIR__ . '/../assets/claudia/claudia-inline.js')
+    ? filemtime(__DIR__ . '/../assets/claudia/claudia-inline.js') : 0;
+?>
+<script src="/assets/claudia/claudia-inline.js?v=<?= $_ciJsVer ?>"></script>
