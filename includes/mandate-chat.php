@@ -36,17 +36,7 @@ if (!defined('MANDATE_CHAT_ASSETS_LOADED')) {
 ?>
 
 <div class="mandate-chat" id="<?= $_mcPrefix ?>-wrapper">
-    <!-- Response -->
-    <div class="mc-scratchpad-header">
-        <h3 title="AI responses appear here — say &quot;clear response&quot; to clear">Response</h3>
-        <button class="mc-clear-response" title="Clear all chat messages">Clear</button>
-    </div>
-    <div class="mc-messages" id="<?= $_mcPrefix ?>-messages"></div>
-
     <!-- Prompt -->
-    <div class="mc-section-header">
-        <h3 title="Type or dictate your idea — say &quot;clear prompt&quot; to clear">Prompt</h3>
-    </div>
     <div class="mc-input">
         <textarea id="<?= $_mcPrefix ?>-input"
                   placeholder="<?= htmlspecialchars($_mc['placeholder']) ?>"
@@ -57,6 +47,13 @@ if (!defined('MANDATE_CHAT_ASSETS_LOADED')) {
         <button class="mc-send" id="<?= $_mcPrefix ?>-send" title="Send your idea to AI for refinement">&#x27A4;</button>
     </div>
     <div class="mc-char" id="<?= $_mcPrefix ?>-char">0 / 2,000</div>
+
+    <!-- Response -->
+    <div class="mc-scratchpad-header">
+        <h3 title="AI responses appear here — say &quot;clear response&quot; to clear">Response</h3>
+        <button class="mc-clear-response" title="Clear all chat messages">Clear</button>
+    </div>
+    <div class="mc-messages" id="<?= $_mcPrefix ?>-messages"></div>
 
     <!-- Ideas Scratchpad -->
     <div class="mc-scratchpad">
