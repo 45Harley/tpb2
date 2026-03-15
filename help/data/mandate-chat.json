@@ -1,79 +1,44 @@
 {
   "id": "mandate-chat",
-  "title": "My Mandate",
-  "subtitle": "Tell your representatives what you want them to do — refine your ideas with AI and save them as official mandates.",
-  "generated": "2026-03-06T12:00:00.000Z",
-  "stepCount": 10,
+  "title": "Your Mandate",
+  "subtitle": "Tell your representatives what matters most to you — pick a topic, share your mandate, and see it join the collective voice of your community.",
+  "generated": "2026-03-14T12:00:00.000Z",
+  "stepCount": 7,
   "steps": [
     {
       "number": 1,
-      "title": "Log In",
-      "description": "Go to My Mandate from the nav bar. You'll see a login card with two tabs: Phone and Email.\n\nPhone: Enter your 10-digit verified phone number, or tap the mic button to say it aloud. The system reads it back for confirmation.\n\nEmail: Type your verified email address, or tap the mic button to say it (e.g. \"harley at gmail dot com\").\n\nIf multiple accounts share your phone number, you'll be asked to enter your first name to disambiguate.\n\nNew user? Click \"Create Your Account\" to sign up via the standard join flow.",
-      "alt": null,
-      "screenshot": null
+      "title": "What Is a Mandate?",
+      "description": "A mandate is your instruction to your elected representatives — what you want them to fight for.\n\nUnlike a poll or petition, a mandate is your own words. It's tied to your location so it reaches the right representatives at the right level: federal (Congress), state (legislature), or town (local officials).\n\nMandates are grouped by policy topic and aggregated into a public summary — The People's Pulse — so representatives can see what their constituents actually want."
     },
     {
       "number": 2,
-      "title": "The Mandate Interface",
-      "description": "Once logged in, you'll see the mandate workspace laid out top to bottom:\n\n1. Header — your location and congressional district (e.g. \"Putnam, CT — District CT-2\") with a graduation-cap \"How It Works\" link back to this guide\n2. Response — where AI responses appear as you chat\n3. Prompt — text input with mic and send buttons, where you type or dictate your idea\n4. Ideas Scratchpad — pinned ideas with save buttons\n5. Public Mandate Summary — saved mandates from your area with filter tabs and a link to The People's Pulse\n\nClick your location line to open a popup showing your elected representatives — U.S. Senators, House Rep, and Governor — with photos, party, phone, and website. The popup is draggable and closeable.",
-      "alt": null,
-      "screenshot": null
+      "title": "Where to Submit",
+      "description": "The mandate form appears on two types of pages:\n\n1. Talk pages (/talk/) — The civic conversation hub. The form is scoped by geography:\n   - /talk/ — federal scope (USA)\n   - /talk/?state=7 — state scope (e.g. Connecticut)\n   - /talk/?town=119 — town scope (e.g. Putnam)\n\n2. The Fight (/elections/the-fight.php) — The elections action page, scoped to federal.\n\nYou'll see the gold-bordered \"Your Mandate\" form at the top of each page, with topic pills and a text input below."
     },
     {
       "number": 3,
-      "title": "Type or Dictate Your Idea",
-      "description": "In the Prompt area, type your idea in the text box or click the mic button to dictate by voice. Speak naturally — your words appear in the text box as you talk.\n\nYou don't need a polished statement. Just share your raw thoughts: \"we need to get big money out of politics\" or \"fix the potholes on Route 44.\"\n\nClick the send button (or say \"command\" then \"send\" by voice) to submit your idea to the AI.",
-      "alt": null,
-      "screenshot": null
+      "title": "Pick a Topic",
+      "description": "The form shows topic pills — 15 policy areas that match how Congress organizes its committees:\n\nEconomy & Jobs, Healthcare, Education, Infrastructure & Transportation, Environment & Energy, Public Safety & Justice, Housing & Cost of Living, Campaign Finance & Elections, Civil Rights & Liberties, Government Accountability, Veterans & Military, Immigration, Technology & Privacy, Agriculture, Other.\n\nClick a topic pill to tag your mandate. The pill turns gold when selected. Click it again to deselect. Picking a topic is optional but helps with aggregation — if you skip it, AI will assign one automatically."
     },
     {
       "number": 4,
-      "title": "Refine with AI",
-      "description": "Your AI response appears in the Response area above the prompt. The AI engages with clarifying questions and helps craft a specific mandate statement. It may:\n\n- Ask which approach you prefer (e.g. constitutional amendment vs. legislation)\n- Provide relevant facts and context\n- Suggest a polished \"Mandate:\" statement\n\nKeep the conversation going until you have a mandate you're happy with. You can send multiple messages to refine it.",
-      "alt": null,
-      "screenshot": null
+      "title": "Write Your Mandate",
+      "description": "Type your mandate in the text box. You don't need a polished statement — just share what matters to you in your own words.\n\nExamples:\n- \"Pass the DISCLOSE Act to get dark money out of politics\"\n- \"Fix the potholes on Route 44 before someone gets hurt\"\n- \"Fund universal pre-K so working parents don't have to choose between their job and their kids\"\n\nBe specific. \"Pass the DISCLOSE Act\" is stronger than \"fix campaign finance.\" One idea per mandate keeps it focused.\n\nPress Enter to submit, or Shift+Enter for a new line."
     },
     {
       "number": 5,
-      "title": "Pin Your Mandate",
-      "description": "When the AI produces a mandate statement you like, click the gold pin button on that response. The mandate text is extracted and added to your Ideas Scratchpad below.\n\nDuplicate pins are prevented — if you accidentally pin the same text twice, it tells you it's already pinned.\n\nYou can pin multiple ideas from different conversations. They accumulate in the scratchpad until you clear them.",
-      "alt": null,
-      "screenshot": null
+      "title": "Submit and See It Live",
+      "description": "Click Submit (or press Enter). You'll see \"Mandate saved!\" in green if it worked.\n\nYour mandate immediately appears in the stream below the form, alongside mandates from other citizens in your area. The stream shows ideas, mandates, and community input flowing in real time.\n\nBehind the scenes, AI also generates a short citizen-voice summary of your mandate for aggregation reports."
     },
     {
       "number": 6,
-      "title": "Save Your Mandate",
-      "description": "In the Ideas Scratchpad, select which pinned idea to save using the dropdown, then click one of the save buttons:\n\n- Save Federal Mandate — for your U.S. congressional representatives\n- Save State Mandate — for your state legislators\n- Save Town Mandate — for your local town officials\n- Save as Idea — save privately without publishing\n\nAfter saving, the Public Mandate Summary at the bottom updates automatically to show your new mandate alongside others from your district.",
-      "alt": null,
-      "screenshot": null
+      "title": "The People's Pulse",
+      "description": "All mandates feed into The People's Pulse — a public summary dashboard at /mandate-summary.php.\n\nThe Pulse shows:\n- Topic breakdown — which policy areas your community cares about most\n- Citizen voices — sample mandates in people's own words\n- Activity trends — this week vs. last week\n- CSV export — download the full dataset\n\nFilter by scope (federal, state, town) and time period (all, month, week). This is the aggregated voice of your district — what representatives should be hearing."
     },
     {
       "number": 7,
-      "title": "Voice Commands",
-      "description": "With the mic on, say \"command\" to enter command mode (mic turns gold). Then say any command:\n\n- \"send\" — submit your dictated text to AI\n- \"pin\" — pin the last AI response\n- \"save federal mandate\" / \"save state mandate\" / \"save town mandate\"\n- \"save idea\" — save as private idea\n- \"read #1\" — read back a pinned idea\n- \"read my mandate\" — read your saved mandates aloud\n- \"delete #3\" — remove a pinned idea\n- \"clear all\" — clear everything\n- \"clear prompt\" — clear just the text input\n- \"clear response\" — clear chat but keep pins\n- \"help\" — list all commands\n\nSay \"command\" again to return to dictation mode.",
-      "alt": null,
-      "screenshot": null
-    },
-    {
-      "number": 8,
-      "title": "Managing Your Ideas",
-      "description": "The Ideas Scratchpad holds your pinned ideas during your session. You can:\n\n- Click the X button to remove an idea\n- Use the dropdown to select which idea to save\n- Click \"Clear All\" to remove all pinned ideas and clear the chat\n\nPinned ideas persist in your browser until you clear them. Saved mandates are stored permanently in the database.",
-      "alt": null,
-      "screenshot": null
-    },
-    {
-      "number": 9,
-      "title": "Public Mandate Summary & The People's Pulse",
-      "description": "Below the scratchpad, the Public Mandate Summary shows saved mandates from your area. Filter tabs inside the box let you narrow the view:\n\n- All — combined federal + state + town mandates\n- Federal — mandates for your U.S. congressional district (e.g. \"Constituent Mandate for CT-2\")\n- State — mandates for your state legislators (e.g. \"Constituent Mandate for CT\")\n- Town — mandates for your local town officials (e.g. \"Constituent Mandate for Putnam\")\n- My Mandates — only mandates you have saved, with Federal/State/Town labels on each\n\nThe title changes to match the selected filter. Click it or your district info to reopen the delegation popup.\n\nBelow the tabs, a \"The People's Pulse\" link opens the full summary page with topic breakdowns, activity stats, and CSV export — the aggregated voice of your district.",
-      "alt": null,
-      "screenshot": null
-    },
-    {
-      "number": 10,
       "title": "Tips",
-      "description": "- Be specific: \"Pass the DISCLOSE Act\" is stronger than \"fix campaign finance\"\n- One idea per mandate: keep each mandate focused on a single action\n- Use all three levels: federal, state, and town mandates address different representatives\n- Voice works best in a quiet environment\n- Your mandates are tied to your location — they go to the right representatives\n- Come back anytime to add more mandates as new issues arise\n- Check The People's Pulse to see how your mandates contribute to the collective voice of your district",
-      "alt": null,
-      "screenshot": null
+      "description": "- Be specific: \"Pass the DISCLOSE Act\" is stronger than \"fix campaign finance\"\n- One idea per mandate: keep each mandate focused on a single action\n- Pick a topic: it helps your mandate show up in the right category on The People's Pulse\n- Use the right page scope: /talk/ for federal, /talk/?state=7 for state, /talk/?town=119 for town\n- Your mandates are tied to your verified location — they reach the right representatives\n- Come back anytime to add more mandates as new issues arise\n- Use Claudia (the gold C bubble) if you want AI help refining your idea before submitting"
     }
   ]
 }

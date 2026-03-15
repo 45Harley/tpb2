@@ -46,7 +46,10 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
 <div class="claudia-inline" id="claudia-inline-form">
     <div class="claudia-inline-header">
         <h2 class="claudia-inline-title"><?= htmlspecialchars($_ci['title']) ?></h2>
-        <span class="claudia-inline-scope"><?= htmlspecialchars($_ci['scope_label']) ?></span>
+        <span class="claudia-inline-scope">
+            <?= htmlspecialchars($_ci['scope_label']) ?>
+            · <a href="/help/guide.php?flow=mandate-chat" style="color:#d4af37;text-decoration:none;font-size:0.8rem;">How It Works</a>
+        </span>
     </div>
 
 <?php if ($_ciCanPost): ?>
