@@ -184,19 +184,7 @@ $claudiaInlineConfig = [
 ];
 require dirname(__DIR__) . '/includes/claudia-inline.php';
 
-// Idea stream below the form
-$talkStreamConfig = [
-    'title'        => $geoLabel . ' Stream',
-    'geo_state_id' => $geoStateId,
-    'geo_town_id'  => $geoTownId,
-    'categories'   => 'mandate-federal,mandate-state,mandate-town,idea',
-    'show_filters' => false,
-    'show_input'   => false,
-    'show_mic'     => false,
-    'show_ai_toggle' => false,
-    'limit'        => 30,
-];
-require dirname(__DIR__) . '/includes/talk-stream.php';
+// Talk stream removed — Public Mandate Summary in claudia-inline.php covers the same data
 ?>
 
     <script>
