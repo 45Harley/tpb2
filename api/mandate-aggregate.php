@@ -5,13 +5,15 @@
  * GET endpoint returning mandate items for a geographic scope.
  *
  * Parameters:
- *   level    — federal | state | town (default: federal)
+ *   level    — federal | state | town | mine | all (default: federal)
  *   district — required if level=federal (e.g. "CT-2")
  *   state_id — required if level=state (integer)
  *   town_id  — required if level=town (integer)
+ *   user_id  — required if level=mine (integer)
  *
  * Response:
  *   { success: true, level, item_count, contributor_count, items: [...] }
+ *   Each item: { id, content, tags, level, policy_topic, agree_count, disagree_count, user_vote, created_at }
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -38,7 +40,7 @@ $categoryMap = [
     'state'   => 'mandate-state',
     'town'    => 'mandate-town',
 ];
-$category = $categoryMap[$level];
+$category = $categoryMap[$level] ?? null;
 
 // Validate required parameters
 $geoParam = null;
@@ -92,6 +94,11 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
     );
 
+    // Optional auth for user_vote
+    require_once __DIR__ . '/../includes/get-user.php';
+    $dbUser = getUser($pdo);
+    $currentUserId = $dbUser ? (int)$dbUser['user_id'] : 0;
+
     if ($level === 'all') {
         // All mandates for this user's geographic area (federal + state + town combined)
         $district = trim($_GET['district'] ?? '');
@@ -122,7 +129,8 @@ try {
         $geoFilter = '(' . implode(' OR ', $whereParts) . ')';
 
         $sql = "
-            SELECT i.id, i.content, i.tags, i.category, i.created_at
+            SELECT i.id, i.content, i.tags, i.category, i.policy_topic,
+                   i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.deleted_at IS NULL AND u.deleted_at IS NULL
@@ -132,15 +140,23 @@ try {
         ";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
+        $rows = $stmt->fetchAll();
+
         $items = [];
-        foreach ($stmt->fetchAll() as $row) {
+        $itemIds = [];
+        foreach ($rows as $row) {
             $levelLabel = str_replace('mandate-', '', $row['category']);
+            $itemIds[] = (int)$row['id'];
             $items[] = [
-                'id'         => (int)$row['id'],
-                'content'    => $row['content'],
-                'tags'       => $row['tags'],
-                'level'      => ucfirst($levelLabel),
-                'created_at' => $row['created_at'],
+                'id'             => (int)$row['id'],
+                'content'        => $row['content'],
+                'tags'           => $row['tags'],
+                'level'          => ucfirst($levelLabel),
+                'policy_topic'   => $row['policy_topic'],
+                'agree_count'    => (int)$row['agree_count'],
+                'disagree_count' => (int)$row['disagree_count'],
+                'user_vote'      => null,
+                'created_at'     => $row['created_at'],
             ];
         }
 
@@ -160,7 +176,8 @@ try {
     } else if ($level === 'mine') {
         // My mandates — all categories for this user
         $sql = "
-            SELECT i.id, i.content, i.tags, i.category, i.created_at
+            SELECT i.id, i.content, i.tags, i.category, i.policy_topic,
+                   i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i
             WHERE i.user_id = ? AND i.deleted_at IS NULL
               AND i.category IN ('mandate-federal','mandate-state','mandate-town')
@@ -168,18 +185,27 @@ try {
         ";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll();
+
         $items = [];
-        foreach ($stmt->fetchAll() as $row) {
+        $itemIds = [];
+        foreach ($rows as $row) {
             $levelLabel = str_replace('mandate-', '', $row['category']);
+            $itemIds[] = (int)$row['id'];
             $items[] = [
-                'id'         => (int)$row['id'],
-                'content'    => $row['content'],
-                'tags'       => $row['tags'],
-                'level'      => ucfirst($levelLabel),
-                'created_at' => $row['created_at'],
+                'id'             => (int)$row['id'],
+                'content'        => $row['content'],
+                'tags'           => $row['tags'],
+                'level'          => ucfirst($levelLabel),
+                'policy_topic'   => $row['policy_topic'],
+                'agree_count'    => (int)$row['agree_count'],
+                'disagree_count' => (int)$row['disagree_count'],
+                'user_vote'      => null,
+                'created_at'     => $row['created_at'],
             ];
         }
         $contributorCount = count($items) > 0 ? 1 : 0;
+
     } else {
         // Build geo filter
         switch ($level) {
@@ -196,7 +222,8 @@ try {
 
         // Get items
         $sql = "
-            SELECT i.id, i.content, i.tags, i.created_at
+            SELECT i.id, i.content, i.tags, i.policy_topic,
+                   i.agree_count, i.disagree_count, i.created_at
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.category = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
@@ -206,13 +233,21 @@ try {
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$category, $geoParam]);
+        $rows = $stmt->fetchAll();
+
         $items = [];
-        foreach ($stmt->fetchAll() as $row) {
+        $itemIds = [];
+        foreach ($rows as $row) {
+            $itemIds[] = (int)$row['id'];
             $items[] = [
-                'id'         => (int)$row['id'],
-                'content'    => $row['content'],
-                'tags'       => $row['tags'],
-                'created_at' => $row['created_at'],
+                'id'             => (int)$row['id'],
+                'content'        => $row['content'],
+                'tags'           => $row['tags'],
+                'policy_topic'   => $row['policy_topic'],
+                'agree_count'    => (int)$row['agree_count'],
+                'disagree_count' => (int)$row['disagree_count'],
+                'user_vote'      => null,
+                'created_at'     => $row['created_at'],
             ];
         }
 
@@ -227,6 +262,23 @@ try {
         $cntStmt = $pdo->prepare($cntSql);
         $cntStmt->execute([$category, $geoParam]);
         $contributorCount = (int)$cntStmt->fetchColumn();
+    }
+
+    // Attach user_vote if authenticated and there are items
+    if ($currentUserId && !empty($itemIds)) {
+        $placeholders = implode(',', array_fill(0, count($itemIds), '?'));
+        $vStmt = $pdo->prepare("SELECT idea_id, vote_type FROM idea_votes WHERE user_id = ? AND idea_id IN ({$placeholders})");
+        $vStmt->execute(array_merge([$currentUserId], $itemIds));
+        $userVotes = [];
+        while ($v = $vStmt->fetch()) {
+            $userVotes[(int)$v['idea_id']] = $v['vote_type'];
+        }
+        foreach ($items as &$item) {
+            if (isset($userVotes[$item['id']])) {
+                $item['user_vote'] = $userVotes[$item['id']];
+            }
+        }
+        unset($item);
     }
 
     echo json_encode([
