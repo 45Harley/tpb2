@@ -191,6 +191,7 @@ $talkStreamConfig = [
     'geo_town_id'  => $geoTownId,
     'categories'   => 'mandate-federal,mandate-state,mandate-town,idea',
     'show_filters' => false,
+    'show_input'   => false,
     'show_mic'     => false,
     'show_ai_toggle' => false,
     'limit'        => 30,

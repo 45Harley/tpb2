@@ -24,6 +24,7 @@ $_tsDefaults = [
     'show_filters'        => false,
     'show_categories'     => false,
     'show_ai_toggle'      => true,
+    'show_input'          => true,
     'show_mic'            => true,
     'show_admin_tools'    => 'auto',     // true/false/'auto'
     'geo_state_id'        => null,
@@ -97,7 +98,7 @@ if (!defined('TALK_STREAM_ASSETS_LOADED')) {
     <p class="stream-subtitle"><?= htmlspecialchars($_ts['subtitle']) ?></p>
 <?php endif; ?>
 
-<?php if ($_tsCanPost): ?>
+<?php if ($_tsCanPost && $_ts['show_input']): ?>
     <div class="input-area">
         <div style="position:absolute;left:-9999px;">
             <input type="text" id="<?= $_tsPrefix ?>-hp" tabindex="-1" autocomplete="off">
