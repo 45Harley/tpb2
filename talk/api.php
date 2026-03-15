@@ -213,6 +213,7 @@ function handleSave($pdo, $input, $userId, $dbUser = null) {
     $sessionId = $input['session_id'] ?? null;
     $parentId  = $input['parent_id']  ?? null;
     $tags      = $input['tags']       ?? null;
+    $policyTopic = isset($input['policy_topic']) ? trim($input['policy_topic']) : null;
 
     if ($content === '') {
         return ['success' => false, 'error' => 'Content is required'];
@@ -224,6 +225,14 @@ function handleSave($pdo, $input, $userId, $dbUser = null) {
         $category = 'idea';
     }
 
+    // Validate policy_topic against known taxonomy
+    if ($policyTopic) {
+        require_once __DIR__ . '/../config/mandate-topics.php';
+        if (!in_array($policyTopic, MANDATE_POLICY_TOPICS)) {
+            $policyTopic = null;
+        }
+    }
+
     // Validate source
     $validSources = ['web', 'voice', 'claude-web', 'claude-desktop', 'api', 'clerk-brainstorm', 'clerk-gatherer'];
     if (!in_array($source, $validSources)) {
@@ -231,6 +240,12 @@ function handleSave($pdo, $input, $userId, $dbUser = null) {
     }
 
     $shareable = (int)($input['shareable'] ?? 0);
+
+    // Mandates are always shareable (community input)
+    if (in_array($category, ['mandate-federal', 'mandate-state', 'mandate-town'])) {
+        $shareable = 1;
+    }
+
     $clerkKey  = $input['clerk_key'] ?? null;
 
     // Validate group_id if provided
@@ -263,8 +278,8 @@ function handleSave($pdo, $input, $userId, $dbUser = null) {
     $townId  = $dbUser['current_town_id'] ?? null;
 
     $stmt = $pdo->prepare("
-        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, tags, source, shareable, clerk_key, group_id, state_id, town_id)
-        VALUES (:user_id, :session_id, :parent_id, :content, :category, 'raw', :tags, :source, :shareable, :clerk_key, :group_id, :state_id, :town_id)
+        INSERT INTO idea_log (user_id, session_id, parent_id, content, category, status, tags, source, shareable, clerk_key, group_id, state_id, town_id, policy_topic)
+        VALUES (:user_id, :session_id, :parent_id, :content, :category, 'raw', :tags, :source, :shareable, :clerk_key, :group_id, :state_id, :town_id, :policy_topic)
     ");
 
     $stmt->execute([
@@ -279,7 +294,8 @@ function handleSave($pdo, $input, $userId, $dbUser = null) {
         ':clerk_key'  => $clerkKey,
         ':group_id'   => $groupId,
         ':state_id'   => $stateId,
-        ':town_id'    => $townId
+        ':town_id'    => $townId,
+        ':policy_topic' => $policyTopic
     ]);
 
     $id = (int)$pdo->lastInsertId();
@@ -314,8 +330,10 @@ function handleSave($pdo, $input, $userId, $dbUser = null) {
                             $pTopic = 'Other';
                         }
                         if ($cSummary || $pTopic) {
+                            // User-selected topic takes precedence over AI
+                            $finalTopic = $policyTopic ?: ($pTopic ?: null);
                             $pdo->prepare("UPDATE idea_log SET citizen_summary = ?, policy_topic = ? WHERE id = ?")
-                                ->execute([$cSummary ?: null, $pTopic ?: null, $id]);
+                                ->execute([$cSummary ?: null, $finalTopic, $id]);
                         }
                     }
                 }

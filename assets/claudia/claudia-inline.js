@@ -57,7 +57,7 @@
             policy_topic: selectedTopic || null
         };
 
-        fetch('/api/save-idea.php', {
+        fetch('/talk/api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
