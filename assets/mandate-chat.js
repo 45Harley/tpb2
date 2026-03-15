@@ -235,7 +235,11 @@
             var self = this;
             pinBtn.addEventListener('click', function() {
                 self.pinIdea(msg.content);
-                pinBtn.classList.add('pinned');
+                // Remove this bubble from response area
+                var idx = self.messages.indexOf(msg);
+                if (idx !== -1) self.messages.splice(idx, 1);
+                div.remove();
+                self.saveToStorage();
             });
             div.appendChild(pinBtn);
         }
@@ -755,6 +759,11 @@
             }
             if (lastAi) {
                 this.pinIdea(lastAi.content);
+                // Remove from response area
+                var idx = this.messages.indexOf(lastAi);
+                if (idx !== -1) this.messages.splice(idx, 1);
+                this.renderAll();
+                this.saveToStorage();
             } else {
                 this.addSystemMessage('No AI response to pin yet.');
             }
