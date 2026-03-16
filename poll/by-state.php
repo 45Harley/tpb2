@@ -32,6 +32,10 @@ if (!$stateCode && $dbUser && !empty($dbUser['current_state_id'])) {
     $stmt->execute([$dbUser['current_state_id']]);
     $stateCode = $stmt->fetchColumn() ?: '';
 }
+// If no town specified, default to logged-in user's town
+if (!$townFilter && $dbUser && !empty($dbUser['current_town_id'])) {
+    $townFilter = (string)$dbUser['current_town_id'];
+}
 
 // State detail mode
 $state = null;
@@ -234,8 +238,8 @@ extract($navVars);
         <div class="view-links">
             <a href="/poll/">Vote</a>
             <a href="/poll/national/">National</a>
-            <a href="/poll/by-state/" class="active">By State</a>
-            <a href="/poll/by-rep/">By Rep</a>
+            <a href="/poll/by-state/<?= $stateCode ? '?state=' . urlencode($stateCode) . ($townInfo ? '&town=' . urlencode($townInfo['town_id']) : '') : '' ?>" class="active">By State</a>
+            <a href="/poll/by-rep/<?= $stateCode ? '?state_filter=' . urlencode($stateCode) : '' ?>">By Rep</a>
         </div>
 
         <?php require_once __DIR__ . '/../includes/criminality-scale.php'; ?>
