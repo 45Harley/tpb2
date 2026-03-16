@@ -138,7 +138,7 @@ require_once __DIR__ . '/includes/nav.php';
                     <li><a href="/ct/brooklyn/">Brooklyn</a></li>
                     <li><a href="/ct/killingly/">Killingly</a></li>
                     <li><a href="/ct/woodstock/">Woodstock</a></li>
-                    <li><a href="/ct/thompson/">Thompson</a></li>
+
                     <li><a href="/ct/pomfret/">Pomfret</a></li>
                     <li><a href="/ct/eastford/">Eastford</a></li>
                 </ul>
