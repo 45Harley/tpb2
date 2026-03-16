@@ -19,6 +19,20 @@ require_once __DIR__ . '/../includes/severity.php';
 $dbUser = getUser($pdo);
 $stateCode = strtoupper(trim($_GET['state'] ?? ''));
 
+// All states for switcher
+$allStates = $pdo->query("SELECT state_id, abbreviation, state_name FROM states ORDER BY state_name")->fetchAll();
+
+// Town filter
+$townFilter = trim($_GET['town'] ?? '');
+$townInfo = null;
+
+// If no state specified, default to logged-in user's state
+if (!$stateCode && $dbUser && !empty($dbUser['current_state_id'])) {
+    $stmt = $pdo->prepare("SELECT abbreviation FROM states WHERE state_id = ?");
+    $stmt->execute([$dbUser['current_state_id']]);
+    $stateCode = $stmt->fetchColumn() ?: '';
+}
+
 // State detail mode
 $state = null;
 $stateThreats = [];
@@ -30,8 +44,32 @@ if ($stateCode) {
     $state = $stmt->fetch();
 }
 
+// Town lookup
+$stateTowns = [];
 if ($state) {
-    // State votes per threat
+    $stmt = $pdo->prepare("SELECT town_id, town_name FROM towns WHERE state_id = ? ORDER BY town_name");
+    $stmt->execute([$state['state_id']]);
+    $stateTowns = $stmt->fetchAll();
+
+    if ($townFilter) {
+        $stmt = $pdo->prepare("SELECT town_id, town_name FROM towns WHERE state_id = ? AND (town_name = ? OR town_id = ?)");
+        $stmt->execute([$state['state_id'], $townFilter, (int)$townFilter]);
+        $townInfo = $stmt->fetch();
+    }
+}
+
+if ($state) {
+    // Build user filter: town or state
+    $geoWhere = 'current_state_id = ?';
+    $geoParam = $state['state_id'];
+    $geoLabel = $state['state_name'];
+    if ($townInfo) {
+        $geoWhere = 'current_town_id = ?';
+        $geoParam = $townInfo['town_id'];
+        $geoLabel = $townInfo['town_name'] . ', ' . $state['abbreviation'];
+    }
+
+    // Geo votes per threat — only return polls that have at least one vote (state, national, or geo)
     $stmt = $pdo->prepare("
         SELECT p.poll_id, p.threat_id,
                et.title, et.severity_score, et.threat_date,
@@ -45,13 +83,25 @@ if ($state) {
         LEFT JOIN elected_officials eo ON et.official_id = eo.official_id
         LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id
             AND pv.is_rep_vote = 0
-            AND pv.user_id IN (SELECT user_id FROM users WHERE current_state_id = ? AND deleted_at IS NULL)
+            AND pv.user_id IN (SELECT user_id FROM users WHERE {$geoWhere} AND deleted_at IS NULL)
         WHERE p.poll_type = 'threat' AND p.active = 1
         GROUP BY p.poll_id
         ORDER BY et.severity_score DESC
     ");
-    $stmt->execute([$state['state_id']]);
-    $stateThreats = $stmt->fetchAll();
+    $stmt->execute([$geoParam]);
+    $allThreats = $stmt->fetchAll();
+
+    // Count total polls and separate voted vs unvoted
+    $totalThreatPolls = count($allThreats);
+    $stateThreats = [];
+    $noVoteCount = 0;
+    foreach ($allThreats as $t) {
+        if ((int)$t['state_votes'] > 0) {
+            $stateThreats[] = $t;
+        } else {
+            $noVoteCount++;
+        }
+    }
 
     // National totals for comparison
     $r = $pdo->query("
@@ -150,18 +200,29 @@ extract($navVars);
         .results-text { font-size: 0.75rem; color: #888; }
         .no-votes { color: #555; font-size: 0.8rem; font-style: italic; }
 
+        /* Geo filters */
+        .geo-filters {
+            display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;
+        }
+        .geo-filters label { color: #888; font-size: 0.85rem; font-weight: 600; }
+        .geo-filters select {
+            padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid #444;
+            background: #1a1a2e; color: #e0e0e0; font-size: 0.85rem;
+        }
+
         @media (max-width: 600px) {
             .threat-row-header { flex-direction: column; align-items: flex-start; }
             .comparison { flex-direction: column; }
+            .geo-filters { flex-direction: column; align-items: flex-start; }
         }
     </style>
 
     <main class="polls-container">
         <?php if ($state): ?>
-            <div class="breadcrumb"><a href="/poll/by-state/">By State</a> &rsaquo; <?= htmlspecialchars($state['state_name']) ?></div>
+            <div class="breadcrumb"><a href="/poll/by-state/">By State</a> &rsaquo; <?= htmlspecialchars($state['state_name']) ?><?= $townInfo ? ' &rsaquo; ' . htmlspecialchars($townInfo['town_name']) : '' ?></div>
             <div class="page-header">
-                <h1><?= htmlspecialchars($state['state_name']) ?></h1>
-                <p class="subtitle">How <?= htmlspecialchars($state['state_name']) ?> citizens voted vs. the nation.</p>
+                <h1><?= $townInfo ? htmlspecialchars($townInfo['town_name']) . ', ' : '' ?><?= htmlspecialchars($state['state_name']) ?></h1>
+                <p class="subtitle">How <?= htmlspecialchars($geoLabel) ?> citizens voted vs. the nation.</p>
             </div>
         <?php else: ?>
             <div class="page-header">
@@ -180,9 +241,28 @@ extract($navVars);
         <?php require_once __DIR__ . '/../includes/criminality-scale.php'; ?>
 
         <?php if ($state): ?>
+            <!-- Filters -->
+            <div class="geo-filters">
+                <label>State:</label>
+                <select id="stateFilter" onchange="switchGeo()">
+                    <?php foreach ($allStates as $s): ?>
+                    <option value="<?= $s['abbreviation'] ?>" <?= $stateCode === $s['abbreviation'] ? 'selected' : '' ?>><?= htmlspecialchars($s['state_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <?php if (!empty($stateTowns)): ?>
+                <label>Town:</label>
+                <select id="townFilter" onchange="switchGeo()">
+                    <option value="">All <?= htmlspecialchars($state['state_name']) ?></option>
+                    <?php foreach ($stateTowns as $t): ?>
+                    <option value="<?= (int)$t['town_id'] ?>" <?= ($townInfo && $townInfo['town_id'] == $t['town_id']) ? 'selected' : '' ?>><?= htmlspecialchars($t['town_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <?php endif; ?>
+            </div>
+
             <!-- State detail intro -->
             <div class="intro-box">
-                <p>How <?= htmlspecialchars($state['state_name']) ?> citizens voted on each documented threat, side by side with the national average. Where your state diverges from the country, that's the story &mdash; and the pressure point for your <a href="/poll/by-rep/">representatives</a>.</p>
+                <p>How <?= htmlspecialchars($geoLabel) ?> citizens voted on each documented threat, side by side with the national average. Where your area diverges from the country, that's the story &mdash; and the pressure point for your <a href="/poll/by-rep/?state_filter=<?= $stateCode ?>">representatives</a>.</p>
             </div>
             <!-- State detail view -->
             <?php foreach ($stateThreats as $t):
@@ -205,7 +285,7 @@ extract($navVars);
                     </div>
                     <div class="comparison">
                         <div class="comparison-col">
-                            <div class="col-label"><?= htmlspecialchars($state['state_name']) ?> (<?= $sTotal ?> votes)</div>
+                            <div class="col-label"><?= htmlspecialchars($geoLabel) ?> (<?= $sTotal ?> votes)</div>
                             <?php if ($sTotal > 0): ?>
                             <div class="results-bar">
                                 <?php if ($sYeaPct > 0): ?><div class="results-yea" style="width:<?= $sYeaPct ?>%"><?= $sYeaPct ?>%</div><?php endif; ?>
@@ -232,8 +312,18 @@ extract($navVars);
                 </div>
             <?php endforeach; ?>
 
-            <?php if (empty($stateThreats)): ?>
+            <?php if (empty($stateThreats) && $noVoteCount === 0): ?>
                 <p style="color: #888;">No threat polls found.</p>
+            <?php elseif (empty($stateThreats)): ?>
+                <div class="intro-box" style="text-align:center;">
+                    <p style="color:#d4af37;font-weight:600;">No votes from <?= htmlspecialchars($geoLabel) ?> yet</p>
+                    <p><?= $totalThreatPolls ?> threat polls are waiting for citizen votes. <a href="/poll/">Cast yours</a>.</p>
+                </div>
+            <?php endif; ?>
+            <?php if ($noVoteCount > 0 && !empty($stateThreats)): ?>
+                <div class="intro-box" style="text-align:center;border-color:#444;">
+                    <p style="color:#888;"><?= $noVoteCount ?> additional poll<?= $noVoteCount !== 1 ? 's' : '' ?> with no <?= htmlspecialchars($geoLabel) ?> votes yet. <a href="/poll/">Be the first to vote</a>.</p>
+                </div>
             <?php endif; ?>
 
         <?php else: ?>
@@ -263,4 +353,13 @@ extract($navVars);
         <?php endif; ?>
     </main>
 
+<script>
+function switchGeo() {
+    var state = document.getElementById('stateFilter');
+    var town = document.getElementById('townFilter');
+    var url = '/poll/by-state/?state=' + (state ? state.value : '');
+    if (town && town.value) url += '&town=' + town.value;
+    window.location.href = url;
+}
+</script>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
