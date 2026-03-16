@@ -68,9 +68,9 @@ require_once __DIR__ . '/includes/nav.php';
                 <h2>Talk</h2>
                 <ul>
                     <li><a href="/talk/">Talk</a> <span class="desc">Civic dialogue by jurisdiction</span></li>
-                    <li><a href="/talk/groups/">Groups</a> <span class="desc">Group deliberation</span></li>
-                    <li><a href="/talk/brainstorm/">Brainstorm</a> <span class="desc">Idea generation</span></li>
-                    <li><a href="/talk/help/">Talk Help</a> <span class="desc">How Talk works</span></li>
+                    <li><a href="/talk/groups.php">Groups</a> <span class="desc">Group deliberation</span></li>
+                    <li><a href="/talk/brainstorm.php">Brainstorm</a> <span class="desc">Idea generation</span></li>
+                    <li><a href="/talk/help.php">Talk Help</a> <span class="desc">How Talk works</span></li>
                     <li><a href="/mandate-poc.php">My Mandate</a> <span class="desc">Personal mandate builder</span></li>
                     <li><a href="/mandate-summary.php">The People's Pulse</a> <span class="desc">Aggregated mandates</span></li>
                 </ul>
