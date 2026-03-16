@@ -316,8 +316,8 @@ function partyInitial($party) {
                 <span class="rep-party-badge badge-<?= $p ?>"><?= htmlspecialchars($m['party']) ?></span>
                 <div class="rep-chamber"><?= chamberLabel($m['title'], $m['office_name']) ?></div>
                 <div class="rep-stats">
-                    <div class="responded"><?= $responded ?>/<?= $totalThreatPolls ?> responded</div>
-                    <div class="silence <?= $silenceClass ?>"><?= $silenceRate ?>% silent</div>
+                    <div class="responded" title="Threat poll voting by reps is not yet implemented — this feature is planned for a future release">— / — responded</div>
+                    <div class="silence" style="color:#666" title="Threat poll voting by reps is not yet implemented">Not yet tracked</div>
                     <?php if ($repThreatCount > 0): ?>
                     <div class="rep-threats">&#9888; <?= $repThreatCount ?> threat<?= $repThreatCount !== 1 ? 's' : '' ?></div>
                     <?php endif; ?>
