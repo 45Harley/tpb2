@@ -214,6 +214,51 @@ $pageStyles = <<<'CSS'
 .vote-btn.vote-active.disagree { background: #b71c1c; border-color: #c62828; color: #ef9a9a; }
 .vote-btn .vote-count { font-weight: 700; }
 
+/* Spectrum bars */
+.score-spectrum {
+    display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem;
+}
+.spectrum-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    position: relative;
+}
+.spectrum-label {
+    font-size: 0.75rem; color: #888; width: 48px; text-align: right; flex-shrink: 0;
+}
+.spectrum-bar {
+    flex: 1; height: 18px; border-radius: 9px; position: relative;
+    overflow: visible; cursor: help;
+}
+.spectrum-bar-harm {
+    background: linear-gradient(90deg, #2e7d32 0%, #66bb6a 15%, #fdd835 35%, #ff9800 55%, #c62828 75%, #4a0000 100%);
+}
+.spectrum-bar-benefit {
+    background: linear-gradient(90deg, #333 0%, #66bb6a 30%, #2e7d32 60%, #1b5e20 100%);
+}
+.spectrum-bar-truth {
+    background: linear-gradient(90deg, #b71c1c 0%, #c62828 10%, #e65100 20%, #f9a825 35%, #fdd835 50%, #9ccc65 60%, #66bb6a 70%, #43a047 80%, #2e7d32 90%, #1b5e20 100%);
+}
+.spectrum-marker {
+    position: absolute; top: -2px; width: 4px; height: 22px;
+    background: #fff; border-radius: 2px; box-shadow: 0 0 4px rgba(0,0,0,0.8);
+    transform: translateX(-2px);
+}
+.spectrum-value {
+    font-size: 0.75rem; font-weight: 700; color: #e0e0e0; width: 100px; flex-shrink: 0;
+    white-space: nowrap;
+}
+.spectrum-ends {
+    display: flex; justify-content: space-between; flex: 1;
+    font-size: 0.65rem; color: #666; margin-top: -2px; padding: 0 2px;
+}
+.spectrum-tooltip {
+    display: none; position: absolute; bottom: 28px; left: 50%;
+    transform: translateX(-50%); background: #0a0a0f; border: 1px solid #555;
+    border-radius: 6px; padding: 6px 10px; font-size: 0.75rem; color: #ccc;
+    white-space: nowrap; z-index: 10; pointer-events: none;
+}
+.spectrum-bar:hover .spectrum-tooltip { display: block; }
+
 /* Empty state */
 .empty-state {
     text-align: center; padding: 3rem 1rem; color: #b0b0b0; font-size: 1.1rem;
@@ -355,26 +400,36 @@ require dirname(__DIR__) . '/includes/nav.php';
             </div>
             <?php endif; ?>
 
-            <div class="dual-scores">
-                <span class="score-badge" style="background:<?= $harmZone['color'] ?>;color:<?= $harmTextColor ?>">
-                    Harm: <?= $harmZone['label'] ?> <span style="opacity:0.7;font-size:0.75rem">(<?= $harmScore !== null ? (int)$harmScore : '—' ?>/1000)</span>
-                </span>
-                <span class="score-badge" style="background:<?= $benefitZone['color'] ?>;color:<?= $benefitTextColor ?>">
-                    Benefit: <?= $benefitZone['label'] ?> <span style="opacity:0.7;font-size:0.75rem">(<?= $benefitScore !== null ? (int)$benefitScore : '—' ?>/1000)</span>
-                </span>
+            <div class="score-spectrum">
+                <div class="spectrum-row">
+                    <span class="spectrum-label">Harm</span>
+                    <div class="spectrum-bar spectrum-bar-harm" title="Clean (0) ← <?= (int)$harmScore ?> → Genocide (1000)">
+                        <div class="spectrum-marker" style="left: <?= min(100, ((int)$harmScore / 1000) * 100) ?>%"></div>
+                        <div class="spectrum-tooltip">Clean (0) &larr; <?= (int)$harmScore ?> &rarr; Genocide (1000)</div>
+                    </div>
+                    <span class="spectrum-value"><?= $harmZone['label'] ?> (<?= (int)$harmScore ?>)</span>
+                </div>
+                <div class="spectrum-row">
+                    <span class="spectrum-label">Benefit</span>
+                    <div class="spectrum-bar spectrum-bar-benefit" title="None (0) ← <?= (int)$benefitScore ?> → Historic (1000)">
+                        <div class="spectrum-marker" style="left: <?= min(100, ((int)$benefitScore / 1000) * 100) ?>%"></div>
+                        <div class="spectrum-tooltip">None (0) &larr; <?= (int)$benefitScore ?> &rarr; Historic (1000)</div>
+                    </div>
+                    <span class="spectrum-value"><?= $benefitZone['label'] ?> (<?= (int)$benefitScore ?>)</span>
+                </div>
+                <?php if ($truthScore !== null): ?>
+                <div class="spectrum-row">
+                    <span class="spectrum-label">Truth</span>
+                    <div class="spectrum-bar spectrum-bar-truth" title="Lie (0) ← <?= (int)$truthScore ?> → Truth (1000)">
+                        <div class="spectrum-marker" style="left: <?= min(100, ((int)$truthScore / 1000) * 100) ?>%"></div>
+                        <div class="spectrum-tooltip">Lie (0) &larr; <?= (int)$truthScore ?> &rarr; Truth (1000)</div>
+                    </div>
+                    <span class="spectrum-value"><?= $truthZone['label'] ?> (<?= (int)$truthScore ?>)<?php if ($truthDir && $truthDir !== 'new'): ?> <span class="truth-direction <?= $truthDir ?>"><?= $truthDir === 'up' ? '&#9650;' : ($truthDir === 'down' ? '&#9660;' : '&#9654;') ?><?= $truthDelta > 0 ? '+' . $truthDelta : $truthDelta ?></span><?php endif; ?></span>
+                </div>
+                <?php endif; ?>
             </div>
-
             <?php if ($truthScore !== null): ?>
             <div class="truth-row">
-                <span class="truth-score-badge" style="background:<?= $truthZone['color'] ?>;color:<?= $truthZone['text'] ?>">
-                    <?= $truthZone['label'] ?> <span style="opacity:0.7;font-size:0.75rem">(<?= (int)$truthScore ?>/1000)</span>
-                </span>
-                <?php if ($truthDir && $truthDir !== 'new'): ?>
-                <span class="truth-direction <?= $truthDir ?>">
-                    <?= $truthDir === 'up' ? '&#9650;' : ($truthDir === 'down' ? '&#9660;' : '&#9654;') ?>
-                    <?= $truthDelta > 0 ? '+' . $truthDelta : $truthDelta ?>
-                </span>
-                <?php endif; ?>
                 <?php if ($repeatCount > 1): ?>
                 <span class="cluster-info">Said <span class="repeat-count"><?= $repeatCount ?>x</span> across sources</span>
                 <?php endif; ?>
