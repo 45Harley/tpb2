@@ -270,6 +270,19 @@ extract($navVars);
             <?php endif; ?>
 
         <?php else: ?>
+            <?php if ($dbUser && empty($dbUser['current_state_id'])): ?>
+            <!-- Profile nudge -->
+            <div class="intro-box" style="border-color:#d4af37;text-align:center;">
+                <p style="color:#d4af37;font-weight:600;">Add your location to see local polls</p>
+                <p><a href="/profile.php">Update your profile</a> with your state and town to see polls for your area.</p>
+            </div>
+            <?php elseif (!$dbUser): ?>
+            <div class="intro-box" style="border-color:#d4af37;text-align:center;">
+                <p style="color:#d4af37;font-weight:600;">Join to see local polls</p>
+                <p><a href="/join.php">Create an account</a> with your location to see polls for your state and town.</p>
+            </div>
+            <?php endif; ?>
+
             <!-- State picker -->
             <div class="geo-filters">
                 <label>Jump to state:</label>
@@ -281,29 +294,59 @@ extract($navVars);
                 </select>
             </div>
 
-            <!-- 50-state intro -->
+            <!-- Federal polls as default -->
             <div class="intro-box">
-                <p>Every state below shows how many citizens have voted on executive, legislative, and judicial threats scored 300+ on the <strong style="color:#d4af37">criminality scale</strong>. Click a state to see how it voted on each threat compared to the national average. Not yet voted? <a href="/poll/">Cast yours</a>.</p>
+                <p>Showing <strong style="color:#d4af37">federal polls</strong> &mdash; select a state above to see state and town polls.</p>
             </div>
-            <!-- 50-state landing -->
-            <table class="state-table">
-                <thead>
-                    <tr>
-                        <th>State</th>
-                        <th>Voters</th>
-                        <th>Total Votes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($stateList as $s): ?>
-                    <tr>
-                        <td><a href="/poll/by-state/<?= strtolower($s['abbreviation']) ?>/"><?= htmlspecialchars($s['state_name']) ?></a> (<?= $s['abbreviation'] ?>)</td>
-                        <td><?= $s['unique_voters'] ?: 0 ?></td>
-                        <td><?= $s['total_votes'] ?: 0 ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+
+            <?php
+            $federalPolls = $pdo->query("
+                SELECT p.poll_id, p.question, p.threat_id,
+                       et.severity_score, et.title,
+                       COUNT(pv.poll_vote_id) as total_votes,
+                       SUM(CASE WHEN pv.vote_choice = 'yea' THEN 1 ELSE 0 END) as yea_count,
+                       SUM(CASE WHEN pv.vote_choice = 'nay' THEN 1 ELSE 0 END) as nay_count
+                FROM polls p
+                LEFT JOIN executive_threats et ON p.threat_id = et.threat_id
+                LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id AND pv.is_rep_vote = 0
+                WHERE p.scope_type = 'federal' AND p.active = 1
+                GROUP BY p.poll_id
+                HAVING total_votes > 0
+                ORDER BY et.severity_score DESC
+                LIMIT 50
+            ")->fetchAll();
+            ?>
+
+            <?php if (empty($federalPolls)): ?>
+                <div class="intro-box" style="text-align:center;">
+                    <p style="color:#888;">No federal polls with votes yet. <a href="/poll/">Cast the first vote</a>.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($federalPolls as $fp):
+                    $fpTotal = (int)$fp['total_votes'];
+                    $fpYeaPct = $fpTotal > 0 ? round($fp['yea_count'] / $fpTotal * 100, 1) : 0;
+                    $fpNayPct = $fpTotal > 0 ? round($fp['nay_count'] / $fpTotal * 100, 1) : 0;
+                    $zone = $fp['severity_score'] ? getSeverityZone($fp['severity_score']) : ['color' => '#444', 'label' => ''];
+                ?>
+                <div class="threat-row">
+                    <div class="threat-row-header">
+                        <?php if ($fp['severity_score']): ?>
+                        <span class="severity-badge" style="background:<?= $zone['color'] ?>"><?= $fp['severity_score'] ?></span>
+                        <?php endif; ?>
+                        <span class="threat-title"><?= htmlspecialchars($fp['question']) ?></span>
+                    </div>
+                    <div class="comparison">
+                        <div class="comparison-col">
+                            <div class="col-label">National (<?= $fpTotal ?> votes)</div>
+                            <div class="results-bar">
+                                <?php if ($fpYeaPct > 0): ?><div class="results-yea" style="width:<?= $fpYeaPct ?>%"><?= $fpYeaPct ?>%</div><?php endif; ?>
+                                <?php if ($fpNayPct > 0): ?><div class="results-nay" style="width:<?= $fpNayPct ?>%"><?= $fpNayPct ?>%</div><?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         <?php endif; ?>
     </main>
 
