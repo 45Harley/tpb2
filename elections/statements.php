@@ -357,17 +357,17 @@ require dirname(__DIR__) . '/includes/nav.php';
 
             <div class="dual-scores">
                 <span class="score-badge" style="background:<?= $harmZone['color'] ?>;color:<?= $harmTextColor ?>">
-                    Harm: <?= $harmScore !== null ? (int)$harmScore : '—' ?> <?= $harmZone['label'] ?>
+                    Harm: <?= $harmZone['label'] ?> <span style="opacity:0.7;font-size:0.75rem">(<?= $harmScore !== null ? (int)$harmScore : '—' ?>/1000)</span>
                 </span>
                 <span class="score-badge" style="background:<?= $benefitZone['color'] ?>;color:<?= $benefitTextColor ?>">
-                    Benefit: <?= $benefitScore !== null ? (int)$benefitScore : '—' ?> <?= $benefitZone['label'] ?>
+                    Benefit: <?= $benefitZone['label'] ?> <span style="opacity:0.7;font-size:0.75rem">(<?= $benefitScore !== null ? (int)$benefitScore : '—' ?>/1000)</span>
                 </span>
             </div>
 
             <?php if ($truthScore !== null): ?>
             <div class="truth-row">
                 <span class="truth-score-badge" style="background:<?= $truthZone['color'] ?>;color:<?= $truthZone['text'] ?>">
-                    Truth: <?= (int)$truthScore ?> <?= $truthZone['label'] ?>
+                    <?= $truthZone['label'] ?> <span style="opacity:0.7;font-size:0.75rem">(<?= (int)$truthScore ?>/1000)</span>
                 </span>
                 <?php if ($truthDir && $truthDir !== 'new'): ?>
                 <span class="truth-direction <?= $truthDir ?>">
