@@ -331,6 +331,17 @@ extract($navVars);
             <?php endif; ?>
 
         <?php else: ?>
+            <!-- State picker -->
+            <div class="geo-filters">
+                <label>Jump to state:</label>
+                <select id="stateFilter" onchange="switchGeo()">
+                    <option value="">Choose a state...</option>
+                    <?php foreach ($allStates as $s): ?>
+                    <option value="<?= $s['abbreviation'] ?>"><?= htmlspecialchars($s['state_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
             <!-- 50-state intro -->
             <div class="intro-box">
                 <p>Every state below shows how many citizens have voted on executive, legislative, and judicial threats scored 300+ on the <strong style="color:#d4af37">criminality scale</strong>. Click a state to see how it voted on each threat compared to the national average. Not yet voted? <a href="/poll/">Cast yours</a>.</p>
