@@ -63,64 +63,33 @@ if ($state) {
 }
 
 if ($state) {
-    // Build user filter: town or state
-    $geoWhere = 'current_state_id = ?';
-    $geoParam = $state['state_id'];
     $geoLabel = $state['state_name'];
     if ($townInfo) {
-        $geoWhere = 'current_town_id = ?';
-        $geoParam = $townInfo['town_id'];
         $geoLabel = $townInfo['town_name'] . ', ' . $state['abbreviation'];
     }
 
-    // Geo votes per threat — only return polls that have at least one vote (state, national, or geo)
-    $stmt = $pdo->prepare("
-        SELECT p.poll_id, p.threat_id,
-               et.title, et.severity_score, et.threat_date,
-               eo.full_name as official_name,
-               COUNT(pv.poll_vote_id) as state_votes,
-               SUM(CASE WHEN pv.vote_choice = 'yea' THEN 1 ELSE 0 END) as state_yea,
-               SUM(CASE WHEN pv.vote_choice = 'nay' THEN 1 ELSE 0 END) as state_nay,
-               SUM(CASE WHEN pv.vote_choice = 'abstain' THEN 1 ELSE 0 END) as state_abstain
-        FROM polls p
-        JOIN executive_threats et ON p.threat_id = et.threat_id
-        LEFT JOIN elected_officials eo ON et.official_id = eo.official_id
-        LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id
-            AND pv.is_rep_vote = 0
-            AND pv.user_id IN (SELECT user_id FROM users WHERE {$geoWhere} AND deleted_at IS NULL)
-        WHERE p.poll_type = 'threat' AND p.active = 1
-        GROUP BY p.poll_id
-        ORDER BY et.severity_score DESC
-    ");
-    $stmt->execute([$geoParam]);
-    $allThreats = $stmt->fetchAll();
-
-    // Count total polls and separate voted vs unvoted
-    $totalThreatPolls = count($allThreats);
-    $stateThreats = [];
-    $noVoteCount = 0;
-    foreach ($allThreats as $t) {
-        if ((int)$t['state_votes'] > 0) {
-            $stateThreats[] = $t;
-        } else {
-            $noVoteCount++;
-        }
+    // Only show polls scoped to this state (or town within it)
+    $scopeWhere = "(p.scope_type = 'state' AND p.scope_id = ?)";
+    $scopeParams = [$state['state_id']];
+    if ($townInfo) {
+        $scopeWhere = "(p.scope_type = 'town' AND p.scope_id = ?)";
+        $scopeParams = [$townInfo['town_id']];
     }
 
-    // National totals for comparison
-    $r = $pdo->query("
-        SELECT p.poll_id,
-               COUNT(pv.poll_vote_id) as nat_votes,
-               SUM(CASE WHEN pv.vote_choice = 'yea' THEN 1 ELSE 0 END) as nat_yea,
-               SUM(CASE WHEN pv.vote_choice = 'nay' THEN 1 ELSE 0 END) as nat_nay
+    $stmt = $pdo->prepare("
+        SELECT p.poll_id, p.slug, p.question, p.poll_type, p.scope_type, p.created_at,
+               COUNT(pv.poll_vote_id) as total_votes,
+               SUM(CASE WHEN pv.vote_choice = 'yea' THEN 1 ELSE 0 END) as yea_count,
+               SUM(CASE WHEN pv.vote_choice = 'nay' THEN 1 ELSE 0 END) as nay_count
         FROM polls p
         LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id AND pv.is_rep_vote = 0
-        WHERE p.poll_type = 'threat' AND p.active = 1
+        WHERE {$scopeWhere} AND p.active = 1
         GROUP BY p.poll_id
+        ORDER BY p.created_at DESC
     ");
-    while ($row = $r->fetch()) {
-        $nationalData[$row['poll_id']] = $row;
-    }
+    $stmt->execute($scopeParams);
+    $statePolls = $stmt->fetchAll();
+
 }
 
 // Landing mode: all states with vote counts
@@ -264,70 +233,40 @@ extract($navVars);
                 <?php endif; ?>
             </div>
 
-            <!-- State detail intro -->
-            <div class="intro-box">
-                <p>How <?= htmlspecialchars($geoLabel) ?> citizens voted on each documented threat, side by side with the national average. Where your area diverges from the country, that's the story &mdash; and the pressure point for your <a href="/poll/by-rep/?state_filter=<?= $stateCode ?>">representatives</a>.</p>
-            </div>
-            <!-- State detail view -->
-            <?php foreach ($stateThreats as $t):
-                $zone = getSeverityZone($t['severity_score']);
-                $sTotal = (int)$t['state_votes'];
-                $sYeaPct = $sTotal > 0 ? round($t['state_yea'] / $sTotal * 100, 1) : 0;
-                $sNayPct = $sTotal > 0 ? round($t['state_nay'] / $sTotal * 100, 1) : 0;
-                $sAbstainPct = $sTotal > 0 ? round($t['state_abstain'] / $sTotal * 100, 1) : 0;
-
-                $nat = $nationalData[$t['poll_id']] ?? ['nat_votes' => 0, 'nat_yea' => 0, 'nat_nay' => 0];
-                $nTotal = (int)$nat['nat_votes'];
-                $nYeaPct = $nTotal > 0 ? round($nat['nat_yea'] / $nTotal * 100, 1) : 0;
-                $nNayPct = $nTotal > 0 ? round($nat['nat_nay'] / $nTotal * 100, 1) : 0;
-                $nAbstainPct = $nTotal > 0 ? round((($nTotal - $nat['nat_yea'] - $nat['nat_nay']) / $nTotal) * 100, 1) : 0;
-            ?>
+            <!-- State/town polls -->
+            <?php if (empty($statePolls)): ?>
+                <div class="intro-box" style="text-align:center;">
+                    <p style="color:#d4af37;font-weight:600;">No <?= htmlspecialchars($geoLabel) ?> polls yet</p>
+                    <p>When polls are created for <?= htmlspecialchars($geoLabel) ?>, they'll appear here. Federal threat polls are on the <a href="/poll/">Vote</a> page.</p>
+                </div>
+            <?php else: ?>
+                <div class="intro-box">
+                    <p><?= count($statePolls) ?> poll<?= count($statePolls) !== 1 ? 's' : '' ?> for <?= htmlspecialchars($geoLabel) ?>.</p>
+                </div>
+                <?php foreach ($statePolls as $poll):
+                    $pTotal = (int)$poll['total_votes'];
+                    $pYeaPct = $pTotal > 0 ? round($poll['yea_count'] / $pTotal * 100, 1) : 0;
+                    $pNayPct = $pTotal > 0 ? round($poll['nay_count'] / $pTotal * 100, 1) : 0;
+                ?>
                 <div class="threat-row">
                     <div class="threat-row-header">
-                        <span class="severity-badge" style="background: <?= $zone['color'] ?>"><?= $t['severity_score'] ?> &mdash; <?= $zone['label'] ?></span>
-                        <span class="threat-title"><a href="/usa/executive.php#threat-<?= $t['threat_id'] ?>" style="color:#d4af37;text-decoration:underline;" title="View full threat detail"><?= htmlspecialchars($t['title']) ?></a></span>
+                        <span class="threat-title"><?= htmlspecialchars($poll['question']) ?></span>
                     </div>
                     <div class="comparison">
                         <div class="comparison-col">
-                            <div class="col-label"><?= htmlspecialchars($geoLabel) ?> (<?= $sTotal ?> votes)</div>
-                            <?php if ($sTotal > 0): ?>
+                            <div class="col-label"><?= $pTotal ?> vote<?= $pTotal !== 1 ? 's' : '' ?></div>
+                            <?php if ($pTotal > 0): ?>
                             <div class="results-bar">
-                                <?php if ($sYeaPct > 0): ?><div class="results-yea" style="width:<?= $sYeaPct ?>%"><?= $sYeaPct ?>%</div><?php endif; ?>
-                                <?php if ($sNayPct > 0): ?><div class="results-nay" style="width:<?= $sNayPct ?>%"><?= $sNayPct ?>%</div><?php endif; ?>
-                                <?php if ($sAbstainPct > 0): ?><div class="results-abstain-seg" style="width:<?= $sAbstainPct ?>%"><?= $sAbstainPct ?>%</div><?php endif; ?>
+                                <?php if ($pYeaPct > 0): ?><div class="results-yea" style="width:<?= $pYeaPct ?>%"><?= $pYeaPct ?>%</div><?php endif; ?>
+                                <?php if ($pNayPct > 0): ?><div class="results-nay" style="width:<?= $pNayPct ?>%"><?= $pNayPct ?>%</div><?php endif; ?>
                             </div>
                             <?php else: ?>
-                            <div class="no-votes">No votes from this state yet</div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="comparison-col">
-                            <div class="col-label">National (<?= $nTotal ?> votes)</div>
-                            <?php if ($nTotal > 0): ?>
-                            <div class="results-bar">
-                                <?php if ($nYeaPct > 0): ?><div class="results-yea" style="width:<?= $nYeaPct ?>%"><?= $nYeaPct ?>%</div><?php endif; ?>
-                                <?php if ($nNayPct > 0): ?><div class="results-nay" style="width:<?= $nNayPct ?>%"><?= $nNayPct ?>%</div><?php endif; ?>
-                                <?php if ($nAbstainPct > 0): ?><div class="results-abstain-seg" style="width:<?= $nAbstainPct ?>%"><?= $nAbstainPct ?>%</div><?php endif; ?>
-                            </div>
-                            <?php else: ?>
-                            <div class="no-votes">No national votes yet</div>
+                            <div class="no-votes">No votes yet</div>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
-            <?php endforeach; ?>
-
-            <?php if (empty($stateThreats) && $noVoteCount === 0): ?>
-                <p style="color: #888;">No threat polls found.</p>
-            <?php elseif (empty($stateThreats)): ?>
-                <div class="intro-box" style="text-align:center;">
-                    <p style="color:#d4af37;font-weight:600;">No votes from <?= htmlspecialchars($geoLabel) ?> yet</p>
-                    <p><?= $totalThreatPolls ?> threat polls are waiting for citizen votes. <a href="/poll/">Cast yours</a>.</p>
-                </div>
-            <?php endif; ?>
-            <?php if ($noVoteCount > 0 && !empty($stateThreats)): ?>
-                <div class="intro-box" style="text-align:center;border-color:#444;">
-                    <p style="color:#888;"><?= $noVoteCount ?> additional poll<?= $noVoteCount !== 1 ? 's' : '' ?> with no <?= htmlspecialchars($geoLabel) ?> votes yet. <a href="/poll/">Be the first to vote</a>.</p>
-                </div>
+                <?php endforeach; ?>
             <?php endif; ?>
 
         <?php else: ?>
