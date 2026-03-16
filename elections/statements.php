@@ -226,7 +226,7 @@ $pageStyles = <<<'CSS'
     font-size: 0.75rem; color: #888; width: 48px; text-align: right; flex-shrink: 0;
 }
 .spectrum-bar {
-    flex: 1; height: 18px; border-radius: 9px; position: relative;
+    flex: 1; max-width: 200px; height: 12px; border-radius: 6px; position: relative;
     overflow: visible; cursor: help;
 }
 .spectrum-bar-harm {
@@ -239,9 +239,9 @@ $pageStyles = <<<'CSS'
     background: linear-gradient(90deg, #b71c1c 0%, #c62828 10%, #e65100 20%, #f9a825 35%, #fdd835 50%, #9ccc65 60%, #66bb6a 70%, #43a047 80%, #2e7d32 90%, #1b5e20 100%);
 }
 .spectrum-marker {
-    position: absolute; top: -2px; width: 4px; height: 22px;
+    position: absolute; top: -2px; width: 3px; height: 16px;
     background: #fff; border-radius: 2px; box-shadow: 0 0 4px rgba(0,0,0,0.8);
-    transform: translateX(-2px);
+    transform: translateX(-1.5px);
 }
 .spectrum-value {
     font-size: 0.75rem; font-weight: 700; color: #e0e0e0; width: 100px; flex-shrink: 0;
