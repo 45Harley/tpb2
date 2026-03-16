@@ -372,8 +372,10 @@ extract($navVars);
 function switchGeo() {
     var state = document.getElementById('stateFilter');
     var town = document.getElementById('townFilter');
-    var url = '/poll/by-state/?state=' + (state ? state.value : '');
-    if (town && town.value) url += '&town=' + town.value;
+    var stateVal = state ? state.value.toLowerCase() : '';
+    if (!stateVal) { window.location.href = '/poll/by-state/'; return; }
+    var url = '/poll/by-state/' + stateVal + '/';
+    if (town && town.value) url += '?town=' + town.value;
     window.location.href = url;
 }
 </script>
