@@ -130,10 +130,19 @@ require_once __DIR__ . '/includes/nav.php';
                 <h2>State &amp; Town Pages</h2>
                 <ul>
                     <li><a href="/ct/">Connecticut</a> <span class="desc">State landing</span></li>
-                    <li><a href="/ct/putnam/">Putnam, CT</a> <span class="desc">Model town</span></li>
-                    <li><a href="/ct/putnam/calendar.php">Putnam Calendar</a> <span class="desc">Town events</span></li>
                 </ul>
-                <p style="color:#888;font-size:0.8rem;margin-top:0.5rem;">State/town pages are generated dynamically. Visit <a href="/usa/" style="color:#d4af37">/usa/</a> to browse by state.</p>
+                <h3 style="color:#b0b0b0;font-size:0.9rem;margin:0.75rem 0 0.5rem;">Quiet Corner, CT</h3>
+                <ul>
+                    <li><a href="/ct/putnam/">Putnam</a> <span class="desc">Model town</span></li>
+                    <li><a href="/ct/putnam/calendar.php">Putnam Calendar</a> <span class="desc">Town events</span></li>
+                    <li><a href="/ct/brooklyn/">Brooklyn</a></li>
+                    <li><a href="/ct/killingly/">Killingly</a></li>
+                    <li><a href="/ct/woodstock/">Woodstock</a></li>
+                    <li><a href="/ct/thompson/">Thompson</a></li>
+                    <li><a href="/ct/pomfret/">Pomfret</a></li>
+                    <li><a href="/ct/eastford/">Eastford</a></li>
+                </ul>
+                <p style="color:#888;font-size:0.8rem;margin-top:0.5rem;">All 50 states and 29,000+ towns are available dynamically. Visit <a href="/usa/" style="color:#d4af37">/usa/</a> to browse by state.</p>
             </div>
 
             <div class="sitemap-section">
