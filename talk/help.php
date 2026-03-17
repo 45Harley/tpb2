@@ -30,9 +30,9 @@ $currentPage = 'talk';
 $pageTitle = 'Help - ' . ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Talk | The People\'s Branch';
 $secondaryNavBrand = ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Talk';
 $secondaryNav = [
-    ['label' => 'Stream',  'url' => '/talk/' . $geoQuery],
-    ['label' => 'Groups',  'url' => '/talk/groups.php' . $geoQuery],
-    ['label' => 'Help',    'url' => '/talk/help.php' . $geoQuery],
+    ['label' => 'Discuss & Draft',  'url' => '/talk/' . $geoQuery],
+    ['label' => 'Groups',           'url' => '/talk/groups.php' . $geoQuery],
+    ['label' => 'Help',             'url' => '/talk/help.php' . $geoQuery],
 ];
 
 $pageStyles = <<<'CSS'

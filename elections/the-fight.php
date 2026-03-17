@@ -371,9 +371,8 @@ require_once dirname(__DIR__) . '/includes/nav.php';
 
     <?php
     $claudiaInlineConfig = [
-        'scope' => 'federal',
-        'scope_label' => 'Elections 2026',
-        'title' => 'Your Mandate for This Election',
+        'default_scope' => 'federal',
+        'title' => 'The Fight — Discuss & Draft',
         'placeholder' => 'What should your representatives fight for?',
         'group' => 'The Fight',
     ];

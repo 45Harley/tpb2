@@ -1,5 +1,9 @@
 /**
- * MandateChat — Lightweight ephemeral chat for mandate refinement.
+ * MandateChat — Discuss & Create Draft
+ *
+ * CRUD bubble workspace for mandate refinement.
+ * Each bubble has: edit, scope checkboxes (federal/state/town/idea), save, delete.
+ * No scratchpad, no pinning — bubbles are the workspace.
  *
  * Config:
  *   prefix        — DOM ID prefix (default: 'mc')
@@ -9,30 +13,34 @@
  *   district      — user's congressional district (e.g. 'CT-2')
  *   stateName     — user's state name
  *   townName      — user's town name
+ *   stateId       — user's state ID
+ *   townId        — user's town ID
+ *   groupId       — group filter (null for none)
  *   placeholder   — textarea placeholder text
+ *   defaultScope  — pre-checked scope ('federal', 'state', 'town', or null)
  */
 (function() {
     'use strict';
 
     function MandateChat(config) {
         this.config = Object.assign({
-            prefix:      'mc',
-            apiChat:     '/api/claude-chat.php',
-            apiSave:     '/talk/api.php',
-            userId:      null,
-            district:    '',
-            stateName:   '',
-            townName:    '',
-            stateId:     0,
-            townId:      0,
-            groupId:     null,
-            placeholder: "What do you want your reps to do?"
+            prefix:       'mc',
+            apiChat:      '/api/claude-chat.php',
+            apiSave:      '/talk/api.php',
+            userId:       null,
+            district:     '',
+            stateName:    '',
+            townName:     '',
+            stateId:      0,
+            townId:       0,
+            groupId:      null,
+            placeholder:  "What matters most to you?",
+            defaultScope: null
         }, config);
 
-        this.messages = [];   // {role: 'user'|'assistant', content: string, ts: string}
-        this.ideas    = [];   // {num: int, content: string, ts: string}
-        this.nextIdea = 1;
-        this.storageKey = 'mandate_chat_' + this.config.prefix;
+        this.bubbles = [];   // {id: int, role: 'user'|'assistant'|'system', content: string, ts: string, scope: null|string}
+        this.nextId = 1;
+        this.storageKey = 'mandate_draft_' + this.config.prefix;
         this.recognition = null;
         this.micOn = false;
         this.commandMode = false;
@@ -50,19 +58,17 @@
 
     MandateChat.prototype.init = function() {
         var p = this.config.prefix;
-        this.messagesEl   = document.getElementById(p + '-messages');
+        this.draftsEl     = document.getElementById(p + '-drafts');
         this.inputEl      = document.getElementById(p + '-input');
-        this.sendBtn      = document.getElementById(p + '-send');
-        this.pinBtn       = document.getElementById(p + '-pin');
+        this.addBtn       = document.getElementById(p + '-add');
+        this.askAiBtn     = document.getElementById(p + '-ask-ai');
         this.micBtn       = document.getElementById(p + '-mic');
         this.charEl       = document.getElementById(p + '-char');
-        this.ideaListEl   = document.getElementById(p + '-idea-list');
-        this.ideaSelectEl = document.getElementById(p + '-idea-select');
+        this.clearAllBtn  = document.getElementById(p + '-clear-all');
         this.toastEl      = document.getElementById(p + '-toast');
 
-        if (!this.messagesEl || !this.inputEl) return;
+        if (!this.draftsEl || !this.inputEl) return;
 
-        // Bind events FIRST so handlers work even if render fails
         this.bindEvents();
         this.loadFromStorage();
         try { this.renderAll(); } catch (e) { console.error('MandateChat renderAll:', e); }
@@ -76,19 +82,21 @@
     MandateChat.prototype.bindEvents = function() {
         var self = this;
 
-        // Send button
-        this.sendBtn.addEventListener('click', function() { self.send(); });
-
-        // Direct pin button — pin to scratchpad without AI
-        if (this.pinBtn) {
-            this.pinBtn.addEventListener('click', function() { self.pinDirect(); });
+        // Add button — post directly as bubble
+        if (this.addBtn) {
+            this.addBtn.addEventListener('click', function() { self.addDirect(); });
         }
 
-        // Enter to send (shift+enter for newline)
+        // Ask AI button — send to AI
+        if (this.askAiBtn) {
+            this.askAiBtn.addEventListener('click', function() { self.askAi(); });
+        }
+
+        // Enter to Ask AI (shift+enter for newline)
         this.inputEl.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                self.send();
+                self.askAi();
             }
         });
 
@@ -98,43 +106,75 @@
             self.updateCharCount();
         });
 
-        // Save buttons
-        var saveBar = this.messagesEl.closest('.mandate-chat').querySelector('.mc-save-bar');
-        if (saveBar) {
-            saveBar.addEventListener('click', function(e) {
-                var btn = e.target.closest('button');
-                if (!btn) return;
-                if (btn.classList.contains('mc-save-federal')) self.saveIdea('mandate-federal');
-                else if (btn.classList.contains('mc-save-state')) self.saveIdea('mandate-state');
-                else if (btn.classList.contains('mc-save-town')) self.saveIdea('mandate-town');
-                else if (btn.classList.contains('mc-save-idea')) self.saveIdea('idea');
-            });
-        }
-
-        // Clear chat button (clears everything)
-        var clearBtn = this.messagesEl.closest('.mandate-chat').querySelector('.mc-clear-chat');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', function() {
-                if (confirm('Clear this conversation and all pinned ideas?')) {
+        // Clear all button
+        if (this.clearAllBtn) {
+            this.clearAllBtn.addEventListener('click', function() {
+                if (confirm('Clear all drafts in this workspace?')) {
                     self.clearSession();
                 }
             });
         }
 
-        // Clear response button (clears chat messages only, keeps ideas)
-        var clearResponseBtn = this.messagesEl.closest('.mandate-chat').querySelector('.mc-clear-response');
-        if (clearResponseBtn) {
-            clearResponseBtn.addEventListener('click', function() {
-                self.messages = [];
-                self.messagesEl.innerHTML = '';
-                self.saveToStorage();
-            });
-        }
+        // Delegated click handler for bubble actions
+        this.draftsEl.addEventListener('click', function(e) {
+            var bubble = e.target.closest('.mc-draft-bubble');
+            if (!bubble) return;
+            var id = parseInt(bubble.dataset.id);
+
+            // Scope checkbox (radio behavior)
+            var scopeInput = e.target.closest('.mc-scope-check input');
+            if (scopeInput) {
+                self.setScope(id, scopeInput.value);
+                return;
+            }
+
+            // Save button
+            if (e.target.closest('.mc-draft-save')) {
+                self.saveBubble(id);
+                return;
+            }
+
+            // Delete button
+            if (e.target.closest('.mc-draft-delete')) {
+                self.deleteBubble(id);
+                return;
+            }
+
+            // Edit button
+            if (e.target.closest('.mc-draft-edit')) {
+                self.editBubble(id);
+                return;
+            }
+
+            // Edit save
+            if (e.target.closest('.mc-edit-save')) {
+                self.saveEdit(id);
+                return;
+            }
+
+            // Edit cancel
+            if (e.target.closest('.mc-edit-cancel')) {
+                self.renderAll();
+                return;
+            }
+        });
     };
 
-    // ── Send Message ──────────────────────────────────────────
+    // ── Add Direct (no AI) ────────────────────────────────────
 
-    MandateChat.prototype.send = async function() {
+    MandateChat.prototype.addDirect = function() {
+        var content = this.inputEl.value.trim();
+        if (!content) return;
+
+        this.addBubble('user', content);
+        this.inputEl.value = '';
+        this.autoResize();
+        this.updateCharCount();
+    };
+
+    // ── Ask AI ────────────────────────────────────────────────
+
+    MandateChat.prototype.askAi = async function() {
         if (this.micOn && this.recognition) {
             this.micOn = false;
             this.recognition.stop();
@@ -143,7 +183,7 @@
         var content = this.inputEl.value.trim();
         if (!content || this.isSubmitting) return;
 
-        // Check for voice/text commands before sending to AI
+        // Check for voice/text commands
         if (this.handleCommand(content)) {
             this.inputEl.value = '';
             this.autoResize();
@@ -151,34 +191,31 @@
             return;
         }
 
-        // Add user message
-        var userMsg = { role: 'user', content: content, ts: new Date().toISOString() };
-        this.messages.push(userMsg);
-        this.renderBubble(userMsg);
+        // Add user bubble
+        this.addBubble('user', content);
         this.inputEl.value = '';
         this.autoResize();
         this.updateCharCount();
-        this.saveToStorage();
 
         // Show thinking indicator
         var thinkingEl = document.createElement('div');
         thinkingEl.className = 'mc-thinking';
         thinkingEl.textContent = 'Thinking...';
-        this.messagesEl.appendChild(thinkingEl);
-        this.scrollToBottom();
+        this.draftsEl.insertBefore(thinkingEl, this.draftsEl.firstChild);
 
-        // Build conversation history for AI (skip system messages)
+        // Build conversation history (last 10 non-system bubbles for context)
         var history = [];
-        for (var i = 0; i < this.messages.length - 1; i++) {
-            if (this.messages[i].role === 'system') continue;
-            history.push({ role: this.messages[i].role, content: this.messages[i].content });
+        var recent = this.bubbles.slice(-10);
+        for (var i = 0; i < recent.length - 1; i++) {
+            if (recent[i].role === 'system') continue;
+            history.push({ role: recent[i].role, content: recent[i].content });
         }
 
-        // Prepend mandate context to user message
+        // Prepend mandate context
         var mandateCtx = 'You are helping a constituent refine their priorities for elected representatives. '
             + 'Help them turn raw ideas into specific, actionable 1-2 sentence mandate statements. '
             + 'Ask one clarifying question if the idea is vague. '
-            + 'When you produce a refined mandate, format it clearly on its own line starting with "Mandate: " so the user can pin it. '
+            + 'When you produce a refined mandate, format it clearly. '
             + 'Do NOT offer to draft letters, emails, or other documents. '
             + 'Keep responses concise and focused.';
 
@@ -201,83 +238,263 @@
                 })
             });
             var data = await resp.json();
-            thinkingEl.remove();
+            if (thinkingEl.parentNode) thinkingEl.remove();
 
             if (data.response) {
-                var aiMsg = { role: 'assistant', content: data.response, ts: new Date().toISOString() };
-                this.messages.push(aiMsg);
-                this.renderBubble(aiMsg);
-                this.saveToStorage();
+                this.addBubble('assistant', data.response);
             } else {
                 this.showToast(data.error || 'AI response failed', 'error');
             }
         } catch (err) {
-            thinkingEl.remove();
+            if (thinkingEl.parentNode) thinkingEl.remove();
             this.showToast('Connection error', 'error');
         }
         this.isSubmitting = false;
     };
 
+    // ── Bubble CRUD ───────────────────────────────────────────
+
+    MandateChat.prototype.addBubble = function(role, content) {
+        var bubble = {
+            id: this.nextId++,
+            role: role,
+            content: content,
+            ts: new Date().toISOString(),
+            scope: this.config.defaultScope || null
+        };
+        this.bubbles.push(bubble);
+        this.saveToStorage();
+        this.renderAll();
+        return bubble;
+    };
+
+    MandateChat.prototype.deleteBubble = function(id) {
+        this.bubbles = this.bubbles.filter(function(b) { return b.id !== id; });
+        this.renumber();
+        this.saveToStorage();
+        this.renderAll();
+    };
+
+    MandateChat.prototype.setScope = function(id, scope) {
+        var bubble = this.bubbles.find(function(b) { return b.id === id; });
+        if (!bubble) return;
+        // Toggle: if same scope clicked, uncheck
+        bubble.scope = (bubble.scope === scope) ? null : scope;
+        this.saveToStorage();
+        this.renderAll();
+    };
+
+    MandateChat.prototype.editBubble = function(id) {
+        // Render edit mode for this bubble
+        var el = this.draftsEl.querySelector('[data-id="' + id + '"]');
+        if (!el || el.querySelector('.mc-edit-input')) return;
+        var bubble = this.bubbles.find(function(b) { return b.id === id; });
+        if (!bubble) return;
+
+        var contentEl = el.querySelector('.mc-draft-content');
+        if (!contentEl) return;
+
+        var input = document.createElement('textarea');
+        input.className = 'mc-edit-input';
+        input.value = bubble.content;
+        input.rows = 3;
+
+        var btnWrap = document.createElement('div');
+        btnWrap.className = 'mc-edit-btns';
+
+        var saveBtn = document.createElement('button');
+        saveBtn.className = 'mc-edit-save';
+        saveBtn.textContent = 'Save';
+        saveBtn.title = 'Save your changes';
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.className = 'mc-edit-cancel';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.title = 'Discard changes';
+
+        btnWrap.appendChild(saveBtn);
+        btnWrap.appendChild(cancelBtn);
+
+        contentEl.style.display = 'none';
+        contentEl.parentNode.insertBefore(input, contentEl.nextSibling);
+        contentEl.parentNode.insertBefore(btnWrap, input.nextSibling);
+        input.focus();
+    };
+
+    MandateChat.prototype.saveEdit = function(id) {
+        var el = this.draftsEl.querySelector('[data-id="' + id + '"]');
+        if (!el) return;
+        var input = el.querySelector('.mc-edit-input');
+        if (!input) return;
+        var newContent = input.value.trim();
+        if (!newContent) return;
+
+        var bubble = this.bubbles.find(function(b) { return b.id === id; });
+        if (bubble) {
+            bubble.content = newContent;
+            this.saveToStorage();
+        }
+        this.renderAll();
+    };
+
+    MandateChat.prototype.saveBubble = async function(id) {
+        var bubble = this.bubbles.find(function(b) { return b.id === id; });
+        if (!bubble || !bubble.scope) {
+            this.showToast('Select a scope first (Federal, State, Town, or Idea)', 'error');
+            return;
+        }
+
+        var category = bubble.scope === 'idea' ? 'idea' : ('mandate-' + bubble.scope);
+        var label = bubble.scope === 'idea' ? 'private idea' : bubble.scope + ' mandate';
+
+        if (!confirm('Save as ' + label + '?\n\n"' + bubble.content.substring(0, 120) + (bubble.content.length > 120 ? '...' : '') + '"')) return;
+
+        try {
+            var resp = await fetch(this.config.apiSave, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: bubble.content,
+                    category: category,
+                    source: 'mandate-chat',
+                    session_id: this.sessionId,
+                    auto_classify: false,
+                    group_id: this.config.groupId || null
+                })
+            });
+            var data = await resp.json();
+            if (data.success) {
+                this.showToast('Saved as ' + label + '! (ID #' + data.id + ')', 'success');
+                this.deleteBubble(id);
+                // Refresh public mandate summary below
+                if (window.refreshMandateSummary) {
+                    var level = bubble.scope === 'idea' ? 'all' : bubble.scope;
+                    window.refreshMandateSummary(level);
+                }
+            } else {
+                this.showToast(data.error || 'Save failed', 'error');
+            }
+        } catch (err) {
+            this.showToast('Connection error', 'error');
+        }
+    };
+
+    // ── Renumber ──────────────────────────────────────────────
+
+    MandateChat.prototype.renumber = function() {
+        for (var i = 0; i < this.bubbles.length; i++) {
+            this.bubbles[i].id = i + 1;
+        }
+        this.nextId = this.bubbles.length + 1;
+    };
+
     // ── Render ────────────────────────────────────────────────
 
     MandateChat.prototype.renderAll = function() {
-        this.messagesEl.innerHTML = '';
-        for (var i = 0; i < this.messages.length; i++) {
-            this.renderBubble(this.messages[i]);
+        this.draftsEl.innerHTML = '';
+        // Newest on top
+        for (var i = this.bubbles.length - 1; i >= 0; i--) {
+            this.renderBubble(this.bubbles[i]);
         }
-        this.renderIdeas();
-        this.scrollToBottom();
     };
 
-    MandateChat.prototype.renderBubble = function(msg) {
+    MandateChat.prototype.renderBubble = function(bubble) {
         var div = document.createElement('div');
-        var bubbleClass = msg.role === 'user' ? 'mc-bubble-user' : (msg.role === 'system' ? 'mc-bubble-system' : 'mc-bubble-ai');
-        div.className = 'mc-bubble ' + bubbleClass;
+        div.className = 'mc-draft-bubble mc-draft-' + bubble.role;
+        div.dataset.id = bubble.id;
 
-        // Format content: convert newlines to <br>, bold **text**
-        var html = this.formatContent(msg.content);
-        div.innerHTML = html;
+        // Header row: ID + timestamp + actions
+        var header = document.createElement('div');
+        header.className = 'mc-draft-header';
 
-        // Pin button on AI messages only (not system)
-        if (msg.role === 'assistant') {
-            var pinBtn = document.createElement('button');
-            pinBtn.className = 'mc-pin';
-            pinBtn.textContent = '\uD83D\uDCCC'; // 📌
-            pinBtn.title = 'Pin this idea';
-            var self = this;
-            pinBtn.addEventListener('click', function() {
-                self.pinIdea(msg.content);
-                // Remove this AI bubble and its preceding user prompt
-                var idx = self.messages.indexOf(msg);
-                if (idx !== -1) {
-                    self.messages.splice(idx, 1);
-                    if (idx > 0 && self.messages[idx - 1] && self.messages[idx - 1].role === 'user') {
-                        self.messages.splice(idx - 1, 1);
-                    }
-                }
-                self.renderAll();
-                self.saveToStorage();
-            });
-            div.appendChild(pinBtn);
+        var idSpan = document.createElement('span');
+        idSpan.className = 'mc-draft-id';
+        idSpan.textContent = '#' + bubble.id;
+        idSpan.title = 'Draft ID';
+        header.appendChild(idSpan);
+
+        var roleSpan = document.createElement('span');
+        roleSpan.className = 'mc-draft-role';
+        roleSpan.textContent = bubble.role === 'assistant' ? 'AI' : (bubble.role === 'system' ? 'System' : 'You');
+        header.appendChild(roleSpan);
+
+        var timeSpan = document.createElement('span');
+        timeSpan.className = 'mc-draft-time';
+        timeSpan.textContent = this.formatTime(bubble.ts);
+        header.appendChild(timeSpan);
+
+        var actions = document.createElement('span');
+        actions.className = 'mc-draft-actions';
+
+        if (bubble.role !== 'system') {
+            var editBtn = document.createElement('button');
+            editBtn.className = 'mc-draft-edit';
+            editBtn.innerHTML = '&#x270E;';
+            editBtn.title = 'Edit this draft';
+            actions.appendChild(editBtn);
         }
 
-        // Timestamp
-        var timeDiv = document.createElement('div');
-        timeDiv.className = 'mc-bubble-time';
-        timeDiv.textContent = this.formatTime(msg.ts);
-        div.appendChild(timeDiv);
+        var deleteBtn = document.createElement('button');
+        deleteBtn.className = 'mc-draft-delete';
+        deleteBtn.innerHTML = '&times;';
+        deleteBtn.title = 'Delete this draft';
+        actions.appendChild(deleteBtn);
 
-        this.messagesEl.appendChild(div);
-        this.scrollToBottom();
+        header.appendChild(actions);
+        div.appendChild(header);
+
+        // Content
+        var contentDiv = document.createElement('div');
+        contentDiv.className = 'mc-draft-content';
+        contentDiv.innerHTML = this.formatContent(bubble.content);
+        div.appendChild(contentDiv);
+
+        // Scope checkboxes + save (not on system bubbles)
+        if (bubble.role !== 'system') {
+            var scopeRow = document.createElement('div');
+            scopeRow.className = 'mc-scope-row';
+
+            var scopes = [
+                { value: 'federal', label: 'Federal', title: 'Save to your U.S. congressional representatives' },
+                { value: 'state',   label: 'State',   title: 'Save to your state legislators' },
+                { value: 'town',    label: 'Town',    title: 'Save to your local town officials' },
+                { value: 'idea',    label: 'Idea',    title: 'Save privately without publishing' }
+            ];
+
+            for (var s = 0; s < scopes.length; s++) {
+                var scope = scopes[s];
+                var lbl = document.createElement('label');
+                lbl.className = 'mc-scope-check' + (bubble.scope === scope.value ? ' checked' : '');
+                lbl.title = scope.title;
+
+                var inp = document.createElement('input');
+                inp.type = 'checkbox';
+                inp.value = scope.value;
+                inp.checked = bubble.scope === scope.value;
+
+                lbl.appendChild(inp);
+                lbl.appendChild(document.createTextNode(' ' + scope.label));
+                scopeRow.appendChild(lbl);
+            }
+
+            if (bubble.scope) {
+                var saveBtn = document.createElement('button');
+                saveBtn.className = 'mc-draft-save';
+                saveBtn.textContent = 'Save';
+                saveBtn.title = 'Save this draft as a ' + (bubble.scope === 'idea' ? 'private idea' : bubble.scope + ' mandate');
+                scopeRow.appendChild(saveBtn);
+            }
+
+            div.appendChild(scopeRow);
+        }
+
+        this.draftsEl.appendChild(div);
     };
 
     MandateChat.prototype.formatContent = function(text) {
         if (!text) return '';
-        // Escape HTML
         var html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        // Bold
         html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        // Newlines
         html = html.replace(/\n/g, '<br>');
         return html;
     };
@@ -291,282 +508,15 @@
         return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
     };
 
-    // ── Pin Ideas ─────────────────────────────────────────────
-
-    MandateChat.prototype.pinIdea = function(content) {
-        // Try to extract "Mandate: ..." line from AI response
-        var extracted = content;
-        var match = content.match(/(?:^|\n)\s*(?:\*\*)?Mandate:\s*(?:\*\*)?\s*(.+?)(?:\n|$)/i);
-        if (match) {
-            extracted = match[1].replace(/\*\*/g, '').replace(/<[^>]+>/g, '').trim();
-        }
-
-        // Prevent duplicates
-        for (var i = 0; i < this.ideas.length; i++) {
-            if (this.ideas[i].content === extracted) {
-                this.showToast('Already pinned as #' + this.ideas[i].num, 'success');
-                return;
-            }
-        }
-
-        var idea = {
-            num: this.nextIdea++,
-            content: extracted,
-            ts: new Date().toISOString()
-        };
-        this.ideas.push(idea);
-        this.renderIdeas();
-        this.saveToStorage();
-        this.showToast('Idea #' + idea.num + ' pinned', 'success');
-
-        // Scroll scratchpad into view
-        var scratchpad = this.ideaListEl.closest('.mc-scratchpad');
-        if (scratchpad) scratchpad.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    };
-
-    MandateChat.prototype.pinDirect = function() {
-        var content = this.inputEl.value.trim();
-        if (!content) return;
-
-        // Prevent duplicates
-        for (var i = 0; i < this.ideas.length; i++) {
-            if (this.ideas[i].content === content) {
-                this.showToast('Already pinned as #' + this.ideas[i].num, 'success');
-                return;
-            }
-        }
-
-        var idea = {
-            num: this.nextIdea++,
-            content: content,
-            ts: new Date().toISOString()
-        };
-        this.ideas.push(idea);
-        this.renderIdeas();
-        this.saveToStorage();
-        this.showToast('Idea #' + idea.num + ' pinned', 'success');
-
-        this.inputEl.value = '';
-        this.autoResize();
-        this.updateCharCount();
-
-        // Scroll scratchpad into view
-        var scratchpad = this.ideaListEl.closest('.mc-scratchpad');
-        if (scratchpad) scratchpad.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    };
-
-    MandateChat.prototype.renderIdeas = function() {
-        if (!this.ideaListEl) return;
-        this.ideaListEl.innerHTML = '';
-
-        // Update scratchpad header to show count
-        var hdr = this.ideaListEl.closest('.mc-scratchpad');
-        if (hdr) {
-            var h3 = hdr.querySelector('.mc-scratchpad-header h3');
-            if (h3) h3.textContent = 'Ideas Scratchpad' + (this.ideas.length ? ' (' + this.ideas.length + ')' : '');
-        }
-
-        // Update select dropdown
-        if (this.ideaSelectEl) this.ideaSelectEl.innerHTML = '';
-        if (this.ideas.length === 0) {
-            if (this.ideaSelectEl) {
-                var opt = document.createElement('option');
-                opt.value = '';
-                opt.textContent = 'No ideas pinned';
-                this.ideaSelectEl.appendChild(opt);
-            }
-            return;
-        }
-
-        // Renumber sequentially
-        for (var n = 0; n < this.ideas.length; n++) {
-            this.ideas[n].num = n + 1;
-        }
-        this.nextIdea = this.ideas.length + 1;
-
-        if (this.ideaSelectEl) {
-            var lastOpt = document.createElement('option');
-            lastOpt.value = 'last';
-            lastOpt.textContent = 'Latest idea (#' + this.ideas[this.ideas.length - 1].num + ')';
-            this.ideaSelectEl.appendChild(lastOpt);
-        }
-
-        // Render newest first
-        var self = this;
-        for (var i = this.ideas.length - 1; i >= 0; i--) {
-            var idea = this.ideas[i];
-
-            // List item
-            var item = document.createElement('div');
-            item.className = 'mc-idea-item';
-
-            var numSpan = document.createElement('span');
-            numSpan.className = 'mc-idea-num';
-            numSpan.textContent = '#' + idea.num;
-
-            var textSpan = document.createElement('span');
-            textSpan.className = 'mc-idea-text';
-            textSpan.textContent = idea.content;
-
-            var actions = document.createElement('span');
-            actions.className = 'mc-idea-actions';
-
-            var editBtn = document.createElement('button');
-            editBtn.textContent = '\u270E'; // ✎
-            editBtn.title = 'Edit';
-            editBtn.className = 'mc-idea-edit';
-            editBtn.addEventListener('click', (function(num) {
-                return function() { self.editIdeaInline(num); };
-            })(idea.num));
-            actions.appendChild(editBtn);
-
-            var removeBtn = document.createElement('button');
-            removeBtn.textContent = '\u2715'; // ✕
-            removeBtn.title = 'Remove';
-            removeBtn.dataset.num = idea.num;
-            removeBtn.addEventListener('click', (function(num) {
-                return function() { self.removeIdea(num); };
-            })(idea.num));
-            actions.appendChild(removeBtn);
-
-            item.appendChild(numSpan);
-            item.appendChild(textSpan);
-            item.appendChild(actions);
-            this.ideaListEl.appendChild(item);
-
-            // Select option
-            if (this.ideaSelectEl) {
-                var opt = document.createElement('option');
-                opt.value = idea.num;
-                opt.textContent = 'Idea #' + idea.num + ': ' + idea.content.substring(0, 40) + (idea.content.length > 40 ? '...' : '');
-                this.ideaSelectEl.appendChild(opt);
-            }
-        }
-    };
-
-    MandateChat.prototype.removeIdea = function(num) {
-        this.ideas = this.ideas.filter(function(i) { return i.num !== num; });
-        this.renderIdeas();
-        this.saveToStorage();
-    };
-
-    MandateChat.prototype.editIdeaInline = function(num) {
-        var idea = this.ideas.find(function(i) { return i.num === num; });
-        if (!idea) return;
-
-        var itemEl = this.ideaListEl.querySelector('[data-num="' + num + '"]')
-            || this.ideaListEl.children[this.ideas.indexOf(idea)];
-        if (!itemEl) return;
-
-        var textEl = itemEl.querySelector('.mc-idea-text');
-        if (!textEl) return;
-
-        var input = document.createElement('textarea');
-        input.className = 'mc-idea-edit-input';
-        input.value = idea.content;
-        input.rows = 2;
-
-        var saveBtn = document.createElement('button');
-        saveBtn.textContent = 'Save';
-        saveBtn.className = 'mc-idea-edit-save';
-
-        var cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel';
-        cancelBtn.className = 'mc-idea-edit-cancel';
-
-        var wrapper = document.createElement('div');
-        wrapper.className = 'mc-idea-edit-wrap';
-        wrapper.appendChild(input);
-        wrapper.appendChild(saveBtn);
-        wrapper.appendChild(cancelBtn);
-
-        textEl.style.display = 'none';
-        textEl.parentNode.insertBefore(wrapper, textEl.nextSibling);
-
-        var self = this;
-        saveBtn.addEventListener('click', function() {
-            var newContent = input.value.trim();
-            if (newContent && newContent !== idea.content) {
-                idea.content = newContent;
-                self.saveToStorage();
-            }
-            self.renderIdeas();
-        });
-        cancelBtn.addEventListener('click', function() {
-            self.renderIdeas();
-        });
-        input.focus();
-    };
-
-    // ── Save to Database ──────────────────────────────────────
-
-    MandateChat.prototype.saveIdea = async function(category) {
-        // Get selected idea
-        var selectedVal = this.ideaSelectEl.value;
-        var idea = null;
-
-        if (!this.ideas.length) {
-            this.showToast('No ideas pinned. Pin an idea first using \uD83D\uDCCC', 'error');
-            return;
-        }
-
-        if (selectedVal === 'last' || selectedVal === '') {
-            idea = this.ideas[this.ideas.length - 1];
-        } else {
-            var num = parseInt(selectedVal);
-            idea = this.ideas.find(function(i) { return i.num === num; });
-        }
-
-        if (!idea) {
-            this.showToast('Idea not found', 'error');
-            return;
-        }
-
-        var label = category.replace('mandate-', '').replace('idea', 'private idea');
-        if (!confirm('Save as ' + label + ' mandate?\n\n"' + idea.content + '"')) return;
-
-        try {
-            var resp = await fetch(this.config.apiSave, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: idea.content,
-                    category: category,
-                    source: 'mandate-chat',
-                    session_id: this.sessionId,
-                    auto_classify: false,
-                    group_id: this.config.groupId || null
-                })
-            });
-            var data = await resp.json();
-            if (data.success) {
-                this.showToast('Saved as ' + label + '! (ID #' + data.id + ')', 'success');
-                // Remove the saved idea from scratchpad
-                this.removeIdea(idea.num);
-                // Refresh the public mandate summary
-                if (window.refreshMandateSummary) {
-                    var level = category.replace('mandate-', '');
-                    if (level === 'idea') level = 'federal'; // default
-                    window.refreshMandateSummary(level);
-                }
-            } else {
-                this.showToast(data.error || 'Save failed', 'error');
-            }
-        } catch (err) {
-            this.showToast('Connection error', 'error');
-        }
-    };
-
     // ── localStorage ──────────────────────────────────────────
 
     MandateChat.prototype.saveToStorage = function() {
         try {
             localStorage.setItem(this.storageKey, JSON.stringify({
-                messages:  this.messages,
-                ideas:     this.ideas,
-                nextIdea:  this.nextIdea
+                bubbles:  this.bubbles,
+                nextId:   this.nextId
             }));
-        } catch (e) { /* quota exceeded — ignore */ }
+        } catch (e) { /* quota exceeded */ }
     };
 
     MandateChat.prototype.loadFromStorage = function() {
@@ -575,9 +525,8 @@
             if (!raw) return;
             var data = JSON.parse(raw);
             if (data) {
-                this.messages = Array.isArray(data.messages) ? data.messages.filter(function(m) { return m && m.content; }) : [];
-                this.ideas    = Array.isArray(data.ideas) ? data.ideas.filter(function(i) { return i && i.content; }) : [];
-                this.nextIdea = data.nextIdea || (this.ideas.length + 1);
+                this.bubbles = Array.isArray(data.bubbles) ? data.bubbles.filter(function(b) { return b && b.content; }) : [];
+                this.nextId  = data.nextId || (this.bubbles.length + 1);
             }
         } catch (e) {
             console.error('MandateChat: corrupt localStorage, clearing', e);
@@ -586,16 +535,15 @@
     };
 
     MandateChat.prototype.clearSession = function() {
-        this.messages = [];
-        this.ideas = [];
-        this.nextIdea = 1;
+        this.bubbles = [];
+        this.nextId = 1;
         this.micBaseText = '';
         localStorage.removeItem(this.storageKey);
         this.inputEl.value = '';
         this.autoResize();
         this.updateCharCount();
         this.renderAll();
-        this.showToast('Conversation cleared', 'success');
+        this.showToast('Workspace cleared', 'success');
     };
 
     // ── Voice Input ───────────────────────────────────────────
@@ -615,26 +563,23 @@
         this.recognition.onstart = function() {
             self.micOn = true;
             self.micBtn.classList.add('listening');
-            self.micBtn.textContent = '\u23FA'; // ⏺
+            self.micBtn.textContent = '\u23FA';
             self.micBaseText = self.inputEl.value;
             self.lastResultIndex = 0;
         };
 
         this.recognition.onend = function() {
-            // If TTS paused us, don't touch mic state — speak.onend will restart
             if (self.ttsPaused) return;
             self.micBtn.classList.remove('listening');
-            self.micBtn.textContent = '\uD83C\uDFA4'; // 🎤
+            self.micBtn.textContent = '\uD83C\uDFA4';
             if (self.micOn) {
                 try { self.recognition.start(); } catch (e) { self.micOn = false; }
             }
         };
 
         this.recognition.onresult = function(e) {
-            // Process only NEW results since last check
             for (var i = self.lastResultIndex; i < e.results.length; i++) {
                 if (!e.results[i].isFinal) {
-                    // Show interim text in textarea (chat mode only)
                     if (!self.commandMode) {
                         var interim = e.results[i][0].transcript;
                         var sep = self.micBaseText && !self.micBaseText.endsWith(' ') ? ' ' : '';
@@ -645,18 +590,15 @@
                     continue;
                 }
 
-                // Final result — process it
                 var text = e.results[i][0].transcript.trim();
                 self.lastResultIndex = i + 1;
-
                 if (!text) continue;
 
                 var lower = text.toLowerCase().replace(/[.,!?]+$/, '').trim();
 
-                // Check for "command" toggle — standalone or at end of phrase
+                // Toggle command mode
                 var toggleMatch = lower.match(/\b(command)\s*$/);
                 if (toggleMatch) {
-                    // If there's text before "command", keep it as dictation first
                     var before = text.substring(0, lower.lastIndexOf(toggleMatch[1])).trim();
                     if (before && !self.commandMode) {
                         var sep = self.micBaseText && !self.micBaseText.endsWith(' ') ? ' ' : '';
@@ -667,36 +609,32 @@
                     }
                     self.commandMode = !self.commandMode;
                     self.updateMicMode();
-                    // Sync micBaseText so interim results don't inject "claude x" into textarea
                     self.micBaseText = self.inputEl.value;
                     if (self.commandMode) {
-                        self.addSystemMessage('Command mode ON. Say a command (pin, save federal, help, etc.) or say "command" to return to chat.');
+                        self.addBubble('system', 'Command mode ON. Say a command or say "command" to return to chat.');
                         self.speak('Command mode on.');
                     } else {
-                        self.addSystemMessage('Chat mode. Speak your ideas.');
+                        self.addBubble('system', 'Chat mode. Speak your ideas.');
                         self.speak('Chat mode.');
                     }
                     continue;
                 }
 
                 if (self.commandMode) {
-                    // Execute as command
                     if (!self.handleCommand(text)) {
-                        // If it's a long phrase (5+ words), it's clearly dictation, not a command
                         if (text.split(/\s+/).length >= 5) {
                             self.commandMode = false;
                             self.updateMicMode();
-                            self.addSystemMessage('That sounds like dictation. Switching to chat mode.');
+                            self.addBubble('system', 'That sounds like dictation. Switching to chat mode.');
                             self.inputEl.value = (self.inputEl.value ? self.inputEl.value + ' ' : '') + text;
                             self.autoResize();
                             self.updateCharCount();
                         } else {
-                            self.addSystemMessage('Unknown command: "' + text + '". Say "help" for commands.');
+                            self.addBubble('system', 'Unknown command: "' + text + '". Say "help" for commands.');
                             self.speak('Unknown command.');
                         }
                     }
                 } else {
-                    // Chat mode — append to textarea
                     var sep = self.micBaseText && !self.micBaseText.endsWith(' ') ? ' ' : '';
                     self.micBaseText = self.micBaseText + sep + text;
                     self.inputEl.value = self.micBaseText;
@@ -730,16 +668,187 @@
         if (!this.micBtn) return;
         if (this.commandMode) {
             this.micBtn.classList.add('command-mode');
-            this.micBtn.textContent = '\u2699'; // ⚙
-            this.micBtn.title = 'Command mode — say "command" to exit';
+            this.micBtn.textContent = '\u2699';
+            this.micBtn.title = 'Command mode \u2014 say "command" to exit';
         } else if (this.micOn) {
             this.micBtn.classList.remove('command-mode');
-            this.micBtn.textContent = '\u23FA'; // ⏺
-            this.micBtn.title = 'Recording — say "command" for commands';
+            this.micBtn.textContent = '\u23FA';
+            this.micBtn.title = 'Recording \u2014 say "command" for commands';
         } else {
             this.micBtn.classList.remove('command-mode');
-            this.micBtn.textContent = '\uD83C\uDFA4'; // 🎤
-            this.micBtn.title = 'Voice input';
+            this.micBtn.textContent = '\uD83C\uDFA4';
+            this.micBtn.title = 'Tap to dictate your idea';
+        }
+    };
+
+    // ── Voice / Text Commands ─────────────────────────────────
+
+    MandateChat.prototype.handleCommand = function(text) {
+        var lower = text.toLowerCase().replace(/[.,!?]+$/, '').trim();
+
+        // ── Save with scope: "save #3 federal", "save federal #3", "save #3" ──
+        var saveMatch = lower.match(/\bsave\b.*?#?(\d+)(?:\s+(federal|state|town|idea))?/);
+        if (!saveMatch) saveMatch = lower.match(/\bsave\b\s+(federal|state|town|idea)(?:\s+#?(\d+))?/);
+        if (saveMatch) {
+            var num = parseInt(saveMatch[1] || saveMatch[2]);
+            var scope = saveMatch[2] || saveMatch[1];
+            if (isNaN(num)) {
+                // "save federal" without number — save most recent
+                var last = this.bubbles[this.bubbles.length - 1];
+                if (last && last.role !== 'system') {
+                    if (scope && /^(federal|state|town|idea)$/.test(scope)) last.scope = scope;
+                    this.saveBubble(last.id);
+                }
+            } else {
+                var bubble = this.bubbles.find(function(b) { return b.id === num; });
+                if (bubble) {
+                    if (scope && /^(federal|state|town|idea)$/.test(scope)) bubble.scope = scope;
+                    this.saveBubble(bubble.id);
+                } else {
+                    this.addBubble('system', 'No draft #' + num + ' found.');
+                }
+            }
+            return true;
+        }
+
+        // ── Check scope: "check federal #3", "federal #3" ──
+        var checkMatch = lower.match(/\b(?:check\s+)?(federal|state|town|idea)\s+#?(\d+)/);
+        if (!checkMatch) checkMatch = lower.match(/\b(?:check\s+)?#?(\d+)\s+(federal|state|town|idea)/);
+        if (checkMatch) {
+            var scope = checkMatch[1].match(/^(federal|state|town|idea)$/) ? checkMatch[1] : checkMatch[2];
+            var num = parseInt(checkMatch[2].match(/^\d+$/) ? checkMatch[2] : checkMatch[1]);
+            this.setScope(num, scope);
+            this.addBubble('system', 'Checked ' + scope + ' on #' + num + '.');
+            return true;
+        }
+
+        // ── Delete: "delete #3" ──
+        if (/\b(delete|remove)\b/.test(lower) && /\b#?\d+\b/.test(lower)) {
+            var num = lower.match(/\b#?(\d+)\b/);
+            if (num) {
+                var n = parseInt(num[1], 10);
+                var found = this.bubbles.some(function(b) { return b.id === n; });
+                if (found) {
+                    this.deleteBubble(n);
+                    this.addBubble('system', 'Deleted draft #' + n + '.');
+                } else {
+                    this.addBubble('system', 'No draft #' + n + ' to delete.');
+                }
+            }
+            return true;
+        }
+
+        // ── Edit: "edit #3" ──
+        if (/\bedit\b/.test(lower) && /\b#?\d+\b/.test(lower)) {
+            var num = lower.match(/\b#?(\d+)\b/);
+            if (num) {
+                this.editBubble(parseInt(num[1], 10));
+            }
+            return true;
+        }
+
+        // ── Send / Ask AI ──
+        if (/\b(send|submit|ask|go)\b/.test(lower)) {
+            if (this.inputEl.value.trim()) {
+                this.askAi();
+            } else {
+                this.addBubble('system', 'Nothing to send. Dictate an idea first.');
+            }
+            return true;
+        }
+
+        // ── Add direct ──
+        if (/\badd\b/.test(lower) && !/\badd\s+(federal|state|town|idea)\b/.test(lower)) {
+            if (this.inputEl.value.trim()) {
+                this.addDirect();
+            } else {
+                this.addBubble('system', 'Nothing to add. Dictate an idea first.');
+            }
+            return true;
+        }
+
+        // ── Clear commands ──
+        if (/\bclear\b/.test(lower) && /\b(all|everything)\b/.test(lower) || /\bstart over\b/.test(lower)) {
+            this.clearSession();
+            return true;
+        }
+        if (/\bclear\b/.test(lower) && /\b(prompt|text|input)\b/.test(lower)) {
+            this.inputEl.value = '';
+            this.micBaseText = '';
+            this.autoResize();
+            this.updateCharCount();
+            this.addBubble('system', 'Prompt cleared.');
+            return true;
+        }
+
+        // ── Read saved mandates ──
+        if (/\b(read|list)\b/.test(lower) && (/\bmandates?\b/.test(lower) || /\b(my|all)\b/.test(lower))) {
+            this.readMandate(lower);
+            return true;
+        }
+
+        // ── Help ──
+        if (/\b(help|commands)\b/.test(lower)) {
+            this.addBubble('system',
+                'Voice commands:\n' +
+                '\u2022 "add" \u2014 add your dictated text as a draft\n' +
+                '\u2022 "send" / "ask" \u2014 send to AI for refinement\n' +
+                '\u2022 "check federal #3" \u2014 set scope on a draft\n' +
+                '\u2022 "save #3" \u2014 save a draft to its checked scope\n' +
+                '\u2022 "save federal #3" \u2014 set scope and save in one step\n' +
+                '\u2022 "edit #3" \u2014 edit a draft\n' +
+                '\u2022 "delete #3" \u2014 remove a draft\n' +
+                '\u2022 "read my mandate" \u2014 read saved mandates\n' +
+                '\u2022 "clear all" \u2014 clear workspace\n' +
+                '\u2022 "clear prompt" \u2014 clear the text input\n' +
+                '\u2022 "help" \u2014 show this list'
+            );
+            this.speak('Available commands: add, send, check scope, save, edit, delete, read mandate, clear all, clear prompt, and help.');
+            return true;
+        }
+
+        // ── Logout ──
+        if (/\b(log\s*out|logout)\b/.test(lower)) {
+            this.addBubble('system', 'Logging you out...');
+            this.speak('Logging you out.');
+            localStorage.removeItem('mandate_phone');
+            localStorage.removeItem('mandate_user');
+            setTimeout(function() { location.reload(); }, 1500);
+            return true;
+        }
+
+        return false;
+    };
+
+    // ── Read saved mandates ───────────────────────────────────
+
+    MandateChat.prototype.readMandate = async function(lower) {
+        var level = 'federal';
+        if (lower.includes('state')) level = 'state';
+        else if (lower.includes('town')) level = 'town';
+
+        var url = '/api/mandate-aggregate.php?level=' + level;
+        if (level === 'federal' && this.config.district) url += '&district=' + encodeURIComponent(this.config.district);
+        else if (level === 'state' && this.config.stateId) url += '&state_id=' + this.config.stateId;
+        else if (level === 'town' && this.config.townId) url += '&town_id=' + this.config.townId;
+
+        try {
+            var resp = await fetch(url);
+            var data = await resp.json();
+            if (!data.success || data.item_count === 0) {
+                this.addBubble('system', 'No mandate items yet for ' + level + ' level.');
+                this.speak('No mandate items yet for ' + level + ' level.');
+                return;
+            }
+            var intro = data.contributor_count + ' constituent' +
+                (data.contributor_count !== 1 ? 's have' : ' has') + ' spoken. ';
+            var list = data.items.map(function(item, i) {
+                return (i + 1) + '. ' + item.content;
+            }).join('. ');
+            this.addBubble('system', intro + list);
+            this.speak(intro + 'Top priorities: ' + list);
+        } catch (err) {
+            this.addBubble('system', 'Could not load mandate data.');
         }
     };
 
@@ -757,10 +866,6 @@
         this.charEl.classList.toggle('warn', len > 1800);
     };
 
-    MandateChat.prototype.scrollToBottom = function() {
-        this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
-    };
-
     MandateChat.prototype.showToast = function(msg, type) {
         if (!this.toastEl) return;
         this.toastEl.textContent = msg;
@@ -769,212 +874,19 @@
         setTimeout(function() { el.classList.remove('show'); }, 3000);
     };
 
-    // ── Voice / Text Commands ─────────────────────────────────
-
-    MandateChat.prototype.handleCommand = function(text) {
-        var lower = text.toLowerCase().replace(/[.,!?]+$/, '').trim();
-
-        // ── Save mandate ──
-        if (lower.includes('save') && lower.includes('federal')) {
-            this.saveIdea('mandate-federal'); return true;
-        }
-        if (lower.includes('save') && lower.includes('state')) {
-            this.saveIdea('mandate-state'); return true;
-        }
-        if (lower.includes('save') && lower.includes('town')) {
-            this.saveIdea('mandate-town'); return true;
-        }
-        if (lower.includes('save') && lower.includes('idea')) {
-            this.saveIdea('idea'); return true;
-        }
-
-        // ── Send prompt ──
-        if (/\b(send|submit|go)\b/.test(lower)) {
-            if (this.inputEl.value.trim()) {
-                this.send();
-            } else {
-                this.addSystemMessage('Nothing to send. Dictate an idea first.');
-            }
-            return true;
-        }
-
-        // ── Pin direct (pin what's in the input box) ──
-        if (/\bpin\s+(this|direct|my|it)\b/.test(lower)) {
-            this.pinDirect();
-            return true;
-        }
-
-        // ── Pin last AI response ──
-        if (/\b(pin|pen|penis)\b/.test(lower)) {
-            var lastAi = null;
-            for (var i = this.messages.length - 1; i >= 0; i--) {
-                if (this.messages[i].role === 'assistant') { lastAi = this.messages[i]; break; }
-            }
-            if (lastAi) {
-                this.pinIdea(lastAi.content);
-                // Remove AI response and its preceding user prompt
-                var idx = this.messages.indexOf(lastAi);
-                if (idx !== -1) {
-                    this.messages.splice(idx, 1);
-                    if (idx > 0 && this.messages[idx - 1] && this.messages[idx - 1].role === 'user') {
-                        this.messages.splice(idx - 1, 1);
-                    }
-                }
-                this.renderAll();
-                this.saveToStorage();
-            } else {
-                this.addSystemMessage('No AI response to pin yet.');
-            }
-            return true;
-        }
-
-        // ── Delete pinned idea ──
-        if (/\b(delete|remove)\b/.test(lower) && /\b#?\d+\b/.test(lower)) {
-            var num = lower.match(/\b#?(\d+)\b/);
-            if (num) {
-                var n = parseInt(num[1], 10);
-                var found = this.ideas.some(function(i) { return i.num === n; });
-                if (found) {
-                    this.removeIdea(n);
-                    this.addSystemMessage('Deleted idea #' + n + '.');
-                } else {
-                    this.addSystemMessage('No idea #' + n + ' to delete.');
-                }
-            }
-            return true;
-        }
-
-        // ── Clear commands ──
-        if (/\bclear\b/.test(lower) && /\b(all|everything)\b/.test(lower) || /\bstart over\b/.test(lower)) {
-            this.clearSession();
-            return true;
-        }
-        if (/\bclear\b/.test(lower) && /\b(prompt|text|input)\b/.test(lower)) {
-            this.inputEl.value = '';
-            this.micBaseText = '';
-            this.autoResize();
-            this.updateCharCount();
-            this.addSystemMessage('Prompt cleared.');
-            return true;
-        }
-        if (/\bclear\b/.test(lower) && /\b(response|responses|chat|messages)\b/.test(lower)) {
-            this.messages = [];
-            this.renderAll();
-            this.addSystemMessage('Chat cleared. Pinned ideas kept.');
-            return true;
-        }
-
-        // ── Read / list mandate or pinned idea ──
-        if (/\b(read|list)\b/.test(lower) && (/\bmandates?\b/.test(lower) || /\b(my|all)\b/.test(lower))) {
-            this.readMandate(lower);
-            return true;
-        }
-        // "read #1", "read 1", "read number 1"
-        if (/\bread\b/.test(lower) && /\b#?\d+\b/.test(lower)) {
-            var num = lower.match(/\b#?(\d+)\b/);
-            if (num) {
-                var idx = parseInt(num[1], 10) - 1;
-                if (idx >= 0 && idx < this.ideas.length) {
-                    this.addSystemMessage('Idea #' + (idx + 1) + ': ' + this.ideas[idx]);
-                    this.speak(this.ideas[idx]);
-                } else {
-                    this.addSystemMessage('No idea #' + (idx + 1) + '. You have ' + this.ideas.length + ' pinned idea' + (this.ideas.length !== 1 ? 's' : '') + '.');
-                }
-            }
-            return true;
-        }
-
-        // ── Help ──
-        if (/\b(help|commands)\b/.test(lower)) {
-            this.addSystemMessage(
-                'Voice commands:\n' +
-                '\u2022 "send" \u2014 submit your dictated idea to AI\n' +
-                '\u2022 "pin" \u2014 pin the last AI response\n' +
-                '\u2022 "save federal mandate" \u2014 save pinned idea as federal mandate\n' +
-                '\u2022 "save state mandate" \u2014 save as state mandate\n' +
-                '\u2022 "save town mandate" \u2014 save as town mandate\n' +
-                '\u2022 "save idea" \u2014 save as private idea\n' +
-                '\u2022 "read #1" \u2014 read back a pinned idea\n' +
-                '\u2022 "read my mandate" \u2014 read your saved mandates\n' +
-                '\u2022 "delete #3" \u2014 remove a pinned idea\n' +
-                '\u2022 "clear all" \u2014 clear everything (chat + pins)\n' +
-                '\u2022 "clear prompt" \u2014 clear the text input\n' +
-                '\u2022 "clear response" \u2014 clear chat bubbles, keep pins\n' +
-                '\u2022 "help" \u2014 show this list'
-            );
-            this.speak('Available commands: send, pin, save federal, save state, save town, save idea, read number, read my mandate, delete number, clear all, clear prompt, clear response, and help.');
-            return true;
-        }
-
-        // ── Logout ──
-        if (/\b(log\s*out|logout)\b/.test(lower)) {
-            this.addSystemMessage("Logging you out...");
-            this.speak("Logging you out.");
-            localStorage.removeItem('mandate_phone');
-            localStorage.removeItem('mandate_user');
-            setTimeout(function() { location.reload(); }, 1500);
-            return true;
-        }
-
-        return false; // Not a command — send to AI
-    };
-
-    // ── Read saved mandates from aggregation API ──────────────
-
-    MandateChat.prototype.readMandate = async function(lower) {
-        var level = 'federal';
-        if (lower.includes('state')) level = 'state';
-        else if (lower.includes('town')) level = 'town';
-
-        var url = '/api/mandate-aggregate.php?level=' + level;
-        if (level === 'federal' && this.config.district) url += '&district=' + encodeURIComponent(this.config.district);
-        else if (level === 'state' && this.config.stateId) url += '&state_id=' + this.config.stateId;
-        else if (level === 'town' && this.config.townId) url += '&town_id=' + this.config.townId;
-
-        try {
-            var resp = await fetch(url);
-            var data = await resp.json();
-            if (!data.success || data.item_count === 0) {
-                this.addSystemMessage('No mandate items yet for ' + level + ' level.');
-                this.speak('No mandate items yet for ' + level + ' level.');
-                return;
-            }
-            var intro = data.contributor_count + ' constituent' +
-                (data.contributor_count !== 1 ? 's have' : ' has') + ' spoken. ';
-            var list = data.items.map(function(item, i) {
-                return (i + 1) + '. ' + item.content;
-            }).join('. ');
-            this.addSystemMessage(intro + list);
-            this.speak(intro + 'Top priorities: ' + list);
-        } catch (err) {
-            this.addSystemMessage('Could not load mandate data.');
-        }
-    };
-
-    // ── System Message (non-AI, non-user) ─────────────────────
-
-    MandateChat.prototype.addSystemMessage = function(text) {
-        var msg = { role: 'system', content: text, ts: new Date().toISOString() };
-        this.messages.push(msg);
-        this.renderBubble(msg);
-        this.saveToStorage();
-    };
-
     // ── Text-to-Speech ────────────────────────────────────────
 
     MandateChat.prototype.speak = function(text) {
         if (!window.speechSynthesis) return;
         var self = this;
-        // Pause recognition while TTS speaks to prevent feedback loop
         var wasListening = this.micOn;
         if (wasListening && this.recognition) {
-            this.ttsPaused = true; // prevent onend from killing micOn
+            this.ttsPaused = true;
             try { this.recognition.stop(); } catch(e) {}
         }
         var utter = new SpeechSynthesisUtterance(text);
         utter.rate = 1.0;
         utter.pitch = 1.0;
-        // Pick preferred voice: Microsoft Mark
         var voices = speechSynthesis.getVoices();
         for (var i = 0; i < voices.length; i++) {
             if (voices[i].name.indexOf('Mark') !== -1) {
@@ -984,7 +896,6 @@
         }
         utter.onend = function() {
             self.ttsPaused = false;
-            // Resume recognition after TTS finishes
             if (wasListening && self.recognition) {
                 self.micOn = true;
                 try { self.recognition.start(); } catch(e) { self.micOn = false; }

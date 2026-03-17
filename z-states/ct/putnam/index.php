@@ -679,89 +679,30 @@ require __DIR__ . '/../../../includes/nav.php';
     </p>
 </section>
 
-<!-- WHAT NEIGHBORS ARE THINKING -->
+<!-- YOUR VOICE -->
 <section class="voice" id="voice">
-    <h2>What Putnam Is Thinking</h2>
+    <h2>Your Voice</h2>
     <p class="section-intro">
-        Real thoughts from your neighbors. Share yours via Claudia or <a href="/talk/?town=119" class="external-link">Talk</a>.
+        Draft your priorities for Putnam. Check a scope and save when ready.
     </p>
 
-    <div class="thoughts-container">
-        <h3 style="color: #d4af37;">💬 What Neighbors Are Thinking</h3>
-        <div id="thoughtsList" class="thoughts-list">
-            <p style="color: #888;">Loading ideas...</p>
-        </div>
-    </div>
+<?php
+$isLoggedIn = (bool)$dbUser;
+$claudiaInlineConfig = [
+    'title'         => 'Putnam — Discuss & Draft',
+    'placeholder'   => 'What matters most to you about Putnam?',
+    'default_scope' => 'town',
+];
+require __DIR__ . '/../../../includes/claudia-inline.php';
+?>
 
     <h3>Get Involved</h3>
     <ul style="color: #ccc; line-height: 1.8;">
-        <li><a href="/talk/?town=119" class="external-link">Join the conversation on Talk</a> — share ideas for Putnam</li>
+        <li><a href="/talk/?town=119" class="external-link">Join the full conversation on Talk</a></li>
         <li><a href="https://onboard.putnamct.us/" class="external-link" target="_blank">Apply for a Board Seat</a> — <?= $totalVacancies ?> vacancies need you</li>
         <li><a href="/volunteer/" class="external-link">Volunteer with TPB</a> — Help build civic infrastructure</li>
         <li><a href="https://www.putnamct.us/government/mayors-office/elected-officials" class="external-link" target="_blank">Contact Your Officials</a></li>
     </ul>
 </section>
-
-<script>
-var sessionId = '<?= htmlspecialchars($sessionId ?? '') ?>';
-var townId = <?= $townId ?>;
-
-async function loadThoughts() {
-    try {
-        const response = await fetch('/api/get-thoughts.php?town_id=' + townId + '&limit=10');
-        const data = await response.json();
-        const container = document.getElementById('thoughtsList');
-
-        if (!data.thoughts || data.thoughts.length === 0) {
-            container.innerHTML = '<div class="empty-state"><div class="icon">💭</div><p>Be the first to share a thought about Putnam!</p></div>';
-            return;
-        }
-
-        container.innerHTML = data.thoughts.map(function(t) {
-            var displayName = t.display_name || 'A neighbor';
-            var timeAgo = t.time_ago || '';
-            return '<div class="thought-card">' +
-                '<div class="thought-content">' + escapeHtml(t.content) + '</div>' +
-                '<div class="thought-meta">' +
-                    '<span>' + displayName + ' · ' + timeAgo + '</span>' +
-                    '<div class="thought-votes">' +
-                        '<button class="vote-btn agree" data-id="' + t.thought_id + '" data-vote="1">👍 <span class="count">' + (t.agree_count || 0) + '</span></button>' +
-                        '<button class="vote-btn disagree" data-id="' + t.thought_id + '" data-vote="-1">👎 <span class="count">' + (t.disagree_count || 0) + '</span></button>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-        }).join('');
-
-        document.querySelectorAll('.vote-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                voteThought(this.dataset.id, this.dataset.vote);
-            });
-        });
-    } catch (err) {
-        document.getElementById('thoughtsList').innerHTML = '<p style="color: #666; text-align: center;">Could not load thoughts</p>';
-    }
-}
-
-function escapeHtml(text) {
-    var div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-async function voteThought(thoughtId, vote) {
-    try {
-        await fetch('/api/vote-thought.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ thought_id: thoughtId, vote: vote, session_id: sessionId })
-        });
-        loadThoughts();
-    } catch (err) {
-        console.error('Vote failed');
-    }
-}
-
-loadThoughts();
-</script>
 
 <?php require __DIR__ . '/../../../includes/footer.php'; ?>

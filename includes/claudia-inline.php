@@ -1,9 +1,8 @@
 <?php
 /**
- * Claudia Inline Mandate Form
- * ============================
- * Full mandate interface embedded on Talk/Fight pages.
- * Matches mandate-poc.php logged-in section from experiment branch.
+ * Claudia Inline — Discuss & Draft + Public Mandate Summary
+ * ==========================================================
+ * Reusable component embedded on Talk, Fight, and Town pages.
  *
  * Required from calling page:
  *   $pdo        — PDO connection
@@ -11,14 +10,17 @@
  *   $isLoggedIn — (bool)$dbUser
  *
  * Config: set $claudiaInlineConfig before requiring this file.
- *   'title'       => heading text (default: 'My Mandate')
- *   'placeholder' => mandate-chat placeholder
+ *   'title'         => heading text (default: 'Discuss & Draft')
+ *   'placeholder'   => prompt placeholder
+ *   'group'         => group name filter (e.g. 'The Fight')
+ *   'default_scope' => pre-checked scope ('federal', 'state', 'town', or null)
  */
 
 $_ciDefaults = [
-    'title'       => 'My Mandate',
-    'placeholder' => "What do you want your reps to do?",
-    'group'       => null,  // group name filter (e.g. 'The Fight')
+    'title'         => 'Discuss & Draft',
+    'placeholder'   => "What matters most to you?",
+    'group'         => null,
+    'default_scope' => null,
 ];
 $_ci = array_merge($_ciDefaults, $claudiaInlineConfig ?? []);
 
@@ -53,11 +55,11 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
 
 <div class="mandate-wrap" id="top">
 
-    <!-- Mandate Header -->
+    <!-- Header -->
     <div class="mandate-header">
         <h1><?= htmlspecialchars($_ci['title']) ?></h1>
         <div class="mandate-header-links">
-            <a href="/help/guide.php?flow=mandate-chat" class="mandate-help-btn">&#x1F393; How It Works</a>
+            <a href="/help/guide.php?flow=mandate-chat" class="mandate-help-btn" title="Learn how the Discuss & Draft workflow works">&#x1F393; How It Works</a>
             <a href="/mandate-summary.php?scope=federal&value=<?= htmlspecialchars(urlencode($_ciUserDistrict ?? '')) ?>"
                class="mandate-pulse-link" title="View full statistics and topic breakdown">The People's Pulse &rarr;</a>
         </div>
@@ -81,7 +83,7 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
     <div class="delegation-popup" id="claudia-inline-delegation">
         <div class="delegation-popup-header" id="claudia-delegation-drag">
             <h3>Your Representatives</h3>
-            <button class="delegation-popup-close" id="claudia-delegation-close">&times;</button>
+            <button class="delegation-popup-close" id="claudia-delegation-close" title="Close this popup">&times;</button>
         </div>
         <div id="claudia-delegation-body">
             <div class="delegation-loading">Loading...</div>
@@ -90,29 +92,30 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
 <?php endif; ?>
 
 <?php if ($_ciCanPost): ?>
-    <!-- Mandate Chat — Response / Prompt / Scratchpad -->
+    <!-- Discuss & Draft -->
     <?php
     $mandateChatConfig = [
-        'placeholder' => $_ci['placeholder'],
-        'group_id'    => $_ciGroupId,
+        'placeholder'   => $_ci['placeholder'],
+        'group_id'      => $_ciGroupId,
+        'default_scope' => $_ci['default_scope'],
     ];
     require __DIR__ . '/mandate-chat.php';
     ?>
 
 <?php elseif (!$isLoggedIn): ?>
     <div class="mandate-auth-nudge">
-        <a href="/join.php">Join</a> or <a href="/login.php">log in</a> to submit your mandate.
+        <a href="/join.php">Join</a> or <a href="/login.php">log in</a> to draft your mandate.
     </div>
 <?php elseif ($_ciUserLevel < 2): ?>
     <div class="mandate-auth-nudge">
-        <a href="/profile.php#email">Verify your email</a> to submit your mandate.
+        <a href="/profile.php#email">Verify your email</a> to draft your mandate.
     </div>
 <?php endif; ?>
 
     <!-- Public Mandate Summary -->
     <div class="mandate-summary" id="claudia-inline-summary">
         <div class="mandate-summary-header">
-            <h3 id="claudia-inline-summary-title" title="Saved mandates from your area — say &quot;read my mandate&quot; to hear them">Public Mandate Summary</h3>
+            <h3 id="claudia-inline-summary-title" title="Saved mandates from your area">Public Mandate Summary</h3>
         </div>
         <!-- Level Filter Tabs -->
         <div class="level-tabs" id="claudia-inline-level-tabs">
@@ -239,20 +242,20 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
                         }
                         if (isOwner) {
                             html += '<span class="mandate-owner-actions">'
-                                + '<button class="mandate-edit-btn" data-id="' + item.id + '" title="Edit">&#9998;</button>'
-                                + '<button class="mandate-delete-btn" data-id="' + item.id + '" title="Delete">&times;</button>'
+                                + '<button class="mandate-edit-btn" data-id="' + item.id + '" title="Edit this mandate">&#9998;</button>'
+                                + '<button class="mandate-delete-btn" data-id="' + item.id + '" title="Delete this mandate">&times;</button>'
                                 + '</span>';
                         }
                         // Vote buttons + count
                         var agreeActive = item.my_vote === 'agree' ? ' vote-active' : '';
                         var disagreeActive = item.my_vote === 'disagree' ? ' vote-active' : '';
                         html += '<div class="mandate-vote-row">'
-                            + '<button class="mandate-vote-btn agree' + agreeActive + '" data-id="' + item.id + '" data-type="agree" title="Agree">'
+                            + '<button class="mandate-vote-btn agree' + agreeActive + '" data-id="' + item.id + '" data-type="agree" title="Agree with this mandate">'
                             + '&#x1F44D; <span class="vote-count">' + (item.agree_count || 0) + '</span></button>'
-                            + '<button class="mandate-vote-btn disagree' + disagreeActive + '" data-id="' + item.id + '" data-type="disagree" title="Disagree">'
+                            + '<button class="mandate-vote-btn disagree' + disagreeActive + '" data-id="' + item.id + '" data-type="disagree" title="Disagree with this mandate">'
                             + '&#x1F44E; <span class="vote-count">' + (item.disagree_count || 0) + '</span></button>'
                             + '</div>';
-                        html += '<div class="mandate-top-link"><a href="#top">&uarr; Top</a></div>';
+                        html += '<div class="mandate-top-link"><a href="#top" title="Back to top">&uarr; Top</a></div>';
                         html += '</li>';
                     });
                     html += '</ol>';

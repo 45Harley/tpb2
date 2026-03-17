@@ -45,13 +45,13 @@ $canPost = $userLevel >= 2 && $hasLocation;
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'talk';
-$pageTitle = ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Talk | The People\'s Branch';
+$pageTitle = ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Discuss & Draft | The People\'s Branch';
 $geoQuery = $geoTownId ? '?town=' . $geoTownId : ($geoStateId ? '?state=' . $geoStateId : '');
 $secondaryNavBrand = ($geoLabel !== 'USA' ? $geoLabel . ' ' : '') . 'Talk';
 $secondaryNav = [
-    ['label' => 'Stream',  'url' => '/talk/' . $geoQuery],
-    ['label' => 'Groups',  'url' => '/talk/groups.php' . $geoQuery],
-    ['label' => 'Help',    'url' => '/talk/help.php'],
+    ['label' => 'Discuss & Draft',  'url' => '/talk/' . $geoQuery],
+    ['label' => 'Groups',           'url' => '/talk/groups.php' . $geoQuery],
+    ['label' => 'Help',             'url' => '/talk/help.php'],
 ];
 
 $pageStyles = <<<'CSS'
@@ -176,10 +176,10 @@ if ($geoTownId || $geoStateId): ?>
 
 <?php
 // Inline mandate form — scoped by geo context
+$_talkTitle = ($geoLabel !== 'USA' ? $geoLabel . ' — ' : '') . 'Discuss & Draft';
 $claudiaInlineConfig = [
-    'scope' => $geoTownId ? 'town' : ($geoStateId ? 'state' : 'federal'),
-    'scope_label' => $geoLabel,
-    'title' => 'Your Mandate',
+    'default_scope' => $geoTownId ? 'town' : ($geoStateId ? 'state' : null),
+    'title' => $_talkTitle,
     'placeholder' => 'What matters most to you? Pick a topic and share.',
 ];
 require dirname(__DIR__) . '/includes/claudia-inline.php';
