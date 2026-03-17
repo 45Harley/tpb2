@@ -248,7 +248,14 @@ require __DIR__ . '/includes/header.php';
 
     <div class="summary-header">
         <h1>The People's Pulse</h1>
-        <p class="scope-label"><?= htmlspecialchars($scopeLabel) ?> &mdash; <?= htmlspecialchars($scopeDisplay) ?></p>
+        <p class="scope-label" id="scopeLabel"><?= htmlspecialchars($scopeLabel) ?> &mdash; <?= htmlspecialchars($scopeDisplay) ?></p>
+    </div>
+
+    <!-- Geo Scope Tabs -->
+    <div class="period-tabs" id="geoTabs">
+        <button class="period-tab<?= $scope === 'federal' ? ' active' : '' ?>" data-scope="federal" title="U.S. Congress &mdash; your district">Federal</button>
+        <button class="period-tab<?= $scope === 'state' ? ' active' : '' ?>" data-scope="state" title="State legislature">State</button>
+        <button class="period-tab<?= $scope === 'town' ? ' active' : '' ?>" data-scope="town" title="Local town government">Town</button>
     </div>
 
     <!-- Period Tabs -->
@@ -281,7 +288,7 @@ require __DIR__ . '/includes/header.php';
     <!-- Empty state -->
     <div class="empty-state" id="emptyState" style="display:none;">
         <p>No mandates yet for this area.</p>
-        <p>Be the first to <a href="/mandate-poc.php" style="color:#d4af37;">submit your mandate</a>.</p>
+        <p>Be the first to <a href="/talk/" style="color:#d4af37;">draft your mandate</a>.</p>
     </div>
 
 </div>
@@ -291,6 +298,18 @@ require __DIR__ . '/includes/header.php';
     var scope      = <?= json_encode($scope) ?>;
     var scopeValue = <?= json_encode($scopeValue) ?>;
     var currentPeriod = 'all';
+
+    // User geo data for scope switching
+    var userGeo = {
+        federal: <?= json_encode($dbUser ? ($dbUser['us_congress_district'] ?? '') : '') ?>,
+        state:   <?= json_encode($dbUser ? ($dbUser['current_state_id'] ?? '') : '') ?>,
+        town:    <?= json_encode($dbUser ? ($dbUser['current_town_id'] ?? '') : '') ?>
+    };
+    var userGeoLabels = {
+        federal: <?= json_encode($dbUser ? ($dbUser['us_congress_district'] ?? 'All') : 'All') ?>,
+        state:   <?= json_encode($dbUser ? ($dbUser['state_name'] ?? 'All') : 'All') ?>,
+        town:    <?= json_encode($dbUser ? ($dbUser['town_name'] ?? 'All') : 'All') ?>
+    };
 
     function escHtml(s) {
         var d = document.createElement('div');
@@ -374,10 +393,23 @@ require __DIR__ . '/includes/header.php';
             + '&format=csv';
     }
 
-    // Period tabs
-    document.querySelectorAll('.period-tab').forEach(function(tab) {
+    // Geo scope tabs
+    document.querySelectorAll('#geoTabs .period-tab').forEach(function(tab) {
         tab.addEventListener('click', function() {
-            document.querySelectorAll('.period-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('#geoTabs .period-tab').forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            scope = tab.dataset.scope;
+            scopeValue = userGeo[scope] || '';
+            var label = userGeoLabels[scope] || 'All';
+            document.getElementById('scopeLabel').innerHTML = escHtml(scope.charAt(0).toUpperCase() + scope.slice(1)) + ' &mdash; ' + escHtml(label);
+            load(currentPeriod);
+        });
+    });
+
+    // Period tabs
+    document.querySelectorAll('.period-tabs:not(#geoTabs) .period-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.period-tabs:not(#geoTabs) .period-tab').forEach(function(t) { t.classList.remove('active'); });
             tab.classList.add('active');
             load(tab.dataset.period);
         });
