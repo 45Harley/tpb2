@@ -15,7 +15,7 @@ $dbUser = getUser($pdo);
 $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $currentPage = 'elections';
-$pageTitle = 'Winning the War — The People\'s Branch';
+$pageTitle = 'Winning the War Against Democracy — The People\'s Branch';
 $ogTitle = 'The 28th Amendment — 70% Recall Power';
 $ogDescription = 'If 70% of Americans agree you must go, YOU MUST GO. The People\'s Accountability Amendment gives citizens the power to recall any federal official.';
 
@@ -180,7 +180,7 @@ $siteUrl = $c['base_url'] ?? 'https://tpb2.sandgems.net';
     </div>
 
     <section class="war-hero">
-        <h1>Winning the War</h1>
+        <h1>Winning the War Against Democracy</h1>
         <div class="number">70%</div>
         <p class="tagline">If 70% of Americans agree you must go, YOU MUST GO.</p>
     </section>

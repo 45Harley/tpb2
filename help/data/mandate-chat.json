@@ -1,44 +1,44 @@
 {
   "id": "mandate-chat",
-  "title": "Your Mandate",
-  "subtitle": "Tell your representatives what matters most to you — pick a topic, share your mandate, and see it join the collective voice of your community.",
-  "generated": "2026-03-14T12:00:00.000Z",
+  "title": "Discuss & Draft",
+  "subtitle": "Draft your priorities for elected representatives — refine with AI if you want, check a scope, and save.",
+  "generated": "2026-03-17T12:00:00.000Z",
   "stepCount": 7,
   "steps": [
     {
       "number": 1,
       "title": "What Is a Mandate?",
-      "description": "A mandate is your instruction to your elected representatives — what you want them to fight for.\n\nUnlike a poll or petition, a mandate is your own words. It's tied to your location so it reaches the right representatives at the right level: federal (Congress), state (legislature), or town (local officials).\n\nMandates are grouped by policy topic and aggregated into a public summary — The People's Pulse — so representatives can see what their constituents actually want."
+      "description": "A mandate is your instruction to your elected representatives — what you want them to fight for.\n\nUnlike a poll or petition, a mandate is your own words. It's tied to your location so it reaches the right representatives at the right level: federal (Congress), state (legislature), or town (local officials).\n\nMandates are aggregated into a public summary — The People's Pulse — so representatives can see what their constituents actually want."
     },
     {
       "number": 2,
-      "title": "Where to Submit",
-      "description": "The mandate form appears on two types of pages:\n\n1. Talk pages (/talk/) — The civic conversation hub. The form is scoped by geography:\n   - /talk/ — federal scope (USA)\n   - /talk/?state=7 — state scope (e.g. Connecticut)\n   - /talk/?town=119 — town scope (e.g. Putnam)\n\n2. The Fight (/elections/the-fight.php) — The elections action page, scoped to federal.\n\nYou'll see the gold-bordered \"Your Mandate\" form at the top of each page, with topic pills and a text input below."
+      "title": "Where to Draft",
+      "description": "The Discuss & Draft workspace appears on several pages:\n\n1. Talk (/talk/) — The main civic hub. Scoped by geography:\n   - /talk/ — federal scope (USA)\n   - /talk/?state=7 — state scope (e.g. Connecticut)\n   - /talk/?town=119 — town scope (e.g. Putnam)\n\n2. The Fight (/elections/the-fight.php) — Elections action page, scoped to federal.\n\n3. Town pages (e.g. /putnam/) — Scoped to your town.\n\nThe scope checkbox matching the page is pre-checked for you."
     },
     {
       "number": 3,
-      "title": "Pick a Topic",
-      "description": "The form shows topic pills — 15 policy areas that match how Congress organizes its committees:\n\nEconomy & Jobs, Healthcare, Education, Infrastructure & Transportation, Environment & Energy, Public Safety & Justice, Housing & Cost of Living, Campaign Finance & Elections, Civil Rights & Liberties, Government Accountability, Veterans & Military, Immigration, Technology & Privacy, Agriculture, Other.\n\nClick a topic pill to tag your mandate. The pill turns gold when selected. Click it again to deselect. Picking a topic is optional but helps with aggregation — if you skip it, AI will assign one automatically."
+      "title": "The Prompt Box",
+      "description": "At the top you'll see a text box with three buttons:\n\n- Add — drops your text directly into the draft workspace as a bubble. No AI involved.\n- Include AI — sends your text to AI for refinement. Both your text and the AI response appear as separate bubbles.\n- Microphone — tap to dictate by voice. Say \"command\" to switch to voice command mode.\n\nPress Enter to Include AI, or click Add if you want to draft without AI help."
     },
     {
       "number": 4,
-      "title": "Write Your Mandate",
-      "description": "Type your mandate in the text box. You don't need a polished statement — just share what matters to you in your own words.\n\nExamples:\n- \"Pass the DISCLOSE Act to get dark money out of politics\"\n- \"Fix the potholes on Route 44 before someone gets hurt\"\n- \"Fund universal pre-K so working parents don't have to choose between their job and their kids\"\n\nBe specific. \"Pass the DISCLOSE Act\" is stronger than \"fix campaign finance.\" One idea per mandate keeps it focused.\n\nPress Enter to submit, or Shift+Enter for a new line."
+      "title": "The Draft Workspace",
+      "description": "Below the prompt is the Discuss & Create Draft box. Every bubble you create lands here, newest on top.\n\nEach bubble shows:\n- A draft ID (#1, #2, etc.)\n- Who wrote it (You or AI)\n- A timestamp\n- Edit (pencil) and Delete (x) buttons\n\nYou can go back and forth with AI — add your idea, include AI to refine it, edit the result, keep iterating until you're happy."
     },
     {
       "number": 5,
-      "title": "Submit and See It Live",
-      "description": "Click Submit (or press Enter). You'll see \"Mandate saved!\" in green if it worked.\n\nYour mandate immediately appears in the stream below the form, alongside mandates from other citizens in your area. The stream shows ideas, mandates, and community input flowing in real time.\n\nBehind the scenes, AI also generates a short citizen-voice summary of your mandate for aggregation reports."
+      "title": "Check a Scope and Save",
+      "description": "When a bubble is ready, check one of four scope boxes:\n\n- Federal — saves to your U.S. congressional representatives\n- State — saves to your state legislators\n- Town — saves to your local town officials\n- Idea — saves privately (not published)\n\nOnly one scope can be checked at a time. Checking a scope reveals a gold Save button. Click Save to confirm — the bubble is removed from the workspace and appears in the Public Mandate Summary below."
     },
     {
       "number": 6,
       "title": "The People's Pulse",
-      "description": "All mandates feed into The People's Pulse — a public summary dashboard at /mandate-summary.php.\n\nThe Pulse shows:\n- Topic breakdown — which policy areas your community cares about most\n- Citizen voices — sample mandates in people's own words\n- Activity trends — this week vs. last week\n- CSV export — download the full dataset\n\nFilter by scope (federal, state, town) and time period (all, month, week). This is the aggregated voice of your district — what representatives should be hearing."
+      "description": "All saved mandates feed into The People's Pulse — a public summary dashboard.\n\nThe Pulse shows:\n- Topic breakdown — which policy areas your community cares about most\n- Citizen voices — sample mandates in people's own words\n- Activity trends — this week vs. last week\n- Geo scope tabs — switch between Federal, State, and Town views\n- CSV export — download the full dataset\n\nThis is the aggregated voice of your district — what representatives should be hearing."
     },
     {
       "number": 7,
       "title": "Tips",
-      "description": "- Be specific: \"Pass the DISCLOSE Act\" is stronger than \"fix campaign finance\"\n- One idea per mandate: keep each mandate focused on a single action\n- Pick a topic: it helps your mandate show up in the right category on The People's Pulse\n- Use the right page scope: /talk/ for federal, /talk/?state=7 for state, /talk/?town=119 for town\n- Your mandates are tied to your verified location — they reach the right representatives\n- Come back anytime to add more mandates as new issues arise\n- Use Claudia (the gold C bubble) if you want AI help refining your idea before submitting"
+      "description": "- Be specific: \"Pass the DISCLOSE Act\" is stronger than \"fix campaign finance\"\n- One idea per mandate: keep each mandate focused on a single action\n- Use Add for quick drafts, Include AI when you want help refining\n- Edit any bubble before saving — click the pencil icon\n- The scope checkbox is pre-checked based on the page you're on\n- Your mandates are tied to your verified location — they reach the right representatives\n- Voice commands: say \"save federal #3\" or \"delete #2\" in command mode\n- Clear All wipes the workspace — saved mandates are safe in the summary below"
     }
   ]
 }
