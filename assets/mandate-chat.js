@@ -243,11 +243,11 @@
             if (data.response) {
                 this.addBubble('assistant', data.response);
             } else {
-                this.showToast(data.error || 'AI response failed', 'error');
+                this.addBubble('system', 'AI is temporarily unavailable. Your draft is saved above \u2014 you can edit it and save without AI.');
             }
         } catch (err) {
             if (thinkingEl.parentNode) thinkingEl.remove();
-            this.showToast('Connection error', 'error');
+            this.addBubble('system', 'AI is temporarily unavailable. Your draft is saved above \u2014 you can edit it and save without AI.');
         }
         this.isSubmitting = false;
     };
