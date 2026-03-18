@@ -166,11 +166,11 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
     <!-- Public Mandate Summary -->
     <div class="mandate-summary" id="claudia-inline-summary">
         <div class="mandate-summary-header">
-            <h3 id="claudia-inline-summary-title" title="Saved mandates from your area">Public Mandate Summary</h3>
+            <h3 id="claudia-inline-summary-title" title="Community contributions from your area">View All</h3>
         </div>
         <!-- Level Filter Tabs -->
         <div class="level-tabs" id="claudia-inline-level-tabs">
-            <button class="level-tab active" data-level="" title="Show all mandates from your area">All</button>
+            <button class="level-tab active" data-level="" title="Show all from your area">View All</button>
             <button class="level-tab" data-level="mandate-federal" title="U.S. Congress &mdash; House &amp; Senate">Federal</button>
             <button class="level-tab" data-level="mandate-state" title="State legislature &mdash; your state reps">State</button>
             <button class="level-tab" data-level="mandate-town" title="Local town government &mdash; selectmen, council">Town</button>
@@ -183,7 +183,7 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
                title="View full statistics and topic breakdown">The People's Pulse &rarr;</a>
         </div>
         <div id="claudia-inline-summary-body" style="padding: 1.5rem;">
-            <p>Loading mandate data...</p>
+            <p>Loading...</p>
         </div>
     </div>
 <?php endif; ?>
@@ -255,18 +255,18 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
                     return 'My Mandates';
                 case 'federal':
                     return userDistrict
-                        ? 'Constituent Mandate for ' + escapeHtml(userDistrict)
-                        : 'Constituent Mandate (Federal)';
+                        ? 'Federal &mdash; ' + escapeHtml(userDistrict)
+                        : 'Federal';
                 case 'state':
                     return userStateName
-                        ? 'Constituent Mandate for ' + escapeHtml(userStateName)
-                        : 'Constituent Mandate (State)';
+                        ? 'State &mdash; ' + escapeHtml(userStateName)
+                        : 'State';
                 case 'town':
                     return userTownName
-                        ? 'Constituent Mandate for ' + escapeHtml(userTownName)
-                        : 'Constituent Mandate (Town)';
+                        ? 'Town &mdash; ' + escapeHtml(userTownName)
+                        : 'Town';
                 default:
-                    return 'Public Mandate Summary';
+                    return 'View All';
             }
         }
 
@@ -278,7 +278,7 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (!data.success || data.item_count === 0) {
-                        bodyEl.innerHTML = '<p style="color:#b0b0b0;">No mandate items yet for this scope.</p>';
+                        bodyEl.innerHTML = '<p style="color:#b0b0b0;">No items yet for this scope.</p>';
                         return;
                     }
 
