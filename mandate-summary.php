@@ -377,7 +377,13 @@ require __DIR__ . '/includes/header.php';
                     m += '<span class="mandate-topic-badge">' + escHtml(item.policy_topic) + '</span>';
                 }
                 m += '<span class="mandate-content">' + escHtml(item.content) + '</span>';
-                m += '<div class="mandate-meta">' + escHtml(item.created_at) + '</div>';
+                if (item.author_display) {
+                    var authorStr = escHtml(item.author_display);
+                    if (item.age_bracket) authorStr += ' (' + escHtml(item.age_bracket) + ')';
+                    m += '<div class="mandate-meta">&mdash; ' + authorStr + ' &middot; ' + escHtml(item.created_at) + '</div>';
+                } else {
+                    m += '<div class="mandate-meta">' + escHtml(item.created_at) + '</div>';
+                }
                 m += '</div>';
             });
             document.getElementById('mandatesBody').innerHTML = m;

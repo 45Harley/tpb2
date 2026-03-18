@@ -156,7 +156,8 @@ try {
 
         $sql = "
             SELECT i.id, i.user_id, i.content, i.tags, i.category, i.policy_topic,
-                   i.agree_count, i.disagree_count, i.created_at
+                   i.agree_count, i.disagree_count, i.created_at,
+                   u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name, u.age_bracket, u.show_age_bracket
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.deleted_at IS NULL AND u.deleted_at IS NULL
@@ -173,6 +174,8 @@ try {
         foreach ($rows as $row) {
             $levelLabel = str_replace('mandate-', '', $row['category']);
             $itemIds[] = (int)$row['id'];
+            $authorDisplay = getDisplayName($row);
+            $ageDisplay = (!empty($row['show_age_bracket']) && !empty($row['age_bracket'])) ? $row['age_bracket'] : null;
             $items[] = [
                 'id'             => (int)$row['id'],
                 'user_id'        => (int)$row['user_id'],
@@ -184,6 +187,8 @@ try {
                 'disagree_count' => (int)$row['disagree_count'],
                 'my_vote'        => null,
                 'created_at'     => $row['created_at'],
+                'author_display' => $authorDisplay,
+                'age_bracket'    => $ageDisplay,
             ];
         }
 
@@ -210,9 +215,11 @@ try {
         // My ideas — category='idea' for this user
         $myGroupFilter = $groupId ? ' AND i.group_id = ?' : '';
         $sql = "
-            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.agree_count, i.disagree_count, i.created_at
+            SELECT i.id, i.user_id, i.content, i.tags, i.category, i.agree_count, i.disagree_count, i.created_at,
+                   u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name, u.age_bracket, u.show_age_bracket
             FROM idea_log i
-            WHERE i.user_id = ? AND i.deleted_at IS NULL
+            JOIN users u ON i.user_id = u.user_id
+            WHERE i.user_id = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
               AND i.category = 'idea'{$myGroupFilter}
             ORDER BY i.created_at DESC
         ";
@@ -226,6 +233,8 @@ try {
         $itemIds = [];
         foreach ($rows as $row) {
             $itemIds[] = (int)$row['id'];
+            $authorDisplay = getDisplayName($row);
+            $ageDisplay = (!empty($row['show_age_bracket']) && !empty($row['age_bracket'])) ? $row['age_bracket'] : null;
             $items[] = [
                 'id'             => (int)$row['id'],
                 'user_id'        => (int)$row['user_id'],
@@ -236,6 +245,8 @@ try {
                 'disagree_count' => (int)$row['disagree_count'],
                 'my_vote'        => null,
                 'created_at'     => $row['created_at'],
+                'author_display' => $authorDisplay,
+                'age_bracket'    => $ageDisplay,
             ];
         }
         $contributorCount = count($items) > 0 ? 1 : 0;
@@ -245,9 +256,11 @@ try {
         $myGroupFilter = $groupId ? ' AND i.group_id = ?' : '';
         $sql = "
             SELECT i.id, i.user_id, i.content, i.tags, i.category, i.policy_topic,
-                   i.agree_count, i.disagree_count, i.created_at
+                   i.agree_count, i.disagree_count, i.created_at,
+                   u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name, u.age_bracket, u.show_age_bracket
             FROM idea_log i
-            WHERE i.user_id = ? AND i.deleted_at IS NULL
+            JOIN users u ON i.user_id = u.user_id
+            WHERE i.user_id = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
               AND i.category IN ('mandate-federal','mandate-state','mandate-town'){$myGroupFilter}
             ORDER BY i.created_at DESC
         ";
@@ -262,6 +275,8 @@ try {
         foreach ($rows as $row) {
             $levelLabel = str_replace('mandate-', '', $row['category']);
             $itemIds[] = (int)$row['id'];
+            $authorDisplay = getDisplayName($row);
+            $ageDisplay = (!empty($row['show_age_bracket']) && !empty($row['age_bracket'])) ? $row['age_bracket'] : null;
             $items[] = [
                 'id'             => (int)$row['id'],
                 'user_id'        => (int)$row['user_id'],
@@ -273,6 +288,8 @@ try {
                 'disagree_count' => (int)$row['disagree_count'],
                 'my_vote'        => null,
                 'created_at'     => $row['created_at'],
+                'author_display' => $authorDisplay,
+                'age_bracket'    => $ageDisplay,
             ];
         }
         $contributorCount = count($items) > 0 ? 1 : 0;
@@ -297,9 +314,11 @@ try {
         $ptCol = $hasPolicyTopic ? ', i.policy_topic' : '';
         $sql = "
             SELECT i.id, i.user_id, i.content, i.tags, i.category{$ptCol},
-                   i.agree_count, i.disagree_count, i.created_at
+                   i.agree_count, i.disagree_count, i.created_at,
+                   u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name, u.age_bracket, u.show_age_bracket
             FROM idea_log i
-            WHERE i.group_id = ? AND i.deleted_at IS NULL
+            JOIN users u ON i.user_id = u.user_id
+            WHERE i.group_id = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
             ORDER BY i.created_at DESC
         ";
         $stmt = $pdo->prepare($sql);
@@ -311,6 +330,8 @@ try {
         foreach ($rows as $row) {
             $levelLabel = str_replace('mandate-', '', $row['category']);
             $itemIds[] = (int)$row['id'];
+            $authorDisplay = getDisplayName($row);
+            $ageDisplay = (!empty($row['show_age_bracket']) && !empty($row['age_bracket'])) ? $row['age_bracket'] : null;
             $items[] = [
                 'id'             => (int)$row['id'],
                 'user_id'        => (int)$row['user_id'],
@@ -322,6 +343,8 @@ try {
                 'disagree_count' => (int)$row['disagree_count'],
                 'my_vote'        => null,
                 'created_at'     => $row['created_at'],
+                'author_display' => $authorDisplay,
+                'age_bracket'    => $ageDisplay,
             ];
         }
 
@@ -348,7 +371,8 @@ try {
         $geoGroupFilter = $groupId ? ' AND i.group_id = ?' : '';
         $sql = "
             SELECT i.id, i.user_id, i.content, i.tags, i.policy_topic,
-                   i.agree_count, i.disagree_count, i.created_at
+                   i.agree_count, i.disagree_count, i.created_at,
+                   u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name, u.age_bracket, u.show_age_bracket
             FROM idea_log i
             JOIN users u ON i.user_id = u.user_id
             WHERE i.category = ? AND i.deleted_at IS NULL AND u.deleted_at IS NULL
@@ -366,6 +390,8 @@ try {
         $itemIds = [];
         foreach ($rows as $row) {
             $itemIds[] = (int)$row['id'];
+            $authorDisplay = getDisplayName($row);
+            $ageDisplay = (!empty($row['show_age_bracket']) && !empty($row['age_bracket'])) ? $row['age_bracket'] : null;
             $items[] = [
                 'id'             => (int)$row['id'],
                 'user_id'        => (int)$row['user_id'],
@@ -376,6 +402,8 @@ try {
                 'disagree_count' => (int)$row['disagree_count'],
                 'my_vote'        => null,
                 'created_at'     => $row['created_at'],
+                'author_display' => $authorDisplay,
+                'age_bracket'    => $ageDisplay,
             ];
         }
 

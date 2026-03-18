@@ -297,6 +297,11 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
                                 + escapeHtml(item.level) + '</span> ';
                         }
                         html += '<span class="mandate-text">' + escapeHtml(item.content) + '</span>';
+                        if (item.author_display) {
+                            var authorStr = escapeHtml(item.author_display);
+                            if (item.age_bracket) authorStr += ' (' + escapeHtml(item.age_bracket) + ')';
+                            html += '<span style="color:#999; font-size:0.8rem; display:block; margin-top:2px;">&mdash; ' + authorStr + '</span>';
+                        }
                         if (item.tags) {
                             html += ' <span style="color:#999; font-size:0.85rem;">('
                                 + escapeHtml(item.tags) + ')</span>';
