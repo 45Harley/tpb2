@@ -2,7 +2,7 @@
   "id": "profile",
   "title": "Your Profile & Trust Journey",
   "subtitle": "Build your civic identity step by step — from new user to fully verified citizen.",
-  "generated": "2026-03-01T03:18:39.379Z",
+  "generated": "2026-03-18T12:00:00.000Z",
   "stepCount": 10,
   "steps": [
     {
@@ -36,7 +36,7 @@
     {
       "number": 5,
       "title": "Set your privacy preferences",
-      "description": "The Privacy Settings section lets you choose what others see when you post in Talk or vote. Toggle checkboxes for first name, last name, and age bracket. A live preview shows exactly how your name will appear to other citizens — for example, \"har Goodwin (55-64)\" or just your first name.",
+      "description": "The Privacy Settings section lets you choose what others see when you post. Toggle checkboxes for first name, last name, and age bracket. A live preview shows exactly how your name will appear.\n\nYour user ID number (e.g. #42) always appears next to your contributions — it's not personally identifying but ensures accountability. The name and age bracket only show if you opt in.\n\nExamples of how you might appear:\n- All checked: \"#42 Harley Goodwin (55-64)\"\n- First name only: \"#42 Harley\"\n- Nothing checked: \"#42\" with your username\n\nThese settings affect the Talk page, Discuss & Draft, group streams, The People's Pulse, and anywhere your saved contributions are displayed.",
       "alt": null,
       "screenshot": null
     },
