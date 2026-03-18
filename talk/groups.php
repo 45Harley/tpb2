@@ -706,14 +706,14 @@ require __DIR__ . '/../includes/nav.php';
         var publicAccess = data.public_access;
         html += '<div class="actions">';
         if (isMember) {
-            html += '<a href="index.php?group=' + g.id + '" class="btn btn-primary">Open in Talk</a>';
+            html += '<a href="#top" class="btn btn-primary" title="Scroll to Discuss & Draft below">Discuss & Draft</a>';
         }
         if (!isMember && g.access_level !== 'closed') {
             html += '<button class="btn btn-primary" onclick="joinGroup(' + g.id + ')">Join Group</button>';
         }
         if (!isMember && publicAccess) {
             var paLabel = publicAccess === 'vote' ? 'View & Vote' : 'View Ideas';
-            html += '<a href="index.php?group=' + g.id + '" class="btn btn-secondary">&#127760; ' + paLabel + '</a>';
+            html += '<a href="#top" class="btn btn-secondary" title="Scroll to group stream below">&#127760; ' + paLabel + '</a>';
         }
         if (isMember && !isFacilitator) {
             html += '<button class="btn btn-danger" onclick="leaveGroup(' + g.id + ')">Leave</button>';
