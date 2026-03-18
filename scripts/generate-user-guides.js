@@ -98,67 +98,73 @@ const flows = [
         ]
     },
 
-    // ── Talk Flow ─────────────────────────────────────────────────────
+    // ── Talk / Discuss & Draft Flow ─────────────────────────────────────
     {
         id: 'talk',
-        title: 'Using Talk',
-        subtitle: 'Share ideas, vote, reply, and brainstorm with your community.',
+        title: 'Discuss & Draft',
+        subtitle: 'Draft your priorities with or without AI help, check a scope, save, and see what your community wants.',
         steps: [
             {
-                title: 'Open USA Talk',
-                description: 'Click "USA Talk" in the main navigation bar. This is the national civic brainstorming stream where citizens share ideas, ask questions, and propose solutions.',
-                alt: 'The Talk stream page showing ideas from citizens across the USA',
-                slug: 'stream',
+                title: 'Open Talk',
+                description: 'Click "Talk" in the navigation bar. This is your civic workspace — where you draft mandates, refine ideas with AI, and see what your community has saved.',
+                alt: 'The Talk page showing the Discuss & Draft workspace and community summary below',
+                slug: 'overview',
                 action: async (page) => {
                     await page.goto('/talk/', { waitUntil: 'networkidle' });
                     await page.waitForTimeout(1000);
                 },
-                screenshot: { fullPage: false }
+                screenshot: { fullPage: true }
             },
             {
-                title: 'Write your idea',
-                description: 'If you\'re verified, you\'ll see a text box at the top. Type your thought, question, or idea. You can write up to 2,000 characters. Press Enter or click the send arrow to post.',
-                alt: 'The Talk input area with text box and send button',
-                slug: 'input',
+                title: 'The Prompt Box',
+                description: 'At the top is a text box with three buttons: Add (drops your text directly as a draft bubble), Include AI (sends your text to AI for refinement — both your text and the AI response appear as bubbles), and a Microphone for voice input. Type your idea and choose how to draft it.',
+                alt: 'The prompt box with Add, Microphone, and Include AI buttons',
+                slug: 'prompt',
                 action: async (page) => {
-                    var input = page.locator('#ts0-input');
+                    var input = page.locator('.mc-input textarea');
                     if (await input.count() > 0) {
-                        await input.fill('What if every town had a public civic calendar?');
+                        await input.fill('Implement term limits for Congress — 12 years max');
                     }
                 },
                 screenshot: { fullPage: false }
             },
             {
-                title: 'Use AI Brainstorm',
-                description: 'Click the "AI" button next to the text box to toggle AI brainstorm mode. When enabled, after you post your idea, an AI assistant will respond with analysis and suggestions to help refine your thinking.',
-                alt: 'The AI toggle button highlighted next to the text input',
-                slug: 'ai-toggle',
+                title: 'The Draft Workspace',
+                description: 'Below the prompt is the Discuss & Create Draft box. Every bubble you create lands here, newest on top. Each bubble shows a draft ID (#1, #2), who wrote it (You or AI), and a timestamp. You can edit (pencil icon) or delete (x) any bubble.',
+                alt: 'Draft workspace showing numbered bubbles with edit and delete controls',
+                slug: 'workspace',
                 action: null,
                 screenshot: null
             },
             {
-                title: 'Vote on ideas',
-                description: 'Every idea has thumbs-up and thumbs-down buttons. Vote to signal agreement or disagreement. Your vote helps the community see which ideas have support.',
-                alt: 'An idea card showing vote buttons',
-                slug: 'vote',
+                title: 'Check a Scope and Save',
+                description: 'When a draft bubble is ready, check one of four scope boxes: Federal (Congress), State (legislature), Town (local officials), or Idea (private). Only one scope at a time. Checking a scope reveals a gold Save button. Click Save — the bubble is removed from the workspace and appears in the community summary below.',
+                alt: 'A draft bubble with Federal checkbox checked and Save button visible',
+                slug: 'save',
                 action: null,
                 screenshot: null
             },
             {
-                title: 'Filter by status',
-                description: 'Use the filter buttons at the top of the stream — All, Raw, Refining, Distilled, Actionable. Ideas mature as the community discusses and refines them.',
-                alt: 'Filter bar showing status options: All, Raw, Refining, Distilled, Actionable',
-                slug: 'filters',
-                action: null,
-                screenshot: null
-            },
-            {
-                title: 'Browse by location',
-                description: 'Talk works at three levels: USA (national), your state, and your town. Visit your state or town page to see local conversations. The breadcrumb at the top shows where you are: USA > State > Town.',
-                alt: 'Talk page showing geographic breadcrumb navigation',
-                slug: 'geo',
+                title: 'Community Summary',
+                description: 'Below the workspace, saved items appear with filter tabs: View All, Federal, State, Town, My Mandates, My Ideas. Each item shows the content, author attribution (respecting privacy settings), and vote buttons. Click a tab to filter by scope.',
+                alt: 'Community summary with filter tabs and saved mandate items with author names',
+                slug: 'summary',
                 action: async (page) => {
-                    await page.goto('/talk/?state=7', { waitUntil: 'networkidle' });
+                    await page.evaluate(() => {
+                        var el = document.querySelector('.mandate-summary');
+                        if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+                    });
+                    await page.waitForTimeout(300);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Groups',
+                description: 'Click "Groups" in the Talk sub-navigation to see deliberation groups. Join a group to draft with a focused team. Each group has its own Discuss & Draft workspace scoped to the group, with access rules based on your role (facilitator, member, observer).',
+                alt: 'Groups list page showing available deliberation groups',
+                slug: 'groups',
+                action: async (page) => {
+                    await page.goto('/talk/groups.php', { waitUntil: 'networkidle' });
                     await page.waitForTimeout(500);
                 },
                 screenshot: { fullPage: false }
@@ -222,16 +228,15 @@ const flows = [
                 screenshot: { fullPage: false }
             },
             {
-                title: 'Join the community stream',
-                description: 'Scroll down on The Fight page to find the Community Stream. Post ideas, share evidence, and discuss what the Golden Rule demands right now. This is where citizens think together.',
-                alt: 'Community Stream section on The Fight page with input area',
-                slug: 'stream',
+                title: 'Discuss & Draft on The Fight',
+                description: 'Scroll down on The Fight page to find the Discuss & Draft workspace — scoped to federal mandates. Draft your priorities for Congress, refine with AI, and save. Your saved mandates appear in the group stream below.',
+                alt: 'Discuss & Draft section on The Fight page with prompt box and draft workspace',
+                slug: 'discuss-draft',
                 action: async (page) => {
                     await page.goto('/elections/the-fight.php', { waitUntil: 'networkidle' });
                     await page.waitForTimeout(500);
-                    // Scroll to the talk stream section
                     await page.evaluate(() => {
-                        var el = document.querySelector('.talk-stream');
+                        var el = document.querySelector('.mandate-wrap');
                         if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
                     });
                     await page.waitForTimeout(300);
@@ -380,7 +385,7 @@ const flows = [
             },
             {
                 title: 'Set your privacy preferences',
-                description: 'The Privacy Settings section lets you choose what others see when you post in Talk or vote. Toggle checkboxes for first name, last name, and age bracket. A live preview shows exactly how your name will appear to other citizens — for example, "har Goodwin (55-64)" or just your first name.',
+                description: 'The Privacy Settings section lets you choose what others see when you post. Toggle checkboxes for first name, last name, and age bracket. A live preview shows exactly how your name will appear.\n\nYour user ID (e.g. #42) always appears next to your contributions for accountability. The name and age bracket only show if you opt in. Examples: "#42 Harley Goodwin (55-64)" with all checked, "#42 Harley" with first name only, or just "#42" with your username if nothing is checked.\n\nThese settings affect Talk, Discuss & Draft, group streams, and The People\'s Pulse.',
                 alt: null,
                 slug: 'privacy',
                 action: null,

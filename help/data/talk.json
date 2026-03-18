@@ -1,51 +1,51 @@
 {
   "id": "talk",
-  "title": "Using Talk",
-  "subtitle": "Draft mandates, refine with AI, and see what your community cares about.",
-  "generated": "2026-03-17T12:00:00.000Z",
+  "title": "Discuss & Draft",
+  "subtitle": "Draft your priorities with or without AI help, check a scope, save, and see what your community wants.",
+  "generated": "2026-03-18T17:42:39.560Z",
   "stepCount": 6,
   "steps": [
     {
       "number": 1,
       "title": "Open Talk",
-      "description": "Click \"Discuss & Draft\" in the Talk secondary navigation. This is the civic workspace where you draft mandates for your elected representatives.\n\nTalk works at three geographic levels:\n- /talk/ — federal (USA)\n- /talk/?state=7 — your state (e.g. Connecticut)\n- /talk/?town=119 — your town (e.g. Putnam)\n\nThe breadcrumb at the top shows where you are: USA > State > Town.",
-      "alt": "The Talk page showing Discuss & Draft workspace",
-      "screenshot": null
+      "description": "Click \"Talk\" in the navigation bar. This is your civic workspace — where you draft mandates, refine ideas with AI, and see what your community has saved.",
+      "alt": "The Talk page showing the Discuss & Draft workspace and community summary below",
+      "screenshot": "talk-01-overview.png"
     },
     {
       "number": 2,
-      "title": "Add a Draft",
-      "description": "Type your idea in the prompt box at the top. You have two options:\n\n- Click \"Add\" to drop your text directly into the draft workspace as a bubble.\n- Click \"Include AI\" (or press Enter) to send your text to AI for refinement. Both your text and the AI response appear as separate bubbles.\n\nYou can also tap the microphone to dictate by voice.",
-      "alt": "The prompt box with Add and Include AI buttons",
-      "screenshot": null
+      "title": "The Prompt Box",
+      "description": "At the top is a text box with three buttons: Add (drops your text directly as a draft bubble), Include AI (sends your text to AI for refinement — both your text and the AI response appear as bubbles), and a Microphone for voice input. Type your idea and choose how to draft it.",
+      "alt": "The prompt box with Add, Microphone, and Include AI buttons",
+      "screenshot": "talk-02-prompt.png"
     },
     {
       "number": 3,
-      "title": "Work with Drafts",
-      "description": "Your drafts appear in the Discuss & Create Draft box, newest on top. Each bubble has:\n\n- A draft ID (#1, #2, etc.)\n- Edit button (pencil) — click to revise the text inline\n- Delete button (x) — remove a draft you don't want\n\nIterate as much as you want — add ideas, include AI to refine them, edit the results, keep going until you're satisfied.",
-      "alt": "Draft bubbles in the workspace with edit and delete controls",
+      "title": "The Draft Workspace",
+      "description": "Below the prompt is the Discuss & Create Draft box. Every bubble you create lands here, newest on top. Each bubble shows a draft ID (#1, #2), who wrote it (You or AI), and a timestamp. You can edit (pencil icon) or delete (x) any bubble.",
+      "alt": "Draft workspace showing numbered bubbles with edit and delete controls",
       "screenshot": null
     },
     {
       "number": 4,
       "title": "Check a Scope and Save",
-      "description": "When a draft is ready, check one of four scope boxes on the bubble:\n\n- Federal — for your U.S. congressional representatives\n- State — for your state legislators\n- Town — for your local town officials\n- Idea — saves privately (not published)\n\nOnly one scope at a time. Checking a scope reveals a gold Save button. Click Save — the bubble is removed from the workspace and published to the Public Mandate Summary below.",
-      "alt": "A draft bubble with scope checkboxes and Save button",
+      "description": "When a draft bubble is ready, check one of four scope boxes: Federal (Congress), State (legislature), Town (local officials), or Idea (private). Only one scope at a time. Checking a scope reveals a gold Save button. Click Save — the bubble is removed from the workspace and appears in the community summary below.",
+      "alt": "A draft bubble with Federal checkbox checked and Save button visible",
       "screenshot": null
     },
     {
       "number": 5,
-      "title": "Public Mandate Summary",
-      "description": "Below the workspace, the Public Mandate Summary shows all saved mandates from your area. Use the tabs to filter:\n\n- All — everything from your area\n- Federal / State / Town — filter by scope\n- My Mandates — only your published mandates\n- My Ideas — your private ideas\n\nYou can vote (thumbs up/down) on anyone's mandate, and edit or delete your own.",
-      "alt": "Public Mandate Summary with filter tabs and vote buttons",
-      "screenshot": null
+      "title": "Community Summary",
+      "description": "Below the workspace, saved items appear with filter tabs: View All, Federal, State, Town, My Mandates, My Ideas. Each item shows the content, author attribution (respecting privacy settings), and vote buttons. Click a tab to filter by scope.",
+      "alt": "Community summary with filter tabs and saved mandate items with author names",
+      "screenshot": "talk-05-summary.png"
     },
     {
       "number": 6,
-      "title": "Voice Commands",
-      "description": "When using the microphone, say \"command\" to enter voice command mode. Available commands:\n\n- \"add\" — add dictated text as a draft\n- \"send\" or \"ask\" — send to AI\n- \"check federal #3\" — set scope on a draft\n- \"save #3\" — save a draft\n- \"edit #3\" — edit a draft\n- \"delete #3\" — remove a draft\n- \"clear all\" — clear the workspace\n- \"help\" — list all commands\n\nSay \"command\" again to return to dictation mode.",
-      "alt": "Voice command reference",
-      "screenshot": null
+      "title": "Groups",
+      "description": "Click \"Groups\" in the Talk sub-navigation to see deliberation groups. Join a group to draft with a focused team. Each group has its own Discuss & Draft workspace scoped to the group, with access rules based on your role (facilitator, member, observer).",
+      "alt": "Groups list page showing available deliberation groups",
+      "screenshot": "talk-06-groups.png"
     }
   ]
 }

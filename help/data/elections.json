@@ -2,7 +2,7 @@
   "id": "elections",
   "title": "Elections & The Fight",
   "subtitle": "Take pledges, land knockouts, rate threats, and hold power accountable.",
-  "generated": "2026-03-01T03:18:29.796Z",
+  "generated": "2026-03-18T17:42:44.821Z",
   "stepCount": 6,
   "steps": [
     {
@@ -42,10 +42,10 @@
     },
     {
       "number": 6,
-      "title": "Join the community stream",
-      "description": "Scroll down on The Fight page to find the Community Stream. Post ideas, share evidence, and discuss what the Golden Rule demands right now. This is where citizens think together.",
-      "alt": "Community Stream section on The Fight page with input area",
-      "screenshot": "elections-06-stream.png"
+      "title": "Discuss & Draft on The Fight",
+      "description": "Scroll down on The Fight page to find the Discuss & Draft workspace — scoped to federal mandates. Draft your priorities for Congress, refine with AI, and save. Your saved mandates appear in the group stream below.",
+      "alt": "Discuss & Draft section on The Fight page with prompt box and draft workspace",
+      "screenshot": "elections-06-discuss-draft.png"
     }
   ]
 }
