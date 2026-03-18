@@ -1,8 +1,8 @@
 <?php
 /**
- * Claudia Inline — Discuss & Draft + Public Mandate Summary
- * ==========================================================
- * Reusable component embedded on Talk, Fight, and Town pages.
+ * Claudia Inline — Discuss & Draft + Summary
+ * ============================================
+ * Reusable component embedded on Talk, Fight, Town, and Group pages.
  *
  * Required from calling page:
  *   $pdo        — PDO connection
@@ -12,7 +12,13 @@
  * Config: set $claudiaInlineConfig before requiring this file.
  *   'title'         => heading text (default: 'Discuss & Draft')
  *   'placeholder'   => prompt placeholder
- *   'group'         => group name filter (e.g. 'The Fight')
+ *   'group'         => group name filter (e.g. 'The Fight') — resolves to group_id
+ *   'group_id'      => direct group_id (overrides 'group' name lookup)
+ *   'group_name'    => group display name (for title)
+ *   'group_mode'    => bool — show ALL categories in summary, not just mandates
+ *   'is_standard'   => bool — civic topic group (open to all verified users)
+ *   'group_status'  => group status string (e.g. 'active', 'archived')
+ *   'user_role'     => user's role in the group ('facilitator', 'member', 'observer', null)
  *   'default_scope' => pre-checked scope ('federal', 'state', 'town', or null)
  */
 
@@ -20,6 +26,12 @@ $_ciDefaults = [
     'title'         => 'Discuss & Draft',
     'placeholder'   => "What matters most to you?",
     'group'         => null,
+    'group_id'      => null,
+    'group_name'    => null,
+    'group_mode'    => false,
+    'is_standard'   => false,
+    'group_status'  => null,
+    'user_role'     => null,
     'default_scope' => null,
 ];
 $_ci = array_merge($_ciDefaults, $claudiaInlineConfig ?? []);
@@ -27,9 +39,29 @@ $_ci = array_merge($_ciDefaults, $claudiaInlineConfig ?? []);
 $_ciUserLevel = $dbUser ? (int)($dbUser['identity_level_id'] ?? 1) : 0;
 $_ciCanPost = $isLoggedIn && $_ciUserLevel >= 2;
 
-// Resolve group name → group_id for mandate saves
-$_ciGroupId = null;
-if (!empty($_ci['group']) && isset($pdo)) {
+// Group access rules override
+$_ciGroupMode = (bool)$_ci['group_mode'];
+$_ciGroupId = $_ci['group_id'] ? (int)$_ci['group_id'] : null;
+
+if ($_ciGroupMode && $_ciGroupId) {
+    $groupStatus = $_ci['group_status'] ?? 'active';
+    $isStandard = (bool)$_ci['is_standard'];
+    $userRole = $_ci['user_role'];
+
+    if ($groupStatus === 'archived') {
+        // Archived: no drafting for anyone
+        $_ciCanPost = false;
+    } elseif ($isStandard) {
+        // Civic topic: any verified user can draft
+        $_ciCanPost = $isLoggedIn && $_ciUserLevel >= 2;
+    } else {
+        // User-created group: members and facilitators only
+        $_ciCanPost = $isLoggedIn && $_ciUserLevel >= 2 && in_array($userRole, ['member', 'facilitator']);
+    }
+}
+
+// Resolve group name → group_id for mandate saves (if not already set)
+if (!$_ciGroupId && !empty($_ci['group']) && isset($pdo)) {
     $stmt = $pdo->prepare("SELECT id FROM idea_groups WHERE name = ? LIMIT 1");
     $stmt->execute([$_ci['group']]);
     $_ciGroupId = $stmt->fetchColumn() ?: null;
@@ -112,6 +144,23 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
     </div>
 <?php endif; ?>
 
+<?php if ($_ciGroupMode): ?>
+    <!-- Group Stream -->
+    <div class="mandate-summary" id="claudia-inline-summary">
+        <div class="mandate-summary-header">
+            <h3 id="claudia-inline-summary-title" title="All items from this group">Group: <?= htmlspecialchars($_ci['group_name'] ?? 'Unknown') ?></h3>
+        </div>
+        <div id="claudia-inline-summary-body" style="padding: 1.5rem;">
+            <p>Loading group stream...</p>
+        </div>
+<?php if ($_ci['group_status'] !== 'archived'): ?>
+        <div style="text-align:center; padding: 8px 12px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <a href="/talk/" style="color:#d4af37; font-size:0.8rem; text-decoration:none;"
+               title="View public mandates from your area">View public mandates &rarr;</a>
+        </div>
+<?php endif; ?>
+    </div>
+<?php else: ?>
     <!-- Public Mandate Summary -->
     <div class="mandate-summary" id="claudia-inline-summary">
         <div class="mandate-summary-header">
@@ -135,8 +184,9 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
             <p>Loading mandate data...</p>
         </div>
     </div>
+<?php endif; ?>
 
-    <!-- ── Mandate Summary JS — edit/delete/vote/tabs ──── -->
+    <!-- ── Summary JS — edit/delete/vote/tabs ──── -->
     <script>
     (function() {
         var userDistrict  = <?= json_encode($_ciUserDistrict ?: null) ?>;
@@ -146,6 +196,9 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
         var userStateName = <?= json_encode($_ciUserStateAbbr ?: $_ciUserStateName ?: '') ?>;
         var userId        = <?= json_encode($dbUser ? (int)$dbUser['user_id'] : 0) ?>;
         var groupFilter   = <?= json_encode($_ci['group'] ?: null) ?>;
+        var groupMode     = <?= json_encode($_ciGroupMode) ?>;
+        var groupId       = <?= json_encode($_ciGroupId ?: null) ?>;
+        var groupArchived = <?= json_encode(($_ci['group_status'] ?? '') === 'archived') ?>;
 
         var titleEl = document.getElementById('claudia-inline-summary-title');
         var bodyEl  = document.getElementById('claudia-inline-summary-body');
@@ -158,6 +211,12 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
 
         function buildUrl(level) {
             var url;
+            if (groupMode) {
+                // Group mode: single query, all categories
+                url = '/api/mandate-aggregate.php?level=group&group_id=' + encodeURIComponent(groupId);
+                if (userId) url += '&viewer_user_id=' + encodeURIComponent(userId);
+                return url;
+            }
             if (level === 'my-ideas') {
                 url = '/api/mandate-aggregate.php?level=my-ideas&user_id=' + encodeURIComponent(userId);
             } else if (level === 'mine') {
@@ -210,7 +269,7 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
         }
 
         function loadSummary(level) {
-            titleEl.innerHTML = buildTitle(level);
+            if (!groupMode) titleEl.innerHTML = buildTitle(level);
             bodyEl.innerHTML = '<p style="color:#b0b0b0;">Loading...</p>';
 
             fetch(buildUrl(level))
@@ -240,21 +299,23 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
                             html += ' <span style="color:#999; font-size:0.85rem;">('
                                 + escapeHtml(item.tags) + ')</span>';
                         }
-                        if (isOwner) {
+                        if (isOwner && !groupArchived) {
                             html += '<span class="mandate-owner-actions">'
-                                + '<button class="mandate-edit-btn" data-id="' + item.id + '" title="Edit this mandate">&#9998;</button>'
-                                + '<button class="mandate-delete-btn" data-id="' + item.id + '" title="Delete this mandate">&times;</button>'
+                                + '<button class="mandate-edit-btn" data-id="' + item.id + '" title="Edit">&#9998;</button>'
+                                + '<button class="mandate-delete-btn" data-id="' + item.id + '" title="Delete">&times;</button>'
                                 + '</span>';
                         }
-                        // Vote buttons + count
-                        var agreeActive = item.my_vote === 'agree' ? ' vote-active' : '';
-                        var disagreeActive = item.my_vote === 'disagree' ? ' vote-active' : '';
-                        html += '<div class="mandate-vote-row">'
-                            + '<button class="mandate-vote-btn agree' + agreeActive + '" data-id="' + item.id + '" data-type="agree" title="Agree with this mandate">'
-                            + '&#x1F44D; <span class="vote-count">' + (item.agree_count || 0) + '</span></button>'
-                            + '<button class="mandate-vote-btn disagree' + disagreeActive + '" data-id="' + item.id + '" data-type="disagree" title="Disagree with this mandate">'
-                            + '&#x1F44E; <span class="vote-count">' + (item.disagree_count || 0) + '</span></button>'
-                            + '</div>';
+                        // Vote buttons + count (hidden for archived groups)
+                        if (!groupArchived) {
+                            var agreeActive = item.my_vote === 'agree' ? ' vote-active' : '';
+                            var disagreeActive = item.my_vote === 'disagree' ? ' vote-active' : '';
+                            html += '<div class="mandate-vote-row">'
+                                + '<button class="mandate-vote-btn agree' + agreeActive + '" data-id="' + item.id + '" data-type="agree" title="Agree">'
+                                + '&#x1F44D; <span class="vote-count">' + (item.agree_count || 0) + '</span></button>'
+                                + '<button class="mandate-vote-btn disagree' + disagreeActive + '" data-id="' + item.id + '" data-type="disagree" title="Disagree">'
+                                + '&#x1F44E; <span class="vote-count">' + (item.disagree_count || 0) + '</span></button>'
+                                + '</div>';
+                        }
                         html += '<div class="mandate-top-link"><a href="#top" title="Back to top">&uarr; Top</a></div>';
                         html += '</li>';
                     });
@@ -271,8 +332,8 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
         window.refreshMandateSummary = loadSummary;
 
         // ── Initial load ──────────────────────────────────────
-        var currentLevel = 'all';
-        loadSummary('all');
+        var currentLevel = groupMode ? 'group' : 'all';
+        loadSummary(currentLevel);
 
         // ── Edit / Delete / Vote handlers (delegated) ─────────
         bodyEl.addEventListener('click', function(e) {

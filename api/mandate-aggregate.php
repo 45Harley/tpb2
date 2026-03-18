@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $level = $_GET['level'] ?? 'federal';
 
 // Validate level
-$validLevels = ['federal', 'state', 'town', 'mine', 'my-ideas', 'all'];
+$validLevels = ['federal', 'state', 'town', 'mine', 'my-ideas', 'all', 'group'];
 if (!in_array($level, $validLevels, true)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Invalid level']);
@@ -276,6 +276,59 @@ try {
             ];
         }
         $contributorCount = count($items) > 0 ? 1 : 0;
+
+    } else if ($level === 'group') {
+        // Group stream — ALL categories for a group_id
+        $gid = $_GET['group_id'] ?? '';
+        if ($gid === '' || !ctype_digit((string)$gid)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'group_id parameter (integer) is required for group level']);
+            exit();
+        }
+        $gid = (int)$gid;
+
+        // Check if policy_topic column exists (not present on all environments)
+        $hasPolicyTopic = false;
+        try {
+            $colCheck = $pdo->query("SHOW COLUMNS FROM idea_log LIKE 'policy_topic'");
+            $hasPolicyTopic = (bool)$colCheck->fetch();
+        } catch (PDOException $e) {}
+
+        $ptCol = $hasPolicyTopic ? ', i.policy_topic' : '';
+        $sql = "
+            SELECT i.id, i.user_id, i.content, i.tags, i.category{$ptCol},
+                   i.agree_count, i.disagree_count, i.created_at
+            FROM idea_log i
+            WHERE i.group_id = ? AND i.deleted_at IS NULL
+            ORDER BY i.created_at DESC
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$gid]);
+        $rows = $stmt->fetchAll();
+
+        $items = [];
+        $itemIds = [];
+        foreach ($rows as $row) {
+            $levelLabel = str_replace('mandate-', '', $row['category']);
+            $itemIds[] = (int)$row['id'];
+            $items[] = [
+                'id'             => (int)$row['id'],
+                'user_id'        => (int)$row['user_id'],
+                'content'        => $row['content'],
+                'tags'           => $row['tags'],
+                'level'          => ucfirst($levelLabel),
+                'policy_topic'   => $row['policy_topic'] ?? null,
+                'agree_count'    => (int)$row['agree_count'],
+                'disagree_count' => (int)$row['disagree_count'],
+                'my_vote'        => null,
+                'created_at'     => $row['created_at'],
+            ];
+        }
+
+        $cntSql = "SELECT COUNT(DISTINCT i.user_id) FROM idea_log i WHERE i.group_id = ? AND i.deleted_at IS NULL";
+        $cntStmt = $pdo->prepare($cntSql);
+        $cntStmt->execute([$gid]);
+        $contributorCount = (int)$cntStmt->fetchColumn();
 
     } else {
         // Build geo filter

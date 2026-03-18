@@ -129,6 +129,22 @@ if ($inviteResult && ($inviteResult['type'] ?? '') === 'success' && isset($invit
 }
 $mode = $groupId ? 'detail' : 'list';
 
+// Load group data for detail view (needed for Discuss & Draft access rules)
+$_groupData = null;
+$_groupUserRole = null;
+if ($mode === 'detail' && $pdo && $groupId) {
+    $gStmt = $pdo->prepare("SELECT id, name, description, status, access_level, is_standard, public_readable, public_voting FROM idea_groups WHERE id = ?");
+    $gStmt->execute([$groupId]);
+    $_groupData = $gStmt->fetch();
+
+    if ($_groupData && $currentUserId) {
+        $rStmt = $pdo->prepare("SELECT role FROM idea_group_members WHERE group_id = ? AND user_id = ? AND status = 'active'");
+        $rStmt->execute([$groupId, $currentUserId]);
+        $roleRow = $rStmt->fetch();
+        $_groupUserRole = $roleRow ? $roleRow['role'] : null;
+    }
+}
+
 // Geo context from URL params
 $geoStateId = isset($_GET['state']) ? (int)$_GET['state'] : null;
 $geoTownId  = isset($_GET['town'])  ? (int)$_GET['town']  : null;
@@ -455,6 +471,25 @@ require __DIR__ . '/../includes/nav.php';
         <?php else: ?>
             <!-- ════ DETAIL VIEW ════ -->
             <div id="groupDetail"><div class="empty">Loading...</div></div>
+
+            <!-- ════ DISCUSS & DRAFT (group-scoped) ════ -->
+<?php if ($_groupData): ?>
+<?php
+    $isLoggedIn = (bool)$dbUser;
+    $claudiaInlineConfig = [
+        'title'         => $_groupData['name'] . ' — Discuss & Draft',
+        'placeholder'   => 'Share your thoughts with this group...',
+        'group_id'      => (int)$_groupData['id'],
+        'group_name'    => $_groupData['name'],
+        'group_mode'    => true,
+        'is_standard'   => (bool)$_groupData['is_standard'],
+        'group_status'  => $_groupData['status'],
+        'user_role'     => $_groupUserRole,
+        'default_scope' => null,
+    ];
+    require dirname(__DIR__) . '/includes/claudia-inline.php';
+?>
+<?php endif; ?>
         <?php endif; ?>
     </div>
 
