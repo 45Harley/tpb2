@@ -18,8 +18,57 @@ const VIDEO_DIR = path.join(__dirname, '..', 'help', 'videos');
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
+async function injectCursor(page) {
+    await page.evaluate(() => {
+        if (document.getElementById('fake-cursor')) return;
+        const cursor = document.createElement('div');
+        cursor.id = 'fake-cursor';
+        cursor.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 20px; height: 20px;
+            z-index: 9999999; pointer-events: none;
+            transition: left 0.05s linear, top 0.05s linear;
+        `;
+        cursor.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 2L8.5 18L10.5 11L17.5 9L2 2Z" fill="white" stroke="black" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>`;
+        document.body.appendChild(cursor);
+    });
+}
+
+async function updateCursor(page, x, y) {
+    await page.evaluate(({ x, y }) => {
+        const cursor = document.getElementById('fake-cursor');
+        if (cursor) {
+            cursor.style.left = x + 'px';
+            cursor.style.top = y + 'px';
+        }
+    }, { x, y });
+}
+
+async function clickFlash(page, x, y) {
+    // Brief yellow ring on click
+    await page.evaluate(({ x, y }) => {
+        const ring = document.createElement('div');
+        ring.style.cssText = `
+            position: fixed; left: ${x - 15}px; top: ${y - 15}px;
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 2px solid #d4af37; pointer-events: none;
+            z-index: 9999998; animation: clickRing 0.4s ease-out forwards;
+        `;
+        if (!document.getElementById('click-ring-style')) {
+            const style = document.createElement('style');
+            style.id = 'click-ring-style';
+            style.textContent = '@keyframes clickRing { from { transform:scale(0.5); opacity:1; } to { transform:scale(1.5); opacity:0; } }';
+            document.head.appendChild(style);
+        }
+        document.body.appendChild(ring);
+        setTimeout(() => ring.remove(), 400);
+    }, { x, y });
+}
+
 async function slowMove(page, x, y, steps = 20) {
     await page.mouse.move(x, y, { steps });
+    await updateCursor(page, x, y);
     await page.waitForTimeout(200);
 }
 
@@ -37,6 +86,7 @@ async function clickElement(page, selector, opts = {}) {
     const pos = await moveToElement(page, selector, opts.offset || {});
     if (!pos) return;
     await page.waitForTimeout(opts.pauseBefore || 400);
+    await clickFlash(page, pos.x, pos.y);
     await page.mouse.click(pos.x, pos.y);
     await page.waitForTimeout(opts.pauseAfter || 600);
 }
@@ -91,12 +141,14 @@ async function walkthroughDiscussAndDraft(context) {
 
     // 1. Start on home page
     await page.goto('/', { waitUntil: 'networkidle' });
+    await injectCursor(page);
     await pause(page, 1000);
     await caption(page, 'Welcome to The People\'s Branch');
 
     // 2. Navigate to Talk
     await caption(page, 'Let\'s draft a mandate for your representatives', 2000);
     await page.goto('/talk/', { waitUntil: 'networkidle' });
+    await injectCursor(page);
     await pause(page, 1000);
     await caption(page, 'This is the Talk page — your civic workspace', 2500);
 
