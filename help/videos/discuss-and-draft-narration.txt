@@ -1,0 +1,46 @@
+DISCUSS & DRAFT — Video Narration Script
+=========================================
+Video: discuss-and-draft-walkthrough.webm
+Duration: ~60 seconds
+
+Timestamps are approximate — sync to on-screen captions.
+
+TIME        CAPTION / NARRATION
+----------- ---------------------------------------------------
+0:00        Welcome to The People's Branch.
+
+0:03        Let's draft a mandate for your representatives.
+
+0:07        This is the Talk page — your civic workspace.
+
+0:12        Type your idea in the prompt box.
+
+0:15        [Typing: "Implement 12-year term limits for all
+             members of Congress"]
+
+0:20        Click "Add" to draft without AI.
+
+0:23        Your draft appears as a bubble.
+
+0:26        [Typing: "How can we make campaign finance more
+             transparent?"]
+
+0:31        Click "Include AI" to get AI refinement.
+
+0:39        AI responds with a refined version.
+
+0:42        Edit any bubble with the pencil icon.
+
+0:47        Check a scope to prepare for saving.
+
+0:50        Federal checked — Save button appears.
+
+0:53        Click Save to publish your mandate.
+
+0:57        Saved! It now appears in the community summary below.
+
+1:01        The community summary shows all saved mandates.
+
+1:05        Filter by Federal, State, or Town.
+
+1:09        That's Discuss & Draft — your voice in democracy.
