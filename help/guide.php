@@ -187,7 +187,7 @@ require dirname(__DIR__) . '/includes/nav.php';
 <?php endif; ?>
 <?php if (!empty($step['link'])): ?>
                 <div class="step-info-card">
-                    <a href="<?= htmlspecialchars($step['link']['url']) ?>" style="color:#d4af37;text-decoration:none;font-weight:600;"><?= htmlspecialchars($step['link']['label']) ?> &rarr;</a>
+                    <a href="<?= htmlspecialchars($step['link']['url']) ?>"<?= !empty($step['link']['target']) ? ' target="' . htmlspecialchars($step['link']['target']) . '"' : '' ?> style="color:#d4af37;text-decoration:none;font-weight:600;"><?= htmlspecialchars($step['link']['label']) ?> &rarr;</a>
                 </div>
 <?php endif; ?>
             </div>

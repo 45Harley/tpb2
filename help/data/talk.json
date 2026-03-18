@@ -2,7 +2,7 @@
   "id": "talk",
   "title": "Discuss & Draft",
   "subtitle": "Draft your priorities with or without AI help, check a scope, save, and see what your community wants.",
-  "generated": "2026-03-18T17:42:39.560Z",
+  "generated": "2026-03-18T17:47:03.144Z",
   "stepCount": 6,
   "steps": [
     {
@@ -10,7 +10,12 @@
       "title": "Open Talk",
       "description": "Click \"Talk\" in the navigation bar. This is your civic workspace — where you draft mandates, refine ideas with AI, and see what your community has saved.",
       "alt": "The Talk page showing the Discuss & Draft workspace and community summary below",
-      "screenshot": "talk-01-overview.png"
+      "screenshot": "talk-01-overview.png",
+      "link": {
+        "url": "/help/videos/discuss-and-draft-walkthrough.webm",
+        "label": "Watch the video walkthrough",
+        "target": "_blank"
+      }
     },
     {
       "number": 2,
