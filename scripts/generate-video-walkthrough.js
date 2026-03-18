@@ -238,13 +238,166 @@ async function walkthroughDiscussAndDraft(context) {
     console.log('  Recording complete.');
 }
 
+// ── Profile Walkthrough ──────────────────────────────────────────────
+
+async function walkthroughProfile(context) {
+    console.log('Recording: Profile Walkthrough');
+
+    const page = await context.newPage();
+
+    // 1. Open profile — overview
+    await page.goto('/profile.php', { waitUntil: 'networkidle' });
+    await injectCursor(page);
+    await pause(page, 1000);
+    await caption(page, 'This is your Profile -- your civic identity', 2500);
+
+    // 2. Trust Journey
+    await moveToElement(page, '.journey-steps');
+    await pause(page, 500);
+    await caption(page, 'The Trust Journey tracks your progress', 2500);
+    // Point at each step
+    const steps = await page.locator('.journey-step').all();
+    for (const step of steps) {
+        const box = await step.boundingBox();
+        if (box) {
+            await slowMove(page, box.x + box.width / 2, box.y + box.height / 2, 15);
+            await pause(page, 400);
+        }
+    }
+    await caption(page, 'Each step earns civic points and raises your trust level', 2500);
+
+    // 3. Civic points display
+    await pause(page, 500);
+    await caption(page, 'Your total civic points appear below the journey bar', 2000);
+
+    // 4. Location section
+    await page.evaluate(() => {
+        const el = document.getElementById('town');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    await pause(page, 1000);
+    await caption(page, 'Location -- your town, state, and districts', 2500);
+    // Point at town name
+    await moveToElement(page, '.location-display .town');
+    await pause(page, 800);
+    // Point at districts
+    const districts = page.locator('.location-display .districts');
+    if (await districts.count() > 0) {
+        await moveToElement(page, '.location-display .districts');
+        await pause(page, 800);
+    }
+    await caption(page, 'Your congressional district connects you to your representatives', 2500);
+
+    // 5. Identity section
+    await page.evaluate(() => {
+        const cards = document.querySelectorAll('.card h2');
+        for (const h of cards) {
+            if (h.textContent.includes('Identity')) {
+                h.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                break;
+            }
+        }
+    });
+    await pause(page, 1000);
+    await caption(page, 'Identity -- your name and age range', 2500);
+    await moveToElement(page, '#firstName');
+    await pause(page, 500);
+    await moveToElement(page, '#lastName');
+    await pause(page, 500);
+    await moveToElement(page, '#ageBracket');
+    await pause(page, 500);
+
+    // 6. Privacy settings
+    await page.evaluate(() => {
+        const el = document.getElementById('showFirstName');
+        if (el) el.closest('.form-group').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    await pause(page, 1000);
+    await caption(page, 'Privacy Settings -- control what others see', 2500);
+    await moveToElement(page, '#showFirstName');
+    await pause(page, 400);
+    await moveToElement(page, '#showLastName');
+    await pause(page, 400);
+    await moveToElement(page, '#showAgeBracket');
+    await pause(page, 400);
+    await caption(page, 'Your user ID always shows -- name and age are opt-in', 2500);
+    // Point at preview
+    await moveToElement(page, '#displayPreview');
+    await pause(page, 800);
+    await caption(page, 'The preview shows exactly how you appear to others', 2000);
+
+    // 7. Notifications
+    await page.evaluate(() => {
+        const el = document.getElementById('notifyThreatBulletin');
+        if (el) el.closest('.form-group').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    await pause(page, 1000);
+    await caption(page, 'Notifications -- opt in to the daily threat bulletin', 2500);
+    await moveToElement(page, '#notifyThreatBulletin');
+    await pause(page, 800);
+
+    // 8. Verification
+    await page.evaluate(() => {
+        const el = document.getElementById('email');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    await pause(page, 1000);
+    await caption(page, 'Verification -- email, phone, and password', 2500);
+    await moveToElement(page, '#emailInput');
+    await pause(page, 600);
+    await caption(page, 'Verify your email to unlock drafting and voting', 2000);
+    await moveToElement(page, '#phone');
+    await pause(page, 600);
+    await caption(page, 'Add phone 2FA to reach Level 3 Verified', 2000);
+
+    // 9. Password
+    const pwSection = page.locator('#password');
+    if (await pwSection.count() > 0) {
+        await page.evaluate(() => {
+            const el = document.getElementById('password');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        await pause(page, 1000);
+        await caption(page, 'Set a password to log in from any device', 2500);
+        await moveToElement(page, '#newPassword');
+        await pause(page, 600);
+    }
+
+    // 10. Volunteer section
+    await page.evaluate(() => {
+        const cards = document.querySelectorAll('.card h2');
+        for (const h of cards) {
+            if (h.textContent.includes('Volunteer')) {
+                h.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                break;
+            }
+        }
+    });
+    await pause(page, 1000);
+    await caption(page, 'Volunteer -- apply to help build the platform', 2500);
+    await pause(page, 1000);
+    await caption(page, 'Select skills, set a primary skill, write your bio', 2500);
+
+    // 11. End — scroll back up
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    await pause(page, 1500);
+    await caption(page, 'That\'s your Profile -- your civic identity on TPB', 3000);
+    await pause(page, 1000);
+
+    await page.close();
+    console.log('  Recording complete.');
+}
+
 // ── Main ─────────────────────────────────────────────────────────────
 
-async function main() {
+// Which walkthrough to record (pass as CLI arg, or 'all')
+const WALKTHROUGH = process.argv[2] || 'all';
+
+async function recordWalkthrough(name, fn) {
     const fs = require('fs');
     fs.mkdirSync(VIDEO_DIR, { recursive: true });
 
-    console.log('Launching browser with video recording...');
+    console.log(`\nLaunching browser for: ${name}`);
     const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({
         viewport: { width: 1280, height: 800 },
@@ -256,31 +409,48 @@ async function main() {
         }
     });
 
-    // Set auth cookie
     const domain = new URL(BASE_URL).hostname;
     await context.addCookies([
         { name: 'tpb_user_id', value: AUTH_USER_ID, domain, path: '/' }
     ]);
-    console.log(`Authenticated as user_id=${AUTH_USER_ID}`);
 
-    await walkthroughDiscussAndDraft(context);
+    await fn(context);
 
     await context.close();
     await browser.close();
 
-    // Rename the video file — find the new recording (not the old named one)
-    const dest = path.join(VIDEO_DIR, 'discuss-and-draft-walkthrough.webm');
-    const files = fs.readdirSync(VIDEO_DIR).filter(f => f.endsWith('.webm') && path.join(VIDEO_DIR, f) !== dest);
+    // Rename the recorded file
+    const destFile = name + '-walkthrough.webm';
+    const dest = path.join(VIDEO_DIR, destFile);
+    const files = fs.readdirSync(VIDEO_DIR)
+        .filter(f => f.endsWith('.webm') && !f.includes('walkthrough') && !f.includes('narration'));
     if (files.length > 0) {
         const latest = files.sort().pop();
         const src = path.join(VIDEO_DIR, latest);
         if (fs.existsSync(dest)) fs.unlinkSync(dest);
         fs.renameSync(src, dest);
-        console.log(`\nVideo saved: help/videos/discuss-and-draft-walkthrough.webm`);
-    } else if (fs.existsSync(dest)) {
-        console.log(`\nVideo saved (overwritten): help/videos/discuss-and-draft-walkthrough.webm`);
+        console.log(`Video saved: help/videos/${destFile}`);
     } else {
-        console.log('\n[!] No video file found — check Playwright video support.');
+        console.log(`[!] No new video file found for ${name}`);
+    }
+}
+
+const walkthroughs = {
+    'discuss-and-draft': walkthroughDiscussAndDraft,
+    'profile': walkthroughProfile,
+};
+
+async function main() {
+    if (WALKTHROUGH === 'all') {
+        for (const [name, fn] of Object.entries(walkthroughs)) {
+            await recordWalkthrough(name, fn);
+        }
+    } else if (walkthroughs[WALKTHROUGH]) {
+        await recordWalkthrough(WALKTHROUGH, walkthroughs[WALKTHROUGH]);
+    } else {
+        console.error(`Unknown walkthrough: ${WALKTHROUGH}`);
+        console.error(`Available: ${Object.keys(walkthroughs).join(', ')}, all`);
+        process.exit(1);
     }
 }
 

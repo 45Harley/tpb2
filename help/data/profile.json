@@ -2,7 +2,7 @@
   "id": "profile",
   "title": "Your Profile & Trust Journey",
   "subtitle": "Build your civic identity step by step — from new user to fully verified citizen.",
-  "generated": "2026-03-18T17:42:52.354Z",
+  "generated": "2026-03-18T21:07:00.000Z",
   "stepCount": 10,
   "steps": [
     {
@@ -10,63 +10,108 @@
       "title": "Open your Profile",
       "description": "After logging in, click \"My TPB\" in the navigation bar, then click \"My Profile.\" This is your civic identity — who you are, where you live, your trust level, and your civic points. The nav bar shows your town, point total, and current trust level at a glance.",
       "alt": "Profile page showing the Trust Journey progress bar and all profile sections",
-      "screenshot": "profile-01-overview.png"
+      "screenshot": "profile-01-overview.png",
+      "link": {
+        "url": "/help/videos/profile-walkthrough.webm#t=0",
+        "label": "Watch video: Profile overview",
+        "target": "_blank"
+      }
     },
     {
       "number": 2,
       "title": "Your Trust Journey",
       "description": "At the top of your profile, a progress bar shows your Trust Journey. Each step you complete earns civic points and raises your trust level. The steps are: Arrived (+1), Location (+50), Name (+50), Email Verified (+50), and Phone 2FA (+50). Your total civic points appear on the right. As you complete steps, the icons light up in gold.",
       "alt": null,
-      "screenshot": null
+      "screenshot": null,
+      "link": {
+        "url": "/help/videos/profile-walkthrough.webm#t=3",
+        "label": "Watch video: Trust Journey",
+        "target": "_blank"
+      }
     },
     {
       "number": 3,
       "title": "Set your location",
       "description": "In the Location section, select your state and type your town name. Once set, your profile shows your town, zip code, and congressional districts (e.g., \"CT-2 • Senate 29 • House 51\"). You can also add a street address (optional) and click \"Go to My Town\" to visit your town's civic page.",
       "alt": null,
-      "screenshot": null
+      "screenshot": null,
+      "link": {
+        "url": "/help/videos/profile-walkthrough.webm#t=15",
+        "label": "Watch video: Location",
+        "target": "_blank"
+      }
     },
     {
       "number": 4,
       "title": "Fill in your identity",
       "description": "In the Identity section, enter your first name, last name, and age range. A green check mark appears next to each completed field. These are required for volunteering and help the community know who they're talking to.",
       "alt": null,
-      "screenshot": null
+      "screenshot": null,
+      "link": {
+        "url": "/help/videos/profile-walkthrough.webm#t=25",
+        "label": "Watch video: Identity",
+        "target": "_blank"
+      }
     },
     {
       "number": 5,
       "title": "Set your privacy preferences",
       "description": "The Privacy Settings section lets you choose what others see when you post. Toggle checkboxes for first name, last name, and age bracket. A live preview shows exactly how your name will appear.\n\nYour user ID (e.g. #42) always appears next to your contributions for accountability. The name and age bracket only show if you opt in. Examples: \"#42 Harley Goodwin (55-64)\" with all checked, \"#42 Harley\" with first name only, or just \"#42\" with your username if nothing is checked.\n\nThese settings affect Talk, Discuss & Draft, group streams, and The People's Pulse.",
       "alt": null,
-      "screenshot": null
+      "screenshot": null,
+      "link": {
+        "url": "/help/videos/profile-walkthrough.webm#t=33",
+        "label": "Watch video: Privacy Settings",
+        "target": "_blank"
+      }
     },
     {
       "number": 6,
       "title": "Turn on notifications",
       "description": "In the Notifications section, check \"Daily threat bulletin email (8 AM ET)\" to receive a daily email summarizing new threats. Click \"Save Changes\" to apply your privacy and notification preferences.",
       "alt": null,
-      "screenshot": null
+      "screenshot": null,
+      "link": {
+        "url": "/help/videos/profile-walkthrough.webm#t=47",
+        "label": "Watch video: Notifications",
+        "target": "_blank"
+      }
     },
     {
       "number": 7,
       "title": "Verify your email",
       "description": "In the Verification section, your email address is shown. If not yet verified, click \"Send Verification Link,\" check your email, and click the link. Once verified, a green \"✓ Verified\" badge appears and your trust level rises to Level 2 (Remembered). You can now post ideas in Talk and vote on threats.",
       "alt": null,
-      "screenshot": null
+      "screenshot": null,
+      "link": {
+        "url": "/help/videos/profile-walkthrough.webm#t=53",
+        "label": "Watch video: Email Verification",
+        "target": "_blank"
+      }
     },
     {
       "number": 8,
       "title": "Verify your phone for 2FA",
       "description": "Below email verification, enter your phone number and click \"Verify.\" You'll receive a text message with a verification link. Once confirmed, a green \"✓ Verified\" badge appears next to your phone number and your trust level rises to Level 3 (Verified) — the highest standard trust level. Two-factor authentication protects your account and unlocks the Volunteer section.",
       "alt": null,
-      "screenshot": null
+      "screenshot": null,
+      "link": {
+        "url": "/help/videos/profile-walkthrough.webm#t=58",
+        "label": "Watch video: Phone 2FA",
+        "target": "_blank"
+      }
     },
     {
       "number": 9,
       "title": "Set a password",
       "description": "In the Password section, you can create or change your password. This is optional — you can always log in via email link — but a password lets you log in faster. Enter your current password (if changing), then your new password (at least 8 characters), confirm it, and click \"Change Password.\" A green \"✓ Set\" badge confirms it's active.",
       "alt": null,
-      "screenshot": null
+      "screenshot": null,
+      "link": {
+        "url": "/help/videos/profile-walkthrough.webm#t=63",
+        "label": "Watch video: Password",
+        "target": "_blank"
+      }
     },
     {
       "number": 10,
@@ -75,8 +120,9 @@
       "alt": null,
       "screenshot": null,
       "link": {
-        "url": "/help/guide.php?flow=volunteer",
-        "label": "Read the full Becoming a Volunteer guide"
+        "url": "/help/videos/profile-walkthrough.webm#t=69",
+        "label": "Watch video: Volunteer",
+        "target": "_blank"
       }
     }
   ]
