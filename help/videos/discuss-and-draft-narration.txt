@@ -5,6 +5,25 @@ Duration: ~60 seconds
 
 Timestamps are approximate -- sync to on-screen captions.
 
+
+HOW TO CREATE THE FINAL VIDEO
+------------------------------
+1. Record the narration:
+   - Read each caption line at the matching timestamp
+   - Use any mic/recording app (Audacity, Voice Recorder, phone)
+   - Save as MP3 or WAV
+
+2. Combine audio + video using ffmpeg (free, command line):
+   ffmpeg -i discuss-and-draft-walkthrough.webm -i narration.mp3 -c:v copy -c:a aac -shortest discuss-and-draft-final.mp4
+
+   Or with Windows-friendly syntax:
+   ffmpeg -i discuss-and-draft-walkthrough.webm -i narration.mp3 -c:v copy -c:a aac -shortest discuss-and-draft-final.mp4
+
+3. Alternative: use any video editor (Clipchamp, DaVinci Resolve, iMovie)
+   - Import the .webm video and .mp3 audio
+   - Align the audio to the video using the on-screen captions as sync points
+   - Export as MP4
+
 TIME        CAPTION / NARRATION
 ----------- ---------------------------------------------------
 0:00        Welcome to The People's Branch.
