@@ -149,28 +149,36 @@ async function walkthroughDiscussAndDraft(context) {
         await caption(page, 'Saved! It now appears in the community summary below', 2500);
     }
 
-    // 9. Scroll to summary
+    // 9. Scroll to summary — scroll to bottom of page first to ensure visibility
+    await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+    await pause(page, 2000);
     await page.evaluate(() => {
         const el = document.querySelector('.mandate-summary');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' });
     });
-    await pause(page, 1500);
+    await pause(page, 1000);
     await caption(page, 'The community summary shows all saved mandates', 2500);
 
-    // 10. Click filter tabs
+    // 10. Click filter tabs — wait for them to be in view
+    await page.evaluate(() => {
+        const tabs = document.querySelector('#claudia-inline-level-tabs');
+        if (tabs) tabs.scrollIntoView({ behavior: 'instant', block: 'center' });
+    });
+    await pause(page, 500);
     const stateTab = page.locator('.level-tab[data-level="mandate-state"]');
-    if (await stateTab.isVisible()) {
-        await clickElement(page, '.level-tab[data-level="mandate-state"]', { pauseAfter: 1000 });
-        await caption(page, 'Filter by Federal, State, or Town', 2000);
+    if (await stateTab.count() > 0 && await stateTab.isVisible()) {
+        await clickElement(page, '.level-tab[data-level="mandate-state"]', { pauseAfter: 1200 });
+        await caption(page, 'Filter by Federal, State, or Town', 2500);
     }
 
     const allTab = page.locator('.level-tab[data-level=""]');
-    if (await allTab.isVisible()) {
+    if (await allTab.count() > 0 && await allTab.isVisible()) {
         await clickElement(page, '.level-tab[data-level=""]', { pauseAfter: 800 });
     }
 
-    // 11. End
-    await pause(page, 500);
+    // 11. End — scroll back up for clean finish
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    await pause(page, 1500);
     await caption(page, 'That\'s Discuss & Draft — your voice in democracy', 3000);
     await pause(page, 1000);
 
@@ -208,15 +216,17 @@ async function main() {
     await context.close();
     await browser.close();
 
-    // Rename the video file
-    const files = fs.readdirSync(VIDEO_DIR).filter(f => f.endsWith('.webm'));
+    // Rename the video file — find the new recording (not the old named one)
+    const dest = path.join(VIDEO_DIR, 'discuss-and-draft-walkthrough.webm');
+    const files = fs.readdirSync(VIDEO_DIR).filter(f => f.endsWith('.webm') && path.join(VIDEO_DIR, f) !== dest);
     if (files.length > 0) {
         const latest = files.sort().pop();
         const src = path.join(VIDEO_DIR, latest);
-        const dest = path.join(VIDEO_DIR, 'discuss-and-draft-walkthrough.webm');
         if (fs.existsSync(dest)) fs.unlinkSync(dest);
         fs.renameSync(src, dest);
         console.log(`\nVideo saved: help/videos/discuss-and-draft-walkthrough.webm`);
+    } else if (fs.existsSync(dest)) {
+        console.log(`\nVideo saved (overwritten): help/videos/discuss-and-draft-walkthrough.webm`);
     } else {
         console.log('\n[!] No video file found — check Playwright video support.');
     }
