@@ -131,10 +131,93 @@ async function hoverElement(page, selector, duration = 1500) {
 }
 
 async function selectDropdown(page, selector, value, displayText) {
+    // 1. Get all options and position
+    const options = await page.evaluate((sel) => {
+        const el = document.querySelector(sel);
+        if (!el) return [];
+        return Array.from(el.options).map(o => ({ value: o.value, text: o.textContent.trim() }));
+    }, selector);
+    const box = await page.locator(selector).first().boundingBox();
+    if (!box || options.length === 0) return;
+
+    // 2. Move cursor to the select and click
     await moveToElement(page, selector);
-    await pause(page, 300);
+    await clickFlash(page, box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForTimeout(300);
+
+    // 3. Inject fake dropdown overlay
+    await page.evaluate(({ options, box, targetValue }) => {
+        const overlay = document.createElement('div');
+        overlay.id = 'fake-dropdown';
+        overlay.style.cssText = `
+            position: fixed; left: ${box.x}px; top: ${box.y + box.height + 2}px;
+            width: ${Math.max(box.width, 160)}px; max-height: 220px; overflow-y: auto;
+            background: #1a1a2e; border: 1px solid #444; border-radius: 6px;
+            z-index: 9999997; box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+            animation: dropOpen 0.15s ease-out;
+        `;
+        if (!document.getElementById('drop-style')) {
+            const s = document.createElement('style');
+            s.id = 'drop-style';
+            s.textContent = `
+                @keyframes dropOpen { from { opacity:0; transform:scaleY(0.8); transform-origin:top; } to { opacity:1; transform:scaleY(1); } }
+                .fake-drop-item { padding: 8px 12px; color: #ccc; font-size: 14px; font-family: sans-serif; cursor: pointer; }
+                .fake-drop-item:hover, .fake-drop-item.highlighted { background: #d4af37; color: #000; }
+            `;
+            document.head.appendChild(s);
+        }
+        options.forEach(opt => {
+            if (!opt.value) return; // skip empty placeholder
+            const item = document.createElement('div');
+            item.className = 'fake-drop-item';
+            item.dataset.value = opt.value;
+            item.textContent = opt.text;
+            overlay.appendChild(item);
+        });
+        document.body.appendChild(overlay);
+    }, { options, box, targetValue: value });
+    await page.waitForTimeout(500);
+
+    // 4. Cursor moves down through a few options, then lands on the target
+    const items = await page.locator('#fake-dropdown .fake-drop-item').all();
+    let targetIndex = -1;
+    for (let i = 0; i < items.length; i++) {
+        const val = await items[i].getAttribute('data-value');
+        if (val === value) { targetIndex = i; break; }
+    }
+    // Hover through a few items leading up to the target
+    const startAt = Math.max(0, targetIndex - 2);
+    for (let i = startAt; i <= targetIndex && i < items.length; i++) {
+        const itemBox = await items[i].boundingBox();
+        if (itemBox) {
+            await slowMove(page, itemBox.x + itemBox.width / 2, itemBox.y + itemBox.height / 2, 10);
+            await page.evaluate((idx) => {
+                document.querySelectorAll('.fake-drop-item').forEach((el, j) => {
+                    el.classList.toggle('highlighted', j === idx);
+                });
+            }, i);
+            await page.waitForTimeout(350);
+        }
+    }
+
+    // 5. Click the target option
+    if (targetIndex >= 0 && targetIndex < items.length) {
+        const targetBox = await items[targetIndex].boundingBox();
+        if (targetBox) {
+            await clickFlash(page, targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);
+        }
+    }
+    await page.waitForTimeout(200);
+
+    // 6. Remove overlay and actually set the value
+    await page.evaluate(() => {
+        const dd = document.getElementById('fake-dropdown');
+        if (dd) { dd.style.opacity = '0'; dd.style.transition = 'opacity 0.15s'; }
+        setTimeout(() => { if (dd) dd.remove(); }, 150);
+    });
     await page.selectOption(selector, value);
-    await pause(page, 500);
+    await page.waitForTimeout(400);
+
     if (displayText) {
         await caption(page, displayText, 1500);
     }
