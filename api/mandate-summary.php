@@ -126,7 +126,7 @@ try {
 
     // 4. Top mandates
     $mandateLimit = ($format === 'csv') ? 1000 : 10;
-    $sql = "SELECT i.id, i.content, i.policy_topic, i.citizen_summary, i.created_at,
+    $sql = "SELECT i.id, i.user_id, i.content, i.policy_topic, i.citizen_summary, i.created_at,
                    u.first_name, u.last_name, u.username, u.show_first_name, u.show_last_name, u.age_bracket, u.show_age_bracket
             FROM idea_log i JOIN users u ON i.user_id = u.user_id
             WHERE {$baseWhere}{$periodWhere}
@@ -139,6 +139,7 @@ try {
         $ageDisplay = (!empty($row['show_age_bracket']) && !empty($row['age_bracket'])) ? $row['age_bracket'] : null;
         $topMandates[] = [
             'id'              => (int)$row['id'],
+            'user_id'         => (int)$row['user_id'],
             'content'         => $row['content'],
             'policy_topic'    => $row['policy_topic'],
             'citizen_summary' => $row['citizen_summary'],
