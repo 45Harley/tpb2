@@ -600,6 +600,123 @@ const flows = [
                 screenshot: null
             }
         ]
+    },
+
+    // ── Claudia — AI Platform Assistant ──────────────────────────────
+    {
+        id: 'claudia',
+        title: 'Claudia — Your Platform Assistant',
+        subtitle: 'Meet Claudia, the AI assistant who helps you navigate, draft, and manage your civic identity.',
+        steps: [
+            {
+                title: 'Who is Claudia?',
+                description: 'Claudia is your AI platform assistant. She appears as a floating "C" bubble in the bottom-right corner of every page. She can navigate you to pages, update your profile, search the web, help you draft mandates, and answer questions about the platform.\n\nShe speaks using text-to-speech and listens via your microphone. You can type or talk to her.',
+                alt: 'The Claudia bubble icon in the bottom-right corner of the page',
+                slug: 'bubble',
+                action: async (page) => {
+                    await page.goto('/', { waitUntil: 'networkidle' });
+                    await page.waitForTimeout(1000);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Open the Chat Panel',
+                description: 'Click the "C" bubble to open Claudia\'s chat panel. You\'ll see a text input at the bottom, a microphone button for voice input, and a Send button. The header shows her name and controls for settings, pop-out, and minimize.',
+                alt: 'Claudia chat panel open showing the input area and header controls',
+                slug: 'panel',
+                action: async (page) => {
+                    var bubble = page.locator('#claudia-bubble');
+                    if (await bubble.isVisible()) await bubble.click();
+                    await page.waitForTimeout(500);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Settings',
+                description: 'Click the gear icon in the header to open settings:\n\n- Voice Mode — Claudia listens to your microphone and responds by voice\n- Earphones — optimizes audio playback for earphone use\n- Web Search — allows Claudia to search the web for current information\n- Scratchpad — a temporary notepad for pinning responses\n- Clear Conversation — wipes the chat history\n\nToggle each setting on or off.',
+                alt: 'Claudia settings panel showing Voice Mode, Earphones, Web Search, Scratchpad, and Clear toggles',
+                slug: 'settings',
+                action: async (page) => {
+                    var settingsBtn = page.locator('#claudia-settings-btn');
+                    if (await settingsBtn.isVisible()) await settingsBtn.click();
+                    await page.waitForTimeout(300);
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Ask a Question',
+                description: 'Type a question in the input box and click Send (or press Enter). Claudia responds in the chat panel. She knows about every page on the platform, your profile, your location, and your representatives.\n\nExamples:\n- "What is The People\'s Pulse?"\n- "How do I verify my phone?"\n- "Show me the polls"',
+                alt: 'Claudia chat showing a question and response',
+                slug: 'ask',
+                action: async (page) => {
+                    // Close settings if open
+                    var settingsMenu = page.locator('#claudia-settings-menu');
+                    if (await settingsMenu.isVisible()) {
+                        await page.locator('#claudia-settings-btn').click();
+                        await page.waitForTimeout(200);
+                    }
+                    var input = page.locator('#claudia-text-input');
+                    if (await input.isVisible()) {
+                        await input.fill('What can you do?');
+                    }
+                },
+                screenshot: { fullPage: false }
+            },
+            {
+                title: 'Navigation Commands',
+                description: 'Claudia can take you to any page on the platform. Say or type:\n\n- "Go to Talk"\n- "Take me to my profile"\n- "Open elections"\n- "Show me polls"\n- "Go to Putnam"\n\nShe navigates your browser directly — no need to find the link yourself.',
+                alt: null,
+                slug: 'navigate',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Profile Updates',
+                description: 'Claudia can update your profile fields by voice or text:\n\n- "Change my first name to Maria"\n- "Set my email to maria@example.com"\n- "Update my street address"\n- "Set my town to Putnam, CT"\n\nShe confirms each change and warns you if re-verification is needed (e.g. changing your email).',
+                alt: null,
+                slug: 'profile-updates',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Voice Mode',
+                description: 'Toggle Voice Mode in settings. When on, a voice state bar appears showing IDLE, LISTENING, or SPEAKING. Claudia listens through your microphone and speaks her responses aloud.\n\nEarphones mode adjusts audio so her speech doesn\'t echo back into the microphone. Turn this on if using headphones.',
+                alt: 'Voice bar showing LISTENING state with microphone active',
+                slug: 'voice',
+                action: async (page) => {
+                    // Just show the widget, voice bar needs manual toggle
+                    var widget = page.locator('#claudia-widget');
+                    if (await widget.isVisible()) {
+                        // Show voice bar area
+                    }
+                },
+                screenshot: null
+            },
+            {
+                title: 'Web Search',
+                description: 'Toggle Web Search in settings. When enabled, Claudia can search the internet for current information — news, legislation, representative actions, and more. She\'ll cite what she finds.\n\nWeb search uses the local AI pipeline, so there\'s no extra API cost.',
+                alt: null,
+                slug: 'websearch',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Pop-Out Mode',
+                description: 'Click the pop-out arrow in the header to open Claudia in a separate window. This lets you keep chatting while browsing the site in the main window. Navigation commands from the pop-out control the main window.\n\nClick the minimize button to collapse Claudia back to the bubble.',
+                alt: null,
+                slug: 'popout',
+                action: null,
+                screenshot: null
+            },
+            {
+                title: 'Tips',
+                description: '- Claudia is available on every page — look for the "C" bubble\n- She remembers your conversation within a session (cleared on page refresh)\n- Voice mode works best with earphones to prevent echo\n- She can\'t access external accounts (email, bank, etc.) — only TPB platform data\n- If AI is temporarily unavailable, Claudia shows a friendly message and you can continue without her\n- Type "help" to see what she can do on the current page',
+                alt: null,
+                slug: 'tips',
+                action: null,
+                screenshot: null
+            }
+        ]
     }
 ];
 
