@@ -1,28 +1,105 @@
 DISCUSS & DRAFT -- Video Narration Script
 =========================================
 Video: discuss-and-draft-walkthrough.webm
-Duration: ~60 seconds
+Duration: ~67 seconds
 
 Timestamps are approximate -- sync to on-screen captions.
 
 
-HOW TO CREATE THE FINAL VIDEO
-------------------------------
-1. Record the narration:
-   - Read each caption line at the matching timestamp
-   - Use any mic/recording app (Audacity, Voice Recorder, phone)
-   - Save as MP3 or WAV
+REQUIRED TOOLS
+--------------
+| Tool                   | Purpose                          | Install                          |
+|------------------------|----------------------------------|----------------------------------|
+| Node.js                | Runs Playwright                  | nodejs.org                       |
+| Playwright             | Records headless browser session | npm install (devDependency)      |
+| PowerShell Speech API  | Generates TTS narration audio    | Built into Windows               |
+| ffmpeg                 | Merges video + audio             | winget install ffmpeg            |
+| XAMPP                  | Local web server for recording   | Already installed                |
 
-2. Combine audio + video using ffmpeg (free, command line):
-   ffmpeg -i discuss-and-draft-walkthrough.webm -i narration.mp3 -c:v copy -c:a aac -shortest discuss-and-draft-final.mp4
 
-   Or with Windows-friendly syntax:
-   ffmpeg -i discuss-and-draft-walkthrough.webm -i narration.mp3 -c:v copy -c:a aac -shortest discuss-and-draft-final.mp4
+HOW TO CREATE A NARRATED VIDEO WALKTHROUGH
+-------------------------------------------
 
-3. Alternative: use any video editor (Clipchamp, DaVinci Resolve, iMovie)
-   - Import the .webm video and .mp3 audio
-   - Align the audio to the video using the on-screen captions as sync points
-   - Export as MP4
+Step 1: Write the walkthrough script
+   - File: scripts/generate-video-walkthrough.js
+   - Define each step: page navigation, mouse movement, clicks, typing, captions
+   - Playwright controls a headless Chromium browser
+   - An injected SVG cursor follows mouse.move() calls
+   - A gold ring animation flashes on each click
+   - Caption overlays appear at the bottom of the viewport
+   - Cursor must be re-injected after each page.goto() (navigation destroys DOM)
+
+Step 2: Record the silent video
+   - Start XAMPP (Apache must be running on localhost)
+   - Run:  SITE_URL=http://localhost/tpb2 AUTH_USER_ID=1 node scripts/generate-video-walkthrough.js
+   - Output: help/videos/discuss-and-draft-walkthrough.webm (silent, with cursor + captions)
+
+Step 3: Write the narration text
+   - Extract caption lines from the walkthrough script
+   - Timestamp each line to match the video
+   - Adapt for spoken delivery:
+     * Replace em dashes (--) with commas or pauses
+     * Remove stage directions like [Typing: "..."] -- rewrite as spoken ("Now typing...")
+     * Remove quotation marks around UI labels (TTS reads them literally)
+     * Simplify apostrophes and Unicode characters
+     * Add emphasis cues if needed
+
+Step 4: Generate TTS audio (Windows Speech Synthesis)
+   - PowerShell script using System.Speech.SpeechSynthesizer
+   - Set rate: $speak.Rate = -1 (slightly slower for clarity)
+   - Add pauses between lines: Start-Sleep -Milliseconds 800
+   - Output: help/videos/narration.wav
+   - Example:
+     powershell -Command "
+       Add-Type -AssemblyName System.Speech
+       $speak = New-Object System.Speech.Synthesis.SpeechSynthesizer
+       $speak.Rate = -1
+       $speak.SetOutputToWaveFile('C:\tpb2\help\videos\narration.wav')
+       $speak.Speak('Welcome to The Peoples Branch.')
+       Start-Sleep -Milliseconds 800
+       $speak.Speak('Lets draft a mandate for your representatives.')
+       ...
+       $speak.Dispose()
+     "
+   - Alternative: record your own voice for human narration (Audacity, phone, etc.)
+
+Step 5: Merge video + audio with ffmpeg
+   - Command:
+     ffmpeg -i discuss-and-draft-walkthrough.webm -i narration.wav \
+       -c:v copy -c:a libopus -b:a 64k -shortest output.webm
+   - -c:v copy = keep video as-is (fast, no re-encode)
+   - -c:a libopus = encode audio as Opus (small, web-optimized)
+   - -shortest = stop when the shorter stream ends
+   - Rename output to replace the silent version
+
+Step 6: Link from the guide page
+   - Add a "link" field to the guide JSON (help/data/talk.json):
+     "link": {
+       "url": "/help/videos/discuss-and-draft-walkthrough.webm",
+       "label": "Watch the video walkthrough",
+       "target": "_blank"
+     }
+   - Guide renderer (help/guide.php) renders it as a gold link
+   - Opens in a new browser tab, WebM plays natively full-window
+
+Step 7: Push to staging
+   - git add + commit + push
+   - git pull on staging server
+
+
+TO CREATE ANOTHER VIDEO
+-----------------------
+1. Add a new walkthrough function in generate-video-walkthrough.js
+2. Run the script -> silent .webm with cursor + captions
+3. Write narration lines, adapt for TTS
+4. Generate .wav with PowerShell (or record your voice)
+5. ffmpeg merge -> final .webm with audio
+6. Add link to the relevant guide JSON
+7. Push to staging
+
+
+NARRATION TEXT
+--------------
 
 TIME        CAPTION / NARRATION
 ----------- ---------------------------------------------------
