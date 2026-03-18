@@ -92,10 +92,12 @@ if (!defined('CLAUDIA_INLINE_LOADED')) {
         <h1><?= htmlspecialchars($_ci['title']) ?></h1>
         <div class="mandate-header-links">
             <a href="/help/guide.php?flow=mandate-chat" class="mandate-help-btn" title="Learn how the Discuss & Draft workflow works">&#x1F393; How It Works</a>
+<?php if (!$_ciGroupMode): ?>
             <a href="/mandate-summary.php?scope=federal&value=<?= htmlspecialchars(urlencode($_ciUserDistrict ?? '')) ?>"
                class="mandate-pulse-link" title="View full statistics and topic breakdown">The People's Pulse &rarr;</a>
+<?php endif; ?>
         </div>
-<?php if ($dbUser && ($_ciUserTownName || $_ciUserStateName || $_ciUserDistrict)): ?>
+<?php if (!$_ciGroupMode && $dbUser && ($_ciUserTownName || $_ciUserStateName || $_ciUserDistrict)): ?>
         <p class="geo-info" id="claudia-inline-geo" title="Click to see your elected representatives">
 <?php if ($_ciUserTownName): ?>
             <span><?= htmlspecialchars($_ciUserTownName) ?></span>,
