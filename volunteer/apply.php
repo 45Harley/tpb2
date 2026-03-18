@@ -174,10 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dbUser && $profileComplete) {
             $emailBody .= "\nSUBMITTED\n---------\n" . date('F j, Y g:i A') . "\n\n";
             $emailBody .= "---\nReview at: https://tpb2.sandgems.net/admin.php\n";
             
-            $headers = "From: TPB Volunteer System <noreply@sandgems.net>\r\n";
-            $headers .= "Reply-To: " . $dbUser['email'] . "\r\n";
-            
-            mail($adminEmail, $subject, $emailBody, $headers);
+            require_once __DIR__ . '/../includes/smtp-mail.php';
+            sendSmtpMail($config, $adminEmail, $subject, $emailBody, 'TPB Volunteer System');
             
             // Award points for volunteer application
             require_once __DIR__ . '/../includes/point-logger.php';
