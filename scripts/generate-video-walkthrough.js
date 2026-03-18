@@ -15,6 +15,22 @@ const path = require('path');
 const BASE_URL = process.env.SITE_URL || 'http://localhost/tpb2';
 const AUTH_USER_ID = process.env.AUTH_USER_ID || '1';
 const VIDEO_DIR = path.join(__dirname, '..', 'help', 'videos');
+const FFMPEG_PATH = process.env.FFMPEG_PATH ||
+    'C:\\Users\\harle\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1-full_build\\bin\\ffmpeg.exe';
+
+// ── Timing log for audio sync ────────────────────────────────────────
+let recordingStartTime = 0;
+let captionLog = [];
+
+function startTiming() {
+    recordingStartTime = Date.now();
+    captionLog = [];
+}
+
+function logCaption(text) {
+    const elapsed = (Date.now() - recordingStartTime) / 1000;
+    captionLog.push({ time: elapsed, text });
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -228,6 +244,7 @@ async function pause(page, ms = 1500) {
 }
 
 async function caption(page, text, duration = 2500) {
+    logCaption(text);
     // Inject a temporary caption overlay
     await page.evaluate(({ text, duration }) => {
         const existing = document.getElementById('walkthrough-caption');
@@ -262,6 +279,7 @@ async function caption(page, text, duration = 2500) {
 
 async function walkthroughDiscussAndDraft(context) {
     console.log('Recording: Discuss & Draft Walkthrough');
+    startTiming();
 
     const page = await context.newPage();
 
@@ -368,6 +386,7 @@ async function walkthroughDiscussAndDraft(context) {
 
 async function walkthroughProfile(context) {
     console.log('Recording: Profile Walkthrough');
+    startTiming();
 
     const page = await context.newPage();
 
@@ -626,6 +645,128 @@ async function recordWalkthrough(name, fn) {
     } else {
         console.log(`[!] No new video file found for ${name}`);
     }
+
+    // Save timing log
+    const timingFile = path.join(VIDEO_DIR, name + '-timing.json');
+    fs.writeFileSync(timingFile, JSON.stringify(captionLog, null, 2));
+    console.log(`Timing log: help/videos/${name}-timing.json (${captionLog.length} captions)`);
+}
+
+// ── Synced Audio Generation ──────────────────────────────────────────
+
+async function generateSyncedAudio(name) {
+    const fs = require('fs');
+    const { execSync } = require('child_process');
+
+    const timingFile = path.join(VIDEO_DIR, name + '-timing.json');
+    if (!fs.existsSync(timingFile)) {
+        console.log(`[!] No timing file for ${name} — record video first`);
+        return;
+    }
+    const captions = JSON.parse(fs.readFileSync(timingFile, 'utf8'));
+
+    // TTS narration map: caption text → spoken text (adapt for TTS)
+    const ttsAdapt = (text) => text
+        .replace(/--/g, ',')
+        .replace(/"/g, '')
+        .replace(/2FA/g, 'two-factor authentication')
+        .replace(/TPB/g, 'T.P.B.')
+        .replace(/\.\.\./g, '');
+
+    const clipDir = path.join(VIDEO_DIR, '_clips');
+    fs.mkdirSync(clipDir, { recursive: true });
+
+    // Generate individual TTS clips
+    console.log(`Generating ${captions.length} TTS clips...`);
+    for (let i = 0; i < captions.length; i++) {
+        const clipFile = path.join(clipDir, `clip_${String(i).padStart(3, '0')}.mp3`);
+        const spokenText = ttsAdapt(captions[i].text);
+        // Write a temp Python script to avoid CLI escaping issues
+        const pyFile = path.join(clipDir, '_tts.py');
+        fs.writeFileSync(pyFile, `
+import edge_tts, asyncio
+async def go():
+    c = edge_tts.Communicate(${JSON.stringify(spokenText)}, 'en-US-GuyNeural', rate='-10%')
+    await c.save(r'${clipFile.replace(/\\/g, '\\\\')}')
+asyncio.run(go())
+`);
+        try {
+            execSync(`python "${pyFile}"`, { stdio: 'pipe', timeout: 30000 });
+        } catch (e) {
+            console.log(`  [!] TTS failed for clip ${i}: ${e.message.slice(0, 80)}`);
+        }
+    }
+
+    // Get duration of each clip using ffprobe
+    const FFPROBE = path.join(path.dirname(FFMPEG_PATH), 'ffprobe.exe');
+
+    function getClipDuration(file) {
+        try {
+            const out = execSync(
+                `"${FFPROBE}" -v quiet -show_entries format=duration -of csv=p=0 "${file}"`,
+                { encoding: 'utf8', timeout: 5000 }
+            ).trim();
+            return parseFloat(out) || 0;
+        } catch { return 0; }
+    }
+
+    // Build ffmpeg concat filter with silence padding
+    // Each clip starts at caption[i].time seconds into the video
+    const concatList = path.join(clipDir, 'concat.txt');
+    let concatContent = '';
+    let currentTime = 0;
+
+    for (let i = 0; i < captions.length; i++) {
+        const clipFile = path.join(clipDir, `clip_${String(i).padStart(3, '0')}.mp3`);
+        if (!fs.existsSync(clipFile)) continue;
+
+        const targetTime = captions[i].time;
+        const silenceNeeded = Math.max(0, targetTime - currentTime);
+
+        // Add silence gap if needed
+        if (silenceNeeded > 0.1) {
+            const silFile = path.join(clipDir, `silence_${String(i).padStart(3, '0')}.mp3`);
+            execSync(
+                `"${FFMPEG_PATH}" -f lavfi -i anullsrc=r=24000:cl=mono -t ${silenceNeeded.toFixed(3)} -c:a libmp3lame -b:a 64k "${silFile}" -y`,
+                { stdio: 'pipe', timeout: 10000 }
+            );
+            concatContent += `file '${silFile.replace(/\\/g, '/')}'\n`;
+            currentTime += silenceNeeded;
+        }
+
+        concatContent += `file '${clipFile.replace(/\\/g, '/')}'\n`;
+        currentTime += getClipDuration(clipFile);
+    }
+
+    fs.writeFileSync(concatList, concatContent);
+
+    // Concatenate all clips + silences into one audio track
+    const audioFile = path.join(VIDEO_DIR, name + '-narration-synced.mp3');
+    execSync(
+        `"${FFMPEG_PATH}" -f concat -safe 0 -i "${concatList}" -c:a libmp3lame -b:a 64k "${audioFile}" -y`,
+        { stdio: 'pipe', timeout: 60000 }
+    );
+    console.log(`Synced audio: help/videos/${name}-narration-synced.mp3`);
+
+    // Merge with video
+    const videoFile = path.join(VIDEO_DIR, name + '-walkthrough.webm');
+    const finalFile = path.join(VIDEO_DIR, name + '-final.webm');
+    execSync(
+        `"${FFMPEG_PATH}" -i "${videoFile}" -i "${audioFile}" -c:v copy -c:a libopus -b:a 64k -shortest "${finalFile}" -y`,
+        { stdio: 'pipe', timeout: 60000 }
+    );
+
+    // Swap
+    if (fs.existsSync(finalFile)) {
+        fs.unlinkSync(videoFile);
+        fs.renameSync(finalFile, videoFile);
+        console.log(`Final video: help/videos/${name}-walkthrough.webm (synced narration)`);
+    }
+
+    // Cleanup clips
+    fs.readdirSync(clipDir).forEach(f => fs.unlinkSync(path.join(clipDir, f)));
+    fs.rmdirSync(clipDir);
+    if (fs.existsSync(audioFile)) fs.unlinkSync(audioFile);
 }
 
 const walkthroughs = {
@@ -634,16 +775,19 @@ const walkthroughs = {
 };
 
 async function main() {
-    if (WALKTHROUGH === 'all') {
-        for (const [name, fn] of Object.entries(walkthroughs)) {
-            await recordWalkthrough(name, fn);
-        }
-    } else if (walkthroughs[WALKTHROUGH]) {
-        await recordWalkthrough(WALKTHROUGH, walkthroughs[WALKTHROUGH]);
-    } else {
+    const names = WALKTHROUGH === 'all'
+        ? Object.keys(walkthroughs)
+        : walkthroughs[WALKTHROUGH] ? [WALKTHROUGH] : null;
+
+    if (!names) {
         console.error(`Unknown walkthrough: ${WALKTHROUGH}`);
         console.error(`Available: ${Object.keys(walkthroughs).join(', ')}, all`);
         process.exit(1);
+    }
+
+    for (const name of names) {
+        await recordWalkthrough(name, walkthroughs[name]);
+        await generateSyncedAudio(name);
     }
 }
 
