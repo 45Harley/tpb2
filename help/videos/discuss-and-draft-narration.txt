@@ -1,9 +1,9 @@
-DISCUSS & DRAFT — Video Narration Script
+DISCUSS & DRAFT -- Video Narration Script
 =========================================
 Video: discuss-and-draft-walkthrough.webm
 Duration: ~60 seconds
 
-Timestamps are approximate — sync to on-screen captions.
+Timestamps are approximate -- sync to on-screen captions.
 
 TIME        CAPTION / NARRATION
 ----------- ---------------------------------------------------
@@ -11,7 +11,7 @@ TIME        CAPTION / NARRATION
 
 0:03        Let's draft a mandate for your representatives.
 
-0:07        This is the Talk page — your civic workspace.
+0:07        This is the Talk page -- your civic workspace.
 
 0:12        Type your idea in the prompt box.
 
@@ -33,7 +33,7 @@ TIME        CAPTION / NARRATION
 
 0:47        Check a scope to prepare for saving.
 
-0:50        Federal checked — Save button appears.
+0:50        Federal checked -- Save button appears.
 
 0:53        Click Save to publish your mandate.
 
@@ -43,4 +43,4 @@ TIME        CAPTION / NARRATION
 
 1:05        Filter by Federal, State, or Town.
 
-1:09        That's Discuss & Draft — your voice in democracy.
+1:09        That's Discuss & Draft -- your voice in democracy.
