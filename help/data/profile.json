@@ -2,7 +2,7 @@
   "id": "profile",
   "title": "Your Profile & Trust Journey",
   "subtitle": "Build your civic identity step by step — from new user to fully verified citizen.",
-  "generated": "2026-03-18T21:07:00.000Z",
+  "generated": "2026-03-18T21:33:00.000Z",
   "stepCount": 10,
   "steps": [
     {
@@ -24,7 +24,7 @@
       "alt": null,
       "screenshot": null,
       "link": {
-        "url": "/help/videos/profile-walkthrough.webm#t=3",
+        "url": "/help/videos/profile-walkthrough.webm#t=4",
         "label": "Watch video: Trust Journey",
         "target": "_blank"
       }
@@ -36,7 +36,7 @@
       "alt": null,
       "screenshot": null,
       "link": {
-        "url": "/help/videos/profile-walkthrough.webm#t=15",
+        "url": "/help/videos/profile-walkthrough.webm#t=18",
         "label": "Watch video: Location",
         "target": "_blank"
       }
@@ -48,7 +48,7 @@
       "alt": null,
       "screenshot": null,
       "link": {
-        "url": "/help/videos/profile-walkthrough.webm#t=25",
+        "url": "/help/videos/profile-walkthrough.webm#t=32",
         "label": "Watch video: Identity",
         "target": "_blank"
       }
@@ -60,7 +60,7 @@
       "alt": null,
       "screenshot": null,
       "link": {
-        "url": "/help/videos/profile-walkthrough.webm#t=33",
+        "url": "/help/videos/profile-walkthrough.webm#t=42",
         "label": "Watch video: Privacy Settings",
         "target": "_blank"
       }
@@ -72,7 +72,7 @@
       "alt": null,
       "screenshot": null,
       "link": {
-        "url": "/help/videos/profile-walkthrough.webm#t=47",
+        "url": "/help/videos/profile-walkthrough.webm#t=62",
         "label": "Watch video: Notifications",
         "target": "_blank"
       }
@@ -84,7 +84,7 @@
       "alt": null,
       "screenshot": null,
       "link": {
-        "url": "/help/videos/profile-walkthrough.webm#t=53",
+        "url": "/help/videos/profile-walkthrough.webm#t=72",
         "label": "Watch video: Email Verification",
         "target": "_blank"
       }
@@ -96,7 +96,7 @@
       "alt": null,
       "screenshot": null,
       "link": {
-        "url": "/help/videos/profile-walkthrough.webm#t=58",
+        "url": "/help/videos/profile-walkthrough.webm#t=80",
         "label": "Watch video: Phone 2FA",
         "target": "_blank"
       }
@@ -108,7 +108,7 @@
       "alt": null,
       "screenshot": null,
       "link": {
-        "url": "/help/videos/profile-walkthrough.webm#t=63",
+        "url": "/help/videos/profile-walkthrough.webm#t=88",
         "label": "Watch video: Password",
         "target": "_blank"
       }
@@ -120,7 +120,7 @@
       "alt": null,
       "screenshot": null,
       "link": {
-        "url": "/help/videos/profile-walkthrough.webm#t=69",
+        "url": "/help/videos/profile-walkthrough.webm#t=96",
         "label": "Watch video: Volunteer",
         "target": "_blank"
       }

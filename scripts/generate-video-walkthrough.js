@@ -97,6 +97,49 @@ async function slowType(page, selector, text, delay = 70) {
     await page.waitForTimeout(300);
 }
 
+async function hoverElement(page, selector, duration = 1500) {
+    const pos = await moveToElement(page, selector);
+    if (!pos) return;
+    // Show native title tooltip by injecting a visible tooltip
+    const title = await page.locator(selector).first().getAttribute('title');
+    if (title) {
+        await page.evaluate(({ x, y, title, duration }) => {
+            const tip = document.createElement('div');
+            tip.id = 'hover-tooltip';
+            tip.textContent = title;
+            tip.style.cssText = `
+                position: fixed; left: ${x + 15}px; top: ${y - 35}px;
+                background: #222; color: #fff; font-size: 13px; font-family: sans-serif;
+                padding: 6px 12px; border-radius: 6px; z-index: 9999998;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.4); pointer-events: none;
+                max-width: 300px; white-space: nowrap;
+                animation: tipFade 0.2s ease-in;
+            `;
+            if (!document.getElementById('tip-style')) {
+                const s = document.createElement('style');
+                s.id = 'tip-style';
+                s.textContent = '@keyframes tipFade { from { opacity:0; } to { opacity:1; } }';
+                document.head.appendChild(s);
+            }
+            document.body.appendChild(tip);
+            setTimeout(() => { tip.style.opacity = '0'; tip.style.transition = 'opacity 0.3s'; }, duration - 300);
+            setTimeout(() => tip.remove(), duration);
+        }, { x: pos.x, y: pos.y, title, duration });
+    }
+    await page.hover(selector);
+    await page.waitForTimeout(duration);
+}
+
+async function selectDropdown(page, selector, value, displayText) {
+    await moveToElement(page, selector);
+    await pause(page, 300);
+    await page.selectOption(selector, value);
+    await pause(page, 500);
+    if (displayText) {
+        await caption(page, displayText, 1500);
+    }
+}
+
 async function pause(page, ms = 1500) {
     await page.waitForTimeout(ms);
 }
@@ -238,7 +281,7 @@ async function walkthroughDiscussAndDraft(context) {
     console.log('  Recording complete.');
 }
 
-// ── Profile Walkthrough ──────────────────────────────────────────────
+// ── Profile Walkthrough (Full Interactive) ───────────────────────────
 
 async function walkthroughProfile(context) {
     console.log('Recording: Profile Walkthrough');
@@ -251,17 +294,17 @@ async function walkthroughProfile(context) {
     await pause(page, 1000);
     await caption(page, 'This is your Profile -- your civic identity', 2500);
 
-    // 2. Trust Journey
+    // 2. Trust Journey — hover each step to show tooltips
     await moveToElement(page, '.journey-steps');
     await pause(page, 500);
     await caption(page, 'The Trust Journey tracks your progress', 2500);
-    // Point at each step
-    const steps = await page.locator('.journey-step').all();
-    for (const step of steps) {
+    const journeySteps = await page.locator('.journey-step').all();
+    for (const step of journeySteps) {
         const box = await step.boundingBox();
         if (box) {
             await slowMove(page, box.x + box.width / 2, box.y + box.height / 2, 15);
-            await pause(page, 400);
+            await page.hover('.journey-step >> nth=' + journeySteps.indexOf(step));
+            await pause(page, 600);
         }
     }
     await caption(page, 'Each step earns civic points and raises your trust level', 2500);
@@ -277,10 +320,8 @@ async function walkthroughProfile(context) {
     });
     await pause(page, 1000);
     await caption(page, 'Location -- your town, state, and districts', 2500);
-    // Point at town name
     await moveToElement(page, '.location-display .town');
     await pause(page, 800);
-    // Point at districts
     const districts = page.locator('.location-display .districts');
     if (await districts.count() > 0) {
         await moveToElement(page, '.location-display .districts');
@@ -288,7 +329,20 @@ async function walkthroughProfile(context) {
     }
     await caption(page, 'Your congressional district connects you to your representatives', 2500);
 
-    // 5. Identity section
+    // Hover the Change button
+    const changeBtn = page.locator('#changeLocationBtn');
+    if (await changeBtn.count() > 0 && await changeBtn.isVisible()) {
+        await hoverElement(page, '#changeLocationBtn', 1500);
+        await caption(page, 'Click Change to update your location', 1500);
+    }
+
+    // Hover the Go to My Town button
+    const townBtn = page.locator('a:has-text("Go to My Town")');
+    if (await townBtn.count() > 0 && await townBtn.isVisible()) {
+        await hoverElement(page, 'a:has-text("Go to My Town")', 1500);
+    }
+
+    // 5. Identity section — interact with fields
     await page.evaluate(() => {
         const cards = document.querySelectorAll('.card h2');
         for (const h of cards) {
@@ -300,55 +354,89 @@ async function walkthroughProfile(context) {
     });
     await pause(page, 1000);
     await caption(page, 'Identity -- your name and age range', 2500);
-    await moveToElement(page, '#firstName');
-    await pause(page, 500);
-    await moveToElement(page, '#lastName');
-    await pause(page, 500);
-    await moveToElement(page, '#ageBracket');
-    await pause(page, 500);
 
-    // 6. Privacy settings
+    // Hover name fields
+    await hoverElement(page, '#firstName', 1000);
+    await hoverElement(page, '#lastName', 1000);
+
+    // Open age bracket dropdown
+    await caption(page, 'Select your age range from the dropdown', 2000);
+    await selectDropdown(page, '#ageBracket', '55-64', 'Age range: 55-64');
+
+    // 6. Privacy settings — toggle checkboxes
     await page.evaluate(() => {
         const el = document.getElementById('showFirstName');
         if (el) el.closest('.form-group').scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     await pause(page, 1000);
     await caption(page, 'Privacy Settings -- control what others see', 2500);
-    await moveToElement(page, '#showFirstName');
-    await pause(page, 400);
-    await moveToElement(page, '#showLastName');
-    await pause(page, 400);
-    await moveToElement(page, '#showAgeBracket');
-    await pause(page, 400);
-    await caption(page, 'Your user ID always shows -- name and age are opt-in', 2500);
-    // Point at preview
-    await moveToElement(page, '#displayPreview');
-    await pause(page, 800);
-    await caption(page, 'The preview shows exactly how you appear to others', 2000);
 
-    // 7. Notifications
+    // Toggle show last name off then on to demonstrate
+    const showLast = page.locator('#showLastName');
+    if (await showLast.count() > 0) {
+        await clickElement(page, '#showLastName', { pauseAfter: 800 });
+        await caption(page, 'Uncheck last name -- preview updates instantly', 2000);
+        await moveToElement(page, '#displayPreview');
+        await pause(page, 1000);
+        await clickElement(page, '#showLastName', { pauseAfter: 800 });
+        await caption(page, 'Check it back -- preview shows your full name', 2000);
+        await moveToElement(page, '#displayPreview');
+        await pause(page, 1000);
+    }
+
+    // Toggle age bracket
+    const showAge = page.locator('#showAgeBracket');
+    if (await showAge.count() > 0) {
+        await clickElement(page, '#showAgeBracket', { pauseAfter: 800 });
+        await caption(page, 'Toggle age bracket on or off', 1500);
+        await moveToElement(page, '#displayPreview');
+        await pause(page, 800);
+    }
+
+    await caption(page, 'Your user ID always shows -- name and age are opt-in', 2500);
+
+    // Hover Save Changes button
+    await hoverElement(page, '#identityForm button[type="submit"]', 1500);
+    await caption(page, 'Click Save Changes to apply', 1500);
+
+    // 7. Notifications — hover and toggle
     await page.evaluate(() => {
         const el = document.getElementById('notifyThreatBulletin');
         if (el) el.closest('.form-group').scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     await pause(page, 1000);
     await caption(page, 'Notifications -- opt in to the daily threat bulletin', 2500);
-    await moveToElement(page, '#notifyThreatBulletin');
-    await pause(page, 800);
+    const bulletinCheck = page.locator('#notifyThreatBulletin');
+    if (await bulletinCheck.count() > 0 && await bulletinCheck.isEnabled()) {
+        await clickElement(page, '#notifyThreatBulletin', { pauseAfter: 600 });
+        await caption(page, 'Toggle to receive or stop the daily email', 2000);
+        await clickElement(page, '#notifyThreatBulletin', { pauseAfter: 400 });
+    }
 
-    // 8. Verification
+    // 8. Verification — hover buttons
     await page.evaluate(() => {
         const el = document.getElementById('email');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     await pause(page, 1000);
     await caption(page, 'Verification -- email, phone, and password', 2500);
-    await moveToElement(page, '#emailInput');
-    await pause(page, 600);
+    await hoverElement(page, '#emailInput', 1000);
     await caption(page, 'Verify your email to unlock drafting and voting', 2000);
-    await moveToElement(page, '#phone');
-    await pause(page, 600);
+
+    // Hover the verify/change email button
+    const emailBtn = page.locator('#verifyEmailBtn, #changeEmailBtn');
+    if (await emailBtn.count() > 0 && await emailBtn.isVisible()) {
+        await hoverElement(page, '#verifyEmailBtn, #changeEmailBtn', 1500);
+    }
+
+    await hoverElement(page, '#phone', 1000);
     await caption(page, 'Add phone 2FA to reach Level 3 Verified', 2000);
+
+    // Hover phone verify/change button
+    const phoneBtn = page.locator('#verifyPhoneBtn, #changePhoneBtn');
+    if (await phoneBtn.count() > 0 && await phoneBtn.isVisible()) {
+        await hoverElement(page, '#verifyPhoneBtn, #changePhoneBtn', 1500);
+    }
 
     // 9. Password
     const pwSection = page.locator('#password');
@@ -359,11 +447,12 @@ async function walkthroughProfile(context) {
         });
         await pause(page, 1000);
         await caption(page, 'Set a password to log in from any device', 2500);
-        await moveToElement(page, '#newPassword');
-        await pause(page, 600);
+        await hoverElement(page, '#newPassword', 800);
+        await hoverElement(page, '#confirmPassword', 800);
+        await hoverElement(page, '#savePasswordBtn', 1000);
     }
 
-    // 10. Volunteer section
+    // 10. Volunteer section — skills grid, primary dropdown
     await page.evaluate(() => {
         const cards = document.querySelectorAll('.card h2');
         for (const h of cards) {
@@ -375,8 +464,29 @@ async function walkthroughProfile(context) {
     });
     await pause(page, 1000);
     await caption(page, 'Volunteer -- apply to help build the platform', 2500);
-    await pause(page, 1000);
-    await caption(page, 'Select skills, set a primary skill, write your bio', 2500);
+
+    // Hover skill grid items if visible
+    const skillItems = await page.locator('#skillsGrid label').all();
+    if (skillItems.length > 0) {
+        await caption(page, 'Select your skills from the grid', 2000);
+        for (let i = 0; i < Math.min(skillItems.length, 5); i++) {
+            const box = await skillItems[i].boundingBox();
+            if (box) {
+                await slowMove(page, box.x + box.width / 2, box.y + box.height / 2, 12);
+                await pause(page, 400);
+            }
+        }
+    }
+
+    // Primary skill dropdown
+    const primarySkill = page.locator('#primarySkill');
+    if (await primarySkill.count() > 0 && await primarySkill.isVisible()) {
+        await caption(page, 'Choose your primary skill from the dropdown', 2000);
+        await moveToElement(page, '#primarySkill');
+        await pause(page, 800);
+    }
+
+    await caption(page, 'Write a bio and save your volunteer info', 2500);
 
     // 11. End — scroll back up
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
