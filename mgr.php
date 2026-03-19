@@ -761,54 +761,54 @@ $users = $pdo->query("
 // Activity — meaningful civic events only
 $activity = $pdo->query("
     SELECT * FROM (
-        SELECT 'thought' COLLATE utf8mb4_unicode_ci as event_type,
-               CONCAT('Published: \"', SUBSTRING(il.content, 1, 60), '...\"') COLLATE utf8mb4_unicode_ci as description,
+        SELECT CONVERT('thought' USING utf8mb4) as event_type,
+               CONVERT(CONCAT('Published: \"', SUBSTRING(il.content, 1, 60), '...\"') USING utf8mb4) as description,
                il.created_at as event_time,
-               u.email COLLATE utf8mb4_unicode_ci as user_email,
-               u.first_name COLLATE utf8mb4_unicode_ci as first_name
+               CONVERT(u.email USING utf8mb4) as user_email,
+               CONVERT(u.first_name USING utf8mb4) as first_name
         FROM idea_log il
         JOIN users u ON il.user_id = u.user_id
         WHERE il.status = 'published' AND il.deleted_at IS NULL
 
         UNION ALL
 
-        SELECT 'vote' COLLATE utf8mb4_unicode_ci as event_type,
-               CONCAT(iv.vote_type, ' on idea #', iv.idea_id) COLLATE utf8mb4_unicode_ci as description,
-               iv.voted_at as event_time,
-               u.email COLLATE utf8mb4_unicode_ci as user_email,
-               u.first_name COLLATE utf8mb4_unicode_ci as first_name
+        SELECT CONVERT('vote' USING utf8mb4),
+               CONVERT(CONCAT(iv.vote_type, ' on idea #', iv.idea_id) USING utf8mb4),
+               iv.voted_at,
+               CONVERT(u.email USING utf8mb4),
+               CONVERT(u.first_name USING utf8mb4)
         FROM idea_votes iv
         JOIN users u ON iv.user_id = u.user_id
 
         UNION ALL
 
-        SELECT 'identity' COLLATE utf8mb4_unicode_ci as event_type,
-               'Email verified' COLLATE utf8mb4_unicode_ci as description,
-               pl.earned_at as event_time,
-               u.email COLLATE utf8mb4_unicode_ci as user_email,
-               u.first_name COLLATE utf8mb4_unicode_ci as first_name
+        SELECT CONVERT('identity' USING utf8mb4),
+               CONVERT('Email verified' USING utf8mb4),
+               pl.earned_at,
+               CONVERT(u.email USING utf8mb4),
+               CONVERT(u.first_name USING utf8mb4)
         FROM points_log pl
         JOIN users u ON pl.user_id = u.user_id
         WHERE pl.context_type = 'email_verified'
 
         UNION ALL
 
-        SELECT 'identity' COLLATE utf8mb4_unicode_ci as event_type,
-               'Phone verified' COLLATE utf8mb4_unicode_ci as description,
-               pl.earned_at as event_time,
-               u.email COLLATE utf8mb4_unicode_ci as user_email,
-               u.first_name COLLATE utf8mb4_unicode_ci as first_name
+        SELECT CONVERT('identity' USING utf8mb4),
+               CONVERT('Phone verified' USING utf8mb4),
+               pl.earned_at,
+               CONVERT(u.email USING utf8mb4),
+               CONVERT(u.first_name USING utf8mb4)
         FROM points_log pl
         JOIN users u ON pl.user_id = u.user_id
         WHERE pl.context_type = 'phone_verified'
 
         UNION ALL
 
-        SELECT 'volunteer' COLLATE utf8mb4_unicode_ci as event_type,
-               CONCAT('Volunteer application (', va.status, ')') COLLATE utf8mb4_unicode_ci as description,
-               va.applied_at as event_time,
-               u.email COLLATE utf8mb4_unicode_ci as user_email,
-               u.first_name COLLATE utf8mb4_unicode_ci as first_name
+        SELECT CONVERT('volunteer' USING utf8mb4),
+               CONVERT(CONCAT('Volunteer application (', va.status, ')') USING utf8mb4),
+               va.applied_at,
+               CONVERT(u.email USING utf8mb4),
+               CONVERT(u.first_name USING utf8mb4)
         FROM volunteer_applications va
         JOIN users u ON va.user_id = u.user_id
     ) events
