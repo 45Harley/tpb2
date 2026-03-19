@@ -2108,6 +2108,10 @@ $adminActions = $pdo->query("
                 </div>
 
                 <!-- Threat Bulletin -->
+                <?php
+                $bulletinLastResult = getSiteSetting($pdo, 'threat_bulletin_last_result', '');
+                $bulletinLastRun = $bulletinLastResult ? json_decode($bulletinLastResult, true) : null;
+                ?>
                 <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
                     <h3 style="color:#d4af37;margin:0 0 15px;">Threat Bulletin Emails</h3>
                     <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Daily email digest of new threats (last 48 hours) sent at 8:00 AM ET to subscribed users.</p>
@@ -2122,9 +2126,32 @@ $adminActions = $pdo->query("
                         <span>Subscribers: <strong style="color:#d4af37;"><?= $subscriberCount ?></strong></span>
                         <span>Status: <strong style="color:<?= $bulletinEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $bulletinEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
                     </div>
+
+                    <?php if ($bulletinLastRun): ?>
+                    <div style="background:#111;border:1px solid #222;border-radius:6px;padding:12px;font-size:0.85em;color:#888;margin-top:10px;">
+                        <strong style="color:#ccc;">Last run:</strong>
+                        <?= $bulletinLastRun['timestamp'] ?? 'unknown' ?>
+                        &mdash;
+                        <?php if (($bulletinLastRun['status'] ?? '') === 'success'): ?>
+                            <span style="color:#4caf50;">OK</span>
+                            &mdash; <?= $bulletinLastRun['sent'] ?? 0 ?> sent to <?= $bulletinLastRun['subscribers'] ?? 0 ?> subscribers
+                            &mdash; <?= $bulletinLastRun['threats'] ?? 0 ?> threats
+                            &mdash; <?= $bulletinLastRun['elapsed'] ?? '?' ?>s
+                        <?php else: ?>
+                            <span style="color:#f39c12;">PARTIAL</span>
+                            &mdash; <?= $bulletinLastRun['sent'] ?? 0 ?> sent, <?= $bulletinLastRun['failed'] ?? 0 ?> failed
+                        <?php endif; ?>
+                    </div>
+                    <?php else: ?>
+                    <div style="color:#666;font-size:0.85em;margin-top:10px;">No runs recorded yet.</div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- FEC Sync -->
+                <?php
+                $fecLastResult = getSiteSetting($pdo, 'fec_sync_last_result', '');
+                $fecLastRun = $fecLastResult ? json_decode($fecLastResult, true) : null;
+                ?>
                 <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
                     <h3 style="color:#d4af37;margin:0 0 15px;">FEC Data Sync</h3>
                     <p style="color:#888;font-size:0.9em;margin:0 0 15px;">Pulls candidate and contributor data from OpenFEC API every 6 hours.</p>
@@ -2140,6 +2167,24 @@ $adminActions = $pdo->query("
                         <span>Status: <strong style="color:<?= $fecSyncEnabled === '1' ? '#4caf50' : '#ef5350' ?>;"><?= $fecSyncEnabled === '1' ? 'ON' : 'OFF' ?></strong></span>
                         <span>Schedule: <strong style="color:#ccc;">Every 6 hours</strong></span>
                     </div>
+
+                    <?php if ($fecLastRun): ?>
+                    <div style="background:#111;border:1px solid #222;border-radius:6px;padding:12px;font-size:0.85em;color:#888;margin-top:10px;">
+                        <strong style="color:#ccc;">Last run:</strong>
+                        <?= $fecLastRun['timestamp'] ?? 'unknown' ?>
+                        &mdash;
+                        <?php if (($fecLastRun['status'] ?? '') === 'success'): ?>
+                            <span style="color:#4caf50;">OK</span>
+                            &mdash; <?= $fecLastRun['races'] ?? 0 ?> races, <?= $fecLastRun['candidates'] ?? 0 ?> candidates, <?= $fecLastRun['contributors'] ?? 0 ?> contributors
+                            &mdash; <?= $fecLastRun['elapsed'] ?? '?' ?>s
+                        <?php else: ?>
+                            <span style="color:#f39c12;">PARTIAL</span>
+                            &mdash; <?= $fecLastRun['errors'] ?? 0 ?> errors
+                        <?php endif; ?>
+                    </div>
+                    <?php else: ?>
+                    <div style="color:#666;font-size:0.85em;margin-top:10px;">No runs recorded yet.</div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Rating Checker -->

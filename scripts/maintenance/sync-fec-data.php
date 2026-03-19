@@ -184,3 +184,16 @@ foreach ($races as $race) {
 
 $elapsed = round(microtime(true) - $startTime, 2);
 echo "FEC sync complete. Races: " . count($races) . ", Candidates: {$totalCandidates}, Contributors: {$totalContributors}, Errors: {$errors}, Time: {$elapsed}s\n";
+
+// Record result in site_settings
+$result = json_encode([
+    'status' => $errors === 0 ? 'success' : 'partial',
+    'timestamp' => date('Y-m-d H:i:s'),
+    'races' => count($races),
+    'candidates' => $totalCandidates,
+    'contributors' => $totalContributors,
+    'errors' => $errors,
+    'elapsed' => $elapsed,
+]);
+setSiteSetting($pdoTpb, 'fec_sync_last_result', $result);
+if ($errors === 0) setSiteSetting($pdoTpb, 'fec_sync_last_success', date('Y-m-d H:i:s'));

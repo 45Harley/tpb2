@@ -108,6 +108,19 @@ foreach ($subscribers as $sub) {
 $elapsed = round(microtime(true) - $startTime, 2);
 echo "Threat bulletin sent. Threats: {$threatCount}, Subscribers: " . count($subscribers) . ", Sent: {$sent}, Failed: {$failed}, Time: {$elapsed}s\n";
 
+// Record result in site_settings
+$result = json_encode([
+    'status' => $failed === 0 ? 'success' : 'partial',
+    'timestamp' => date('Y-m-d H:i:s'),
+    'threats' => $threatCount,
+    'subscribers' => count($subscribers),
+    'sent' => $sent,
+    'failed' => $failed,
+    'elapsed' => $elapsed,
+]);
+setSiteSetting($pdo, 'threat_bulletin_last_result', $result);
+if ($failed === 0) setSiteSetting($pdo, 'threat_bulletin_last_success', date('Y-m-d H:i:s'));
+
 
 /**
  * Build the HTML email body
