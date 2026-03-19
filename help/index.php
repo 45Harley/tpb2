@@ -110,6 +110,21 @@ $pageStyles = <<<'CSS'
     border-color: #d4af37;
     transform: translateY(-2px);
 }
+.help-card.dragging {
+    opacity: 0.4;
+    transform: scale(0.95);
+}
+.help-card.drag-over {
+    border-color: #d4af37;
+    box-shadow: 0 0 8px rgba(212,175,55,0.4);
+}
+.help-grid-header {
+    display: flex; justify-content: space-between; align-items: center;
+}
+.drag-hint {
+    color: #666; font-size: 0.75rem; font-weight: normal; letter-spacing: 0;
+    text-transform: none;
+}
 .help-card .card-icon {
     font-size: 3rem;
     margin-bottom: 0.75rem;
@@ -176,10 +191,14 @@ require dirname(__DIR__) . '/includes/nav.php';
     </div>
 
 <?php if (!empty($guides)): ?>
-    <h2 class="help-section-title">Visual Guides</h2>
-    <div class="help-grid">
+    <div class="help-grid-header">
+        <h2 class="help-section-title" style="margin-bottom:0;border-bottom:none;">Visual Guides</h2>
+        <span class="drag-hint">Drag cards to reorder &middot; <a href="#" id="resetOrder" style="color:#d4af37;text-decoration:none;font-size:0.75rem;">Reset</a></span>
+    </div>
+    <div style="border-bottom:1px solid #333; margin-bottom:1rem;"></div>
+    <div class="help-grid" id="helpGrid">
 <?php foreach ($guides as $g): ?>
-        <a href="/help/guide.php?flow=<?= htmlspecialchars($g['id']) ?>" class="help-card">
+        <a href="/help/guide.php?flow=<?= htmlspecialchars($g['id']) ?>" class="help-card" draggable="true" data-guide-id="<?= htmlspecialchars($g['id']) ?>">
             <div class="card-icon"><?= $guideIcons[$g['id']] ?? getIconEmoji('docs') ?></div>
             <h3><?= htmlspecialchars($g['title']) ?></h3>
             <p><?= htmlspecialchars($g['subtitle']) ?></p>
@@ -206,7 +225,144 @@ require dirname(__DIR__) . '/includes/nav.php';
     </ul>
 </div>
 
-<?php
-?>
+<script>
+(function() {
+    const grid = document.getElementById('helpGrid');
+    if (!grid) return;
+    const STORAGE_KEY = 'tpb_help_guide_order';
+    let dragCard = null;
+
+    // Restore saved order
+    function restoreOrder() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        try {
+            const order = JSON.parse(saved);
+            const cards = {};
+            grid.querySelectorAll('.help-card').forEach(c => { cards[c.dataset.guideId] = c; });
+            order.forEach(id => { if (cards[id]) grid.appendChild(cards[id]); });
+        } catch(e) {}
+    }
+
+    function saveOrder() {
+        const order = Array.from(grid.querySelectorAll('.help-card')).map(c => c.dataset.guideId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+    }
+
+    // Drag events
+    grid.addEventListener('dragstart', e => {
+        const card = e.target.closest('.help-card');
+        if (!card) return;
+        dragCard = card;
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', card.dataset.guideId);
+    });
+
+    grid.addEventListener('dragend', e => {
+        const card = e.target.closest('.help-card');
+        if (card) card.classList.remove('dragging');
+        grid.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
+        dragCard = null;
+    });
+
+    grid.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const target = e.target.closest('.help-card');
+        if (!target || target === dragCard) return;
+        grid.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
+        target.classList.add('drag-over');
+    });
+
+    grid.addEventListener('dragleave', e => {
+        const target = e.target.closest('.help-card');
+        if (target) target.classList.remove('drag-over');
+    });
+
+    grid.addEventListener('drop', e => {
+        e.preventDefault();
+        const target = e.target.closest('.help-card');
+        if (!target || !dragCard || target === dragCard) return;
+        target.classList.remove('drag-over');
+
+        // Determine position: insert before or after target
+        const cards = Array.from(grid.querySelectorAll('.help-card'));
+        const dragIdx = cards.indexOf(dragCard);
+        const targetIdx = cards.indexOf(target);
+        if (dragIdx < targetIdx) {
+            target.after(dragCard);
+        } else {
+            target.before(dragCard);
+        }
+        saveOrder();
+    });
+
+    // Touch support for mobile
+    let touchCard = null;
+    let touchClone = null;
+    let touchStarted = false;
+    let touchTimer = null;
+
+    grid.addEventListener('touchstart', e => {
+        const card = e.target.closest('.help-card');
+        if (!card) return;
+        touchTimer = setTimeout(() => {
+            touchStarted = true;
+            touchCard = card;
+            card.classList.add('dragging');
+            e.preventDefault();
+        }, 300);
+    }, {passive: false});
+
+    grid.addEventListener('touchmove', e => {
+        if (!touchStarted || !touchCard) { clearTimeout(touchTimer); return; }
+        e.preventDefault();
+        const touch = e.touches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const target = el ? el.closest('.help-card') : null;
+        grid.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
+        if (target && target !== touchCard) target.classList.add('drag-over');
+    }, {passive: false});
+
+    grid.addEventListener('touchend', e => {
+        clearTimeout(touchTimer);
+        if (!touchStarted || !touchCard) { touchStarted = false; return; }
+        const overCard = grid.querySelector('.drag-over');
+        if (overCard && overCard !== touchCard) {
+            const cards = Array.from(grid.querySelectorAll('.help-card'));
+            const dragIdx = cards.indexOf(touchCard);
+            const targetIdx = cards.indexOf(overCard);
+            if (dragIdx < targetIdx) {
+                overCard.after(touchCard);
+            } else {
+                overCard.before(touchCard);
+            }
+            saveOrder();
+        }
+        touchCard.classList.remove('dragging');
+        grid.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
+        touchCard = null;
+        touchStarted = false;
+        e.preventDefault();
+    });
+
+    // Reset link
+    document.getElementById('resetOrder').addEventListener('click', e => {
+        e.preventDefault();
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+    });
+
+    // Prevent navigation during drag
+    grid.querySelectorAll('.help-card').forEach(card => {
+        card.addEventListener('click', e => {
+            if (card.classList.contains('dragging')) e.preventDefault();
+        });
+    });
+
+    restoreOrder();
+})();
+</script>
 
 <?php require dirname(__DIR__) . '/includes/footer.php'; ?>
