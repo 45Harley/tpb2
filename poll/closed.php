@@ -19,7 +19,7 @@ try {
 
 // Get closed polls with results
 $stmt = $pdo->query("
-    SELECT p.poll_id, p.slug, p.question, p.active, p.closed_at,
+    SELECT p.poll_id, p.slug, p.question, p.active, p.closed_at, p.created_at,
            COUNT(pv.poll_vote_id) as total_votes,
            SUM(CASE WHEN pv.vote_choice = 'yes' THEN 1 ELSE 0 END) as yes_votes,
            SUM(CASE WHEN pv.vote_choice = 'no' THEN 1 ELSE 0 END) as no_votes,
@@ -163,11 +163,12 @@ $currentPage = 'poll';
                     (<?= $poll['yes_votes'] ?: 0 ?> yes, <?= $poll['no_votes'] ?: 0 ?> no)
                 </div>
                 
-                <?php if ($poll['closed_at']): ?>
-                    <div class="closed-date">
-                        Closed: <?= date('M j, Y', strtotime($poll['closed_at'])) ?>
-                    </div>
-                <?php endif; ?>
+                <div class="closed-date">
+                    Created: <?= date('M j, Y', strtotime($poll['created_at'])) ?>
+                    <?php if ($poll['closed_at']): ?>
+                        &middot; Closed: <?= date('M j, Y', strtotime($poll['closed_at'])) ?>
+                    <?php endif; ?>
+                </div>
             </div>
         <?php endforeach; ?>
         

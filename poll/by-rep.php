@@ -63,7 +63,7 @@ if ($rep) {
 
     // All threats with rep's vote + state citizen votes
     $stmt = $pdo->prepare("
-        SELECT p.poll_id, p.threat_id,
+        SELECT p.poll_id, p.threat_id, p.created_at as poll_created_at,
                et.title, et.severity_score, et.threat_date,
                rep_vote.vote_choice as rep_position,
                COUNT(citizen_vote.poll_vote_id) as state_votes,
@@ -341,7 +341,7 @@ extract($navVars);
                 ?>
                     <tr>
                         <td><span class="severity-badge" style="background:<?= $zone['color'] ?>"><?= $r['severity_score'] ?></span></td>
-                        <td><a href="/usa/executive.php#threat-<?= $r['threat_id'] ?>" style="color:#d4af37;text-decoration:underline;" title="View full threat detail"><?= htmlspecialchars(mb_strimwidth($r['title'], 0, 80, '...')) ?></a></td>
+                        <td><a href="/usa/executive.php#threat-<?= $r['threat_id'] ?>" style="color:#d4af37;text-decoration:underline;" title="View full threat detail"><?= htmlspecialchars(mb_strimwidth($r['title'], 0, 80, '...')) ?></a><br><span style="color:#666;font-size:0.7rem;"><?= date('M j, Y', strtotime($r['poll_created_at'])) ?></span></td>
                         <td>
                             <?php if ($r['rep_position'] === 'yea'): ?>
                                 <span class="position-yea">Yea</span>

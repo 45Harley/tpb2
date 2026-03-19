@@ -100,7 +100,7 @@ $threatPolls = [];
 $threatTags = [];
 try {
     $threatPolls = $pdo->query("
-        SELECT p.poll_id, p.threat_id,
+        SELECT p.poll_id, p.threat_id, p.created_at as poll_created_at,
                et.title, et.severity_score, et.threat_date, et.official_id,
                eo.full_name as official_name,
                COUNT(pv.poll_vote_id) as total_votes,
@@ -259,7 +259,7 @@ extract($navVars);
         .tally-yea { color: #4caf50; }
         .tally-nay { color: #f44336; }
         .tally-abstain { color: #888; }
-        .tally-threat { color: #555; margin-left: auto; font-size: 0.75rem; }
+        .tally-threat { color: #b0b0b0; margin-left: auto; font-size: 0.75rem; }
 
         /* Alerts */
         .alert { padding: 1rem; border-radius: 6px; margin-bottom: 1rem; }
@@ -450,7 +450,7 @@ extract($navVars);
                     <span class="tally-item tally-yea">Yea: <?= (int)$tp['yea_votes'] ?></span>
                     <span class="tally-item tally-nay">Nay: <?= (int)$tp['nay_votes'] ?></span>
                     <span class="tally-item tally-abstain">Abstain: <?= (int)$tp['abstain_votes'] ?></span>
-                    <span class="tally-threat">Threat #<?= (int)$tp['threat_id'] ?></span>
+                    <span class="tally-threat"><?= date('M j, Y', strtotime($tp['poll_created_at'])) ?> &middot; Threat #<?= (int)$tp['threat_id'] ?></span>
                 </div>
             </div>
         <?php endforeach; ?>

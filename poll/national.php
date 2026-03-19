@@ -19,7 +19,7 @@ $dbUser = getUser($pdo);
 
 // National aggregate — citizen votes only (is_rep_vote = 0)
 $threats = $pdo->query("
-    SELECT p.poll_id, p.threat_id,
+    SELECT p.poll_id, p.threat_id, p.created_at as poll_created_at,
            et.title, et.severity_score, et.threat_date,
            eo.full_name as official_name,
            COUNT(pv.poll_vote_id) as total_votes,
@@ -203,6 +203,7 @@ extract($navVars);
                 <div class="results-text">
                     <?= $total ?> vote<?= $total != 1 ? 's' : '' ?>
                     (<?= $t['yea_votes'] ?: 0 ?> yea, <?= $t['nay_votes'] ?: 0 ?> nay, <?= $t['abstain_votes'] ?: 0 ?> abstain)
+                    &middot; <?= date('M j, Y', strtotime($t['poll_created_at'])) ?>
                 </div>
             </div>
         <?php endforeach; ?>

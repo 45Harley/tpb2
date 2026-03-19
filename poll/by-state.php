@@ -251,6 +251,7 @@ extract($navVars);
                 <div class="threat-row">
                     <div class="threat-row-header">
                         <span class="threat-title"><?= htmlspecialchars($poll['question']) ?></span>
+                        <span style="color:#666;font-size:0.75rem;margin-left:auto;"><?= date('M j, Y', strtotime($poll['created_at'])) ?></span>
                     </div>
                     <div class="comparison">
                         <div class="comparison-col">
@@ -301,7 +302,7 @@ extract($navVars);
 
             <?php
             $federalPolls = $pdo->query("
-                SELECT p.poll_id, p.question, p.threat_id,
+                SELECT p.poll_id, p.question, p.threat_id, p.created_at as poll_created_at,
                        et.severity_score, et.title,
                        COUNT(pv.poll_vote_id) as total_votes,
                        SUM(CASE WHEN pv.vote_choice = 'yea' THEN 1 ELSE 0 END) as yea_count,
@@ -334,6 +335,7 @@ extract($navVars);
                         <span class="severity-badge" style="background:<?= $zone['color'] ?>"><?= $fp['severity_score'] ?></span>
                         <?php endif; ?>
                         <span class="threat-title"><?= htmlspecialchars($fp['question']) ?></span>
+                        <span style="color:#666;font-size:0.75rem;margin-left:auto;"><?= date('M j, Y', strtotime($fp['poll_created_at'])) ?></span>
                     </div>
                     <div class="comparison">
                         <div class="comparison-col">
