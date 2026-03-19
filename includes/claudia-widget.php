@@ -72,6 +72,23 @@ if ($dbUser) {
     ];
 }
 
+// Check if page is readable (from ai_clerks table)
+$pageReadable = 1; // default: readable
+if (isset($pdo) && $pdo) {
+    try {
+        $clerkContext = $claudiaConfig['context'] ?? 'general';
+        $stmt = $pdo->prepare("SELECT readable FROM ai_clerks WHERE clerk_key = ? AND enabled = 1");
+        $stmt->execute([$clerkContext]);
+        $row = $stmt->fetch();
+        if ($row !== false) {
+            $pageReadable = (int)$row['readable'];
+        }
+    } catch (Exception $e) {
+        // Table may not have readable column locally — default to 1
+    }
+}
+$claudiaConfig['readable'] = $pageReadable;
+
 // CSS + JS versioning
 $_cuCssPath = __DIR__ . '/../assets/claudia/claudia-unified.css';
 $_cuJsPath = __DIR__ . '/../assets/claudia/claudia-unified.js';
@@ -170,6 +187,46 @@ $jsVer = file_exists($_cuJsPath) ? filemtime($_cuJsPath) : 0;
 <div id="claudia-bubble" class="claudia-bubble">
     <span class="claudia-bubble-icon">C</span>
 </div>
+
+<!-- Right-click context menu -->
+<div id="claudia-context-menu" style="display:none;position:fixed;z-index:10001;background:#1a1a2e;border:1px solid #d4af37;border-radius:8px;padding:0.4rem 0;box-shadow:0 4px 12px rgba(0,0,0,0.5);min-width:160px;">
+    <div id="claudia-read-page" style="padding:0.6rem 1rem;color:#e0e0e0;cursor:pointer;font-size:0.9rem;transition:background 0.15s;">&#9654; Read this page</div>
+</div>
+
+<!-- Floating read controls (appear next to bubble while reading) -->
+<div id="claudia-read-controls" style="display:none;">
+    <button id="claudia-read-pause" class="claudia-rc-btn" title="Pause">&#10074;&#10074;</button>
+    <button id="claudia-read-stop" class="claudia-rc-btn" title="Stop">&#9632;</button>
+</div>
+
+<style>
+#claudia-read-page:hover { background: rgba(212,175,55,0.2); color: #d4af37; }
+@keyframes claudia-pulse {
+    0%, 100% { box-shadow: 0 2px 12px rgba(212,175,55,0.3); }
+    50% { box-shadow: 0 2px 20px rgba(212,175,55,0.8), 0 0 30px rgba(212,175,55,0.4); }
+}
+.claudia-bubble.reading {
+    animation: claudia-pulse 1.5s ease-in-out infinite;
+}
+.claudia-bubble.paused {
+    box-shadow: 0 2px 12px rgba(212,175,55,0.5);
+}
+#claudia-read-controls {
+    position: fixed; z-index: 10000;
+    display: flex; gap: 0.4rem;
+}
+.claudia-rc-btn {
+    width: 2rem; height: 2rem; border-radius: 50%;
+    background: #1a1a2e; border: 1px solid #d4af37; color: #d4af37;
+    cursor: pointer; font-size: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.claudia-rc-btn:hover {
+    background: #d4af37; color: #000;
+}
+</style>
 
 <script>
 window.claudiaConfig = <?= json_encode($claudiaConfig) ?>;

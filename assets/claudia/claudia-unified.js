@@ -155,11 +155,13 @@
 
     // ── Events ──────────────────────────────────────────────
     function bindEvents() {
-        // Bubble — drag to move, click to open
+        // Bubble — drag to move, click to open, right-click to read
         initBubbleDrag();
+        initReadAloud();
 
-        // Minimize → close widget, stop speech, show bubble
+        // Minimize → close widget, stop speech/reading, show bubble
         minimizeBtn.addEventListener('click', function() {
+            if (readAloud.active) stopReadAloud();
             speechSynthesis.cancel();
             stopMic();
             closeWidget();
@@ -289,6 +291,203 @@
         applyPosition();
     }
 
+    // ── Read Aloud ────────────────────────────────────────
+    var readAloud = {
+        active: false,
+        paused: false,
+        chunks: [],
+        currentIdx: 0,
+        contextMenu: null,
+        readBtn: null,
+        controls: null,
+        pauseBtn: null,
+        stopBtn: null
+    };
+
+    function initReadAloud() {
+        readAloud.contextMenu = document.getElementById('claudia-context-menu');
+        readAloud.readBtn = document.getElementById('claudia-read-page');
+        readAloud.controls = document.getElementById('claudia-read-controls');
+        readAloud.pauseBtn = document.getElementById('claudia-read-pause');
+        readAloud.stopBtn = document.getElementById('claudia-read-stop');
+        if (!readAloud.contextMenu || !readAloud.readBtn) return;
+
+        // Right-click bubble → show context menu
+        bubble.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            if (readAloud.active || readAloud.paused) return; // controls are showing, no menu
+            var menu = readAloud.contextMenu;
+            menu.style.left = Math.min(e.clientX, window.innerWidth - 180) + 'px';
+            menu.style.top = (e.clientY - 40) + 'px';
+            menu.style.display = 'block';
+        });
+
+        // Click anywhere closes menu
+        document.addEventListener('click', function() {
+            readAloud.contextMenu.style.display = 'none';
+        });
+
+        // Read page button
+        readAloud.readBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            readAloud.contextMenu.style.display = 'none';
+            startReadAloud();
+        });
+
+        // Pause/resume button
+        if (readAloud.pauseBtn) {
+            readAloud.pauseBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (readAloud.paused) {
+                    resumeReadAloud();
+                } else {
+                    pauseReadAloud();
+                }
+            });
+        }
+
+        // Stop button
+        if (readAloud.stopBtn) {
+            readAloud.stopBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                stopReadAloud();
+            });
+        }
+    }
+
+    function getPageText() {
+        var main = document.querySelector('main')
+            || document.querySelector('[role="main"]')
+            || document.querySelector('.content');
+        if (!main) return '';
+
+        var clone = main.cloneNode(true);
+        clone.querySelectorAll(
+            'nav, footer, script, style, noscript, svg, ' +
+            '#claudia-widget, .claudia-widget, .mandate-chat-wrapper, ' +
+            '.hp-field, [aria-hidden="true"], .view-links, .controls select, ' +
+            'button, input, select, textarea, form, .claudia-bubble'
+        ).forEach(function(el) { el.remove(); });
+
+        return clone.innerText.replace(/\s+/g, ' ').trim();
+    }
+
+    function splitReadText(text) {
+        var sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+        var result = [];
+        var buf = '';
+        for (var i = 0; i < sentences.length; i++) {
+            if ((buf + sentences[i]).length > 200 && buf) {
+                result.push(buf.trim());
+                buf = sentences[i];
+            } else {
+                buf += sentences[i];
+            }
+        }
+        if (buf.trim()) result.push(buf.trim());
+        return result;
+    }
+
+    function startReadAloud() {
+        var readable = CONFIG.readable !== undefined ? CONFIG.readable : 1;
+
+        if (!readable) {
+            // Page marked not readable — open Claudia and suggest help guides
+            openWidget();
+            addMessage('assistant', 'Not much to read on this page. Try the **Help Center** at /help/ for step-by-step visual guides.');
+            return;
+        }
+
+        var text = getPageText();
+        if (!text || text.length < 50) {
+            // No meaningful content — suggest help
+            openWidget();
+            addMessage('assistant', 'This page doesn\'t have much content to read. Try the **Help Center** at /help/ for step-by-step visual guides.');
+            return;
+        }
+
+        readAloud.chunks = splitReadText(text);
+        readAloud.currentIdx = 0;
+        readAloud.active = true;
+        readAloud.paused = false;
+        bubble.classList.add('reading');
+        bubble.classList.remove('paused');
+        showReadControls();
+
+        // Use Claudia's voice if available, otherwise pick one
+        if (!voice.claudiaVoice) pickVoice();
+        speakReadChunk(0);
+    }
+
+    function speakReadChunk(idx) {
+        if (!readAloud.active || idx >= readAloud.chunks.length) {
+            stopReadAloud();
+            return;
+        }
+        readAloud.currentIdx = idx;
+        var u = new SpeechSynthesisUtterance(readAloud.chunks[idx]);
+        u.rate = 1;
+        u.pitch = 1.05;
+        if (voice.claudiaVoice) u.voice = voice.claudiaVoice;
+        u.onend = function() { speakReadChunk(idx + 1); };
+        u.onerror = function(e) {
+            if (e.error !== 'canceled') speakReadChunk(idx + 1);
+        };
+        speechSynthesis.speak(u);
+    }
+
+    function pauseReadAloud() {
+        speechSynthesis.pause();
+        readAloud.paused = true;
+        bubble.classList.remove('reading');
+        bubble.classList.add('paused');
+        if (readAloud.pauseBtn) readAloud.pauseBtn.innerHTML = '&#9654;';
+        if (readAloud.pauseBtn) readAloud.pauseBtn.title = 'Resume';
+    }
+
+    function resumeReadAloud() {
+        speechSynthesis.resume();
+        readAloud.paused = false;
+        bubble.classList.add('reading');
+        bubble.classList.remove('paused');
+        if (readAloud.pauseBtn) readAloud.pauseBtn.innerHTML = '&#10074;&#10074;';
+        if (readAloud.pauseBtn) readAloud.pauseBtn.title = 'Pause';
+    }
+
+    function stopReadAloud() {
+        readAloud.active = false;
+        readAloud.paused = false;
+        readAloud.chunks = [];
+        readAloud.currentIdx = 0;
+        speechSynthesis.cancel();
+        bubble.classList.remove('reading');
+        bubble.classList.remove('paused');
+        hideReadControls();
+        if (readAloud.pauseBtn) {
+            readAloud.pauseBtn.innerHTML = '&#10074;&#10074;';
+            readAloud.pauseBtn.title = 'Pause';
+        }
+    }
+
+    function showReadControls() {
+        if (!readAloud.controls) return;
+        positionReadControls();
+        readAloud.controls.style.display = 'flex';
+    }
+
+    function hideReadControls() {
+        if (!readAloud.controls) return;
+        readAloud.controls.style.display = 'none';
+    }
+
+    function positionReadControls() {
+        if (!readAloud.controls || !bubble) return;
+        var rect = bubble.getBoundingClientRect();
+        // Float above the bubble, centered
+        readAloud.controls.style.left = (rect.left + rect.width / 2 - 36) + 'px';
+        readAloud.controls.style.top = (rect.top - 40) + 'px';
+    }
+
     // ── Bubble Drag ────────────────────────────────────────
     function initBubbleDrag() {
         var dragging = false, moved = false, startX, startY, startLeft, startTop;
@@ -314,6 +513,7 @@
             if (!moved) return;
             bubble.style.left = Math.max(0, Math.min(startLeft + dx, window.innerWidth - 48)) + 'px';
             bubble.style.top = Math.max(0, Math.min(startTop + dy, window.innerHeight - 48)) + 'px';
+            if (readAloud.active || readAloud.paused) positionReadControls();
         }
 
         function onUp() {
@@ -327,8 +527,14 @@
                 };
                 savePosition();
             } else {
-                // Short click — open widget
-                openWidget();
+                // Short click — if reading, pause/resume; otherwise open widget
+                if (readAloud.active && !readAloud.paused) {
+                    pauseReadAloud();
+                } else if (readAloud.paused) {
+                    resumeReadAloud();
+                } else {
+                    openWidget();
+                }
             }
         }
 
