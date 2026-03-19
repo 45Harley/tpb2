@@ -55,7 +55,6 @@ $guideIconMap = [
     'purpose'      => 'philosophy',  // 🎪
     'philosophy'   => 'philosophy',  // 🎪
     'profile'      => 'info',        // ℹ️
-    'mandate-chat' => 'tutorial',    // 🎓
 ];
 // Resolve to actual emoji via the centralized function
 $guideIcons = [];
