@@ -5,11 +5,11 @@
  * CRUD operations for managing modals
  * 
  * Endpoints:
- *   GET    /api/modal/admin.php              - List all modals
- *   GET    /api/modal/admin.php?id=1         - Get single modal
- *   POST   /api/modal/admin.php              - Create new modal
- *   PUT    /api/modal/admin.php?id=1         - Update modal
- *   DELETE /api/modal/admin.php?id=1         - Delete modal
+ *   GET    /api/modal/mgr.php              - List all modals
+ *   GET    /api/modal/mgr.php?id=1         - Get single modal
+ *   POST   /api/modal/mgr.php              - Create new modal
+ *   PUT    /api/modal/mgr.php?id=1         - Update modal
+ *   DELETE /api/modal/mgr.php?id=1         - Delete modal
  */
 
 require_once __DIR__ . '/../../config/modal_config.php';

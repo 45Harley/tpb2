@@ -179,12 +179,12 @@ All lookups filter `deleted_at IS NULL` — soft-deleted users cannot log in.
 Access via `$dbUser['identity_level_id']`.
 
 ### Roles vs Volunteers (two separate systems)
-- **Platform roles** (`user_roles` + `user_role_membership`): What a user can DO on the platform. 39 roles (Admin, Moderator, Developer, Group Facilitator, etc.). Admin role (role_id=1) gates `admin.php` access.
+- **Platform roles** (`user_roles` + `user_role_membership`): What a user can DO on the platform. 39 roles (Admin, Moderator, Developer, Group Facilitator, etc.). Admin role (role_id=1) gates `mgr.php` access.
 - **Volunteer applications** (`volunteer_applications` + `skill_sets`): Application to help BUILD TPB. 15 skill categories (Technical, Content, Designer, etc.). Admin approves/rejects via dashboard.
 - These are **independent systems** — approving a volunteer does not assign a platform role.
 
 ### Soft delete
-Users are **never** hard-deleted. `admin.php` sets `users.deleted_at` timestamp instead.
+Users are **never** hard-deleted. `mgr.php` sets `users.deleted_at` timestamp instead.
 - Devices deactivated (`user_devices.is_active = 0`)
 - Thoughts hidden (`user_thoughts.status = 'draft'`)
 - `getUser($pdo)` returns `false` for deleted users (filtered in all 3 lookup functions)
@@ -201,6 +201,6 @@ Users are **never** hard-deleted. `admin.php` sets `users.deleted_at` timestamp 
 ### Exceptions (files that legitimately skip getUser)
 - **Token-based**: `verify-magic-link.php`, `verify-parent-consent.php`, `verify-phone-link.php` (auth by URL token, not cookie)
 - **Public read-only**: `api/get-thoughts.php` (no auth needed)
-- **Admin**: `admin.php` (hybrid auth: role-based via `user_role_membership` + password fallback from config)
+- **Admin**: `mgr.php` (hybrid auth: role-based via `user_role_membership` + password fallback from config)
 - **Test**: `tests/talk-harness.php` (uses `tpb_user_id` cookie fallback deliberately)
 - **Separate apps**: `0t/*.php` (People Power), `tpb-claude/api/claude-chat.php` (AI subsystem)

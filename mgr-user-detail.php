@@ -2,8 +2,8 @@
 /**
  * Admin User Detail Page
  * ======================
- * Shows complete user info when user_id is clicked in admin.php
- * Same auth as admin.php (role-based + password fallback)
+ * Shows complete user info when user_id is clicked in mgr.php
+ * Same auth as mgr.php (role-based + password fallback)
  */
 
 session_start();
@@ -23,7 +23,7 @@ try {
 
 require_once __DIR__ . '/includes/get-user.php';
 
-// --- Auth: same as admin.php ---
+// --- Auth: same as mgr.php ---
 $adminUser = null;
 $dbUser = getUser($pdo);
 if ($dbUser && empty($_SESSION['tpb_admin_logged_out'])) {
@@ -36,14 +36,14 @@ if ($dbUser && empty($_SESSION['tpb_admin_logged_out'])) {
 }
 
 if (empty($_SESSION['tpb_admin'])) {
-    header('Location: admin.php');
+    header('Location: mgr.php');
     exit;
 }
 
 // --- Get user_id from URL ---
 $userId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if (!$userId) {
-    header('Location: admin.php?tab=users');
+    header('Location: mgr.php?tab=users');
     exit;
 }
 
@@ -296,14 +296,14 @@ $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '
     <div class="header">
         <h1>TPB Admin</h1>
         <div class="header-right">
-            <a href="admin.php?tab=users">&larr; Back to Users</a>
-            <a href="admin.php?tab=dashboard">Dashboard</a>
+            <a href="mgr.php?tab=users">&larr; Back to Users</a>
+            <a href="mgr.php?tab=dashboard">Dashboard</a>
             <a href="?logout=1">Logout</a>
         </div>
     </div>
 
     <div class="container">
-        <a href="admin.php?tab=users" class="back-link">&larr; All Users</a>
+        <a href="mgr.php?tab=users" class="back-link">&larr; All Users</a>
 
         <div class="user-header">
             <div>

@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dbUser && $profileComplete) {
             }
             
             $emailBody .= "\nSUBMITTED\n---------\n" . date('F j, Y g:i A') . "\n\n";
-            $emailBody .= "---\nReview at: https://tpb2.sandgems.net/admin.php\n";
+            $emailBody .= "---\nReview at: https://tpb2.sandgems.net/mgr.php\n";
             
             require_once __DIR__ . '/../includes/smtp-mail.php';
             sendSmtpMail($config, $adminEmail, $subject, $emailBody, 'TPB Volunteer System');

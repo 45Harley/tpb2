@@ -95,7 +95,7 @@ header('Content-Type: text/html; charset=utf-8');
     // Test 4: List All Modals
     echo '<div class="test">';
     echo '<h3>Test 4: List All Modals (Admin API)</h3>';
-    echo '<p><code>GET /api/modal/admin.php</code></p>';
+    echo '<p><code>GET /api/modal/mgr.php</code></p>';
     try {
         $stmt = $db->query("SELECT modal_key, title, status, is_active FROM modals ORDER BY updated_at DESC");
         $modals = $stmt->fetchAll();
@@ -157,11 +157,11 @@ header('Content-Type: text/html; charset=utf-8');
     echo "  GET  /api/modal/get-pages.php              → List predefined pages\n";
     echo "\n";
     echo "ADMIN ENDPOINTS:\n";
-    echo "  GET    /api/modal/admin.php                → List all modals\n";
-    echo "  GET    /api/modal/admin.php?id=1           → Get single modal + locations\n";
-    echo "  POST   /api/modal/admin.php                → Create new modal\n";
-    echo "  PUT    /api/modal/admin.php?id=1           → Update modal\n";
-    echo "  DELETE /api/modal/admin.php?id=1           → Delete modal\n";
+    echo "  GET    /api/modal/mgr.php                → List all modals\n";
+    echo "  GET    /api/modal/mgr.php?id=1           → Get single modal + locations\n";
+    echo "  POST   /api/modal/mgr.php                → Create new modal\n";
+    echo "  PUT    /api/modal/mgr.php?id=1           → Update modal\n";
+    echo "  DELETE /api/modal/mgr.php?id=1           → Delete modal\n";
     echo '</pre>';
     echo '</div>';
     ?>

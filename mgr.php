@@ -88,7 +88,7 @@ if (isset($_GET['logout'])) {
     unset($_SESSION['tpb_admin']);
     unset($_SESSION['tpb_admin_user_id']);
     $_SESSION['tpb_admin_logged_out'] = true;  // suppress auto-login
-    header('Location: admin.php');
+    header('Location: mgr.php');
     exit;
 }
 
@@ -339,10 +339,10 @@ if (isset($_POST['approve_volunteer'])) {
             logAdminAction($pdo, $adminUserId, 'approve_volunteer', 'volunteer', $appId, ['email' => $app['email'], 'email_sent' => $emailSent]);
         }
 
-        header('Location: admin.php?tab=volunteers&msg=' . ($emailSent ?? false ? 'approved' : 'approve_failed'));
+        header('Location: mgr.php?tab=volunteers&msg=' . ($emailSent ?? false ? 'approved' : 'approve_failed'));
         exit;
     } else {
-        header('Location: admin.php?tab=volunteers');
+        header('Location: mgr.php?tab=volunteers');
         exit;
     }
 }
@@ -382,10 +382,10 @@ if (isset($_POST['reject_volunteer'])) {
             logAdminAction($pdo, $adminUserId, 'reject_volunteer', 'volunteer', $appId, ['email' => $app['email'], 'email_sent' => $emailSent]);
         }
 
-        header('Location: admin.php?tab=volunteers&msg=' . ($emailSent ?? false ? 'rejected' : 'reject_failed'));
+        header('Location: mgr.php?tab=volunteers&msg=' . ($emailSent ?? false ? 'rejected' : 'reject_failed'));
         exit;
     } else {
-        header('Location: admin.php?tab=volunteers');
+        header('Location: mgr.php?tab=volunteers');
         exit;
     }
 }
@@ -1517,7 +1517,7 @@ $adminActions = $pdo->query("
                 <tbody>
                     <?php foreach ($users as $user): ?>
                         <tr<?= $user['deleted_at'] ? ' style="opacity: 0.5;"' : '' ?>>
-                            <td class="sticky-id"><a href="admin-user-detail.php?id=<?= $user['user_id'] ?>" class="user-id-link" title="View full profile"><?= $user['user_id'] ?></a></td>
+                            <td class="sticky-id"><a href="mgr-user-detail.php?id=<?= $user['user_id'] ?>" class="user-id-link" title="View full profile"><?= $user['user_id'] ?></a></td>
                             <td class="sticky-email"><?= htmlspecialchars($user['email'] ?? '-') ?></td>
                             <td><?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?: '-') ?></td>
                             <td>

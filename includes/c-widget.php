@@ -27,8 +27,8 @@ if (!isset($claudiaConfig)) {
 }
 
 // Toggle check: site-wide
-// Note: getSiteSetting() is defined in admin.php. For c-widget.php,
-// use a simple inline query since we don't want to require admin.php.
+// Note: getSiteSetting() is defined in mgr.php. For c-widget.php,
+// use a simple inline query since we don't want to require mgr.php.
 $claudiaWidgetEnabled = '0';
 if (isset($pdo) && $pdo) {
     try {
