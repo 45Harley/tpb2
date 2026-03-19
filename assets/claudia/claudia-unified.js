@@ -538,7 +538,7 @@
             }
         }
 
-        bubble.addEventListener('mousedown', function(e) { onDown(e.clientX, e.clientY); e.preventDefault(); });
+        bubble.addEventListener('mousedown', function(e) { if (e.button === 2) return; onDown(e.clientX, e.clientY); e.preventDefault(); });
         document.addEventListener('mousemove', function(e) { onMove(e.clientX, e.clientY); });
         document.addEventListener('mouseup', onUp);
 
