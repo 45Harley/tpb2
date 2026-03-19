@@ -356,9 +356,23 @@
     }
 
     function getPageText() {
+        // Find the best content container — try semantic first, then known wrappers
         var main = document.querySelector('main')
             || document.querySelector('[role="main"]')
+            || document.querySelector('.guide-container')
+            || document.querySelector('.polls-container')
+            || document.querySelector('.help-container')
+            || document.querySelector('.talk-container')
+            || document.querySelector('.volunteer-container')
+            || document.querySelector('.constitution-container')
+            || document.querySelector('.elections-container')
             || document.querySelector('.content');
+        // Last resort: grab everything between nav and footer
+        if (!main) {
+            var body = document.body.cloneNode(true);
+            body.querySelectorAll('header, nav, footer, script, style, noscript, #claudia-widget, .claudia-widget, .claudia-bubble').forEach(function(el) { el.remove(); });
+            return body.innerText.replace(/\s+/g, ' ').trim();
+        }
         if (!main) return '';
 
         var clone = main.cloneNode(true);
