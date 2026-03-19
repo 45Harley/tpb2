@@ -4,18 +4,18 @@
   "subtitle": "Join, verify your email, set your town, and find your representatives.",
   "generated": "2026-03-18T17:46:59.114Z",
   "stepCount": 6,
-  "link": {
-    "url": "/help/videos/getting-started-walkthrough.webm",
-    "label": "Watch the video walkthrough",
-    "target": "_blank"
-  },
   "steps": [
     {
       "number": 1,
       "title": "Visit The People's Branch",
       "description": "Go to the home page. You'll see an interactive map of the United States and links to get involved in your community.",
       "alt": "The People's Branch home page with interactive USA map",
-      "screenshot": "onboarding-01-home.png"
+      "screenshot": "onboarding-01-home.png",
+      "link": {
+        "url": "/help/videos/getting-started-walkthrough.webm",
+        "label": "Watch the video walkthrough",
+        "target": "_blank"
+      }
     },
     {
       "number": 2,
