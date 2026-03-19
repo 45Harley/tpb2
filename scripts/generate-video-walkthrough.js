@@ -752,7 +752,7 @@ asyncio.run(go())
     const videoFile = path.join(VIDEO_DIR, name + '-walkthrough.webm');
     const finalFile = path.join(VIDEO_DIR, name + '-final.webm');
     execSync(
-        `"${FFMPEG_PATH}" -i "${videoFile}" -i "${audioFile}" -c:v copy -c:a libopus -b:a 64k -shortest "${finalFile}" -y`,
+        `"${FFMPEG_PATH}" -i "${videoFile}" -i "${audioFile}" -c:v copy -c:a libopus -b:a 64k "${finalFile}" -y`,
         { stdio: 'pipe', timeout: 60000 }
     );
 

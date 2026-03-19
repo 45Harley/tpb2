@@ -24,53 +24,50 @@ Step 1: Write the walkthrough script
    - File: scripts/generate-video-walkthrough.js
    - Define each step: page navigation, mouse movement, clicks, typing, captions
    - Playwright controls a headless Chromium browser
-   - An injected SVG cursor follows mouse.move() calls
-   - A gold ring animation flashes on each click
-   - Caption overlays appear at the bottom of the viewport
-   - Cursor must be re-injected after each page.goto() (navigation destroys DOM)
 
-Step 2: Record the silent video
+   MOUSE & VISUAL OVERLAYS (important!):
+   - injectCursor(page) — injects a white SVG arrow cursor that follows mouse moves
+     * MUST be called after every page.goto() — navigation destroys the DOM
+     * Without it, the video shows no mouse movement (headless has no real cursor)
+   - slowMove(page, x, y, steps) — smoothly moves cursor to coordinates
+   - moveToElement(page, selector) — moves cursor to center of element
+   - clickFlash(page, x, y) — shows a gold ring animation at click point
+   - clickElement(page, selector) — moves to element, flashes, clicks
+   - hoverElement(page, selector, duration) — moves to element, shows tooltip
+   - selectDropdown(page, selector, value) — animated fake dropdown overlay
+   - caption(page, text, duration) — centered caption bar at bottom of viewport
+   - All timing is logged to a JSON file for audio sync
+
+Step 2: Record and narrate (automated — one command does both)
    - Start XAMPP (Apache must be running on localhost)
-   - Run:  SITE_URL=http://localhost/tpb2 AUTH_USER_ID=1 node scripts/generate-video-walkthrough.js
-   - Output: help/videos/discuss-and-draft-walkthrough.webm (silent, with cursor + captions)
+   - Run:
+     SITE_URL=http://localhost/tpb2 AUTH_USER_ID=1 node scripts/generate-video-walkthrough.js <name>
+   - Available walkthroughs: discuss-and-draft, profile, getting-started, all
+   - The script automatically:
+     1. Records silent video with cursor overlays + captions (.webm)
+     2. Saves timing log (.json) mapping each caption to its timestamp
+     3. Generates TTS audio clips via edge-tts (en-US-JennyNeural voice)
+     4. Inserts silence gaps between clips to sync with video timing
+     5. Merges video + audio into final .webm with ffmpeg
 
-Step 3: Write the narration text
-   - Extract caption lines from the walkthrough script
-   - Timestamp each line to match the video
-   - Adapt for spoken delivery:
-     * Replace em dashes (--) with commas or pauses
-     * Remove stage directions like [Typing: "..."] -- rewrite as spoken ("Now typing...")
-     * Remove quotation marks around UI labels (TTS reads them literally)
-     * Simplify apostrophes and Unicode characters
-     * Add emphasis cues if needed
+   Voice: en-US-JennyNeural (female, natural) via edge-tts Python package
+   - pip install edge-tts (if not installed)
+   - Rate: -10% (slightly slower for clarity)
+   - All TTS generation is automatic — no manual PowerShell needed
 
-Step 4: Generate TTS audio (Windows Speech Synthesis)
-   - PowerShell script using System.Speech.SpeechSynthesizer
-   - Set rate: $speak.Rate = -1 (slightly slower for clarity)
-   - Add pauses between lines: Start-Sleep -Milliseconds 800
-   - Output: help/videos/narration.wav
-   - Example:
-     powershell -Command "
-       Add-Type -AssemblyName System.Speech
-       $speak = New-Object System.Speech.Synthesis.SpeechSynthesizer
-       $speak.Rate = -1
-       $speak.SetOutputToWaveFile('C:\tpb2\help\videos\narration.wav')
-       $speak.Speak('Welcome to The Peoples Branch.')
-       Start-Sleep -Milliseconds 800
-       $speak.Speak('Lets draft a mandate for your representatives.')
-       ...
-       $speak.Dispose()
-     "
-   - Alternative: record your own voice for human narration (Audacity, phone, etc.)
+Step 3: Verify and link
+   - Play the final .webm to check cursor, captions, and narration sync
+   - Add a "link" field to the guide JSON (step 1 of the guide):
+     "link": {
+       "url": "/help/videos/<name>-walkthrough.webm",
+       "label": "Watch the video walkthrough",
+       "target": "_blank"
+     }
 
-Step 5: Merge video + audio with ffmpeg
-   - Command:
-     ffmpeg -i discuss-and-draft-walkthrough.webm -i narration.wav \
-       -c:v copy -c:a libopus -b:a 64k -shortest output.webm
+   ffmpeg merge details (handled automatically by the script):
    - -c:v copy = keep video as-is (fast, no re-encode)
    - -c:a libopus = encode audio as Opus (small, web-optimized)
-   - -shortest = stop when the shorter stream ends
-   - Rename output to replace the silent version
+   - No -shortest flag — audio plays to completion even if video is shorter
 
 Step 6: Link from the guide page
    - Add a "link" field to the guide JSON (help/data/talk.json):
@@ -89,13 +86,18 @@ Step 7: Push to staging
 
 TO CREATE ANOTHER VIDEO
 -----------------------
-1. Add a new walkthrough function in generate-video-walkthrough.js
-2. Run the script -> silent .webm with cursor + captions
-3. Write narration lines, adapt for TTS
-4. Generate .wav with PowerShell (or record your voice)
-5. ffmpeg merge -> final .webm with audio
-6. Add link to the relevant guide JSON
-7. Push to staging
+1. Add a new async function walkthroughXxx(context) in generate-video-walkthrough.js
+   - Use injectCursor(page) after every page.goto()
+   - Use slowMove/moveToElement for visible mouse movement
+   - Use clickElement (not page.click) for gold click flash
+   - Use caption() for on-screen text (auto-logged for TTS timing)
+   - Use hoverElement for tooltip reveals
+   - Use selectDropdown for animated dropdown selection
+2. Register it in the walkthroughs object at the bottom of the file
+3. Run: SITE_URL=http://localhost/tpb2 AUTH_USER_ID=1 node scripts/generate-video-walkthrough.js <name>
+   - Records video + generates JennyNeural narration + merges — all in one step
+4. Add link to step 1 of the relevant guide JSON in help/data/
+5. Push to staging
 
 
 NARRATION TEXT
