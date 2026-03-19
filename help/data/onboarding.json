@@ -2,8 +2,13 @@
   "id": "onboarding",
   "title": "Getting Started",
   "subtitle": "Join, verify your email, set your town, and find your representatives.",
-  "generated": "2026-03-18T17:42:35.515Z",
+  "generated": "2026-03-18T17:46:59.114Z",
   "stepCount": 6,
+  "link": {
+    "url": "/help/videos/getting-started-walkthrough.webm",
+    "label": "Watch the video walkthrough",
+    "target": "_blank"
+  },
   "steps": [
     {
       "number": 1,

@@ -686,7 +686,7 @@ async function generateSyncedAudio(name) {
         fs.writeFileSync(pyFile, `
 import edge_tts, asyncio
 async def go():
-    c = edge_tts.Communicate(${JSON.stringify(spokenText)}, 'en-US-GuyNeural', rate='-10%')
+    c = edge_tts.Communicate(${JSON.stringify(spokenText)}, 'en-US-JennyNeural', rate='-10%')
     await c.save(r'${clipFile.replace(/\\/g, '\\\\')}')
 asyncio.run(go())
 `);
@@ -728,7 +728,7 @@ asyncio.run(go())
             const silFile = path.join(clipDir, `silence_${String(i).padStart(3, '0')}.mp3`);
             execSync(
                 `"${FFMPEG_PATH}" -f lavfi -i anullsrc=r=24000:cl=mono -t ${silenceNeeded.toFixed(3)} -c:a libmp3lame -b:a 64k "${silFile}" -y`,
-                { stdio: 'pipe', timeout: 10000 }
+                { stdio: 'pipe', timeout: 30000 }
             );
             concatContent += `file '${silFile.replace(/\\/g, '/')}'\n`;
             currentTime += silenceNeeded;
@@ -769,9 +769,150 @@ asyncio.run(go())
     if (fs.existsSync(audioFile)) fs.unlinkSync(audioFile);
 }
 
+// ── Getting Started Walkthrough ──────────────────────────────────────
+
+async function walkthroughGettingStarted(context) {
+    console.log('Recording: Getting Started Walkthrough');
+    startTiming();
+
+    const page = await context.newPage();
+
+    // Clear auth cookie so we see the logged-out state
+    await context.clearCookies();
+
+    // 1. Home page — show the map
+    await page.goto('/', { waitUntil: 'networkidle' });
+    await injectCursor(page);
+    await pause(page, 1000);
+    await caption(page, 'Welcome to The People\'s Branch', 2500);
+    await caption(page, 'An interactive civic platform for every American', 2500);
+
+    // Pan over the map
+    const mapEl = page.locator('#usa-map, .map-container, canvas').first();
+    if (await mapEl.count() > 0) {
+        const box = await mapEl.boundingBox();
+        if (box) {
+            await slowMove(page, box.x + box.width * 0.3, box.y + box.height * 0.5, 30);
+            await pause(page, 500);
+            await slowMove(page, box.x + box.width * 0.7, box.y + box.height * 0.4, 30);
+            await pause(page, 500);
+        }
+    }
+    await caption(page, 'The map shows every state — click to explore', 2500);
+
+    // 2. Click Login dropdown — need to hover to open the dropdown menu
+    await pause(page, 500);
+    await caption(page, 'To get started, click Login', 2000);
+    // The nav dropdown opens on hover
+    const loginLink = page.locator('.login-link, a[href="/join.php"], a:has-text("Login")').first();
+    if (await loginLink.count() > 0) {
+        await moveToElement(page, '.login-link, a[href="/join.php"], a:has-text("Login")');
+        await pause(page, 800);
+        // Try to click the dropdown toggle
+        await page.locator('.login-link, a[href="/join.php"], a:has-text("Login")').first().click();
+        await pause(page, 800);
+    }
+
+    // Navigate to join page
+    await caption(page, 'Click New User to create your account', 2500);
+    await page.goto('/join.php', { waitUntil: 'networkidle' });
+    await injectCursor(page);
+    await caption(page, 'This is the sign-up page', 2000);
+
+    // 3. Fill in the form
+    await pause(page, 500);
+    await caption(page, 'Enter your email address', 2000);
+    await slowType(page, '#email', 'maria@example.com', 60);
+    await pause(page, 500);
+
+    await caption(page, 'Add your name — optional but helps us serve you better', 2500);
+    await slowType(page, '#firstName', 'Maria', 80);
+    await pause(page, 300);
+    await slowType(page, '#lastName', 'Garcia', 80);
+    await pause(page, 500);
+
+    // Select age bracket
+    await caption(page, 'Select your age range', 2000);
+    await selectDropdown(page, '#ageBracket', '25-44', 'Age: 25-44');
+    await pause(page, 500);
+
+    // Hover submit button
+    await caption(page, 'Click Continue with Email', 2000);
+    await moveToElement(page, '#submitBtn');
+    await pause(page, 800);
+    await clickFlash(page, (await page.locator('#submitBtn').boundingBox()).x + 60, (await page.locator('#submitBtn').boundingBox()).y + 20);
+    await pause(page, 500);
+
+    // 4. Email verification caption (don't actually submit)
+    await caption(page, 'Check your inbox for a verification link', 2500);
+    await pause(page, 500);
+    await caption(page, 'One click and you\'re verified — one email, one citizen', 2500);
+
+    // 5. Navigate to Profile (as logged-in user)
+    // Re-add auth cookie for logged-in sections
+    const domain = new URL(BASE_URL).hostname;
+    await context.addCookies([
+        { name: 'tpb_user_id', value: AUTH_USER_ID, domain, path: '/' }
+    ]);
+    await caption(page, 'After verifying, visit your Profile to set your location', 2500);
+    await page.goto('/profile.php', { waitUntil: 'networkidle' });
+    await injectCursor(page);
+    await pause(page, 1000);
+    await caption(page, 'This is your Profile — your civic identity', 2500);
+
+    // Scroll to location section
+    await page.evaluate(() => {
+        const el = document.getElementById('town');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    await pause(page, 1000);
+    await caption(page, 'Set your state and town to connect to your community', 2500);
+
+    // Hover the change/set location button
+    const locBtn = page.locator('#changeLocationBtn, #setLocationBtn');
+    if (await locBtn.count() > 0 && await locBtn.isVisible()) {
+        await hoverElement(page, '#changeLocationBtn, #setLocationBtn', 1500);
+        await caption(page, 'Click to choose your state and type your town name', 2500);
+    }
+
+    // Show districts if present
+    const districts = page.locator('.location-display .districts');
+    if (await districts.count() > 0 && await districts.isVisible()) {
+        await moveToElement(page, '.location-display .districts');
+        await pause(page, 800);
+        await caption(page, 'Your congressional district is detected automatically', 2500);
+    }
+
+    // 6. Navigate to My Reps
+    await caption(page, 'Now let\'s find your representatives', 2000);
+    await page.goto('/reps.php?my=1', { waitUntil: 'networkidle' });
+    await injectCursor(page);
+    await pause(page, 1000);
+    await caption(page, 'My Reps — everyone who represents you', 2500);
+
+    // Scroll slowly through reps cards
+    await page.evaluate(() => window.scrollTo({ top: 300, behavior: 'smooth' }));
+    await pause(page, 1500);
+    await caption(page, 'From Congress all the way to your town hall', 2500);
+
+    await page.evaluate(() => window.scrollTo({ top: 600, behavior: 'smooth' }));
+    await pause(page, 1500);
+    await caption(page, 'See their contact info, voting record, and more', 2500);
+
+    // 7. End — scroll back up
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    await pause(page, 1500);
+    await caption(page, 'That\'s it — you\'re set up and ready to participate', 3000);
+    await pause(page, 1000);
+
+    await page.close();
+    console.log('  Recording complete.');
+}
+
 const walkthroughs = {
     'discuss-and-draft': walkthroughDiscussAndDraft,
     'profile': walkthroughProfile,
+    'getting-started': walkthroughGettingStarted,
 };
 
 async function main() {
