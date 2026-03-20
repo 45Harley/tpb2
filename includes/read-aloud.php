@@ -189,6 +189,7 @@
     let selTimeout = null;
 
     function readSelection(text) {
+        synth.cancel(); // clear any queued speech
         bar.style.display = 'flex';
         chunks = splitText(text);
         currentIdx = 0;
@@ -228,10 +229,11 @@
         }, 200);
     });
 
-    // Hide button when clicking elsewhere or scrolling
+    // Hide button when clicking elsewhere
     document.addEventListener('mousedown', function(e) {
-        if (!e.target.closest('.ra-selection-btn')) {
-            selBtn.style.display = 'none';
+        if (!e.target.closest('.ra-selection-btn, .ra-bar')) {
+            // Delay hide so click on button can fire first
+            setTimeout(function() { selBtn.style.display = 'none'; }, 150);
         }
     });
 })();
