@@ -185,7 +185,7 @@ $sqlLines[] = "";
 
 foreach ($threats as $threat) {
     $title = trim($threat['title'] ?? '');
-    $date = trim($threat['threat_date'] ?? $today);
+    $date = $today; // always stamp with collection date, not article date
     $desc = trim($threat['description'] ?? '');
     $type = in_array($threat['threat_type'] ?? '', ['tactical', 'strategic']) ? $threat['threat_type'] : 'tactical';
     $target = trim($threat['target'] ?? '');

@@ -98,7 +98,54 @@ $pageStyles = <<<'CSS'
     50% { opacity: 0.7; text-shadow: 0 0 20px currentColor; }
 }
 
-/* Subscribe bar */
+/* Subscribe banner */
+.subscribe-banner {
+    background: linear-gradient(135deg, #1a1a0a 0%, #2a2510 100%);
+    border: 1px solid #d4af37; border-radius: 8px;
+    padding: 1rem 1.5rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    flex-wrap: wrap;
+}
+.subscribe-banner.subscribed { border-color: #4caf50; background: linear-gradient(135deg, #0a1a0a 0%, #102510 100%); }
+.sub-banner-text { color: #d4af37; font-size: 1rem; font-weight: 600; }
+.sub-banner-text small { display: block; color: #b0b0b0; font-weight: 400; font-size: 0.85rem; margin-top: 0.2rem; }
+.subscribe-banner.subscribed .sub-banner-text { color: #4caf50; }
+.sub-banner-btn {
+    padding: 0.5rem 1.5rem; border: none; border-radius: 6px;
+    font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
+    background: #d4af37; color: #000;
+}
+.sub-banner-btn:hover { background: #e8c84a; transform: scale(1.02); }
+.sub-banner-btn.unsub-btn { background: #333; color: #aaa; font-weight: 400; font-size: 0.8rem; padding: 0.4rem 1rem; }
+.sub-banner-btn.unsub-btn:hover { background: #444; color: #ccc; }
+
+/* Subscribe popup overlay */
+.sub-popup-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7); z-index: 9999;
+    justify-content: center; align-items: center;
+}
+.sub-popup-overlay.open { display: flex; }
+.sub-popup {
+    background: #1a1a2e; border: 1px solid #444; border-radius: 12px;
+    padding: 2rem; max-width: 420px; width: 90%; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.sub-popup h3 { color: #e0e0e0; margin: 0 0 1rem; font-size: 1.2rem; }
+.sub-popup p { color: #b0b0b0; margin: 0.5rem 0; font-size: 0.95rem; line-height: 1.5; }
+.sub-popup .email-highlight { color: #d4af37; font-weight: 600; }
+.sub-popup .checkmark { font-size: 3rem; color: #4caf50; margin-bottom: 0.5rem; }
+.sub-popup .sub-popup-btn {
+    display: inline-block; margin-top: 1rem; padding: 0.5rem 2rem;
+    background: #d4af37; color: #000; border: none; border-radius: 6px;
+    font-weight: 700; cursor: pointer; font-size: 0.9rem;
+}
+.sub-popup .sub-popup-btn:hover { background: #e8c84a; }
+.sub-popup .sub-popup-btn.secondary { background: #333; color: #ccc; margin-left: 0.5rem; }
+.sub-popup .sub-popup-link { color: #d4af37; text-decoration: none; }
+.sub-popup .sub-popup-link:hover { text-decoration: underline; }
+
+/* Legacy subscribe bar — keep as secondary control */
 .subscribe-bar {
     display: flex; align-items: center; justify-content: center; gap: 0.75rem;
     padding: 0.75rem 1rem; margin-bottom: 1rem;
@@ -297,18 +344,27 @@ require dirname(__DIR__) . '/includes/nav.php';
         </div>
     </div>
 
-    <!-- Subscribe to daily alerts -->
-    <div class="subscribe-bar">
-    <?php if ($dbUser && ($dbUser['identity_level_id'] ?? 0) >= 2): ?>
-        <span class="sub-label">Daily threat alerts by email</span>
-        <label class="toggle-switch">
-            <input type="checkbox" id="bulletinToggle" <?= !empty($dbUser['notify_threat_bulletin']) ? 'checked' : '' ?> onchange="toggleBulletin(this.checked)">
-            <span class="toggle-slider"></span>
-        </label>
-        <span class="sub-status" id="bulletinStatus"></span>
+    <!-- Subscribe banner -->
+    <?php
+    $isVerified = $dbUser && ($dbUser['identity_level_id'] ?? 0) >= 2;
+    $isSubscribed = $isVerified && !empty($dbUser['notify_threat_bulletin']);
+    $userEmail = $dbUser['email'] ?? '';
+    ?>
+    <?php if ($isSubscribed): ?>
+    <div class="subscribe-banner subscribed" id="subBanner">
+        <span class="sub-banner-text">You're subscribed to Daily Threat Alerts<small>Delivered to <?= htmlspecialchars($userEmail) ?></small></span>
+        <button class="sub-banner-btn unsub-btn" onclick="subAction('unsubscribe')">Unsubscribe</button>
+    </div>
     <?php else: ?>
-        <span class="sub-hint">Sign in and verify your email to get daily threat alerts</span>
+    <div class="subscribe-banner" id="subBanner">
+        <span class="sub-banner-text">Get totally free Daily Threat Alerts delivered to your inbox<small>Stay informed. No spam. Unsubscribe anytime.</small></span>
+        <button class="sub-banner-btn" onclick="subAction('subscribe')">Subscribe Free</button>
+    </div>
     <?php endif; ?>
+
+    <!-- Subscribe popup -->
+    <div class="sub-popup-overlay" id="subPopup" onclick="if(event.target===this)closeSubPopup()">
+        <div class="sub-popup" id="subPopupContent"></div>
     </div>
 
     <!-- Filters -->
@@ -453,27 +509,104 @@ function sortThreats(sortBy) {
     cards.forEach(card => stream.appendChild(card));
 }
 
-function toggleBulletin(checked) {
-    const status = document.getElementById('bulletinStatus');
-    fetch('/api/save-profile.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ notify_threat_bulletin: checked ? 1 : 0 })
-    })
-    .then(r => r.json())
-    .then(d => {
-        if (d.status === 'success') {
-            status.textContent = checked ? 'Subscribed!' : 'Unsubscribed';
-            status.style.color = checked ? '#4caf50' : '#888';
-            status.style.display = 'inline';
-            setTimeout(() => { status.style.display = 'none'; }, 3000);
+// Subscribe banner + popup system
+const SUB_USER = <?= json_encode([
+    'loggedIn' => (bool)$dbUser,
+    'verified' => $isVerified,
+    'subscribed' => $isSubscribed,
+    'email' => $userEmail
+]) ?>;
+
+function subAction(action) {
+    const popup = document.getElementById('subPopup');
+    const content = document.getElementById('subPopupContent');
+
+    if (action === 'subscribe') {
+        if (!SUB_USER.loggedIn) {
+            content.innerHTML = '<h3>Create a Free Account</h3>'
+                + '<p>Sign up to subscribe to Daily Threat Alerts.</p>'
+                + '<a href="/join.php" class="sub-popup-btn">Create Account</a>'
+                + ' <a href="/login.php" class="sub-popup-btn secondary">Log In</a>';
+            popup.classList.add('open');
+            return;
         }
-    })
-    .catch(() => {
-        status.textContent = 'Error saving';
-        status.style.color = '#f44336';
-        status.style.display = 'inline';
-    });
+        if (!SUB_USER.verified) {
+            content.innerHTML = '<h3>Verify Your Email First</h3>'
+                + '<p>We need a verified email address to send you alerts.</p>'
+                + '<a href="/profile.php" class="sub-popup-btn">Go to Profile</a>';
+            popup.classList.add('open');
+            return;
+        }
+        // Subscribe + send today's bulletin immediately
+        content.innerHTML = '<h3>Subscribing...</h3><p>Sending today\'s bulletin to ' + SUB_USER.email + '</p>';
+        popup.classList.add('open');
+
+        fetch('/api/save-profile.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ notify_threat_bulletin: 1 })
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.status === 'success') {
+                // Update banner immediately
+                const banner = document.getElementById('subBanner');
+                banner.className = 'subscribe-banner subscribed';
+                banner.innerHTML = '<span class="sub-banner-text">You\'re subscribed to Daily Threat Alerts'
+                    + '<small>Delivered to ' + SUB_USER.email + '</small></span>'
+                    + '<button class="sub-banner-btn unsub-btn" onclick="subAction(\'unsubscribe\')">Unsubscribe</button>';
+                SUB_USER.subscribed = true;
+
+                // Now send today's bulletin
+                return fetch('/api/send-threat-bulletin-now.php');
+            }
+            throw new Error('Subscribe failed');
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.status === 'success') {
+                content.innerHTML = '<div class="checkmark">&#10003;</div>'
+                    + '<h3>You\'re Subscribed</h3>'
+                    + '<p>Today\'s Threat Bulletin (' + d.threats + ' threats) sent to<br>'
+                    + '<span class="email-highlight">' + SUB_USER.email + '</span></p>'
+                    + '<p style="color:#888;font-size:0.85rem;">You\'ll get a new bulletin every morning.</p>'
+                    + '<button class="sub-popup-btn" onclick="closeSubPopup()">Got It</button>';
+            } else {
+                content.innerHTML = '<div class="checkmark">&#10003;</div>'
+                    + '<h3>You\'re Subscribed</h3>'
+                    + '<p>Daily alerts will be sent to<br><span class="email-highlight">' + SUB_USER.email + '</span></p>'
+                    + '<p style="color:#888;font-size:0.85rem;">' + (d.message || 'Your first bulletin arrives tomorrow morning.') + '</p>'
+                    + '<button class="sub-popup-btn" onclick="closeSubPopup()">Got It</button>';
+            }
+        })
+        .catch(() => {
+            content.innerHTML = '<h3>Something went wrong</h3><p>Please try again.</p>'
+                + '<button class="sub-popup-btn" onclick="closeSubPopup()">Close</button>';
+        });
+    }
+
+    if (action === 'unsubscribe') {
+        fetch('/api/save-profile.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ notify_threat_bulletin: 0 })
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.status === 'success') {
+                const banner = document.getElementById('subBanner');
+                banner.className = 'subscribe-banner';
+                banner.innerHTML = '<span class="sub-banner-text">Get totally free Daily Threat Alerts delivered to your inbox'
+                    + '<small>Stay informed. No spam. Unsubscribe anytime.</small></span>'
+                    + '<button class="sub-banner-btn" onclick="subAction(\'subscribe\')">Subscribe Free</button>';
+                SUB_USER.subscribed = false;
+            }
+        });
+    }
+}
+
+function closeSubPopup() {
+    document.getElementById('subPopup').classList.remove('open');
 }
 
 function openEmailModal() { document.getElementById('emailModal').classList.add('open'); }
