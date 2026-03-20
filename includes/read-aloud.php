@@ -14,6 +14,7 @@
     <button id="ra-close" class="ra-btn ra-close" title="Close">&times;</button>
 </div>
 <button id="ra-selection-btn" class="ra-selection-btn" style="display:none;" title="Read selected text aloud">&#9654; Read This</button>
+<div id="ra-hint" class="ra-hint">&#9654; Select text to read aloud</div>
 
 <style>
 .ra-selection-btn {
@@ -27,6 +28,24 @@
 }
 .ra-selection-btn:hover { background: #252540; transform: scale(1.05); }
 @keyframes raSelFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.ra-hint {
+    position: fixed; bottom: 5rem; right: 1.5rem; z-index: 900;
+    background: #1a1a2e; color: #d4af37; border: 1px solid #d4af37;
+    padding: 0.4rem 1rem; border-radius: 16px; font-size: 0.8rem;
+    font-weight: 600; pointer-events: none;
+    transform: rotate(-15deg);
+    opacity: 0;
+    animation: raHintPulse 1.5s ease-in-out 2;
+    animation-delay: 2s;
+    animation-fill-mode: forwards;
+}
+@keyframes raHintPulse {
+    0% { opacity: 0; transform: rotate(-15deg) scale(0.9); }
+    20% { opacity: 1; transform: rotate(-15deg) scale(1.05); }
+    40% { opacity: 1; transform: rotate(-15deg) scale(1); }
+    80% { opacity: 1; transform: rotate(-15deg) scale(1); }
+    100% { opacity: 0; transform: rotate(-15deg) scale(0.95); }
+}
 .ra-bar {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
     background: #1a1a2e; border-top: 1px solid #d4af37;
