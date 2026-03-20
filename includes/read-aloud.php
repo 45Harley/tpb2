@@ -35,7 +35,7 @@
     font-weight: 600; pointer-events: none;
     transform: rotate(-15deg);
     opacity: 0;
-    animation: raHintPulse 1.5s ease-in-out 2;
+    animation: raHintPulse 1.5s ease-in-out 10;
     animation-delay: 2s;
     animation-fill-mode: forwards;
 }
