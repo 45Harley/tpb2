@@ -120,9 +120,12 @@
         currentIdx = idx;
         const utt = new SpeechSynthesisUtterance(chunks[idx]);
         utt.rate = parseFloat(speedSel.value);
-        utt.voice = pickVoice();
+        const voice = pickVoice();
+        if (voice) utt.voice = voice;
+        utt.lang = 'en-US';
         utt.onend = () => speakChunk(idx + 1);
         utt.onerror = (e) => {
+            progress.textContent = 'Error: ' + e.error;
             if (e.error !== 'canceled') speakChunk(idx + 1);
         };
         progress.textContent = (idx + 1) + '/' + chunks.length + ': ' + chunks[idx].substring(0, 60) + '...';
@@ -189,9 +192,11 @@
     let selTimeout = null;
 
     function readSelection(text) {
-        synth.cancel(); // clear any queued speech
+        synth.cancel();
         bar.style.display = 'flex';
+        progress.textContent = 'Starting...';
         chunks = splitText(text);
+        if (!chunks.length) { progress.textContent = 'No text to read.'; return; }
         currentIdx = 0;
         speaking = true;
         showPause();
