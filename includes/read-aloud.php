@@ -53,7 +53,7 @@
     const synth = window.speechSynthesis;
     if (!synth) return;
 
-    const bar = document.getElementById('ra-bar');
+    const bar = document.getElementById('read-aloud-bar');
     const playBtn = document.getElementById('ra-play');
     const pauseBtn = document.getElementById('ra-pause');
     const stopBtn = document.getElementById('ra-stop');
