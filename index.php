@@ -131,6 +131,16 @@ foreach ($sessionHistory as $h) {
     if ($h['action_type'] === 'zip_lookup') $hasEnteredZip = true;
 }
 
+// Threat count for floating bubble
+$threatCount = 0;
+$threatHighCrime = 0;
+if ($pdo) {
+    $tq = $pdo->query("SELECT COUNT(*) as cnt, SUM(CASE WHEN severity_score >= 300 THEN 1 ELSE 0 END) as hc FROM executive_threats WHERE is_active = 1 AND threat_date >= DATE_SUB(CURDATE(), INTERVAL 2 DAY)");
+    $tr = $tq->fetch(PDO::FETCH_ASSOC);
+    $threatCount = (int)($tr['cnt'] ?? 0);
+    $threatHighCrime = (int)($tr['hc'] ?? 0);
+}
+
 // Nav variables via helper (get-user.php already loaded above)
 $navVars = getNavVarsForUser($dbUser, $sessionPoints);
 extract($navVars);
@@ -2450,6 +2460,75 @@ $pageTitle = 'The People\'s Branch - A More Perfect Union';
         
     })();
     </script>
+<?php if ($threatCount > 0): ?>
+<!-- Threat Alerts floating bubble -->
+<style>
+.threat-bubble {
+    position: fixed; bottom: 24px; left: 24px; z-index: 900;
+    background: linear-gradient(135deg, #1a1a2e 0%, #252540 100%);
+    border: 2px solid #f44336; border-radius: 12px;
+    padding: 12px 18px; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(244,67,54,0.3);
+    transition: all 0.3s; text-decoration: none;
+    display: flex; align-items: center; gap: 12px;
+    max-width: 340px;
+    animation: bubblePulse 3s ease-in-out infinite;
+}
+.threat-bubble:hover {
+    transform: scale(1.03); border-color: #ff5722;
+    box-shadow: 0 6px 30px rgba(244,67,54,0.5);
+    text-decoration: none;
+}
+.threat-bubble-count {
+    font-size: 1.8rem; font-weight: 900; color: #f44336;
+    font-family: 'Courier New', monospace; line-height: 1;
+    min-width: 36px; text-align: center;
+}
+.threat-bubble-text {
+    font-size: 0.85rem; color: #e0e0e0; line-height: 1.3;
+}
+.threat-bubble-text strong { color: #f44336; }
+.threat-bubble-text small { display: block; color: #888; font-size: 0.75rem; margin-top: 2px; }
+.threat-bubble-close {
+    position: absolute; top: -8px; right: -8px;
+    background: #333; color: #888; border: none; border-radius: 50%;
+    width: 20px; height: 20px; font-size: 12px; line-height: 20px;
+    text-align: center; cursor: pointer; padding: 0;
+}
+.threat-bubble-close:hover { background: #555; color: #fff; }
+@keyframes bubblePulse {
+    0%, 100% { box-shadow: 0 4px 20px rgba(244,67,54,0.3); }
+    50% { box-shadow: 0 4px 30px rgba(244,67,54,0.6), 0 0 40px rgba(244,67,54,0.2); }
+}
+@media (max-width: 480px) {
+    .threat-bubble { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+}
+</style>
+<a href="/elections/threats.php#subBanner" class="threat-bubble" id="threatBubble">
+    <span class="threat-bubble-count"><?= $threatCount ?></span>
+    <span class="threat-bubble-text">
+        <strong>Today's Threat Alerts</strong>
+        <small><?= $threatHighCrime ?> score High Crime or above</small>
+    </span>
+    <button class="threat-bubble-close" onclick="event.preventDefault();event.stopPropagation();document.getElementById('threatBubble').style.display='none';" aria-label="Dismiss">&times;</button>
+</a>
+<script>
+// Pulse the count 10 times then stop
+(function() {
+    const bubble = document.getElementById('threatBubble');
+    if (!bubble) return;
+    let pulses = 0;
+    bubble.addEventListener('animationiteration', function() {
+        pulses++;
+        if (pulses >= 10) {
+            bubble.style.animation = 'none';
+            bubble.style.boxShadow = '0 4px 20px rgba(244,67,54,0.3)';
+        }
+    });
+})();
+</script>
+<?php endif; ?>
+
 <?php
 $claudiaConfig = [
     'context' => 'home',
