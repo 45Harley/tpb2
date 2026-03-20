@@ -165,6 +165,9 @@
 (function(){var e=document.getElementById('tpbContactEmail');if(e){var u='contact',d='4tpb',t='org';var a=u+'@'+d+'.'+t;e.href='mai'+'lto:'+a;e.textContent=a;}})();
 </script>
 <?php
+// Read Aloud — selection-based + full page read
+require_once __DIR__ . '/read-aloud.php';
+
 // Claudia widget — auto-loaded on every page with footer
 // Pages can set $claudiaConfig before including footer for custom context
 // Requires $pdo in scope (standard for all TPB pages)
