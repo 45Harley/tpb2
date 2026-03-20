@@ -132,16 +132,21 @@ if ($searchFilter) {
 if ($myRepsMode && $userState) {
     $districtConditions = array();
 
-    // Federal - President, VP, Supreme Court
-    $districtConditions[] = "eo.title IN ('President', 'Vice President')";
+    // Federal - President, VP, Supreme Court (scope to Federal org to avoid matching Council President/VP)
+    $districtConditions[] = "(eo.title IN ('President', 'Vice President') AND go.org_type = 'Federal')";
     $districtConditions[] = "(eo.office_name LIKE '%Supreme Court%' AND go.org_type = 'Federal')";
 
     // US Senators for their state
     $districtConditions[] = "(eo.title = 'U.S. Senator' AND eo.state_code = " . $pdo->quote($userState) . ")";
 
-    // US Rep for their district
+    // US Rep for their district — extract district number from "CT-2" format
     if ($userCD) {
-        $districtConditions[] = "(eo.ocd_id LIKE '%state:" . strtolower($userState) . "/cd:" . $userCD . "')";
+        $cdNum = $userCD;
+        if (strpos($userCD, '-') !== false) {
+            $parts = explode('-', $userCD);
+            $cdNum = ltrim($parts[1], '0') ?: '0';
+        }
+        $districtConditions[] = "(eo.ocd_id LIKE '%state:" . strtolower($userState) . "/cd:" . $cdNum . "')";
     }
 
     // Governor
