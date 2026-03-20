@@ -218,9 +218,13 @@
                 ) + 'px';
                 selBtn.style.display = '';
                 selBtn.onclick = function(ev) {
+                    ev.preventDefault();
                     ev.stopPropagation();
+                    ev.stopImmediatePropagation();
                     selBtn.style.display = 'none';
-                    readSelection(text);
+                    // Chrome needs cancel + short delay before first speak
+                    synth.cancel();
+                    setTimeout(function() { readSelection(text); }, 100);
                     sel.removeAllRanges();
                 };
             } else {
@@ -229,11 +233,11 @@
         }, 200);
     });
 
-    // Hide button when clicking elsewhere
-    document.addEventListener('mousedown', function(e) {
-        if (!e.target.closest('.ra-selection-btn, .ra-bar')) {
-            // Delay hide so click on button can fire first
-            setTimeout(function() { selBtn.style.display = 'none'; }, 150);
+    // Hide button when selection is cleared (not on mousedown — that kills the click)
+    document.addEventListener('selectionchange', function() {
+        const text = (window.getSelection().toString() || '').trim();
+        if (text.length <= 5) {
+            setTimeout(function() { selBtn.style.display = 'none'; }, 300);
         }
     });
 })();
