@@ -42,13 +42,15 @@ $townFilter = isset($_GET['town']) ? trim($_GET['town']) : '';
 // My Reps mode - apply user's location as filters
 $userState = '';
 $userTown = '';
+$userTownId = '';
 $userCD = '';
 $userSLDU = '';
 $userSLDL = '';
 
 if ($dbUser && $dbUser['state_abbrev']) {
     $userState = $dbUser['state_abbrev'];
-    $userTown = $dbUser['town_name'];
+    $userTown = $dbUser['town_name'] ?? '';
+    $userTownId = $dbUser['current_town_id'] ?? '';
     $userCD = $dbUser['us_congress_district'];
     $userSLDU = $dbUser['state_senate_district'];
     $userSLDL = $dbUser['state_house_district'];
@@ -61,10 +63,13 @@ if ($myRepsMode && $userState) {
 // Get all states for dropdown
 $states = $pdo->query("SELECT abbreviation, state_name FROM states ORDER BY state_name")->fetchAll();
 
-// Build query — include branch info for grouping
+// Build query — include branch info for grouping, DISTINCT to avoid duplicate branch rows
 $sql = "
-    SELECT eo.*,
-           go.org_type, go.org_name,
+    SELECT DISTINCT eo.official_id, eo.full_name, eo.title, eo.party, eo.office_name,
+           eo.email, eo.phone, eo.website, eo.bioguide_id, eo.photo_url,
+           eo.ocd_id, eo.state_code, eo.org_id, eo.branch_id,
+           eo.appointment_type, eo.term_start, eo.term_end, eo.is_vacant,
+           go.org_type, go.org_name, go.town_id,
            s.state_name,
            t.town_name as org_town_name,
            bd.branch_name, bd.branch_type, bd.total_seats
@@ -155,9 +160,11 @@ if ($myRepsMode && $userState) {
         $districtConditions[] = "(eo.ocd_id LIKE '%state:" . strtolower($userState) . "/sldl:" . $userSLDL . "')";
     }
 
-    // Town officials
-    if ($userTown) {
-        $districtConditions[] = "(t.town_name = " . $pdo->quote($userTown) . " AND go.org_type = 'Town')";
+    // Town officials — use town_id for precision (town names can repeat across states)
+    if ($userTownId) {
+        $districtConditions[] = "(go.town_id = " . (int)$userTownId . " AND go.org_type = 'Town')";
+    } elseif ($userTown) {
+        $districtConditions[] = "(t.town_name = " . $pdo->quote($userTown) . " AND eo.state_code = " . $pdo->quote($userState) . " AND go.org_type = 'Town')";
     }
 
     $sql .= " AND (" . implode(" OR ", $districtConditions) . ")";
