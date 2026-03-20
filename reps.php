@@ -61,16 +61,18 @@ if ($myRepsMode && $userState) {
 // Get all states for dropdown
 $states = $pdo->query("SELECT abbreviation, state_name FROM states ORDER BY state_name")->fetchAll();
 
-// Build query
+// Build query — include branch info for grouping
 $sql = "
     SELECT eo.*,
            go.org_type, go.org_name,
            s.state_name,
-           t.town_name as org_town_name
+           t.town_name as org_town_name,
+           bd.branch_name, bd.branch_type, bd.total_seats
     FROM elected_officials eo
     JOIN governing_organizations go ON eo.org_id = go.org_id
     LEFT JOIN states s ON eo.state_code = s.abbreviation
     LEFT JOIN towns t ON go.town_id = t.town_id
+    LEFT JOIN branches_departments bd ON eo.branch_id = bd.branch_id AND bd.org_id = eo.org_id
     WHERE eo.is_current = 1
 ";
 $params = array();
@@ -161,7 +163,7 @@ if ($myRepsMode && $userState) {
     $sql .= " AND (" . implode(" OR ", $districtConditions) . ")";
 }
 
-// Order
+// Order — federal/state by role importance, town by elected-first then board name
 $sql .= " ORDER BY
     CASE go.org_type
         WHEN 'Federal' THEN 1
@@ -179,6 +181,27 @@ $sql .= " ORDER BY
         WHEN eo.ocd_id LIKE '%/sldl:%' THEN 8
         ELSE 9
     END,
+    CASE eo.appointment_type WHEN 'elected' THEN 1 WHEN 'appointed' THEN 2 ELSE 3 END,
+    CASE bd.branch_type
+        WHEN 'Executive' THEN 1
+        WHEN 'Legislative' THEN 2
+        WHEN 'Board' THEN 3
+        WHEN 'Commission' THEN 4
+        WHEN 'Committee' THEN 5
+        WHEN 'Authority' THEN 6
+        WHEN 'Department' THEN 7
+        ELSE 8
+    END,
+    bd.branch_name,
+    CASE eo.title
+        WHEN 'Mayor' THEN 1 WHEN 'First Selectman' THEN 1
+        WHEN 'Deputy Mayor' THEN 2
+        WHEN 'Chair' THEN 3 WHEN 'Chairman' THEN 3 WHEN 'Chairperson' THEN 3 WHEN 'President' THEN 3
+        WHEN 'Vice Chair' THEN 4 WHEN 'Vice Chairman' THEN 4 WHEN 'Vice President' THEN 4
+        WHEN 'Secretary' THEN 5 WHEN 'Clerk' THEN 5
+        WHEN 'Treasurer' THEN 6
+        ELSE 7
+    END,
     eo.full_name
 ";
 
@@ -186,12 +209,28 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $officials = $stmt->fetchAll();
 
-// Count by level
+// Group officials by level, then by board for town level
 $counts = array('federal' => 0, 'state' => 0, 'town' => 0, 'total' => count($officials));
+$grouped = array('Federal' => [], 'State' => [], 'Town' => []);
 foreach ($officials as $o) {
     $type = strtolower($o['org_type']);
-    if (isset($counts[$type])) {
-        $counts[$type]++;
+    if (isset($counts[$type])) $counts[$type]++;
+    $grouped[$o['org_type']][] = $o;
+}
+
+// For town level, sub-group by board and appointment type
+$townElected = [];
+$townAppointed = [];
+$townStaff = [];
+foreach ($grouped['Town'] as $o) {
+    $board = $o['branch_name'] ?: 'Other';
+    $isStaff = ($o['appointment_type'] === 'appointed' && empty($o['term_end']) && !in_array($o['branch_type'], ['Board', 'Commission', 'Committee', 'Authority', 'Legislative']));
+    if ($isStaff) {
+        $townStaff[$board][] = $o;
+    } elseif ($o['appointment_type'] === 'elected') {
+        $townElected[$board][] = $o;
+    } else {
+        $townAppointed[$board][] = $o;
     }
 }
 
@@ -256,22 +295,77 @@ $pageStyles = '
 .officials-grid {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem;
+}
+.level-section {
+    margin-bottom: 1.5rem;
 }
 .level-header {
     color: #d4af37;
-    font-size: 1.1rem;
-    padding: 0.5rem 0;
+    font-size: 1.3rem;
+    padding: 0.75rem 0;
+    border-bottom: 2px solid #d4af37;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.level-header .count { font-size: 0.8rem; color: #888; font-weight: normal; }
+.level-header .toggle { font-size: 0.8rem; color: #666; }
+.level-body { }
+.level-body.collapsed { display: none; }
+.board-group {
+    margin-bottom: 1.25rem;
+}
+.board-header {
+    color: #88c0d0;
+    font-size: 0.95rem;
+    padding: 0.4rem 0.75rem;
+    margin-bottom: 0.5rem;
+    background: rgba(136,192,208,0.08);
+    border-left: 3px solid #88c0d0;
+    border-radius: 0 4px 4px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.board-header.elected { border-left-color: #4caf50; background: rgba(76,175,80,0.08); color: #81c784; }
+.board-header.appointed { border-left-color: #ff9800; background: rgba(255,152,0,0.08); color: #ffb74d; }
+.board-header.staff { border-left-color: #666; background: rgba(100,100,100,0.08); color: #aaa; }
+.board-header .seats { font-size: 0.8rem; color: #888; font-weight: normal; }
+.board-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-left: 0.75rem;
+}
+.category-label {
+    color: #888;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 1rem 0 0.5rem 0;
+    padding-bottom: 0.3rem;
     border-bottom: 1px solid #333;
-    margin-top: 1rem;
 }
-.level-header:first-child { margin-top: 0; }
 .official-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid #333;
+    width: 150px;
+    text-align: center;
+    padding: 14px 10px;
     border-radius: 8px;
-    padding: 1rem;
+    background: #1a1a1a;
+    border: 2px solid #2a2a2a;
+    transition: transform 0.2s, border-color 0.2s;
 }
+.official-card:hover {
+    transform: translateY(-2px);
+    border-color: #444;
+}
+.official-card.party-D { border-color: #1a3a5c; }
+.official-card.party-R { border-color: #5c1a1a; }
+.official-card.party-I, .official-card.party-U { border-color: #3a3a3a; }
+.official-card.vacant { border-color: #5c3a1a; opacity: 0.6; }
 .official-header {
     display: flex;
     justify-content: space-between;
@@ -422,43 +516,124 @@ require 'includes/nav.php';
     </div>
     <?php else: ?>
     <div class="officials-grid">
-        <?php
-        $currentLevel = '';
-        foreach ($officials as $o):
-            // Level header
-            if ($o['org_type'] !== $currentLevel):
-                $currentLevel = $o['org_type'];
-        ?>
-        <div class="level-header">
-            <?php if ($currentLevel == 'Federal'): ?>🇺🇸 Federal
-            <?php elseif ($currentLevel == 'State'): ?>🗺️ State
-            <?php else: ?>🏘️ Town
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
 
-        <div class="official-card">
-            <div class="official-header">
-                <span class="official-name"><?= htmlspecialchars($o['full_name']) ?></span>
-                <?php if ($o['party']): ?>
-                <span class="party-badge party-<?= substr($o['party'], 0, 1) ?>"><?= htmlspecialchars($o['party']) ?></span>
-                <?php endif; ?>
-            </div>
-            <div class="official-title"><?= htmlspecialchars($o['title']) ?></div>
-            <div class="official-office"><?= htmlspecialchars($o['office_name']) ?></div>
-            <div class="official-contact">
+    <?php
+    // Helper: render a single card
+    function renderCard($o) {
+        $partyCode = $o['party'] ? strtoupper(substr($o['party'], 0, 1)) : '';
+        $partyClass = $partyCode ? "party-$partyCode" : '';
+        if ($o['full_name'] === 'VACANT') $partyClass = 'vacant';
+        $photoUrl = !empty($o['bioguide_id'])
+            ? "https://bioguide.congress.gov/bioguide/photo/{$o['bioguide_id'][0]}/{$o['bioguide_id']}.jpg"
+            : (!empty($o['photo_url']) ? htmlspecialchars($o['photo_url']) : '');
+        ?>
+        <div class="official-card <?= $partyClass ?>">
+            <?php if ($photoUrl): ?>
+            <img src="<?= $photoUrl ?>" alt="<?= htmlspecialchars($o['full_name']) ?>" class="rep-photo" loading="lazy"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="rep-photo-placeholder" style="display:none;width:60px;height:60px;border-radius:50%;background:#2a2a2a;margin:0 auto 8px;align-items:center;justify-content:center;font-size:1.5rem;color:#555">👤</div>
+            <?php endif; ?>
+            <div class="official-name" style="font-size:0.9rem;font-weight:bold;color:#e0e0e0;margin-bottom:4px"><?= htmlspecialchars($o['full_name']) ?></div>
+            <?php if ($o['party']): ?>
+            <span class="party-badge party-<?= $partyCode ?>" style="font-size:0.7rem;display:inline-block;margin-bottom:4px"><?= htmlspecialchars($o['party']) ?></span>
+            <?php endif; ?>
+            <div style="color:#d4af37;font-size:0.8rem"><?= htmlspecialchars($o['title']) ?></div>
+            <?php if (!empty($o['office_name'])): ?>
+            <div style="color:#888;font-size:0.75rem;margin-top:2px"><?= htmlspecialchars($o['office_name']) ?></div>
+            <?php endif; ?>
+            <?php if (!empty($o['term_end'])): ?>
+            <div style="color:#666;font-size:0.7rem;margin-top:4px">Term ends <?= date('M Y', strtotime($o['term_end'])) ?></div>
+            <?php endif; ?>
+            <div class="official-contact" style="margin-top:6px;justify-content:center">
                 <?php if ($o['email']): ?>
-                <a href="mailto:<?= htmlspecialchars($o['email']) ?>" class="contact-link">📧 Email</a>
+                <a href="mailto:<?= htmlspecialchars($o['email']) ?>" class="contact-link" style="font-size:0.75rem">📧</a>
                 <?php endif; ?>
                 <?php if ($o['phone']): ?>
-                <a href="tel:<?= htmlspecialchars($o['phone']) ?>" class="contact-link">📞 <?= htmlspecialchars($o['phone']) ?></a>
+                <a href="tel:<?= htmlspecialchars($o['phone']) ?>" class="contact-link" style="font-size:0.75rem">📞</a>
                 <?php endif; ?>
                 <?php if ($o['website']): ?>
-                <a href="<?= htmlspecialchars($o['website']) ?>" target="_blank" class="contact-link">🌐 Website</a>
+                <a href="<?= htmlspecialchars($o['website']) ?>" target="_blank" class="contact-link" style="font-size:0.75rem">🌐</a>
                 <?php endif; ?>
             </div>
         </div>
-        <?php endforeach; ?>
+        <?php
+    }
+
+    // Helper: render a board group with header and cards
+    function renderBoardGroup($boardName, $officials, $type = 'elected') {
+        $seats = $officials[0]['total_seats'] ?? '';
+        $seatsLabel = $seats ? "$seats seats" : '';
+        ?>
+        <div class="board-group">
+            <div class="board-header <?= $type ?>">
+                <?= htmlspecialchars($boardName) ?>
+                <?php if ($seatsLabel): ?><span class="seats"><?= $seatsLabel ?></span><?php endif; ?>
+            </div>
+            <div class="board-cards">
+                <?php foreach ($officials as $o) renderCard($o); ?>
+            </div>
+        </div>
+        <?php
+    }
+    ?>
+
+    <?php // ── FEDERAL ── ?>
+    <?php if (!empty($grouped['Federal'])): ?>
+    <div class="level-section">
+        <div class="level-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+            🇺🇸 Federal <span class="count"><?= $counts['federal'] ?></span> <span class="toggle">▼</span>
+        </div>
+        <div class="level-body">
+            <div class="board-cards">
+                <?php foreach ($grouped['Federal'] as $o) renderCard($o); ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php // ── STATE ── ?>
+    <?php if (!empty($grouped['State'])): ?>
+    <div class="level-section">
+        <div class="level-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+            🗺️ State <span class="count"><?= $counts['state'] ?></span> <span class="toggle">▼</span>
+        </div>
+        <div class="level-body">
+            <div class="board-cards">
+                <?php foreach ($grouped['State'] as $o) renderCard($o); ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php // ── TOWN — grouped by board ── ?>
+    <?php if (!empty($grouped['Town'])): ?>
+    <div class="level-section">
+        <div class="level-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+            🏘️ <?= htmlspecialchars($userTown ?: 'Town') ?> <span class="count"><?= $counts['town'] ?></span> <span class="toggle">▼</span>
+        </div>
+        <div class="level-body">
+
+            <?php if (!empty($townElected)): ?>
+            <div class="category-label">Elected</div>
+            <?php foreach ($townElected as $board => $members) renderBoardGroup($board, $members, 'elected'); ?>
+            <?php endif; ?>
+
+            <?php if (!empty($townAppointed)): ?>
+            <div class="category-label">Appointed</div>
+            <?php foreach ($townAppointed as $board => $members) renderBoardGroup($board, $members, 'appointed'); ?>
+            <?php endif; ?>
+
+            <?php if (!empty($townStaff)): ?>
+            <div class="category-label" style="cursor:pointer" onclick="document.getElementById('staff-section').classList.toggle('collapsed')">Staff ▸</div>
+            <div id="staff-section" class="collapsed">
+            <?php foreach ($townStaff as $board => $members) renderBoardGroup($board, $members, 'staff'); ?>
+            </div>
+            <?php endif; ?>
+
+        </div>
+    </div>
+    <?php endif; ?>
+
     </div>
     <?php endif; ?>
 </main>
