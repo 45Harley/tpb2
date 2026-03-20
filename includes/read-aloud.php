@@ -13,17 +13,9 @@
     </select>
     <button id="ra-close" class="ra-btn ra-close" title="Close">&times;</button>
 </div>
-<button id="ra-trigger" class="ra-trigger" title="Read this page aloud">&#9654; Read Aloud</button>
 <button id="ra-selection-btn" class="ra-selection-btn" style="display:none;" title="Read selected text aloud">&#9654; Read This</button>
 
 <style>
-.ra-trigger {
-    position: fixed; bottom: 5rem; right: 1.5rem; z-index: 900;
-    background: #1a1a2e; color: #d4af37; border: 1px solid #d4af37;
-    padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem;
-    font-weight: 600; cursor: pointer; opacity: 0.85; transition: opacity 0.2s;
-}
-.ra-trigger:hover { opacity: 1; }
 .ra-selection-btn {
     position: absolute; z-index: 950;
     background: #1a1a2e; color: #d4af37; border: 1px solid #d4af37;
@@ -61,7 +53,6 @@
     const synth = window.speechSynthesis;
     if (!synth) return;
 
-    const trigger = document.getElementById('ra-trigger');
     const bar = document.getElementById('ra-bar');
     const playBtn = document.getElementById('ra-play');
     const pauseBtn = document.getElementById('ra-pause');
@@ -175,18 +166,12 @@
         pauseBtn.style.display = '';
     }
 
-    trigger.addEventListener('click', () => {
-        bar.style.display = 'flex';
-        trigger.style.display = 'none';
-        play();
-    });
     playBtn.addEventListener('click', play);
     pauseBtn.addEventListener('click', pause);
     stopBtn.addEventListener('click', stop);
     closeBtn.addEventListener('click', () => {
         stop();
         bar.style.display = 'none';
-        trigger.style.display = '';
     });
     speedSel.addEventListener('change', () => {
         if (speaking && !synth.paused) {
@@ -205,7 +190,6 @@
 
     function readSelection(text) {
         bar.style.display = 'flex';
-        trigger.style.display = 'none';
         chunks = splitText(text);
         currentIdx = 0;
         speaking = true;
