@@ -100,6 +100,7 @@ $pageStyles = <<<'CSS'
 
 /* Subscribe banner */
 .subscribe-banner {
+    scroll-margin-top: 120px;
     background: linear-gradient(135deg, #1a1a0a 0%, #2a2510 100%);
     border: 1px solid #d4af37; border-radius: 8px;
     padding: 1rem 1.5rem; margin-bottom: 1.5rem;
