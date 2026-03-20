@@ -364,6 +364,7 @@ $pageStyles = '
     background: #1a1a1a;
     border: 2px solid #2a2a2a;
     transition: transform 0.2s, border-color 0.2s;
+    overflow: hidden;
 }
 .official-card:hover {
     transform: translateY(-2px);
@@ -373,6 +374,15 @@ $pageStyles = '
 .official-card.party-R { border-color: #5c1a1a; }
 .official-card.party-I, .official-card.party-U { border-color: #3a3a3a; }
 .official-card.vacant { border-color: #5c3a1a; opacity: 0.6; }
+.official-card .rep-photo {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 0 auto 8px;
+    display: block;
+    background: #2a2a2a;
+}
 .official-header {
     display: flex;
     justify-content: space-between;
@@ -537,8 +547,7 @@ require 'includes/nav.php';
         <div class="official-card <?= $partyClass ?>">
             <?php if ($photoUrl): ?>
             <img src="<?= $photoUrl ?>" alt="<?= htmlspecialchars($o['full_name']) ?>" class="rep-photo" loading="lazy"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="rep-photo-placeholder" style="display:none;width:60px;height:60px;border-radius:50%;background:#2a2a2a;margin:0 auto 8px;align-items:center;justify-content:center;font-size:1.5rem;color:#555">👤</div>
+                 onerror="this.style.display='none'">
             <?php endif; ?>
             <div class="official-name" style="font-size:0.9rem;font-weight:bold;color:#e0e0e0;margin-bottom:4px"><?= htmlspecialchars($o['full_name']) ?></div>
             <?php if ($o['party']): ?>
