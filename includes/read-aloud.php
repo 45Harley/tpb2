@@ -190,6 +190,7 @@
     // --- Selection-based "Read This" ---
     const selBtn = document.getElementById('ra-selection-btn');
     let selTimeout = null;
+    let pendingText = '';
 
     function readSelection(text) {
         synth.cancel();
@@ -203,17 +204,17 @@
         speakChunk(0);
     }
 
+    // Show button when text is selected
     document.addEventListener('mouseup', function(e) {
-        // Ignore clicks on our own UI
-        if (e.target.closest('.ra-bar, .ra-trigger, .ra-selection-btn')) return;
+        if (e.target.closest('.ra-bar, .ra-selection-btn')) return;
 
         clearTimeout(selTimeout);
         selTimeout = setTimeout(function() {
             const sel = window.getSelection();
-            const text = sel.toString().trim();
+            const text = (sel.toString() || '').trim();
 
             if (text.length > 5) {
-                // Position near the end of selection
+                pendingText = text;
                 const range = sel.getRangeAt(0);
                 const rect = range.getBoundingClientRect();
                 selBtn.style.top = (window.scrollY + rect.bottom + 6) + 'px';
@@ -222,27 +223,24 @@
                     window.innerWidth - 120
                 ) + 'px';
                 selBtn.style.display = '';
-                selBtn.onclick = function(ev) {
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    ev.stopImmediatePropagation();
-                    selBtn.style.display = 'none';
-                    // Chrome needs cancel + short delay before first speak
-                    synth.cancel();
-                    setTimeout(function() { readSelection(text); }, 100);
-                    sel.removeAllRanges();
-                };
             } else {
                 selBtn.style.display = 'none';
+                pendingText = '';
             }
         }, 200);
     });
 
-    // Hide button when selection is cleared (not on mousedown — that kills the click)
-    document.addEventListener('selectionchange', function() {
-        const text = (window.getSelection().toString() || '').trim();
-        if (text.length <= 5) {
-            setTimeout(function() { selBtn.style.display = 'none'; }, 300);
+    // Use mousedown on button — fires before selectionchange clears everything
+    selBtn.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var text = pendingText;
+        selBtn.style.display = 'none';
+        pendingText = '';
+        window.getSelection().removeAllRanges();
+        if (text) {
+            synth.cancel();
+            setTimeout(function() { readSelection(text); }, 50);
         }
     });
 })();
