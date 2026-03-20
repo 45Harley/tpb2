@@ -311,6 +311,29 @@ require dirname(__DIR__) . '/includes/nav.php';
 
 <main class="stream-container">
 
+    <!-- Subscribe banner (first thing visitors see from homepage link) -->
+    <?php
+    $isVerified = $dbUser && ($dbUser['identity_level_id'] ?? 0) >= 2;
+    $isSubscribed = $isVerified && !empty($dbUser['notify_threat_bulletin']);
+    $userEmail = $dbUser['email'] ?? '';
+    ?>
+    <?php if ($isSubscribed): ?>
+    <div class="subscribe-banner subscribed" id="subBanner">
+        <span class="sub-banner-text">You're subscribed to Daily Threat Alerts<small>Delivered to <?= htmlspecialchars($userEmail) ?></small></span>
+        <button class="sub-banner-btn unsub-btn" onclick="subAction('unsubscribe')">Unsubscribe</button>
+    </div>
+    <?php else: ?>
+    <div class="subscribe-banner" id="subBanner">
+        <span class="sub-banner-text">Get totally free Daily Threat Alerts delivered to your inbox<small>Stay informed. No spam. Unsubscribe anytime.</small></span>
+        <button class="sub-banner-btn" onclick="subAction('subscribe')">Subscribe Free</button>
+    </div>
+    <?php endif; ?>
+
+    <!-- Subscribe popup -->
+    <div class="sub-popup-overlay" id="subPopup" onclick="if(event.target===this)closeSubPopup()">
+        <div class="sub-popup" id="subPopupContent"></div>
+    </div>
+
     <div class="view-links">
         <a href="/elections/">Elections</a>
         <a href="/elections/the-fight.php">The Fight</a>
@@ -342,29 +365,6 @@ require dirname(__DIR__) . '/includes/nav.php';
             <div class="stat-number" style="color:#aaa;font-size:1.2rem;padding-top:0.5rem"><?= date('M j, Y', strtotime($newestDate)) ?></div>
             <div class="stat-label">Latest Threat</div>
         </div>
-    </div>
-
-    <!-- Subscribe banner -->
-    <?php
-    $isVerified = $dbUser && ($dbUser['identity_level_id'] ?? 0) >= 2;
-    $isSubscribed = $isVerified && !empty($dbUser['notify_threat_bulletin']);
-    $userEmail = $dbUser['email'] ?? '';
-    ?>
-    <?php if ($isSubscribed): ?>
-    <div class="subscribe-banner subscribed" id="subBanner">
-        <span class="sub-banner-text">You're subscribed to Daily Threat Alerts<small>Delivered to <?= htmlspecialchars($userEmail) ?></small></span>
-        <button class="sub-banner-btn unsub-btn" onclick="subAction('unsubscribe')">Unsubscribe</button>
-    </div>
-    <?php else: ?>
-    <div class="subscribe-banner" id="subBanner">
-        <span class="sub-banner-text">Get totally free Daily Threat Alerts delivered to your inbox<small>Stay informed. No spam. Unsubscribe anytime.</small></span>
-        <button class="sub-banner-btn" onclick="subAction('subscribe')">Subscribe Free</button>
-    </div>
-    <?php endif; ?>
-
-    <!-- Subscribe popup -->
-    <div class="sub-popup-overlay" id="subPopup" onclick="if(event.target===this)closeSubPopup()">
-        <div class="sub-popup" id="subPopupContent"></div>
     </div>
 
     <!-- Filters -->
