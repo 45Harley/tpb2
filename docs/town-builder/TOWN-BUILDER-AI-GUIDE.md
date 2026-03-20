@@ -36,16 +36,125 @@ Putnam sections to show (in order):
 2. **Overview** — Quick facts grid (population, area, incorporated, etc.)
 3. **History** — Founding narrative, key events, audio option
 4. **Government** — Mayor, boards/commissions, departments, vacancies
-5. **Department Mapping** — Map local departments/boards to civic group templates (see below)
-6. **Budget & Taxes** — Town budget, major projects, TA reports
-7. **Schools** — District info, school list, school budget dashboard
-8. **Living Here** — Local links grid (dining, shopping, recreation, library)
-9. **Talk** — Link to town's Talk stream (`/talk/?town=ID`)
-10. **Vision page** — "Just Imagine" standalone page (putnam-vision.html)
+5. **Elected Officials & Delegation** — Complete roster from town charter/clerk (see below)
+6. **Department Mapping** — Map local departments/boards to civic group templates (see below)
+7. **Budget & Taxes** — Town budget, major projects, TA reports
+8. **Schools** — District info, school list, school budget dashboard
+9. **Living Here** — Local links grid (dining, shopping, recreation, library)
+10. **Talk** — Link to town's Talk stream (`/talk/?town=ID`)
+11. **Vision page** — "Just Imagine" standalone page (putnam-vision.html)
 
-> **Note:** Department Mapping (step 5) feeds directly into Talk (step 9). The civic group templates power Talk's standard groups, and the local department names appear as subtitles on group cards.
+> **Note:** Department Mapping (step 6) feeds directly into Talk (step 10). The civic group templates power Talk's standard groups, and the local department names appear as subtitles on group cards.
 
-### Department Mapping Step (during Phase 1, section 5)
+### Elected Officials & Delegation Step (Phase 1, section 5)
+
+This is the most important data step — it populates the `elected_officials`, `branches_departments`, and `role_canonicals` tables for the town. Every elected and appointed seat, who holds it, and when their term expires.
+
+#### The Golden Source: Town Elected Officials PDF
+
+Most CT towns publish a "List of Elected Officials" document — usually a PDF on the Town Clerk or Board of Finance page. **This is the single best source.** One document gets you 80-95% of the elected delegation.
+
+**Model example:** [Pomfret, CT — List of Elected Officials (Jan 2025)](https://www.pomfretct.gov/sites/g/files/vyhlif3701/f/uploads/list_of_elected_officials_as_of-_jan_2025_1.pdf)
+— One PDF → 75 officials populated, 98% verified. Covered: Board of Selectmen, Board of Finance, Board of Education, Board of Assessment Appeals, Library Trustees, Constables, Planning & Zoning (members + alternates), Zoning Board of Appeals (members + alternates), Registrars of Voters, and 18 Justices of the Peace.
+
+#### Where to Find It
+
+Ask the volunteer to check (in order):
+1. **Town Clerk page** — most common location
+2. **Board of Finance / Annual Reports** — often includes full roster
+3. **Town website "Boards" page** — sometimes has an aggregate list
+4. **Secretary of State** — [portal.ct.gov/SOTS](https://portal.ct.gov/SOTS/Election-Services/Find-Your-Town-Clerk-Registrar-and-Elected-Officials/Find-Your-Town-Clerk-Registrar-of-Voters-and-Elected-Officials) has Town Clerk contacts
+5. **ecode360.com** — has some town charters (but often blocks scraping)
+
+If no PDF exists, the volunteer can call the Town Clerk — they're required to maintain this list.
+
+#### What It Typically Contains
+
+- Every **elected** body: Selectmen/Council, Board of Ed, Board of Finance, Assessment Appeals, Library Trustees, P&Z (if elected), ZBA (if elected), Constables, Registrars, Justices of the Peace
+- **Names** of all current members
+- **Term dates** (start and end)
+- **Vacancies** (seats not filled at election)
+
+#### What It Usually Doesn't Contain
+
+- **Party affiliations** — some towns include them, most don't
+- **Appointed boards** — Conservation, Recreation, Inland Wetlands, etc. (these are appointed by Selectmen/Council, not elected)
+- **Staff/employees** — Town Manager, Finance Director, etc.
+- **Contact info** — phone, email (check town website separately)
+
+#### Important: Elected vs Appointed Varies by Town!
+
+The same board can be elected in one town and appointed in another. **Always check the charter or the PDF.**
+
+| Body | Putnam | Pomfret | Killingly |
+|------|--------|---------|-----------|
+| P&Z | Appointed | **Elected** | Appointed |
+| ZBA | Appointed | **Elected** | Appointed |
+| Board of Finance | Elected | Elected | **None** (Council-Manager) |
+| Governing board | Board of Selectmen | Board of Selectmen | Town Council |
+
+Never assume — let the source document tell you.
+
+#### How AI Processes It
+
+1. Volunteer provides the PDF (or pastes the list)
+2. AI creates `governing_organizations` entry if needed (with `charter_source` URL)
+3. AI creates `branches_departments` entries for each board/commission
+4. AI inserts `elected_officials` records with:
+   - `appointment_type` = 'elected' or 'appointed' (from charter/PDF)
+   - `branch_id` = linked to the correct board
+   - `term_start` and `term_end` from the PDF
+   - `data_status` = 'human_verified' (if from official PDF) or 'ai_draft' (if from web search)
+   - `data_note` = source citation (e.g., "Source: pomfretct.gov elected officials PDF, revised 01/14/2025")
+5. AI populates `role_canonicals` for cross-town querying (e.g., "First Selectman" → `chief_executive`)
+6. AI flags gaps: missing parties, missing appointed boards, missing term dates → `data_status = 'ai_draft'` with `data_note` explaining what's missing
+
+#### Charter vs Statutory Towns
+
+- **Charter towns** (Putnam, Killingly): Have a local charter that defines government structure. Find it on ecode360.com or town website. Record in `governing_organizations.charter_source`.
+- **Statutory towns** (Pomfret, Brooklyn): No local charter — governed by CT General Statutes. Government structure follows state defaults. Record as "Statutory town — no local charter, governed by CT General Statutes".
+
+#### Coverage Summary by Town (model)
+
+| Town | Officials | Verified | Source |
+|------|-----------|----------|--------|
+| Putnam (model) | 190 | 186 (98%) | Charter + OnBoard portal |
+| Pomfret | 75 | 74 (99%) | Elected Officials PDF |
+| Killingly | 19 | 10 (53%) | Town website (no PDF found) |
+| Brooklyn | 3 | 0 (0%) | Minimal — needs volunteer |
+
+The PDF is the difference between 53% and 99%.
+
+#### Title Synonyms Across Towns
+
+Different towns use different titles for the same role. When entering data, use the **local title** exactly as the town uses it — the `role_canonicals` table maps it to a normalized name for cross-town queries.
+
+| Canonical Role | Known Synonyms | Notes |
+|---|---|---|
+| `chief_executive` | Mayor, First Selectman, Town Council Chair | Putnam uses Mayor; most CT towns use First Selectman |
+| `governing_board_member` | Selectman, Council Member, Alderman, Trustee (village) | Killingly has Council Members; everyone else has Selectmen |
+| `deputy_executive` | Deputy Mayor, Vice Chair (when governing board) | Context matters — Vice Chair on Board of Ed is `board_vice_chair`, not deputy executive |
+| `professional_admin` | Town Administrator, Town Manager, City Manager | Not elected — appointed by governing board |
+| `board_chair` | Chair, Chairman, Chairperson, Chairwoman, President | Pomfret PDF uses "Chairman"; others use "Chair" |
+| `board_vice_chair` | Vice Chair, Vice Chairman, Vice President | |
+| `board_secretary` | Secretary, Clerk (on a board, not Town Clerk) | Don't confuse with `town_clerk` |
+| `board_member` | Member, Trustee, Seated as Democrat/Republican, Member Appointed | "Seated as [party]" means filling a minority-party seat |
+| `board_alternate` | Alternate, Alternate Member | |
+| `town_clerk` | Town Clerk | Elected per CT §9-189a; 4-year term |
+| `registrar_of_voters` | Registrar, Registrar of Voters | 2 per town (one per party); elected |
+| `justice_of_the_peace` | Justice, Justice of the Peace, JP | Elected in presidential election years; 4-year terms |
+| `constable` | Constable | Elected; some towns have them, some don't |
+| `staff` | Town Administrator, Finance Director, Assessor, Recreation Director, etc. | Not elected — hired employees. Store in `elected_officials` with `appointment_type = 'appointed'` and no term dates |
+
+**When AI encounters a new title:**
+1. Check if it's a synonym of an existing canonical role
+2. If yes, insert into `role_canonicals` with the local title
+3. If no, flag it: `data_note = 'New title — needs canonical mapping'`
+4. The `role_canonicals` table grows organically as more towns are processed
+
+**Library board example:** Putnam calls it "Library Board of Trustees" (branch name), members are "Trustee". Pomfret calls it "Library Trustees" (branch name), members are also "Trustee". Same canonical role, slightly different board names. The branch name is local; the canonical role is universal.
+
+### Department Mapping Step (Phase 1, section 6)
 
 After the volunteer identifies their town's government structure (boards, commissions, departments), map each one to a **standard civic group template**. There are 13 town-level templates:
 

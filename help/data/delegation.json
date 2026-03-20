@@ -1,0 +1,65 @@
+{
+  "id": "delegation",
+  "title": "Your Delegation",
+  "subtitle": "Every elected official who represents you — from President to your town's Library Trustee — with a running track of what they say and do on your behalf.",
+  "generated": "2026-03-20T22:00:00.000Z",
+  "stepCount": 8,
+  "steps": [
+    {
+      "number": 1,
+      "title": "What is your delegation?",
+      "description": "Your delegation is the complete list of every elected official who represents you — typically 40 to 60+ people across six layers of government. Most citizens can name their president and maybe their governor. Almost nobody can name their state representative, county commissioner, or the chair of their town's Board of Finance. Your delegation page shows all of them in one place, based on your address.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 2,
+      "title": "The six layers",
+      "description": "Your delegation spans six layers of government, each determined by where you live:\n\n1. Federal — President, 2 U.S. Senators, 1 U.S. Representative\n2. State — Governor, Lt. Governor, Attorney General, Secretary of State, Treasurer, your State Senator, your State Representative\n3. County — County executive or judge, commissioners, sheriff, clerk, district attorney (varies by state — some states like Connecticut have no county government)\n4. City/Town — Mayor or First Selectman, council or selectmen, boards of finance and education\n5. School District — School board or committee (sometimes overlaps city, sometimes separate)\n6. Special Districts — Water, sewer, hospital, community college districts (often invisible but they tax you)\n\nTwo neighbors on the same street can have different delegations if they fall in different congressional, state legislative, or school districts.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 3,
+      "title": "How we know who represents you",
+      "description": "When you set your address in your profile, we geocode it to latitude and longitude. That point on the map falls inside specific boundaries for each layer — your congressional district, your state senate district, your county, your city, your school district. Each boundary maps to specific elected officials. That's how we build your personal delegation without you having to look anything up.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 4,
+      "title": "What you see for each official",
+      "description": "Every official in your delegation shows:\n\n- Name, title, party, photo\n- Which body they serve on (e.g., Board of Selectmen, City Council)\n- When their term expires — so you know when their seat is up for election\n- Whether they were elected or appointed\n- Contact info — phone, email, website\n\nThis is the basic profile. Below it, the platform tracks what they actually do.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 5,
+      "title": "Statements — what they say",
+      "description": "The platform collects public statements made by your officials — from press conferences, social media, interviews, and official channels. Each statement is tagged by policy topic (education, housing, healthcare, etc.) and timestamped. Over time, you build a record of what each official has promised, claimed, or said about issues that affect you. You can agree or disagree with any statement.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 6,
+      "title": "Actions and votes — what they do",
+      "description": "Statements are words. Actions are what matter. The platform tracks how your officials vote on legislation, what executive actions they take, and whether threats to your community are addressed or ignored. Each action links back to related statements — so you can see whether promises became reality or were quietly abandoned.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 7,
+      "title": "The scorecard — are they keeping the Golden Rule?",
+      "description": "Every official accumulates a scorecard across three axes:\n\n- Impact (0-1000) — Are their actions helping or harming people?\n- Language (0-1000) — Are they speaking with precision or rhetoric?\n- Accountability (0-1000) — Are they keeping promises or breaking them?\n\nThese scores are derived from the Golden Rule: treat others as you would want to be treated. The platform doesn't tell you who to vote for. It gives you the scorecard and lets you decide. Honesty, accountability, transparency, humility, equity, empathy — measured, not editorialized.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 8,
+      "title": "Why this matters",
+      "description": "Nobody can track 50 elected officials across 6 layers of government. That's not laziness — that's an impossible task for one person. The delegation page makes it possible by putting everything in one place: who they are, what they said, what they did, and whether they kept their word.\n\nThis is also the foundation for liquid democracy — if you trust someone to follow education issues more closely than you can, you could delegate your attention on that topic to them. They watch your School Committee and State Rep on education votes so you don't have to. You can take it back anytime.\n\nDemocracy works when citizens can see what their officials are doing. Your delegation page is that window.",
+      "alt": null,
+      "screenshot": null
+    }
+  ]
+}
