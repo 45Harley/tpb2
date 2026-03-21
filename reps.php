@@ -407,7 +407,7 @@ $pageStyles = '
 .official-card .card-tooltip {
     display: none;
     position: absolute;
-    bottom: 100%;
+    top: 100%;
     left: 50%;
     transform: translateX(-50%);
     width: 260px;
@@ -415,23 +415,24 @@ $pageStyles = '
     border: 1px solid #d4af37;
     border-radius: 8px;
     padding: 12px;
-    z-index: 100;
+    z-index: 1000;
     text-align: left;
     box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-    margin-bottom: 8px;
+    margin-top: 8px;
+    pointer-events: none;
 }
 .official-card:hover .card-tooltip { display: block; }
 .card-tooltip .tt-board { color: #d4af37; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; }
 .card-tooltip .tt-board-desc { color: #b0b0b0; font-size: 0.8rem; margin-bottom: 8px; line-height: 1.4; }
 .card-tooltip .tt-role { color: #88c0d0; font-size: 0.8rem; font-style: italic; line-height: 1.4; }
-.card-tooltip::after {
+.card-tooltip::before {
     content: "";
     position: absolute;
-    top: 100%;
+    bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
-    border-top-color: #d4af37;
+    border-bottom-color: #d4af37;
 }
 .official-header {
     display: flex;
