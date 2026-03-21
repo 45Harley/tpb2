@@ -73,12 +73,14 @@ $sql = "
            go.org_type, go.org_name, go.town_id,
            s.state_name,
            t.town_name as org_town_name,
-           bd.branch_name, bd.branch_type, bd.total_seats
+           bd.branch_name, bd.branch_type, bd.total_seats, bd.description as board_description,
+           rc.description as role_description
     FROM elected_officials eo
     JOIN governing_organizations go ON eo.org_id = go.org_id
     LEFT JOIN states s ON eo.state_code = s.abbreviation
     LEFT JOIN towns t ON go.town_id = t.town_id
     LEFT JOIN branches_departments bd ON eo.branch_id = bd.branch_id AND bd.org_id = eo.org_id
+    LEFT JOIN role_canonicals rc ON rc.local_title = eo.title AND rc.org_id = eo.org_id AND (rc.branch_id = eo.branch_id OR rc.branch_id IS NULL)
     WHERE eo.is_current = 1
 ";
 $params = array();
@@ -399,6 +401,36 @@ $pageStyles = '
     display: block;
     background: #2a2a2a;
 }
+.official-card { position: relative; }
+.official-card .card-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+    background: #1a1a2e;
+    border: 1px solid #d4af37;
+    border-radius: 8px;
+    padding: 12px;
+    z-index: 100;
+    text-align: left;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    margin-bottom: 8px;
+}
+.official-card:hover .card-tooltip { display: block; }
+.card-tooltip .tt-board { color: #d4af37; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; }
+.card-tooltip .tt-board-desc { color: #b0b0b0; font-size: 0.8rem; margin-bottom: 8px; line-height: 1.4; }
+.card-tooltip .tt-role { color: #88c0d0; font-size: 0.8rem; font-style: italic; line-height: 1.4; }
+.card-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #d4af37;
+}
 .official-header {
     display: flex;
     justify-content: space-between;
@@ -596,6 +628,19 @@ require 'includes/nav.php';
                 <a href="<?= htmlspecialchars($o['website']) ?>" target="_blank" class="contact-link" style="font-size:0.75rem">🌐</a>
                 <?php endif; ?>
             </div>
+            <?php if (!empty($o['board_description']) || !empty($o['role_description'])): ?>
+            <div class="card-tooltip">
+                <?php if (!empty($o['branch_name'])): ?>
+                <div class="tt-board"><?= htmlspecialchars($o['branch_name']) ?></div>
+                <?php endif; ?>
+                <?php if (!empty($o['board_description'])): ?>
+                <div class="tt-board-desc"><?= htmlspecialchars($o['board_description']) ?></div>
+                <?php endif; ?>
+                <?php if (!empty($o['role_description'])): ?>
+                <div class="tt-role"><?= htmlspecialchars($o['title']) ?>: <?= htmlspecialchars($o['role_description']) ?></div>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
         </div>
         <?php
     }
@@ -604,12 +649,16 @@ require 'includes/nav.php';
     function renderBoardGroup($boardName, $officials, $type = 'elected') {
         $seats = $officials[0]['total_seats'] ?? '';
         $seatsLabel = $seats ? "$seats seats" : '';
+        $boardDesc = $officials[0]['board_description'] ?? '';
         ?>
         <div class="board-group">
-            <div class="board-header <?= $type ?>">
+            <div class="board-header <?= $type ?>" <?php if ($boardDesc): ?>title="<?= htmlspecialchars($boardDesc) ?>"<?php endif; ?>>
                 <?= htmlspecialchars($boardName) ?>
                 <?php if ($seatsLabel): ?><span class="seats"><?= $seatsLabel ?></span><?php endif; ?>
             </div>
+            <?php if ($boardDesc): ?>
+            <div style="color:#888;font-size:0.8rem;padding:0 0.75rem 0.5rem;margin-top:-4px"><?= htmlspecialchars($boardDesc) ?></div>
+            <?php endif; ?>
             <div class="board-cards">
                 <?php foreach ($officials as $o) renderCard($o); ?>
             </div>
