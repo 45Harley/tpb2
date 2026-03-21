@@ -82,7 +82,7 @@ if ($rep) {
             )
         WHERE p.poll_type = 'threat' AND p.active = 1
         GROUP BY p.poll_id, rep_vote.vote_choice
-        ORDER BY et.severity_score DESC
+        ORDER BY p.created_at DESC
     ");
     $stmt->execute([$repUserId, $stateId ?: 0]);
     $rollCall = $stmt->fetchAll();

@@ -313,7 +313,7 @@ extract($navVars);
                 WHERE p.scope_type = 'federal' AND p.active = 1
                 GROUP BY p.poll_id
                 HAVING total_votes > 0
-                ORDER BY et.severity_score DESC
+                ORDER BY p.created_at DESC
                 LIMIT 50
             ")->fetchAll();
             ?>

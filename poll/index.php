@@ -113,7 +113,7 @@ try {
         LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id
         WHERE p.poll_type = 'threat' AND p.active = 1
         GROUP BY p.poll_id
-        ORDER BY et.severity_score DESC
+        ORDER BY p.created_at DESC
     ")->fetchAll();
 
     // Get tags per threat
