@@ -3,7 +3,7 @@
   "title": "How TPB Works",
   "subtitle": "The People's Branch is a continuous civic feedback loop — you say what you need, we track whether your officials deliver.",
   "generated": "2026-03-21T01:00:00.000Z",
-  "stepCount": 10,
+  "stepCount": 12,
   "steps": [
     {
       "number": 1,
@@ -71,7 +71,21 @@
     {
       "number": 10,
       "title": "The cycle continues",
-      "description": "After the election, the cycle starts again. New officials, updated mandates, fresh scorecard. You add new priorities. You remove resolved ones. Your civic profile grows over time — a living record of what you care about and whether your government responded.\n\nThis isn't something you do once every four years. It's continuous. Every statement tracked. Every action recorded. Every mandate counted. Every day, democracy gets a little more transparent.\n\nThat's The People's Branch. Not a party. Not an ideology. A tool that helps citizens see what their government is doing and hold it accountable. Built on the Golden Rule — the one thing 5.9 billion people across 10 religions already agree on.\n\nDo to others what you would have them do to you.",
+      "description": "After the election, the cycle starts again. New officials, updated mandates, fresh scorecard. You add new priorities. You remove resolved ones. Your civic profile grows over time — a living record of what you care about and whether your government responded.\n\nThis isn't something you do once every four years. It's continuous. Every statement tracked. Every action recorded. Every mandate counted. Every day, democracy gets a little more transparent.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 11,
+      "title": "Your participation is the point",
+      "description": "Democracy isn't democracy without transparent participation. Showing up matters — and The People's Branch says thank you for it.\n\nEvery civic action you take earns civic points — posting a mandate, voting on an idea, attending a group, verifying your identity, volunteering your skills. Your points reflect your degree of participation and your level of mutual trust with the community. They're not currency. They're not rank. They're gratitude. The People's Branch saying thank you for helping build a more perfect town.\n\nAnd if you have special skills — technology, writing, design, data, legal, education — you can volunteer to help build the platform itself. TPB is built by the people it serves. Every state page, every town page, every official verified in the database was put there by a citizen who cared enough to do the work. Your skills matter here. Not for profit. For your neighbors.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 12,
+      "title": "It starts in the Quiet Corner",
+      "description": "Putnam, Connecticut is the first model town — fully built out with every elected official, every board, every budget, every school, every civic group. It's the proof that this works.\n\nNow the towns around Putnam — Brooklyn, Killingly, Pomfret, Woodstock, Thompson, Eastford, and the rest of the Quiet Corner — are ready. The online town building kit lets any volunteer build their town's page with the help of AI. Pull your town charter. Enter your elected officials. Map your boards and departments. AI does the research. You verify the facts. Your town goes live.\n\nOne town at a time. One volunteer at a time. From the Quiet Corner of Connecticut to every corner of America.\n\nThat's The People's Branch. Not a party. Not an ideology. A tool that helps citizens see what their government is doing and hold it accountable. Built on the Golden Rule — the one thing 5.9 billion people across 10 religions already agree on.\n\nDo to others what you would have them do to you.",
       "alt": null,
       "screenshot": null
     }
