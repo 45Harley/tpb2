@@ -1,0 +1,79 @@
+{
+  "id": "how-tpb-works",
+  "title": "How TPB Works",
+  "subtitle": "The People's Branch is a continuous civic feedback loop — you say what you need, we track whether your officials deliver.",
+  "generated": "2026-03-21T01:00:00.000Z",
+  "stepCount": 10,
+  "steps": [
+    {
+      "number": 1,
+      "title": "Start with you",
+      "description": "Everything begins with your civic profile — who you are, where you live, and what matters to you. Your address connects you to every elected official who represents you, from President down to your town's Library Trustee. Your bio tells the story behind your priorities — are you a single mom who needs childcare help? A retiree on a fixed income? A first-time homebuyer? Your situation shapes what you need from government. That's not politics. That's life.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 2,
+      "title": "Say what you need",
+      "description": "Post your priorities — we call them mandates. Not petitions. Not complaints. Clear statements about what you need from your government at every level.\n\nFederal: \"Healthcare costs are crushing my family.\"\nState: \"Fund our public schools properly.\"\nTown: \"Fix Kennedy Drive before someone gets hurt.\"\n\nYou can post mandates on any Talk page, on your town page, or anywhere you see the Discuss & Draft box. Tag each one by scope — Federal, State, or Town — so it reaches the right level. Your mandates are living documents. Add new ones anytime. Remove ones that got resolved. Your mandate is always current.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 3,
+      "title": "Find your people",
+      "description": "When you post a mandate, other citizens can vote on it. If 50 people in your town say \"fund the library\" — that's not 50 separate wishes. That's a power group. Mandates with votes become visible to the officials responsible for that issue.\n\nYou can also join groups — private working groups with a facilitator to draft ideas together, open groups around specific issues, or standing civic topics that exist permanently for every town (Education, Budget, Public Safety, and more). All of them produce mandates. All of them build collective voice.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 4,
+      "title": "Know who represents you",
+      "description": "Your delegation page shows every elected official who represents you — typically 40 to 60 people across federal, state, and local government. Most citizens can name their president and maybe their governor. Almost nobody can name their state representative, their county commissioner, or who chairs their town's Board of Finance.\n\nWe show you all of them. Who they are, what party, when their term expires, what board they sit on, and what that board actually does. Hover on any official to see their role description. This is the starting point for accountability — you can't hold someone accountable if you don't know they exist.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 5,
+      "title": "Track what they say",
+      "description": "The platform collects public statements made by your officials — from press conferences, social media, interviews, and official channels. Each statement is tagged by policy topic and timestamped.\n\n\"I support our libraries.\" — Board of Finance member, March 2025.\n\"We'll hold the line on taxes.\" — Mayor, January 2025.\n\nYou can agree or disagree with any statement. Over time, you build a record of what each official has promised, claimed, or said about the issues that matter to you.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 6,
+      "title": "Watch what they do",
+      "description": "Statements are words. Actions are what matter. The platform tracks how your officials vote on legislation, what budget decisions they make, and whether threats to your community are addressed or ignored.\n\nEach action links back to related statements — so you can see whether promises became reality or were quietly abandoned. Did they say they'd fund the library and then cut the library budget? That's documented. Did they say nothing about roads and then fix Kennedy Drive? That's documented too.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 7,
+      "title": "Compare: your mandates vs. their record",
+      "description": "This is where it comes together. Your mandates sit next to your officials' statements and actions. Three columns:\n\nWhat You Want — What They Said — What They Did\n\nFund the library — \"I support our libraries\" — Cut library budget 12%\nFix Kennedy Drive — (no statement) — (no action)\nLower mill rate — \"We'll hold the line\" — Raised it 1.2 mills\n\nThree possible outcomes for each mandate: Aligned (said it and did it), Lip service (said it, didn't do it), or Silent (never even addressed it). No editorializing. Just the record.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 8,
+      "title": "The scorecard",
+      "description": "Every official accumulates a scorecard across three axes, all rooted in the Golden Rule — treat others as you would want to be treated.\n\nImpact (0-1000): Are their actions helping or harming the people they serve?\nLanguage (0-1000): Are they speaking with precision or hiding behind rhetoric?\nAccountability (0-1000): Are they keeping promises or breaking them?\n\nThe platform doesn't tell you who to vote for. It gives you the scorecard and lets you decide. You set the priorities. The scorecard shows who delivered.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 9,
+      "title": "Vote informed",
+      "description": "When election day comes, you're not guessing. You're not relying on a yard sign or a TV ad. You have:\n\n- Your mandates — what you asked for\n- Their statements — what they promised\n- Their actions — what they delivered\n- Their scorecard — how they measure up\n\nYou decide what matters most. Maybe you forgive a broken promise on taxes because they delivered on schools. Maybe language matters more to you than impact. That's your call. The platform gives you the information. Democracy gives you the choice.",
+      "alt": null,
+      "screenshot": null
+    },
+    {
+      "number": 10,
+      "title": "The cycle continues",
+      "description": "After the election, the cycle starts again. New officials, updated mandates, fresh scorecard. You add new priorities. You remove resolved ones. Your civic profile grows over time — a living record of what you care about and whether your government responded.\n\nThis isn't something you do once every four years. It's continuous. Every statement tracked. Every action recorded. Every mandate counted. Every day, democracy gets a little more transparent.\n\nThat's The People's Branch. Not a party. Not an ideology. A tool that helps citizens see what their government is doing and hold it accountable. Built on the Golden Rule — the one thing 5.9 billion people across 10 religions already agree on.\n\nDo to others what you would have them do to you.",
+      "alt": null,
+      "screenshot": null
+    }
+  ]
+}
