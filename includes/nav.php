@@ -473,6 +473,7 @@ $electionSite = 'https://tpb.sandgems.net';
                     <div class="nav-dropdown-menu">
                         <a href="/help/">📚 User Guides</a>
                         <a href="/help/tpb-getting-started-tutorial.html">🎓 Getting Started</a>
+                        <a href="/help/build-log.php">🔨 Build Log</a>
                         <a href="/help/icons.php">🎨 Modal Icons</a>
                     </div>
                 </div>
