@@ -3,7 +3,7 @@
  * Step 3: Parse Claude's JSON response and insert statements into DB.
  * Runs on the SERVER via SSH. Reads JSON from file argument.
  *
- * Usage: php collect-statements-step3-insert.php /path/to/claude-response.json
+ * Usage: php collect-statements-step3-insert.php /path/to/claude-response.json [official_id]
  */
 
 $startTime = microtime(true);
@@ -20,6 +20,11 @@ $pdo = new PDO(
     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
 );
 
+// Per-official tracking
+$officialId = intval($argv[2] ?? 326);
+$successKey = "statement_collect_last_success_{$officialId}";
+$resultKey = "statement_collect_last_result_{$officialId}";
+
 // Logging
 $logDir = $base . '/scripts/maintenance/logs';
 if (!is_dir($logDir)) mkdir($logDir, 0755, true);
@@ -33,7 +38,7 @@ function logMsg($msg) {
     echo $line;
 }
 
-logMsg("=== Step 3: Insert statements (local pipeline) ===");
+logMsg("=== Step 3: Insert statements for official_id={$officialId} (local pipeline) ===");
 
 // Read Claude's response
 $inputFile = $argv[1] ?? '';
@@ -71,10 +76,10 @@ logMsg("Search summary: {$searchSummary}");
 
 if (empty($statements)) {
     logMsg("No new statements found.");
-    setSiteSetting($pdo, 'statement_collect_last_success', date('Y-m-d H:i:s'));
-    setSiteSetting($pdo, 'statement_collect_last_result', json_encode([
+    setSiteSetting($pdo, $successKey, date('Y-m-d H:i:s'));
+    setSiteSetting($pdo, $resultKey, json_encode([
         'status' => 'success', 'timestamp' => date('Y-m-d H:i:s'),
-        'inserted' => 0, 'note' => 'No new statements found (local pipeline)',
+        'official_id' => $officialId, 'inserted' => 0, 'note' => 'No new statements found (local pipeline)',
         'elapsed' => round(microtime(true) - $startTime, 1)
     ]));
     echo json_encode(['status' => 'success', 'inserted' => 0]);
@@ -133,10 +138,10 @@ logMsg("After dedup: " . count($statements) . " new statements ({$skippedCount} 
 if (empty($statements)) {
     logMsg("All statements were duplicates.");
     $elapsed = round(microtime(true) - $startTime, 1);
-    setSiteSetting($pdo, 'statement_collect_last_success', date('Y-m-d H:i:s'));
-    setSiteSetting($pdo, 'statement_collect_last_result', json_encode([
+    setSiteSetting($pdo, $successKey, date('Y-m-d H:i:s'));
+    setSiteSetting($pdo, $resultKey, json_encode([
         'status' => 'success', 'timestamp' => date('Y-m-d H:i:s'),
-        'inserted' => 0, 'skipped' => $skippedCount, 'note' => 'All duplicates (local pipeline)',
+        'official_id' => $officialId, 'inserted' => 0, 'skipped' => $skippedCount, 'note' => 'All duplicates (local pipeline)',
         'elapsed' => $elapsed
     ]));
     echo json_encode(['status' => 'success', 'inserted' => 0, 'skipped' => $skippedCount]);
@@ -228,17 +233,18 @@ logMsg("Duplicates skipped: {$skippedCount}");
 logMsg("Total statements in DB: {$totalStatements}");
 logMsg("Elapsed: {$elapsed}s");
 
-setSiteSetting($pdo, 'statement_collect_last_success', date('Y-m-d H:i:s'));
+setSiteSetting($pdo, $successKey, date('Y-m-d H:i:s'));
 $result = json_encode([
     'status' => 'success',
     'timestamp' => date('Y-m-d H:i:s'),
+    'official_id' => $officialId,
     'inserted' => $inserted,
     'skipped' => $skippedCount,
     'total_statements' => (int)$totalStatements,
     'elapsed' => $elapsed,
     'pipeline' => 'local'
 ]);
-setSiteSetting($pdo, 'statement_collect_last_result', $result);
+setSiteSetting($pdo, $resultKey, $result);
 logMsg("Success recorded to site_settings.");
 
 echo json_encode(['status' => 'success', 'inserted' => $inserted, 'skipped' => $skippedCount]);

@@ -1,10 +1,10 @@
 <?php
 /**
- * Rep Statements — What the President Says
- * =========================================
- * Reverse-chronological stream of presidential statements.
+ * Rep Statements — What Your Representatives Say
+ * ================================================
+ * Reverse-chronological stream of official statements.
  * Dual scoring (criminality + benefit), citizen agree/disagree voting.
- * POC: President only (official_id = 326).
+ * Supports multiple officials with "My Delegation" view.
  */
 
 $c = require dirname(__DIR__) . '/config.php';
@@ -19,9 +19,47 @@ $navVars = getNavVarsForUser($dbUser);
 extract($navVars);
 $userId = $dbUser ? (int)$dbUser['user_id'] : 0;
 $currentPage = 'elections';
-$pageTitle = 'Statements | TPB';
-$ogTitle = 'What the President Says — The People\'s Branch';
-$ogDescription = 'Track presidential statements scored on dual scales. Agree or disagree. Hold your representatives accountable.';
+
+// --- Officials with statements ---
+$trackedOfficials = [
+    326 => ['name' => 'Donald Trump', 'short' => 'President', 'title' => 'President'],
+    374 => ['name' => 'Richard Blumenthal', 'short' => 'Sen. Blumenthal', 'title' => 'U.S. Senator (CT)'],
+    441 => ['name' => 'Christopher Murphy', 'short' => 'Sen. Murphy', 'title' => 'U.S. Senator (CT)'],
+];
+
+// CT federal delegation IDs (for "My Delegation" view)
+$delegationIds = [374, 441]; // Blumenthal + Murphy
+
+// --- View param ---
+$view = $_GET['view'] ?? 'delegation';
+$validViews = array_merge(['delegation', 'all'], array_map('strval', array_keys($trackedOfficials)));
+if (!in_array($view, $validViews)) $view = 'delegation';
+
+// --- Page titles per view ---
+if ($view === 'delegation') {
+    $pageTitle = 'My Delegation — Statements | TPB';
+    $ogTitle = 'What My Senators Say — The People\'s Branch';
+    $ogDescription = 'Track your CT federal delegation\'s statements scored on dual scales. Hold your representatives accountable.';
+    $headingTitle = 'My Federal Delegation';
+    $headingSubtitle = 'What your CT senators are saying — scored on harm, benefit, and truth.';
+    $officialFilter = $delegationIds;
+} elseif ($view === 'all') {
+    $pageTitle = 'All Statements | TPB';
+    $ogTitle = 'All Official Statements — The People\'s Branch';
+    $ogDescription = 'Track official statements scored on dual scales. Agree or disagree. Hold your representatives accountable.';
+    $headingTitle = 'All Officials';
+    $headingSubtitle = 'Every tracked official\'s statements — scored on harm, benefit, and truth.';
+    $officialFilter = array_keys($trackedOfficials);
+} else {
+    $oid = (int)$view;
+    $off = $trackedOfficials[$oid];
+    $pageTitle = $off['short'] . ' — Statements | TPB';
+    $ogTitle = 'What ' . $off['name'] . ' Says — The People\'s Branch';
+    $ogDescription = 'Track statements by ' . $off['name'] . ' scored on dual scales. Agree or disagree.';
+    $headingTitle = $off['name'];
+    $headingSubtitle = $off['title'] . ' — statements scored on harm, benefit, and truth.';
+    $officialFilter = [$oid];
+}
 
 // --- Filter params ---
 $filterTopic = $_GET['topic'] ?? '';
@@ -37,8 +75,9 @@ $policyTopics = [
 ];
 
 // --- Build query ---
-$where = ['rs.official_id = 326'];
-$params = [];
+$placeholders = implode(',', array_fill(0, count($officialFilter), '?'));
+$where = ["rs.official_id IN ($placeholders)"];
+$params = array_values($officialFilter);
 
 if ($filterTopic) {
     $where[] = 'rs.policy_topic = ?';
@@ -80,10 +119,12 @@ if ($userId) {
     }
 }
 
-// --- Distinct sources for filter dropdown ---
-$sources = $pdo->query("
-    SELECT DISTINCT source FROM rep_statements WHERE official_id = 326 ORDER BY source
-")->fetchAll(PDO::FETCH_COLUMN);
+// --- Distinct sources for filter dropdown (scoped to current view) ---
+$srcStmt = $pdo->prepare("
+    SELECT DISTINCT source FROM rep_statements WHERE official_id IN ($placeholders) ORDER BY source
+");
+$srcStmt->execute(array_values($officialFilter));
+$sources = $srcStmt->fetchAll(PDO::FETCH_COLUMN);
 
 $hasFilters = $filterTopic || $filterTense || $filterSource;
 
@@ -104,6 +145,28 @@ function getTruthZone($score) {
 
 $pageStyles = <<<'CSS'
 .stream-container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+
+/* Official selector tabs */
+.official-tabs {
+    display: flex; gap: 0.4rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    justify-content: center;
+}
+.official-tab {
+    padding: 0.5rem 1.2rem; border: 1px solid #333; border-radius: 20px;
+    color: #b0b0b0; text-decoration: none; font-size: 0.9rem; font-weight: 500;
+    transition: all 0.2s;
+}
+.official-tab:hover { color: #e0e0e0; border-color: #555; background: rgba(255,255,255,0.03); }
+.official-tab.active {
+    color: #d4af37; border-color: #d4af37; background: rgba(212,175,55,0.1); font-weight: 600;
+}
+
+/* Official name badge (shown in multi-official views) */
+.official-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: 0.75rem; font-weight: 600; background: rgba(100,181,246,0.15);
+    color: #64b5f6; border: 1px solid rgba(100,181,246,0.3);
+}
 
 /* View links */
 .view-links { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
@@ -322,8 +385,17 @@ require dirname(__DIR__) . '/includes/nav.php';
     <?php require_once dirname(__DIR__) . '/includes/criminality-scale.php'; ?>
     <?php require_once dirname(__DIR__) . '/includes/benefit-scale.php'; ?>
 
-    <h1 class="page-heading">What the President Says</h1>
-    <p class="page-subheading">Presidential statements scored on dual scales — criminality and benefit. You decide if you agree.</p>
+    <!-- Official selector tabs -->
+    <div class="official-tabs">
+        <a href="?view=delegation" class="official-tab <?= $view === 'delegation' ? 'active' : '' ?>">My Delegation</a>
+        <?php foreach ($trackedOfficials as $oid => $off): ?>
+        <a href="?view=<?= $oid ?>" class="official-tab <?= $view === (string)$oid ? 'active' : '' ?>"><?= htmlspecialchars($off['short']) ?></a>
+        <?php endforeach; ?>
+        <a href="?view=all" class="official-tab <?= $view === 'all' ? 'active' : '' ?>">All</a>
+    </div>
+
+    <h1 class="page-heading"><?= htmlspecialchars($headingTitle) ?></h1>
+    <p class="page-subheading"><?= htmlspecialchars($headingSubtitle) ?></p>
 
     <!-- Filters -->
     <div class="statement-filters">
@@ -350,6 +422,10 @@ require dirname(__DIR__) . '/includes/nav.php';
             <option value="<?= htmlspecialchars($src) ?>" <?= $filterSource === $src ? 'selected' : '' ?>><?= htmlspecialchars($src) ?></option>
             <?php endforeach; ?>
         </select>
+
+        <?php if ($hasFilters): ?>
+        <a href="?view=<?= htmlspecialchars($view) ?>" style="color:#d4af37;font-size:0.85rem;text-decoration:none;">Clear filters</a>
+        <?php endif; ?>
     </div>
 
     <!-- Statements -->
@@ -376,6 +452,9 @@ require dirname(__DIR__) . '/includes/nav.php';
         ?>
         <div class="statement-card">
             <div class="statement-meta">
+                <?php if (count($officialFilter) > 1): ?>
+                <span class="official-badge"><?= htmlspecialchars($s['official_name']) ?></span>
+                <?php endif; ?>
                 <span class="source-badge"><?= htmlspecialchars($s['source']) ?></span>
                 <?php if ($s['tense']): ?>
                 <span class="tense-badge <?= $tenseClass ?>"><?= ucfirst($s['tense']) ?></span>
@@ -464,6 +543,10 @@ function updateFilter(key, value) {
         url.searchParams.set(key, value);
     } else {
         url.searchParams.delete(key);
+    }
+    // Always preserve view param
+    if (!url.searchParams.has('view')) {
+        url.searchParams.set('view', '<?= htmlspecialchars($view) ?>');
     }
     window.location.href = url.toString();
 }
