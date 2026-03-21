@@ -38,6 +38,7 @@ $stateFilter = isset($_GET['state']) ? strtoupper($_GET['state']) : '';
 $chamberFilter = isset($_GET['branch']) ? $_GET['branch'] : '';
 $searchFilter = isset($_GET['search']) ? trim($_GET['search']) : '';
 $townFilter = isset($_GET['town']) ? trim($_GET['town']) : '';
+$showFilter = isset($_GET['show']) ? $_GET['show'] : ($myRepsMode ? 'elected' : 'all');
 
 // My Reps mode - apply user's location as filters
 $userState = '';
@@ -120,6 +121,16 @@ if ($townFilter) {
     $sql .= " AND t.town_name LIKE ?";
     $params[] = '%' . $townFilter . '%';
 }
+
+// Show filter — elected/appointed/staff/all
+if ($showFilter === 'elected') {
+    $sql .= " AND eo.appointment_type = 'elected'";
+} elseif ($showFilter === 'boards') {
+    $sql .= " AND (eo.appointment_type = 'elected' OR (eo.appointment_type = 'appointed' AND eo.term_end IS NOT NULL))";
+} elseif ($showFilter === 'staff') {
+    // Show everything including staff
+}
+// 'all' = no filter
 
 // Search filter
 if ($searchFilter) {
@@ -496,6 +507,15 @@ require 'includes/nav.php';
                 <option value="federal" <?= $levelFilter == 'federal' ? 'selected' : '' ?>>Federal</option>
                 <option value="state" <?= $levelFilter == 'state' ? 'selected' : '' ?>>State</option>
                 <option value="town" <?= $levelFilter == 'town' ? 'selected' : '' ?>>Town</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Show</label>
+            <select name="show" onchange="this.form.submit()">
+                <option value="elected" <?= $showFilter == 'elected' ? 'selected' : '' ?>>Elected</option>
+                <option value="boards" <?= $showFilter == 'boards' ? 'selected' : '' ?>>Elected + Appointed Boards</option>
+                <option value="all" <?= $showFilter == 'all' ? 'selected' : '' ?>>All (incl. Staff)</option>
             </select>
         </div>
 
