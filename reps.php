@@ -418,7 +418,6 @@ $pageStyles = '
     text-align: left;
     box-shadow: 0 4px 20px rgba(0,0,0,0.6);
     margin-top: 8px;
-    pointer-events: none;
 }
 .official-card:hover { z-index: 999; }
 .official-card:hover .card-tooltip { display: block; }
