@@ -74,13 +74,15 @@ $sql = "
            s.state_name,
            t.town_name as org_town_name,
            bd.branch_name, bd.branch_type, bd.total_seats, bd.description as board_description,
-           rc.description as role_description
+           (SELECT rc.description FROM role_canonicals rc
+            WHERE rc.local_title = eo.title AND rc.org_id = eo.org_id
+            AND (rc.branch_id = eo.branch_id OR rc.branch_id IS NULL)
+            LIMIT 1) as role_description
     FROM elected_officials eo
     JOIN governing_organizations go ON eo.org_id = go.org_id
     LEFT JOIN states s ON eo.state_code = s.abbreviation
     LEFT JOIN towns t ON go.town_id = t.town_id
     LEFT JOIN branches_departments bd ON eo.branch_id = bd.branch_id AND bd.org_id = eo.org_id
-    LEFT JOIN role_canonicals rc ON rc.local_title = eo.title AND rc.org_id = eo.org_id AND (rc.branch_id = eo.branch_id OR rc.branch_id IS NULL)
     WHERE eo.is_current = 1
 ";
 $params = array();
