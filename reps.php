@@ -425,7 +425,7 @@ $pageStyles = '
 .card-tooltip .tt-board-desc { color: #b0b0b0; font-size: 0.8rem; margin-bottom: 8px; line-height: 1.4; }
 .card-tooltip .tt-role { color: #88c0d0; font-size: 0.8rem; font-style: italic; line-height: 1.4; }
 .card-tooltip::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 100%;
     left: 50%;
