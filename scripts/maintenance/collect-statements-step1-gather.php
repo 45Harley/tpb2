@@ -67,6 +67,21 @@ SRC,
         'search_instruction' => 'Check murphy.senate.gov press releases, Twitter/X, Substack newsletter, committee hearings, floor speeches, and CT/national media coverage.',
         'extra_rules' => '',
     ],
+    390 => [
+        'name' => 'U.S. Representative Joe Courtney (D-CT-2)',
+        'short_name' => 'Courtney',
+        'title' => 'U.S. Representative',
+        'sources_text' => <<<'SRC'
+1. courtney.house.gov/news — official press releases and statements (PRIMARY)
+2. Twitter/X @RepJoeCourtney — official account
+3. House committee hearings — Armed Services, Education & Labor
+4. C-SPAN (c-span.org) — floor speeches, hearing clips
+Also check news outlets: CT Mirror, Hartford Courant, The Day (New London), Norwich Bulletin, AP, The Hill
+SRC,
+        'source_types' => 'Press Release | Twitter/X | Committee Hearing | Floor Speech | Interview | Press Conference',
+        'search_instruction' => 'Check courtney.house.gov press releases, Twitter/X, committee hearings, floor speeches, and CT media coverage.',
+        'extra_rules' => '',
+    ],
 ];
 
 // ─── Parse CLI arg ──────────────────────────────────────────────────────

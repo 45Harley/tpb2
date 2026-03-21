@@ -25,10 +25,11 @@ $trackedOfficials = [
     326 => ['name' => 'Donald Trump', 'short' => 'President', 'title' => 'President'],
     374 => ['name' => 'Richard Blumenthal', 'short' => 'Sen. Blumenthal', 'title' => 'U.S. Senator (CT)'],
     441 => ['name' => 'Christopher Murphy', 'short' => 'Sen. Murphy', 'title' => 'U.S. Senator (CT)'],
+    390 => ['name' => 'Joe Courtney', 'short' => 'Rep. Courtney', 'title' => 'U.S. Representative (CT-2)'],
 ];
 
 // CT federal delegation IDs (for "My Delegation" view)
-$delegationIds = [374, 441]; // Blumenthal + Murphy
+$delegationIds = [326, 374, 441, 390]; // Trump + Blumenthal + Murphy + Courtney (CT-2)
 
 // --- View param ---
 $view = $_GET['view'] ?? 'delegation';
