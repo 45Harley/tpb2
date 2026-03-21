@@ -627,6 +627,11 @@ function congressionalGlossary(): array {
             'short' => 'Each branch can limit the others. Congress passes laws, the President can veto them, Congress can override the veto, and courts can strike laws down as unconstitutional.',
             'cat'   => 'Constitutional',
         ],
+        'dei' => [
+            'term'  => 'DEI (Diversity, Equity, Inclusion)',
+            'short' => 'DEI isn\'t a program or a policy — it\'s the description of reality. Good expresses infinitely through every person, every perspective, every community. A system that excludes any expression is a system that\'s broken. Every public servant rating axis is a DEI axis: do they honor diverse perspectives (Honesty), resist flattening diversity into conformity (Independence), walk the talk equitably (Integrity), do the work of inclusion (Diligence), and serve the full expression, not just the loudest voice (Fairness)?',
+            'cat'   => 'Constitutional',
+        ],
         'advice and consent' => [
             'term'  => 'Advice and Consent',
             'short' => 'The Senate\'s constitutional power to approve or reject presidential nominations and treaties. "Advice" means the Senate can consult; "consent" means they must approve.',
