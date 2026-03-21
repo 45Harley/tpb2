@@ -420,6 +420,7 @@ $pageStyles = '
     margin-top: 8px;
     pointer-events: none;
 }
+.official-card:hover { z-index: 999; }
 .official-card:hover .card-tooltip { display: block; }
 .card-tooltip .tt-board { color: #d4af37; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; }
 .card-tooltip .tt-board-desc { color: #b0b0b0; font-size: 0.8rem; margin-bottom: 8px; line-height: 1.4; }
