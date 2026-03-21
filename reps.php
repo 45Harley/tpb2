@@ -384,7 +384,6 @@ $pageStyles = '
     background: #1a1a1a;
     border: 2px solid #2a2a2a;
     transition: transform 0.2s, border-color 0.2s;
-    overflow: hidden;
 }
 .official-card:hover {
     transform: translateY(-2px);
@@ -631,16 +630,20 @@ require 'includes/nav.php';
                 <a href="<?= htmlspecialchars($o['website']) ?>" target="_blank" class="contact-link" style="font-size:0.75rem">🌐</a>
                 <?php endif; ?>
             </div>
-            <?php if (!empty($o['board_description']) || !empty($o['role_description'])): ?>
+            <?php
+            $bd = $o['board_description'] ?? '';
+            $rd = $o['role_description'] ?? '';
+            $bn = $o['branch_name'] ?? '';
+            if ($bd || $rd || $bn): ?>
             <div class="card-tooltip">
-                <?php if (!empty($o['branch_name'])): ?>
-                <div class="tt-board"><?= htmlspecialchars($o['branch_name']) ?></div>
+                <?php if ($bn): ?>
+                <div class="tt-board"><?= htmlspecialchars($bn) ?></div>
                 <?php endif; ?>
-                <?php if (!empty($o['board_description'])): ?>
-                <div class="tt-board-desc"><?= htmlspecialchars($o['board_description']) ?></div>
+                <?php if ($bd): ?>
+                <div class="tt-board-desc"><?= htmlspecialchars($bd) ?></div>
                 <?php endif; ?>
-                <?php if (!empty($o['role_description'])): ?>
-                <div class="tt-role"><?= htmlspecialchars($o['title']) ?>: <?= htmlspecialchars($o['role_description']) ?></div>
+                <?php if ($rd): ?>
+                <div class="tt-role"><?= htmlspecialchars($o['title'] ?? '') ?>: <?= htmlspecialchars($rd) ?></div>
                 <?php endif; ?>
             </div>
             <?php endif; ?>
