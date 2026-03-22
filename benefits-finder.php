@@ -409,8 +409,8 @@ require __DIR__ . '/includes/nav.php';
 
         <div class="form-group">
             <label>Monthly Housing Cost <span class="pts">+5</span> <span class="info-icon">&#9432;</span>
-                <span class="tooltip">Determines eligibility for Section 8, SNAP shelter deduction, and LIHEAP heating assistance</span></label>
-            <div class="hover-reason">Determines eligibility for Section 8, SNAP shelter deduction, and LIHEAP heating assistance</div>
+                <span class="tooltip">Include rent/mortgage, property tax, and homeowner's insurance if applicable. Determines eligibility for Section 8, SNAP shelter deduction, and LIHEAP.</span></label>
+            <div class="hover-reason">Rent or mortgage + property tax + insurance if applicable</div>
             <select name="monthly_housing_cost">
                 <option value="">— Select —</option>
                 <?php foreach (['$0','Under $500','$500-$1,000','$1,000-$1,500','$1,500-$2,000','$2,000-$3,000','$3,000+'] as $h): ?>
