@@ -82,12 +82,16 @@ Location: {$town}, {$stateName} ({$state})
    - How to apply (website URL or phone number)
    - Category (one of: Housing, Food, Healthcare, Energy, Tax Credits, Education, Childcare, Veterans, Disability, Employment, Senior Services, Other)
 4. Be honest — say "may qualify" not "you qualify" since final eligibility depends on full application
-5. Include state-specific programs for {$stateName}:
-   - First-time homebuyer programs (CHFA, down payment assistance) if applicable
-   - State energy assistance (LIHEAP, Operation Fuel)
-   - State healthcare (HUSKY/Medicaid, Access Health CT)
-   - State food programs
-6. Include municipal programs for {$town} if you know of any
+5. Include {$stateName}-specific programs. Every state has its own versions of:
+   - First-time homebuyer / down payment assistance (state housing finance authority)
+   - Energy assistance (state LIHEAP administrator, local fuel funds)
+   - State Medicaid / healthcare marketplace
+   - State food assistance beyond federal SNAP
+   - State education grants and workforce training
+   - State childcare subsidies
+   - State tax credits (earned income, property tax relief, renter's credit)
+   Use your knowledge of {$stateName}'s specific program names, agencies, and websites.
+6. Include municipal programs for {$town}, {$stateName} if you know of any
 7. Don't include programs they clearly don't qualify for based on their profile
 8. Sort by estimated value (highest dollar benefit first)
 
