@@ -341,12 +341,13 @@ require __DIR__ . '/includes/nav.php';
             <label>Health Insurance <span class="pts">+5</span> <span class="info-icon">&#9432;</span>
                 <span class="tooltip">Identifies coverage gaps and connects you to affordable options</span></label>
             <div class="hover-reason">Identifies coverage gaps and connects you to affordable options</div>
-            <select name="health_insurance">
-                <option value="">— Select —</option>
+            <?php $savedIns = array_map('trim', explode(',', pv('health_insurance'))); ?>
+            <select name="health_insurance" multiple size="4" style="height: auto;">
                 <?php foreach (['Employer-provided','ACA Marketplace','Medicare','Medicaid','VA / TRICARE','Private','Uninsured','Other'] as $h): ?>
-                <option value="<?= $h ?>"<?= pv('health_insurance') === $h ? ' selected' : '' ?>><?= $h ?></option>
+                <option value="<?= $h ?>"<?= in_array($h, $savedIns) ? ' selected' : '' ?>><?= $h ?></option>
                 <?php endforeach; ?>
             </select>
+            <div style="font-size: 0.72rem; color: #666; margin-top: 0.3rem;">Ctrl+click (Cmd+click on Mac) to select multiple</div>
         </div>
 
         <div class="toggle-row">
@@ -610,7 +611,12 @@ document.getElementById('benefitsForm').addEventListener('submit', async functio
     const form = this;
     const data = {};
     form.querySelectorAll('select, input[type="text"], input[type="date"], input[type="number"]').forEach(el => {
-        if (el.name) data[el.name] = el.value;
+        if (!el.name) return;
+        if (el.multiple) {
+            data[el.name] = Array.from(el.selectedOptions).map(o => o.value).join(',');
+        } else {
+            data[el.name] = el.value;
+        }
     });
     form.querySelectorAll('input[type="checkbox"]').forEach(el => {
         if (el.name) data[el.name] = el.checked ? 1 : 0;
