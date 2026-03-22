@@ -190,37 +190,11 @@ if (!$parsed || !isset($parsed['programs'])) {
     exit;
 }
 
-// Validate URLs — fix bare domains, strip bad links
+// Fix bare domain URLs — add https:// if missing
 foreach ($parsed['programs'] as &$prog) {
     $url = trim($prog['how_to_apply'] ?? '');
-    // Fix bare domains — add https:// if missing
     if ($url && !preg_match('/^https?:\/\//', $url) && preg_match('/^[a-z0-9].*\.[a-z]{2,}/i', $url)) {
-        $url = 'https://' . $url;
-        $prog['how_to_apply'] = $url;
-    }
-    if ($url && preg_match('/^https?:\/\//', $url)) {
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_NOBODY => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 2,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS => 3,
-            CURLOPT_USERAGENT => 'Mozilla/5.0 (TPB Benefits Checker)',
-            CURLOPT_SSL_VERIFYPEER => false
-        ]);
-        curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode >= 400 || $httpCode === 0) {
-            // Extract domain for fallback
-            $domain = parse_url($url, PHP_URL_HOST) ?? '';
-            $prog['how_to_apply'] = '';
-            $prog['apply_note'] = $domain
-                ? "Search {$domain} or call the agency directly"
-                : "Contact the agency directly for application details";
-        }
+        $prog['how_to_apply'] = 'https://' . $url;
     }
 }
 unset($prog);
