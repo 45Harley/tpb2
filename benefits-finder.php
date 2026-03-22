@@ -687,7 +687,7 @@ document.getElementById('scanBtn').addEventListener('click', async function() {
     try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 180000); // 3 min timeout
-        const resp = await fetch('/api/benefits-match.php', {
+        const resp = await fetch('/api/benefits-scan.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             signal: controller.signal
