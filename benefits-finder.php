@@ -723,7 +723,7 @@ document.getElementById('scanBtn').addEventListener('click', async function() {
                 '<span class="pc-confidence ' + confClass + '">' + confClass + '</span>' +
                 '<div class="pc-provides">' + (p.provides || '') + '</div>' +
                 '<div class="pc-why">' + (p.why_you_qualify || '') + '</div>' +
-                (p.how_to_apply ? '<div class="pc-apply"><a href="' + p.how_to_apply + '" target="_blank">' + p.how_to_apply + ' →</a></div>' : '');
+                (p.how_to_apply ? '<div class="pc-apply"><a href="' + p.how_to_apply + '" target="_blank" rel="noopener">' + p.how_to_apply + ' →</a><div style="font-size:0.68rem;color:#666;margin-top:0.2rem;">Verify link is current — contact the agency directly if it doesn\'t work</div></div>' : '');
             cards.appendChild(card);
         });
 

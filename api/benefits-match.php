@@ -94,6 +94,7 @@ Location: {$town}, {$stateName} ({$state})
 6. Include municipal programs for {$town}, {$stateName} if you know of any
 7. Don't include programs they clearly don't qualify for based on their profile
 8. Sort by estimated value (highest dollar benefit first)
+9. For how_to_apply URLs, use ONLY official .gov or well-known organization domains you are confident exist. If unsure of the exact URL, provide the main agency website (e.g. portal.ct.gov/dss) rather than guessing a deep link. Include phone numbers as alternatives.
 
 ## Output Format
 Return ONLY valid JSON. No markdown, no code blocks.
