@@ -11,6 +11,12 @@ error_reporting(E_ALL);
 ini_set('log_errors', 1);
 header('Content-Type: application/json');
 
+// Debug: GET returns status
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    echo json_encode(['status' => 'ok', 'method' => 'GET', 'time' => date('H:i:s')]);
+    exit;
+}
+
 $config = require dirname(__DIR__) . '/config.php';
 $pdo = new PDO(
     "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}",
