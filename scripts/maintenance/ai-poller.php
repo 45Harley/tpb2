@@ -62,9 +62,13 @@ $handlers['statement_collect'] = function($job) {
     return $systemPrompt . "\n\n---\n\nUser: " . $userMessage;
 };
 
+$handlers['truthfulness'] = function($job) {
+    $request = json_decode($job['request_data'], true);
+    return ($request['system_prompt'] ?? '') . "\n\n---\n\nUser: " . ($request['user_message'] ?? '');
+};
+
 // Future handlers:
 // $handlers['claudia_chat'] = function($job) { ... };
-// $handlers['truthfulness'] = function($job) { ... };
 
 function buildBenefitsScanPrompt($job) {
     $request = json_decode($job['request_data'], true);
@@ -213,8 +217,8 @@ while (true) {
         } else {
             $jsonStr = $output;
             if (preg_match('/```(?:json)?\s*\n?(.*?)\n?```/s', $jsonStr, $m)) $jsonStr = $m[1];
-            // Find JSON object — look for any top-level key (programs, threats, statements, etc.)
-            if (preg_match('/\{[\s\S]*("programs"|"threats"|"statements"|"result")[\s\S]*\}/s', $jsonStr, $m)) $jsonStr = $m[0];
+            // Find JSON object — look for any top-level key
+            if (preg_match('/\{[\s\S]*("programs"|"threats"|"statements"|"cluster_assignments"|"result")[\s\S]*\}/s', $jsonStr, $m)) $jsonStr = $m[0];
 
             $parsed = json_decode($jsonStr, true);
             if (!$parsed) {

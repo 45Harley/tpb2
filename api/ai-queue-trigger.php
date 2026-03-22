@@ -82,19 +82,104 @@ if ($jobType === 'threat_collect') {
         exit;
     }
 
-    // Include step1-gather to build prompt
-    // Pass official_id via the request
-    $requestData = json_encode([
-        'official_id' => $officialId,
-        'gather_on_server' => true
-    ]);
+    // Inline step1-gather logic from collect-statements-step1-gather.php
+    require_once dirname(__DIR__) . '/scripts/maintenance/collect-statements-step1-gather-q.php';
+    $gatherResult = gatherStatementPrompt($pdo, $officialId);
+    if (!$gatherResult) {
+        echo json_encode(['error' => "Unknown official_id: {$officialId}"]);
+        exit;
+    }
 
+    $requestData = json_encode($gatherResult);
     $stmt = $pdo->prepare("INSERT INTO ai_queue (job_type, user_id, status, request_data) VALUES ('statement_collect', 0, 'pending', ?)");
     $stmt->execute([$requestData]);
-    echo json_encode(['status' => 'queued', 'job_id' => (int)$pdo->lastInsertId()]);
+    echo json_encode(['status' => 'queued', 'job_id' => (int)$pdo->lastInsertId(), 'official_id' => $officialId]);
+
+} elseif ($jobType === 'truthfulness') {
+    $enabled = getSiteSetting($pdo, 'truthfulness_score_local_enabled', '0');
+    if ($enabled !== '1') {
+        echo json_encode(['status' => 'disabled']);
+        exit;
+    }
+
+    // Inline step1-gather logic from score-truthfulness-step1-gather
+    $today = date('Y-m-d');
+
+    $unclustered = $pdo->query("SELECT id, content, summary, policy_topic, tense, source, statement_date, severity_score, benefit_score FROM rep_statements WHERE cluster_id IS NULL ORDER BY statement_date DESC")->fetchAll();
+    $clusters = $pdo->query("SELECT sc.id, sc.canonical_claim, sc.policy_topic, sc.repeat_count, sc.truthfulness_score AS prev_score, sc.first_seen, sc.last_seen FROM statement_clusters sc ORDER BY sc.id")->fetchAll();
+
+    $clusterStatements = [];
+    if (!empty($clusters)) {
+        $cids = array_column($clusters, 'id');
+        $ph = implode(',', array_fill(0, count($cids), '?'));
+        $cs = $pdo->prepare("SELECT id, cluster_id, content, summary, tense, statement_date FROM rep_statements WHERE cluster_id IN ($ph) ORDER BY cluster_id, statement_date");
+        $cs->execute($cids);
+        while ($r = $cs->fetch()) $clusterStatements[$r['cluster_id']][] = $r;
+    }
+
+    $threats = $pdo->query("SELECT threat_id, title, description, threat_date, target, branch, severity_score, benefit_score FROM executive_threats WHERE is_active = 1 ORDER BY threat_date DESC LIMIT 80")->fetchAll();
+
+    $clusterContext = [];
+    foreach ($clusters as $c) {
+        $stmts = $clusterStatements[$c['id']] ?? [];
+        $ss = [];
+        foreach ($stmts as $s) $ss[] = "[{$s['statement_date']}] {$s['summary']}";
+        $clusterContext[] = ['cluster_id' => (int)$c['id'], 'canonical_claim' => $c['canonical_claim'], 'policy_topic' => $c['policy_topic'], 'repeat_count' => (int)$c['repeat_count'], 'prev_score' => $c['prev_score'] !== null ? (int)$c['prev_score'] : null, 'date_range' => $c['first_seen'] . ' to ' . $c['last_seen'], 'statements' => $ss];
+    }
+
+    $threatContext = [];
+    foreach ($threats as $t) $threatContext[] = "#{$t['threat_id']} ({$t['threat_date']}) [{$t['branch']}] {$t['title']} — {$t['target']}. Sev:{$t['severity_score']} Ben:{$t['benefit_score']}";
+
+    $unclusteredContext = [];
+    foreach ($unclustered as $u) $unclusteredContext[] = ['statement_id' => (int)$u['id'], 'content' => $u['content'], 'summary' => $u['summary'], 'policy_topic' => $u['policy_topic'], 'tense' => $u['tense'], 'date' => $u['statement_date']];
+
+    $systemPrompt = buildTruthfulnessPrompt(
+        !empty($clusterContext) ? json_encode($clusterContext, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : 'None yet',
+        !empty($unclusteredContext) ? json_encode($unclusteredContext, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : 'None',
+        !empty($threatContext) ? implode("\n", $threatContext) : 'No tracked actions yet.'
+    );
+
+    $requestData = json_encode([
+        'system_prompt' => $systemPrompt,
+        'user_message' => 'Analyze all statements. Cluster any unclustered ones. Then score truthfulness for every cluster based on current evidence. Return structured JSON.'
+    ]);
+
+    $stmt = $pdo->prepare("INSERT INTO ai_queue (job_type, user_id, status, request_data) VALUES ('truthfulness', 0, 'pending', ?)");
+    $stmt->execute([$requestData]);
+    echo json_encode(['status' => 'queued', 'job_id' => (int)$pdo->lastInsertId(), 'unclustered' => count($unclustered), 'clusters' => count($clusters)]);
 
 } else {
     echo json_encode(['error' => "Unknown job type: {$jobType}"]);
+}
+
+// === Truthfulness prompt builder ===
+function buildTruthfulnessPrompt($clusterJson, $unclusteredJson, $threatText) {
+    return <<<PROMPT
+You are a truthfulness analyst for The People's Branch (TPB).
+
+You have TWO jobs:
+
+## Job 1: Cluster unclustered statements
+Assign each to an existing cluster OR create a new one. Same cluster = same core claim/promise.
+
+## Job 2: Score truthfulness for ALL clusters (0-1000)
+0-100: False  101-200: Mostly False  201-300: Misleading  301-400: Half True
+401-500: Mixed  501-600: Mostly True  601-700: True  701-800: Very True
+801-900: Verified  901-1000: Precisely True
+
+## Existing Clusters
+{$clusterJson}
+
+## Unclustered Statements
+{$unclusteredJson}
+
+## Evidence: Recent Government Actions
+{$threatText}
+
+## Output Format
+Return ONLY valid JSON:
+{"cluster_assignments":[{"statement_id":123,"cluster_id":5,"cluster_id_is_new":false},{"statement_id":456,"cluster_id":null,"cluster_id_is_new":true,"new_cluster":{"canonical_claim":"claim","policy_topic":"topic"}}],"truthfulness_scores":[{"cluster_id":5,"cluster_id_is_new":false,"score":350,"note":"explanation","evidence_refs":"threat #123"},{"cluster_id":null,"cluster_id_is_new":true,"canonical_claim":"claim","score":500,"note":"explanation","evidence_refs":""}]}
+PROMPT;
 }
 
 // === Threat prompt builder ===

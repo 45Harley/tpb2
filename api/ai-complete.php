@@ -40,7 +40,7 @@ if ($status === 'done') {
     $jobStmt->execute([$jobId]);
     $jobType = $jobStmt->fetchColumn();
 
-    $needsProcessing = ['threat_collect', 'statement_collect'];
+    $needsProcessing = ['threat_collect', 'statement_collect', 'truthfulness'];
     if (in_array($jobType, $needsProcessing)) {
         // Process inline — no HTTP call (avoids ModSecurity)
         // ai-process-result checks $_GET['key'] — already set from this request
