@@ -129,6 +129,41 @@ $pageStyles = <<<'CSS'
 .bf .save-btn.saved { background: #2ecc71; }
 .bf .privacy-note { text-align: center; font-size: 0.75rem; color: #666; margin-top: 1rem; line-height: 1.5; }
 .bf .save-status { text-align: center; font-size: 0.85rem; color: #2ecc71; margin-top: 0.5rem; min-height: 1.2em; }
+/* Program cards */
+.bf .program-card {
+    background: #1a1a2e; border: 1px solid #333; border-radius: 10px;
+    padding: 1.25rem; margin-bottom: 0.75rem; transition: border-color 0.2s;
+}
+.bf .program-card:hover { border-color: #555; }
+.bf .program-card .pc-header {
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;
+}
+.bf .program-card .pc-name { color: #e0e0e0; font-size: 1rem; font-weight: 600; }
+.bf .program-card .pc-value {
+    color: #2ecc71; font-size: 0.85rem; font-weight: 600; white-space: nowrap;
+    background: rgba(46,204,113,0.1); padding: 2px 8px; border-radius: 8px;
+}
+.bf .program-card .pc-cat {
+    display: inline-block; font-size: 0.7rem; color: #d4af37; background: rgba(212,175,55,0.1);
+    border: 1px solid rgba(212,175,55,0.2); padding: 1px 8px; border-radius: 8px; margin-bottom: 0.5rem;
+}
+.bf .program-card .pc-provides { color: #ccc; font-size: 0.85rem; margin-bottom: 0.4rem; line-height: 1.5; }
+.bf .program-card .pc-why { color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 0.4rem; line-height: 1.4; }
+.bf .program-card .pc-apply a {
+    color: #d4af37; font-size: 0.8rem; text-decoration: none; transition: color 0.2s;
+}
+.bf .program-card .pc-apply a:hover { color: #e4cf67; text-decoration: underline; }
+.bf .program-card .pc-confidence {
+    font-size: 0.7rem; padding: 1px 6px; border-radius: 6px; margin-left: 0.5rem;
+}
+.bf .pc-confidence.high { color: #2ecc71; background: rgba(46,204,113,0.1); }
+.bf .pc-confidence.medium { color: #f39c12; background: rgba(243,156,18,0.1); }
+.bf .pc-confidence.low { color: #e74c3c; background: rgba(231,76,60,0.1); }
+.bf .scan-spinner {
+    display: inline-block; width: 20px; height: 20px; border: 2px solid #333;
+    border-top-color: #d4af37; border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 500px) { .bf .form-row { flex-direction: column; gap: 0; } }
 CSS;
 
@@ -517,9 +552,24 @@ require __DIR__ . '/includes/nav.php';
                 <span class="reason">We'll scan your profile against 50+ federal and state programs</span>
                 <span class="pts-inline">+25 pts</span>
             </div>
-            <label class="toggle-switch"><input type="checkbox" name="benefits_match_optin"<?= chk('benefits_match_optin') ?>><span class="slider"></span></label>
+            <label class="toggle-switch"><input type="checkbox" name="benefits_match_optin" id="benefitsOptinToggle"<?= chk('benefits_match_optin') ?>><span class="slider"></span></label>
         </div>
+        <button type="button" id="scanBtn" style="display: <?= pv('benefits_match_optin') ? 'block' : 'none' ?>; width: 100%; margin-top: 1rem; padding: 0.75rem; background: transparent; border: 1px solid #d4af37; color: #d4af37; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+            Scan My Profile Now
+        </button>
     </div>
+
+    <!-- Results -->
+    <div id="benefitsResults" style="display: none;">
+        <div class="card" id="resultsSummary" style="border: 1px solid #2ecc71; background: linear-gradient(180deg, #1a1a2e 0%, #1a2a1a 100%);">
+            <h2 style="color: #2ecc71;">Your Benefits Match</h2>
+            <p id="summaryText" style="color: #ccc; font-size: 0.9rem; line-height: 1.6;"></p>
+            <p id="disclaimerText" style="color: #888; font-size: 0.75rem; margin-top: 0.75rem; font-style: italic;"></p>
+        </div>
+        <div id="programCards"></div>
+    </div>
+
+    <div id="scanStatus" style="text-align: center; min-height: 2em; padding: 1rem 0;"></div>
 
     <button type="submit" class="save-btn" id="saveBtn">Save Profile</button>
     <div class="save-status" id="saveStatus"></div>
@@ -581,6 +631,106 @@ document.querySelector('select[name="student_status"]').addEventListener('change
     const pslfRow = document.querySelector('input[name="public_service_employer"]').closest('.toggle-row');
     if (this.value === 'not_student') {
         // Only hide if no education beyond high school (might still have debt)
+    }
+});
+
+// Benefits opt-in toggle → show scan button
+document.getElementById('benefitsOptinToggle').addEventListener('change', function() {
+    document.getElementById('scanBtn').style.display = this.checked ? 'block' : 'none';
+    if (!this.checked) {
+        document.getElementById('benefitsResults').style.display = 'none';
+    }
+});
+
+// Scan button → call benefits-match API
+document.getElementById('scanBtn').addEventListener('click', async function() {
+    const btn = this;
+    const status = document.getElementById('scanStatus');
+    const results = document.getElementById('benefitsResults');
+
+    // Save profile first
+    const form = document.getElementById('benefitsForm');
+    const data = {};
+    form.querySelectorAll('select, input[type="text"], input[type="date"], input[type="number"]').forEach(el => {
+        if (!el.name) return;
+        if (el.multiple) {
+            data[el.name] = Array.from(el.selectedOptions).map(o => o.value).join(',');
+        } else {
+            data[el.name] = el.value;
+        }
+    });
+    form.querySelectorAll('input[type="checkbox"]').forEach(el => {
+        if (el.name) data[el.name] = el.checked ? 1 : 0;
+    });
+
+    btn.disabled = true;
+    btn.textContent = 'Saving profile...';
+    status.innerHTML = '';
+
+    // Save first
+    await fetch('/api/benefits-profile.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+
+    // Now scan
+    btn.textContent = 'Scanning programs...';
+    status.innerHTML = '<span class="scan-spinner"></span> Scanning 50+ federal and state programs — this may take 30-60 seconds...';
+
+    try {
+        const resp = await fetch('/api/benefits-match.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        const result = await resp.json();
+
+        if (result.error) {
+            status.innerHTML = '<span style="color: #e74c3c;">' + result.error + '</span>';
+            btn.textContent = 'Scan My Profile Now';
+            btn.disabled = false;
+            return;
+        }
+
+        // Render results
+        results.style.display = 'block';
+        document.getElementById('summaryText').textContent = result.summary || '';
+        document.getElementById('disclaimerText').textContent = result.disclaimer || '';
+
+        const cards = document.getElementById('programCards');
+        cards.innerHTML = '';
+
+        (result.programs || []).forEach(function(p) {
+            const valueStr = p.estimated_annual_value
+                ? '$' + Number(p.estimated_annual_value).toLocaleString() + '/yr'
+                : '';
+            const confClass = (p.confidence || 'medium').toLowerCase();
+            const card = document.createElement('div');
+            card.className = 'program-card';
+            card.innerHTML =
+                '<div class="pc-header">' +
+                    '<span class="pc-name">' + (p.name || '') + '</span>' +
+                    (valueStr ? '<span class="pc-value">' + valueStr + '</span>' : '') +
+                '</div>' +
+                '<span class="pc-cat">' + (p.category || '') + '</span>' +
+                '<span class="pc-confidence ' + confClass + '">' + confClass + '</span>' +
+                '<div class="pc-provides">' + (p.provides || '') + '</div>' +
+                '<div class="pc-why">' + (p.why_you_qualify || '') + '</div>' +
+                (p.how_to_apply ? '<div class="pc-apply"><a href="' + p.how_to_apply + '" target="_blank">' + p.how_to_apply + ' →</a></div>' : '');
+            cards.appendChild(card);
+        });
+
+        status.innerHTML = '<span style="color: #2ecc71;">' + (result.programs || []).length + ' programs found</span>';
+        btn.textContent = 'Scan Again';
+        btn.disabled = false;
+
+        // Scroll to results
+        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch(err) {
+        status.innerHTML = '<span style="color: #e74c3c;">Network error — try again</span>';
+        btn.textContent = 'Scan My Profile Now';
+        btn.disabled = false;
     }
 });
 
