@@ -48,15 +48,7 @@ $pageTitle = isset($pageTitle) ? $pageTitle : 'The People\'s Branch';
             min-height: 100vh;
         }
         
-        /* Navigation */
-        .top-nav {
-            background: #1a1a2e;
-            border-bottom: 1px solid #333;
-            padding: 0 1rem;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        /* Navigation — styles in nav.php */
         .nav-container {
             max-width: 1200px;
             margin: 0 auto;
