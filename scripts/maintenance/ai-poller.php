@@ -262,7 +262,10 @@ while (true) {
     }
 
     $jobsProcessed++;
-    $count = $resultStatus === 'done' && isset($parsed['programs']) ? count($parsed['programs']) : 0;
+    $count = 0;
+    if ($resultStatus === 'done' && $parsed) {
+        $count = count($parsed['programs'] ?? $parsed['threats'] ?? $parsed['statements'] ?? []);
+    }
     echo "[" . date('H:i:s') . "] {$resultStatus}: job #{$jobId} | {$count} items | {$elapsed}s | total: {$jobsProcessed}\n";
 
     sleep($pollInterval);

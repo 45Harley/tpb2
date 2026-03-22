@@ -36,18 +36,18 @@ $pdo->prepare("UPDATE ai_queue SET status = ?, result_data = ?, completed_at = N
 
 // Auto-trigger post-processing for job types that need it
 if ($status === 'done') {
-    $job = $pdo->prepare("SELECT job_type FROM ai_queue WHERE id = ?");
-    $job->execute([$jobId]);
-    $jobType = $job->fetchColumn();
+    $jobStmt = $pdo->prepare("SELECT job_type FROM ai_queue WHERE id = ?");
+    $jobStmt->execute([$jobId]);
+    $jobType = $jobStmt->fetchColumn();
 
     $needsProcessing = ['threat_collect', 'statement_collect'];
     if (in_array($jobType, $needsProcessing)) {
-        // Call process-result endpoint internally
-        $processUrl = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . "/api/ai-process-result.php?job_id={$jobId}&key={$pollerKey}";
-        $ch = curl_init($processUrl);
-        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30]);
-        $processResult = curl_exec($ch);
-        curl_close($ch);
+        // Process inline — no HTTP call (avoids ModSecurity)
+        // ai-process-result checks $_GET['key'] — already set from this request
+        $_GET['job_id'] = $jobId;
+        ob_start();
+        require __DIR__ . '/ai-process-result.php';
+        $processOutput = ob_get_clean();
     }
 }
 
