@@ -190,9 +190,14 @@ if (!$parsed || !isset($parsed['programs'])) {
     exit;
 }
 
-// Validate URLs — strip bad links
+// Validate URLs — fix bare domains, strip bad links
 foreach ($parsed['programs'] as &$prog) {
     $url = trim($prog['how_to_apply'] ?? '');
+    // Fix bare domains — add https:// if missing
+    if ($url && !preg_match('/^https?:\/\//', $url) && preg_match('/^[a-z0-9].*\.[a-z]{2,}/i', $url)) {
+        $url = 'https://' . $url;
+        $prog['how_to_apply'] = $url;
+    }
     if ($url && preg_match('/^https?:\/\//', $url)) {
         $ch = curl_init($url);
         curl_setopt_array($ch, [
