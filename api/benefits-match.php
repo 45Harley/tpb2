@@ -57,6 +57,24 @@ foreach ($profile as $key => $val) {
 }
 $profileText = implode("\n", $profileLines);
 
+// Load state benefits database if available
+$stateBenefitsContext = '';
+$benefitsFile = dirname(__DIR__) . '/help/data/' . strtolower($state) . '-benefits.json';
+if (file_exists($benefitsFile)) {
+    $stateData = json_decode(file_get_contents($benefitsFile), true);
+    if ($stateData && !empty($stateData['programs'])) {
+        $stateBenefitsContext = "\n\n## Known {$stateName} Programs Database\nThe following programs are confirmed to exist in {$stateName}. Match against these FIRST, then add any additional programs from your knowledge or web search.\n\n";
+        foreach ($stateData['programs'] as $prog) {
+            $stateBenefitsContext .= "### {$prog['name']} [{$prog['level']}] [{$prog['category']}]\n";
+            $stateBenefitsContext .= "Provides: {$prog['provides']}\n";
+            $stateBenefitsContext .= "Eligibility: {$prog['eligibility']}\n";
+            $stateBenefitsContext .= "Apply: {$prog['how_to_apply']}\n";
+            if (!empty($prog['phone'])) $stateBenefitsContext .= "Phone: {$prog['phone']}\n";
+            $stateBenefitsContext .= "\n";
+        }
+    }
+}
+
 // Age from DOB
 $age = '';
 if (!empty($profile['date_of_birth'])) {
@@ -99,6 +117,8 @@ Location: {$town}, {$stateName} ({$state})
 7. Don't include programs they clearly don't qualify for based on their profile
 8. Sort by estimated value (highest dollar benefit first)
 9. For how_to_apply URLs, use ONLY official .gov or well-known organization domains you are confident exist. If unsure of the exact URL, provide the main agency website (e.g. portal.ct.gov/dss) rather than guessing a deep link. Include phone numbers as alternatives.
+10. Also search the web for any additional {$stateName} programs or recent changes to eligibility rules that may not be in the database below.
+{$stateBenefitsContext}
 
 ## Output Format
 Return ONLY valid JSON. No markdown, no code blocks.

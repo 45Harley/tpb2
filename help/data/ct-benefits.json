@@ -1,0 +1,179 @@
+{
+  "state": "CT",
+  "state_name": "Connecticut",
+  "last_updated": "2026-03-22",
+  "programs": [
+    {
+      "name": "CT LIHEAP (Low Income Home Energy Assistance Program)",
+      "category": "Energy",
+      "level": "Federal",
+      "provides": "Help paying heating bills — grants typically $200-$2,500 depending on income and household size. No repayment required.",
+      "eligibility": "Household income at or below 60% of state median income. Must be responsible for heating costs. Renters qualify if heat is included in rent.",
+      "how_to_apply": "https://portal.ct.gov/dss/Economic-Security/Winter-Heating-Assistance",
+      "phone": "211 (CT United Way) or DSS office",
+      "season": "November through March typically"
+    },
+    {
+      "name": "Operation Fuel",
+      "category": "Energy",
+      "level": "State",
+      "provides": "Emergency energy assistance when LIHEAP runs out or between seasons. Grants up to $500-$700 for heating, cooling, or utility bills.",
+      "eligibility": "Household income up to 75% of state median income. Available year-round unlike LIHEAP.",
+      "how_to_apply": "https://operationfuel.org",
+      "phone": "860-243-2345 or 211"
+    },
+    {
+      "name": "CHFA Time To Own Down Payment Assistance",
+      "category": "Housing",
+      "level": "State",
+      "provides": "Forgivable loan up to $50,000 in high-opportunity areas, $25,000 elsewhere. 0% interest. Forgiven after staying in the home.",
+      "eligibility": "First-time homebuyer. Income limits vary by town. Must use CHFA mortgage. Home must be primary residence.",
+      "how_to_apply": "https://www.chfa.org/homebuyers-homeowners/homebuyers/time-to-own-down-payment-assistance-program-loan/",
+      "phone": "860-571-3502"
+    },
+    {
+      "name": "CHFA Down Payment Assistance Program (DAP)",
+      "category": "Housing",
+      "level": "State",
+      "provides": "Second mortgage up to $20,000 at 1% interest for down payment and closing costs.",
+      "eligibility": "First-time homebuyer or buying in targeted area. Income limits apply. Must pair with CHFA first mortgage.",
+      "how_to_apply": "https://www.chfa.org/homebuyers-homeowners/homebuyers/",
+      "phone": "860-571-3502"
+    },
+    {
+      "name": "SmartMove Connecticut",
+      "category": "Housing",
+      "level": "State",
+      "provides": "Low-interest loan (3%) to reduce down payment and closing costs to as little as 1% of purchase price.",
+      "eligibility": "First-time homebuyer. Income limits vary. Provided by Housing Development Fund (HDF).",
+      "how_to_apply": "https://hdfconnects.org/downpayment-closing-costs-assistance/",
+      "phone": "203-338-0048"
+    },
+    {
+      "name": "HUSKY Health (CT Medicaid)",
+      "category": "Healthcare",
+      "level": "State",
+      "provides": "Free or low-cost health coverage. HUSKY A: children and parents. HUSKY B: uninsured children. HUSKY C: elderly/disabled. HUSKY D: adults without children.",
+      "eligibility": "Income varies by program: HUSKY A up to 201% FPL for children, 155% for parents. HUSKY D up to 138% FPL for adults.",
+      "how_to_apply": "https://portal.ct.gov/dss/Health-And-Home-Care/HUSKY-Health",
+      "phone": "1-877-CT-HUSKY (1-877-284-8759)"
+    },
+    {
+      "name": "Access Health CT (ACA Marketplace)",
+      "category": "Healthcare",
+      "level": "Federal",
+      "provides": "Subsidized health insurance plans. Premium tax credits and cost-sharing reductions based on income.",
+      "eligibility": "Income 100-400% FPL (subsidies). Available to those not eligible for Medicaid or employer coverage.",
+      "how_to_apply": "https://www.accesshealthct.com",
+      "phone": "1-855-805-4325"
+    },
+    {
+      "name": "CT SNAP (Supplemental Nutrition Assistance Program)",
+      "category": "Food",
+      "level": "Federal",
+      "provides": "Monthly food benefits on EBT card. Average CT benefit ~$234/month per person. CT expanded to 200% FPL (higher than federal 130%).",
+      "eligibility": "Gross income up to 200% FPL (CT expanded eligibility). Most households exempt from asset test. Must be CT resident.",
+      "how_to_apply": "https://portal.ct.gov/dss/snap",
+      "phone": "211 or local DSS office"
+    },
+    {
+      "name": "CT WIC (Women, Infants, Children)",
+      "category": "Food",
+      "level": "Federal",
+      "provides": "Supplemental food, nutrition education, and referrals for pregnant/postpartum women, infants, and children up to age 5.",
+      "eligibility": "Pregnant, breastfeeding, or postpartum women. Infants and children under 5. Income up to 185% FPL.",
+      "how_to_apply": "https://portal.ct.gov/dph/wic",
+      "phone": "1-800-741-2142"
+    },
+    {
+      "name": "CT Energy Assistance Program (CEAP)",
+      "category": "Energy",
+      "level": "State",
+      "provides": "Utility bill assistance for electric and gas. Arrearage forgiveness programs through Eversource and UI.",
+      "eligibility": "Income at or below 60% state median income. Must have utility account in your name.",
+      "how_to_apply": "https://portal.ct.gov/dss/Economic-Security/Winter-Heating-Assistance",
+      "phone": "211"
+    },
+    {
+      "name": "CT Property Tax Credit for Seniors/Disabled",
+      "category": "Tax Credits",
+      "level": "State",
+      "provides": "Property tax credit up to $1,250 for married, $1,000 for single. Applied to local property tax bill.",
+      "eligibility": "Age 65+ or totally disabled. Income limits: single up to $42,900, married up to $52,300. Must own and live in the home.",
+      "how_to_apply": "Apply through local town assessor's office",
+      "phone": "Local town assessor"
+    },
+    {
+      "name": "CT Renters Rebate",
+      "category": "Tax Credits",
+      "level": "State",
+      "provides": "Rebate up to $900 for married, $700 for single renters. Direct payment.",
+      "eligibility": "Age 65+ or totally disabled. Renter. Income limits: single up to $42,900, married up to $52,300.",
+      "how_to_apply": "Apply through local town assessor's office",
+      "phone": "Local town assessor"
+    },
+    {
+      "name": "CT Earned Income Tax Credit (CT EITC)",
+      "category": "Tax Credits",
+      "level": "State",
+      "provides": "State credit equal to 30.5% of federal EITC. Can be $200-$2,000+ depending on income and children.",
+      "eligibility": "Must qualify for federal EITC. Working individuals and families with low-moderate income.",
+      "how_to_apply": "Claimed on CT state income tax return (Form CT-1040)",
+      "phone": "DRS: 860-297-5962"
+    },
+    {
+      "name": "Connecticut Care 4 Kids",
+      "category": "Childcare",
+      "level": "State",
+      "provides": "Childcare subsidies for working families. Covers portion of daycare, before/after school, and summer programs.",
+      "eligibility": "Working or in job training. Income up to 50% state median income to start, can stay up to 85%. Children under 13.",
+      "how_to_apply": "https://www.ctcare4kids.com",
+      "phone": "1-888-214-5437"
+    },
+    {
+      "name": "Section 8 Housing Choice Voucher (CT)",
+      "category": "Housing",
+      "level": "Federal",
+      "provides": "Rental assistance voucher — pays difference between 30% of income and fair market rent. Can save $500-$1,500+/month.",
+      "eligibility": "Income at or below 50% area median income. Long waitlists in most CT towns.",
+      "how_to_apply": "Apply through local housing authority",
+      "phone": "Local housing authority or 211"
+    },
+    {
+      "name": "CT TFA (Temporary Family Assistance / TANF)",
+      "category": "Other",
+      "level": "Federal",
+      "provides": "Monthly cash assistance for families with children. Amount varies by family size. Time-limited (21 months).",
+      "eligibility": "Families with dependent children under 18. Very low income. Must participate in employment activities.",
+      "how_to_apply": "https://portal.ct.gov/dss",
+      "phone": "211 or local DSS office"
+    },
+    {
+      "name": "Medicare Savings Program (CT)",
+      "category": "Healthcare",
+      "level": "State",
+      "provides": "Pays Medicare premiums, deductibles, and copayments. Can save $170+/month on Part B premium alone.",
+      "eligibility": "On Medicare. Income limits vary by program level (QMB, SLMB, QI). CT has higher limits than federal minimum.",
+      "how_to_apply": "https://portal.ct.gov/dss",
+      "phone": "1-800-842-1508"
+    },
+    {
+      "name": "ConnectiCare / Medicare Extra Help (LIS)",
+      "category": "Healthcare",
+      "level": "Federal",
+      "provides": "Helps pay Medicare Part D prescription drug costs. Can save $5,000+/year on medications.",
+      "eligibility": "On Medicare. Income below 150% FPL. Limited resources ($17,220 single, $34,360 married).",
+      "how_to_apply": "https://www.ssa.gov/medicare/part-d-extra-help",
+      "phone": "1-800-772-1213 (SSA)"
+    },
+    {
+      "name": "Putnam Housing Authority",
+      "category": "Housing",
+      "level": "Local",
+      "provides": "Public housing and rental assistance in Putnam. Affordable units for low-income families, elderly, and disabled.",
+      "eligibility": "Income limits based on HUD guidelines. Putnam resident preferred.",
+      "how_to_apply": "Contact Putnam Housing Authority directly",
+      "phone": "(860) 928-7606"
+    }
+  ]
+}
