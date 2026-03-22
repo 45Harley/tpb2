@@ -481,9 +481,9 @@ require __DIR__ . '/includes/nav.php';
             </select>
         </div>
 
-        <div class="toggle-row">
+        <div class="toggle-row" id="pregnantRow" style="display: <?= pv('gender') === 'male' ? 'none' : 'flex' ?>;">
             <div class="toggle-label"><span class="name">I am pregnant or recently gave birth</span><span class="reason">Immediately expands eligibility for Medicaid, WIC, CHIP, TANF, and prenatal services</span><span class="pts-inline">+5 pts</span></div>
-            <label class="toggle-switch"><input type="checkbox" name="pregnant"<?= chk('pregnant') ?>><span class="slider"></span></label>
+            <label class="toggle-switch"><input type="checkbox" name="pregnant" id="pregnantToggle"<?= chk('pregnant') ?>><span class="slider"></span></label>
         </div>
         <div class="toggle-row">
             <div class="toggle-label"><span class="name">I am a single parent</span><span class="reason">Qualifies for additional childcare credits, TANF, and head-of-household tax status</span><span class="pts-inline">+5 pts</span></div>
@@ -533,11 +533,71 @@ require __DIR__ . '/includes/nav.php';
 </main>
 
 <script>
+// Conditional field dependencies
 document.getElementById('veteranToggle').addEventListener('change', function() {
     document.getElementById('branchGroup').style.display = this.checked ? 'block' : 'none';
 });
 document.getElementById('disabilityToggle').addEventListener('change', function() {
     document.getElementById('disabilityType').style.display = this.checked ? 'block' : 'none';
+});
+
+// Gender → hide pregnancy for male
+document.querySelector('select[name="gender"]').addEventListener('change', function() {
+    const row = document.getElementById('pregnantRow');
+    if (this.value === 'male') {
+        row.style.display = 'none';
+        document.getElementById('pregnantToggle').checked = false;
+    } else {
+        row.style.display = 'flex';
+    }
+});
+
+// US Citizen → show/hide immigration status
+document.querySelector('select[name="us_citizen"]').addEventListener('change', function() {
+    const immGroup = document.querySelector('select[name="immigration_status"]').closest('.form-group');
+    if (this.value === 'yes') {
+        immGroup.style.display = 'none';
+        document.querySelector('select[name="immigration_status"]').value = 'U.S. citizen';
+    } else {
+        immGroup.style.display = 'block';
+    }
+});
+
+// Living situation = homeless → hide housing cost
+document.querySelector('select[name="living_situation"]').addEventListener('change', function() {
+    const costGroup = document.querySelector('select[name="monthly_housing_cost"]').closest('.form-group');
+    if (this.value === 'homeless') {
+        costGroup.style.display = 'none';
+        document.querySelector('select[name="monthly_housing_cost"]').value = '$0';
+    } else {
+        costGroup.style.display = 'block';
+    }
+});
+
+// Student status = not_student → hide student debt
+document.querySelector('select[name="student_status"]').addEventListener('change', function() {
+    const debtRow = document.querySelector('input[name="student_debt"]').closest('.toggle-row');
+    const pslfRow = document.querySelector('input[name="public_service_employer"]').closest('.toggle-row');
+    if (this.value === 'not_student') {
+        // Only hide if no education beyond high school (might still have debt)
+    }
+});
+
+// Voter registered = No → show register link
+document.querySelector('select[name="voter_registered"]').addEventListener('change', function() {
+    let link = document.getElementById('registerLink');
+    if (this.value === 'no') {
+        if (!link) {
+            link = document.createElement('div');
+            link.id = 'registerLink';
+            link.style.cssText = 'margin-top: 0.5rem; font-size: 0.85rem;';
+            link.innerHTML = '<a href="https://voterregistration.ct.gov/" target="_blank" style="color: #d4af37;">Register to vote in Connecticut →</a>';
+            this.closest('.form-group').appendChild(link);
+        }
+        link.style.display = 'block';
+    } else if (link) {
+        link.style.display = 'none';
+    }
 });
 
 document.getElementById('benefitsForm').addEventListener('submit', async function(e) {
