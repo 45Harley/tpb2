@@ -153,6 +153,12 @@ $pageStyles = <<<'CSS'
     color: #d4af37; font-size: 0.8rem; text-decoration: none; transition: color 0.2s;
 }
 .bf .program-card .pc-apply a:hover { color: #e4cf67; text-decoration: underline; }
+.bf .program-card .pc-level {
+    display: inline-block; font-size: 0.7rem; padding: 1px 8px; border-radius: 8px; margin-left: 0.3rem;
+}
+.bf .pc-level-federal { color: #5dade2; background: rgba(93,173,226,0.1); border: 1px solid rgba(93,173,226,0.3); }
+.bf .pc-level-state { color: #a569bd; background: rgba(165,105,189,0.1); border: 1px solid rgba(165,105,189,0.3); }
+.bf .pc-level-local { color: #f39c12; background: rgba(243,156,18,0.1); border: 1px solid rgba(243,156,18,0.3); }
 .bf .program-card .pc-confidence {
     font-size: 0.7rem; padding: 1px 6px; border-radius: 6px; margin-left: 0.5rem;
 }
@@ -713,6 +719,7 @@ document.getElementById('scanBtn').addEventListener('click', async function() {
                     (valueStr ? '<span class="pc-value">' + valueStr + '</span>' : '') +
                 '</div>' +
                 '<span class="pc-cat">' + (p.category || '') + '</span>' +
+                (p.level ? '<span class="pc-level pc-level-' + (p.level || '').toLowerCase() + '">' + p.level + '</span> ' : '') +
                 '<span class="pc-confidence ' + confClass + '">' + confClass + '</span>' +
                 '<div class="pc-provides">' + (p.provides || '') + '</div>' +
                 '<div class="pc-why">' + (p.why_you_qualify || '') + '</div>' +

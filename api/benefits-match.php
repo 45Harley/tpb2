@@ -102,6 +102,7 @@ Return ONLY valid JSON. No markdown, no code blocks.
     {
       "name": "Program Name",
       "category": "Housing",
+      "level": "Federal|State|Local",
       "provides": "What you could receive — dollar amounts if known",
       "why_you_qualify": "Based on your profile: specific reason",
       "how_to_apply": "URL or phone number",
