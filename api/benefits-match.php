@@ -174,7 +174,7 @@ foreach ($parsed['programs'] as &$prog) {
         curl_setopt_array($ch, [
             CURLOPT_NOBODY => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 5,
+            CURLOPT_TIMEOUT => 2,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS => 3,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (TPB Benefits Checker)',

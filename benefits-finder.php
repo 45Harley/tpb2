@@ -685,10 +685,14 @@ document.getElementById('scanBtn').addEventListener('click', async function() {
     status.innerHTML = '<span class="scan-spinner"></span> Scanning 50+ federal and state programs — this may take 30-60 seconds...';
 
     try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 180000); // 3 min timeout
         const resp = await fetch('/api/benefits-match.php', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'}
+            headers: {'Content-Type': 'application/json'},
+            signal: controller.signal
         });
+        clearTimeout(timeout);
         const result = await resp.json();
 
         if (result.error) {
