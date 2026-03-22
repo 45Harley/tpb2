@@ -268,7 +268,7 @@ while (true) {
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode(['job_id' => $jobId, 'status' => $resultStatus, 'result' => $resultData]),
+            CURLOPT_POSTFIELDS => json_encode(['job_id' => $jobId, 'status' => $resultStatus, 'result_compressed' => base64_encode(gzcompress($resultData))]),
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_TIMEOUT => 15,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (TPB-Poller/1.0)',

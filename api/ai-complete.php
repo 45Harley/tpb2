@@ -24,7 +24,12 @@ if (!$pollerKey || $sentKey !== $pollerKey) {
 $input = json_decode(file_get_contents('php://input'), true);
 $jobId = intval($input['job_id'] ?? 0);
 $status = ($input['status'] ?? '') === 'error' ? 'error' : 'done';
-$resultData = $input['result'] ?? '';
+// Support compressed results (large payloads bypass ModSecurity size limits)
+if (!empty($input['result_compressed'])) {
+    $resultData = gzuncompress(base64_decode($input['result_compressed']));
+} else {
+    $resultData = $input['result'] ?? '';
+}
 
 if (!$jobId) {
     echo json_encode(['error' => 'No job_id']);
