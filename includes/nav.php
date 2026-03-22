@@ -496,6 +496,7 @@ $electionSite = 'https://tpb.sandgems.net';
                         <?php endif; ?>
                         <a href="/reps.php?my=1">My Reps</a>
                         <a href="/civic-positions.php">Where I Need Gov</a>
+                        <a href="/benefits-finder.php">My Benefits Finder</a>
                         <a href="/poll/">My Opinion</a>
                         <a href="/0t/">My Power</a>
                         <a href="/profile.php#points">My Points</a>
