@@ -173,7 +173,7 @@ while (true) {
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 10,
-            CURLOPT_USERAGENT => 'TPB-Poller/1.0',
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (TPB-Poller/1.0)',
             CURLOPT_SSL_VERIFYPEER => false
         ]);
         $resp = curl_exec($ch);
@@ -271,7 +271,7 @@ while (true) {
             CURLOPT_POSTFIELDS => json_encode(['job_id' => $jobId, 'status' => $resultStatus, 'result' => $resultData]),
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_TIMEOUT => 15,
-            CURLOPT_USERAGENT => 'TPB-Poller/1.0',
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (TPB-Poller/1.0)',
             CURLOPT_SSL_VERIFYPEER => false
         ]);
         curl_exec($ch);
