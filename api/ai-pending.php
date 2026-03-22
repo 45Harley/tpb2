@@ -21,8 +21,15 @@ if (!$pollerKey || $sentKey !== $pollerKey) {
     exit;
 }
 
-// Get next pending job
-$stmt = $pdo->query("SELECT id, user_id, request_data FROM ai_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 1");
+// Optional job_type filter
+$jobType = $_GET['type'] ?? '';
+
+if ($jobType) {
+    $stmt = $pdo->prepare("SELECT id, job_type, user_id, request_data FROM ai_queue WHERE status = 'pending' AND job_type = ? ORDER BY created_at ASC LIMIT 1");
+    $stmt->execute([$jobType]);
+} else {
+    $stmt = $pdo->query("SELECT id, job_type, user_id, request_data FROM ai_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 1");
+}
 $job = $stmt->fetch();
 
 if (!$job) {

@@ -685,7 +685,7 @@ document.getElementById('scanBtn').addEventListener('click', async function() {
     status.innerHTML = '';
 
     try {
-        const submitResp = await fetch('/api/scan-submit.php');
+        const submitResp = await fetch('/api/ai-submit.php');
         const submitResult = await submitResp.json();
 
         if (submitResult.error) {
@@ -713,7 +713,7 @@ document.getElementById('scanBtn').addEventListener('click', async function() {
             }
 
             try {
-                const pollResp = await fetch('/api/scan-result.php?id=' + scanId);
+                const pollResp = await fetch('/api/ai-result.php?id=' + scanId);
                 const pollResult = await pollResp.json();
 
                 if (pollResult.status === 'processing') {

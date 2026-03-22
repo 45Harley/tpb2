@@ -1,6 +1,6 @@
 <?php
 /**
- * Scan Poller — runs on local PC, polls scan_queue, runs claude -p
+ * Scan Poller — runs on local PC, polls ai_queue, runs claude -p
  * =================================================================
  * Start: php scripts/maintenance/scan-poller.php
  * Polls every 5 seconds. Ctrl+C to stop.
@@ -53,7 +53,7 @@ while (true) {
     $uptimeStr = gmdate('H:i:s', $uptime);
 
     // Check for pending scans
-    $stmt = $pdo->query("SELECT id, user_id, request_data FROM scan_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 1");
+    $stmt = $pdo->query("SELECT id, user_id, request_data FROM ai_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 1");
     $job = $stmt->fetch();
 
     if (!$job) {
@@ -66,7 +66,7 @@ while (true) {
     echo "[{$now}] cycle #{$cycleCount} | uptime {$uptimeStr} | FOUND JOB #{$jobId} for user {$job['user_id']}\n";
 
     // Mark as processing
-    $pdo->prepare("UPDATE scan_queue SET status = 'processing', started_at = NOW() WHERE id = ?")->execute([$jobId]);
+    $pdo->prepare("UPDATE ai_queue SET status = 'processing', started_at = NOW() WHERE id = ?")->execute([$jobId]);
 
     // Parse request
     $request = json_decode($job['request_data'], true);
@@ -152,7 +152,7 @@ PROMPT;
     echo "[" . date('H:i:s') . "] claude -p finished in {$elapsed}s | " . strlen($output) . " bytes\n";
 
     if (!$output) {
-        $pdo->prepare("UPDATE scan_queue SET status = 'error', result_data = ?, completed_at = NOW() WHERE id = ?")
+        $pdo->prepare("UPDATE ai_queue SET status = 'error', result_data = ?, completed_at = NOW() WHERE id = ?")
             ->execute([json_encode(['error' => 'claude -p returned no output']), $jobId]);
         echo "[" . date('H:i:s') . "] ERROR: no output from claude -p\n";
         $jobsProcessed++;
@@ -171,7 +171,7 @@ PROMPT;
 
     $parsed = json_decode($jsonStr, true);
     if (!$parsed || !isset($parsed['programs'])) {
-        $pdo->prepare("UPDATE scan_queue SET status = 'error', result_data = ?, completed_at = NOW() WHERE id = ?")
+        $pdo->prepare("UPDATE ai_queue SET status = 'error', result_data = ?, completed_at = NOW() WHERE id = ?")
             ->execute([json_encode(['error' => 'JSON parse failed', 'raw' => substr($output, 0, 2000)]), $jobId]);
         echo "[" . date('H:i:s') . "] ERROR: couldn't parse JSON\n";
         $jobsProcessed++;
@@ -189,7 +189,7 @@ PROMPT;
     unset($prog);
 
     $programCount = count($parsed['programs']);
-    $pdo->prepare("UPDATE scan_queue SET status = 'done', result_data = ?, completed_at = NOW() WHERE id = ?")
+    $pdo->prepare("UPDATE ai_queue SET status = 'done', result_data = ?, completed_at = NOW() WHERE id = ?")
         ->execute([json_encode($parsed), $jobId]);
 
     $jobsProcessed++;
