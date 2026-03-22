@@ -166,6 +166,36 @@ if (!$parsed || !isset($parsed['programs'])) {
     exit;
 }
 
+// Validate URLs — strip bad links
+foreach ($parsed['programs'] as &$prog) {
+    $url = trim($prog['how_to_apply'] ?? '');
+    if ($url && preg_match('/^https?:\/\//', $url)) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_NOBODY => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 5,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 3,
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (TPB Benefits Checker)',
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+        curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode >= 400 || $httpCode === 0) {
+            // Extract domain for fallback
+            $domain = parse_url($url, PHP_URL_HOST) ?? '';
+            $prog['how_to_apply'] = '';
+            $prog['apply_note'] = $domain
+                ? "Search {$domain} or call the agency directly"
+                : "Contact the agency directly for application details";
+        }
+    }
+}
+unset($prog);
+
 echo json_encode($parsed);
 
 // === Functions (same as claude-chat.php) ===
