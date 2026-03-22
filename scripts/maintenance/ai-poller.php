@@ -47,9 +47,23 @@ $handlers['benefits_scan'] = function($job) {
     return buildBenefitsScanPrompt($job);
 };
 
+$handlers['threat_collect'] = function($job) {
+    // Prompt already built by server trigger — just extract it
+    $request = json_decode($job['request_data'], true);
+    $systemPrompt = $request['system_prompt'] ?? '';
+    $userMessage = $request['user_message'] ?? '';
+    return $systemPrompt . "\n\n---\n\nUser: " . $userMessage;
+};
+
+$handlers['statement_collect'] = function($job) {
+    $request = json_decode($job['request_data'], true);
+    $systemPrompt = $request['system_prompt'] ?? '';
+    $userMessage = $request['user_message'] ?? '';
+    return $systemPrompt . "\n\n---\n\nUser: " . $userMessage;
+};
+
 // Future handlers:
 // $handlers['claudia_chat'] = function($job) { ... };
-// $handlers['statement_collect'] = function($job) { ... };
 // $handlers['truthfulness'] = function($job) { ... };
 
 function buildBenefitsScanPrompt($job) {
@@ -199,7 +213,8 @@ while (true) {
         } else {
             $jsonStr = $output;
             if (preg_match('/```(?:json)?\s*\n?(.*?)\n?```/s', $jsonStr, $m)) $jsonStr = $m[1];
-            if (preg_match('/\{[\s\S]*"programs"[\s\S]*\}/s', $jsonStr, $m)) $jsonStr = $m[0];
+            // Find JSON object — look for any top-level key (programs, threats, statements, etc.)
+            if (preg_match('/\{[\s\S]*("programs"|"threats"|"statements"|"result")[\s\S]*\}/s', $jsonStr, $m)) $jsonStr = $m[0];
 
             $parsed = json_decode($jsonStr, true);
             if (!$parsed) {
