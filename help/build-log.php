@@ -88,9 +88,6 @@ $pageStyles = <<<'CSS'
 }
 CSS;
 
-require dirname(__DIR__) . '/includes/header.php';
-require dirname(__DIR__) . '/includes/nav.php';
-
 // Build log entries — each day's story
 $entries = [
     ['day' => 1, 'date' => '2026-02-09', 'title' => 'The Beginning', 'commits' => 8, 'milestone' => true,
