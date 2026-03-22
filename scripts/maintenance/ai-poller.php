@@ -67,8 +67,21 @@ $handlers['truthfulness'] = function($job) {
     return ($request['system_prompt'] ?? '') . "\n\n---\n\nUser: " . ($request['user_message'] ?? '');
 };
 
-// Future handlers:
-// $handlers['claudia_chat'] = function($job) { ... };
+$handlers['claudia_chat'] = function($job) {
+    $request = json_decode($job['request_data'], true);
+    $systemPrompt = $request['system_prompt'] ?? '';
+    $messages = $request['messages'] ?? [];
+    $userMsg = $request['user_message'] ?? '';
+
+    // Build conversational prompt
+    $parts = [];
+    if ($systemPrompt) $parts[] = $systemPrompt;
+    foreach ($messages as $m) {
+        $role = ucfirst($m['role']);
+        $parts[] = "\n{$role}: {$m['content']}";
+    }
+    return implode("\n", $parts);
+};
 
 function buildBenefitsScanPrompt($job) {
     $request = json_decode($job['request_data'], true);
@@ -214,6 +227,11 @@ while (true) {
         if (!$output) {
             $resultStatus = 'error';
             $resultData = json_encode(['error' => 'claude -p returned no output']);
+        } elseif ($jobType === 'claudia_chat') {
+            // Chat returns free text, not JSON
+            $resultStatus = 'done';
+            $resultData = json_encode(['response' => $output]);
+            $parsed = null;
         } else {
             $jsonStr = $output;
             if (preg_match('/```(?:json)?\s*\n?(.*?)\n?```/s', $jsonStr, $m)) $jsonStr = $m[1];

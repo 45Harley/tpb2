@@ -175,7 +175,7 @@ require_once __DIR__ . '/../includes/site-settings.php';
 $claudiaLocalEnabled = getSiteSetting($pdo, 'claudia_local_enabled', '0');
 
 if ($claudiaLocalEnabled === '1') {
-    $response = callLocalClaude($systemPrompt, $messages);
+    $response = callLocalClaudeViaQ($pdo, $systemPrompt, $messages);
 } else {
     $model = $clerk['model'] ?? CLAUDE_MODEL;
     $response = callClaudeAPI($systemPrompt, $messages, $model, $webSearchEnabled);
@@ -786,37 +786,48 @@ function cleanActionTags($message) {
 /**
  * Call local claude -p via reverse SSH tunnel
  */
-function callLocalClaude($systemPrompt, $messages) {
-    $payload = json_encode([
+function callLocalClaudeViaQ($pdo, $systemPrompt, $messages) {
+    // Build the full prompt from system + messages
+    $lastUserMsg = '';
+    foreach ($messages as $m) {
+        if ($m['role'] === 'user') $lastUserMsg = $m['content'];
+    }
+
+    $requestData = json_encode([
         'system_prompt' => $systemPrompt,
+        'user_message' => $lastUserMsg,
         'messages' => $messages
     ]);
 
-    $ch = curl_init('http://127.0.0.1:9880');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload,
-        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-        CURLOPT_TIMEOUT => 120
-    ]);
+    // Insert into Q
+    $stmt = $pdo->prepare("INSERT INTO ai_queue (job_type, user_id, status, request_data) VALUES ('claudia_chat', 0, 'pending', ?)");
+    $stmt->execute([$requestData]);
+    $jobId = (int)$pdo->lastInsertId();
 
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curlError = curl_error($ch);
-    curl_close($ch);
+    // Poll for result — check every 1 second, timeout 60 seconds
+    $maxWait = 60;
+    $start = time();
+    while (time() - $start < $maxWait) {
+        usleep(1000000); // 1 second
+        $check = $pdo->prepare("SELECT status, result_data FROM ai_queue WHERE id = ?");
+        $check->execute([$jobId]);
+        $row = $check->fetch(PDO::FETCH_ASSOC);
 
-    if ($curlError) {
-        return ['error' => "Local tunnel error: {$curlError}"];
+        if (!$row) return ['error' => 'Job disappeared from queue'];
+
+        if ($row['status'] === 'done') {
+            $result = json_decode($row['result_data'], true);
+            // Q returns raw claude output — wrap it in expected format
+            if (isset($result['response'])) {
+                return ['content' => [['type' => 'text', 'text' => $result['response']]]];
+            }
+            return $result ?: ['error' => 'Empty result from Q'];
+        }
+        if ($row['status'] === 'error') {
+            $result = json_decode($row['result_data'], true);
+            return ['error' => $result['error'] ?? 'Q processing error'];
+        }
     }
-    if ($httpCode !== 200) {
-        return ['error' => "Local listener returned HTTP {$httpCode}"];
-    }
 
-    $data = json_decode($response, true);
-    if (!$data) {
-        return ['error' => 'Invalid response from local listener'];
-    }
-
-    return $data;
+    return ['error' => 'Q timeout — is the poller running?'];
 }
