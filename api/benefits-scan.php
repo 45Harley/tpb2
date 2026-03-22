@@ -144,12 +144,17 @@ PROMPT;
 
 $userMessage = "Based on my profile, what federal and {$stateName} programs might I qualify for? Please check all categories — housing, food, healthcare, energy, tax credits, education, and any others that apply to my situation.";
 
-// Call Claude — local pipe or API
+// Call Claude — direct CLI on localhost, tunnel on server, API as fallback
+$isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1'])
+    || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false;
 $claudiaLocalEnabled = getSiteSetting($pdo, 'claudia_local_enabled', '0');
 
 $messages = [['role' => 'user', 'content' => $userMessage]];
 
-if ($claudiaLocalEnabled === '1') {
+if ($isLocalhost) {
+    // Direct claude -p call — no tunnel needed
+    $response = callClaudeCLI($systemPrompt, $userMessage);
+} elseif ($claudiaLocalEnabled === '1') {
     $response = callLocalClaude($systemPrompt, $messages);
 } else {
     // Fall back to Anthropic API
@@ -203,7 +208,21 @@ unset($prog);
 
 echo json_encode($parsed);
 
-// === Functions (same as claude-chat.php) ===
+// === Functions ===
+
+function callClaudeCLI($systemPrompt, $userMessage) {
+    $fullPrompt = $systemPrompt . "\n\n---\n\nUser: " . $userMessage;
+    $tempFile = sys_get_temp_dir() . '/tpb-benefits-prompt-' . getmypid() . '.txt';
+    file_put_contents($tempFile, $fullPrompt);
+
+    $cmd = 'claude -p --allowedTools "WebSearch,WebFetch" < ' . escapeshellarg($tempFile) . ' 2>&1';
+    $output = shell_exec($cmd);
+    unlink($tempFile);
+
+    if (!$output) return ['error' => 'claude -p returned no output'];
+    return ['response' => $output];
+}
+
 
 function callLocalClaude($systemPrompt, $messages) {
     $payload = json_encode([

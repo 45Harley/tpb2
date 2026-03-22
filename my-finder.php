@@ -680,65 +680,97 @@ document.getElementById('scanBtn').addEventListener('click', async function() {
         body: JSON.stringify(data)
     });
 
-    // Now scan
-    btn.textContent = 'Scanning programs...';
-    status.innerHTML = '<span class="scan-spinner"></span> Scanning 50+ federal and state programs — this may take 30-60 seconds...';
+    // Submit scan to queue
+    btn.textContent = 'Submitting...';
+    status.innerHTML = '';
 
     try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 180000); // 3 min timeout
-        const resp = await fetch('/api/benefits-scan.php', {
-            signal: controller.signal
-        });
-        clearTimeout(timeout);
-        const result = await resp.json();
+        const submitResp = await fetch('/api/scan-submit.php');
+        const submitResult = await submitResp.json();
 
-        if (result.error) {
-            status.innerHTML = '<span style="color: #e74c3c;">' + result.error + '</span>';
+        if (submitResult.error) {
+            status.innerHTML = '<span style="color: #e74c3c;">' + submitResult.error + '</span>';
             btn.textContent = 'Scan My Profile Now';
             btn.disabled = false;
             return;
         }
 
-        // Render results
-        results.style.display = 'block';
-        document.getElementById('summaryText').textContent = result.summary || '';
-        document.getElementById('disclaimerText').textContent = result.disclaimer || '';
+        const scanId = submitResult.scan_id;
+        btn.textContent = 'Scanning...';
+        status.innerHTML = '<span class="scan-spinner"></span> Queued — waiting for processor...';
 
-        const cards = document.getElementById('programCards');
-        cards.innerHTML = '';
+        // Poll for result every 3 seconds, timeout after 120 seconds
+        const startTime = Date.now();
+        const pollTimer = setInterval(async () => {
+            const elapsed = Math.round((Date.now() - startTime) / 1000);
 
-        (result.programs || []).forEach(function(p) {
-            const valueStr = p.estimated_annual_value
-                ? '$' + Number(p.estimated_annual_value).toLocaleString() + '/yr'
-                : '';
-            const confClass = (p.confidence || 'medium').toLowerCase();
-            const card = document.createElement('div');
-            card.className = 'program-card';
-            card.innerHTML =
-                '<div class="pc-header">' +
-                    '<span class="pc-name">' + (p.name || '') + '</span>' +
-                    (valueStr ? '<span class="pc-value">' + valueStr + '</span>' : '') +
-                '</div>' +
-                '<span class="pc-cat">' + (p.category || '') + '</span>' +
-                (p.level ? '<span class="pc-level pc-level-' + (p.level || '').toLowerCase() + '">' + p.level + '</span> ' : '') +
-                '<span class="pc-confidence ' + confClass + '">' + confClass + '</span>' +
-                '<div class="pc-provides">' + (p.provides || '') + '</div>' +
-                '<div class="pc-why">' + (p.why_you_qualify || '') + '</div>' +
-                (p.how_to_apply ? '<div class="pc-apply"><a href="' + p.how_to_apply + '" target="_blank" rel="noopener">' + p.how_to_apply + ' →</a></div>'
-                    : (p.apply_note ? '<div class="pc-apply" style="color:#888;font-size:0.8rem;font-style:italic;">' + p.apply_note + '</div>' : ''));
-            cards.appendChild(card);
-        });
+            if (elapsed > 120) {
+                clearInterval(pollTimer);
+                status.innerHTML = '<span style="color: #e74c3c;">Scan timed out after 120s. Is the poller running?</span>';
+                btn.textContent = 'Scan My Profile Now';
+                btn.disabled = false;
+                return;
+            }
 
-        status.innerHTML = '<span style="color: #2ecc71;">' + (result.programs || []).length + ' programs found</span>';
-        btn.textContent = 'Scan Again';
-        btn.disabled = false;
+            try {
+                const pollResp = await fetch('/api/scan-result.php?id=' + scanId);
+                const pollResult = await pollResp.json();
 
-        // Scroll to results
-        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (pollResult.status === 'processing') {
+                    status.innerHTML = '<span class="scan-spinner"></span> Processing — analyzing your profile... (' + elapsed + 's)';
+                } else if (pollResult.status === 'pending') {
+                    status.innerHTML = '<span class="scan-spinner"></span> Queued — waiting for pickup... (' + elapsed + 's)';
+                } else if (pollResult.status === 'done') {
+                    clearInterval(pollTimer);
+                    const result = pollResult.result;
+
+                    results.style.display = 'block';
+                    document.getElementById('summaryText').textContent = result.summary || '';
+                    document.getElementById('disclaimerText').textContent = result.disclaimer || '';
+
+                    const cards = document.getElementById('programCards');
+                    cards.innerHTML = '';
+
+                    (result.programs || []).forEach(function(p) {
+                        const valueStr = p.estimated_annual_value
+                            ? '$' + Number(p.estimated_annual_value).toLocaleString() + '/yr'
+                            : '';
+                        const confClass = (p.confidence || 'medium').toLowerCase();
+                        const card = document.createElement('div');
+                        card.className = 'program-card';
+                        card.innerHTML =
+                            '<div class="pc-header">' +
+                                '<span class="pc-name">' + (p.name || '') + '</span>' +
+                                (valueStr ? '<span class="pc-value">' + valueStr + '</span>' : '') +
+                            '</div>' +
+                            '<span class="pc-cat">' + (p.category || '') + '</span>' +
+                            (p.level ? '<span class="pc-level pc-level-' + (p.level || '').toLowerCase() + '">' + p.level + '</span> ' : '') +
+                            '<span class="pc-confidence ' + confClass + '">' + confClass + '</span>' +
+                            '<div class="pc-provides">' + (p.provides || '') + '</div>' +
+                            '<div class="pc-why">' + (p.why_you_qualify || '') + '</div>' +
+                            (p.how_to_apply ? '<div class="pc-apply"><a href="' + p.how_to_apply + '" target="_blank" rel="noopener">' + p.how_to_apply + ' →</a></div>'
+                                : (p.apply_note ? '<div class="pc-apply" style="color:#888;font-size:0.8rem;font-style:italic;">' + p.apply_note + '</div>' : ''));
+                        cards.appendChild(card);
+                    });
+
+                    status.innerHTML = '<span style="color: #2ecc71;">' + (result.programs || []).length + ' programs found in ' + elapsed + 's</span>';
+                    btn.textContent = 'Scan Again';
+                    btn.disabled = false;
+                    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                } else if (pollResult.status === 'error') {
+                    clearInterval(pollTimer);
+                    status.innerHTML = '<span style="color: #e74c3c;">' + (pollResult.result?.error || 'Scan failed') + '</span>';
+                    btn.textContent = 'Scan My Profile Now';
+                    btn.disabled = false;
+                }
+            } catch(pollErr) {
+                // Network blip — keep polling
+            }
+        }, 3000);
 
     } catch(err) {
-        status.innerHTML = '<span style="color: #e74c3c;">Network error — try again</span>';
+        status.innerHTML = '<span style="color: #e74c3c;">Failed to submit scan request</span>';
         btn.textContent = 'Scan My Profile Now';
         btn.disabled = false;
     }
