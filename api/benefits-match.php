@@ -5,6 +5,10 @@
  * POST — reads user_profile, calls Claude, returns matched programs as JSON
  */
 
+set_time_limit(180); // 3 min — Claude + URL checks take time
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('log_errors', 1);
 header('Content-Type: application/json');
 
 $config = require dirname(__DIR__) . '/config.php';
