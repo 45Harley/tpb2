@@ -8,7 +8,7 @@
  * tpb-roles: developer, admin
  */
 
-require dirname(__DIR__) . '/config.php';
+$config = require dirname(__DIR__) . '/config.php';
 
 try {
     $pdo = new PDO(
