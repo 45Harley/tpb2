@@ -27,7 +27,7 @@ $dataDir = __DIR__ . '/data';
 if (is_dir($dataDir)) {
     foreach (glob($dataDir . '/*.json') as $file) {
         $data = json_decode(file_get_contents($file), true);
-        if ($data) {
+        if ($data && !empty($data['id']) && !empty($data['title'])) {
             $guides[] = $data;
         }
     }
