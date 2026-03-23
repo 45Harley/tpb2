@@ -475,6 +475,7 @@ $electionSite = 'https://tpb.sandgems.net';
                         <a href="/help/tpb-getting-started-tutorial.html">🎓 Getting Started</a>
                         <a href="/help/build-log.php">🔨 Build Log</a>
                         <a href="/help/icons.php">🎨 Modal Icons</a>
+                        <a href="/help/tools.php">🔧 Tools Dashboard</a>
                     </div>
                 </div>
                 <?php if ($isLoggedIn): ?>

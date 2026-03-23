@@ -222,6 +222,12 @@ require dirname(__DIR__) . '/includes/nav.php';
                 <div class="link-desc">How the civic brainstorming stream works — rules, groups, facilitating</div>
             </a>
         </li>
+        <li>
+            <a href="/help/tools.php">
+                Tools Dashboard
+                <div class="link-desc">All 56 tools, scripts, pipelines, and capabilities — searchable by agent</div>
+            </a>
+        </li>
     </ul>
 </div>
 
